@@ -629,7 +629,7 @@ async function requireLogin() {
   const { data: { session }, error } = await supabase.auth.getSession();
   if (error || !session || !session.user) {
     showToast("Kamu harus login dulu!");
-    window.location.href = "login";
+    window.location.href = "login.html";
     return false;
   }
   currentUser = { id: session.user.id };

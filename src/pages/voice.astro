@@ -18,7 +18,7 @@ import Layout from '../layouts/Layout.astro';
     </div>
 
     <div class="sidebar-menu">
-      <a href="/data">
+      <a href="/data.html">
         <span class="material-icons">person</span> 
         <span>Profil</span>
       </a>
@@ -323,7 +323,7 @@ function playVIPEntrance(username, level) {
         textHTML = `<span style="color:#fff; font-size: 13px; font-weight: 600; letter-spacing: 1px;">LEGEND</span> <b style="color:#fff; font-size: 15px; font-weight: 800; text-transform: uppercase; margin: 0 4px;">${username}</b> <span style="color:#fff; font-size: 13px; font-weight: 600;">MEMASUKI ROOM</span>`;
     }
 
-    overlay.style.cssText += bgStyle;
+    overlay.setAttribute('style', bgStyle);
     overlay.innerHTML = `<div class="vip-shine-clean"></div><div style="display: flex; align-items: center;">${textHTML}</div>`;
     document.body.appendChild(overlay);
 
@@ -432,7 +432,7 @@ function renderStage(slots) {
                     ${(IS_OWNER && !isMe) ? `<div class="kick-btn-wrapper" style="display:none;"><div class="kick-btn" onclick="event.stopPropagation(); kickUser('${slot.profile_id}', '${user.username}')"><span class="material-icons">close</span></div></div>` : ''}
                 </div>
                 <span class="name-label" 
-                      onclick="window.location.href='data?username=${encodeURIComponent(user.username)}'" 
+                      onclick="window.location.href='data.html?username=${encodeURIComponent(user.username)}'" 
                       style="color: ${lvlStyle.color}; cursor: pointer; font-weight: bold;">
                       ${user.username}${lvlBadge}${getUserBadge(user.role)}
                 </span>`; // <--- Backtick penutup di sini!
@@ -591,7 +591,7 @@ function listenRealtime() {
             const roleBadge = getUserBadge(p.new.role || '');
             
             const userLink = `
-                <span onclick="window.location.href='data?username=${encodeURIComponent(p.new.username)}'" 
+                <span onclick="window.location.href='data.html?username=${encodeURIComponent(p.new.username)}'" 
                       style="color:${style.color}; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; position:relative; z-index:10; pointer-events:auto;">
                     ${p.new.username}${lvlBadge}${roleBadge}
                 </span>`;
@@ -979,7 +979,7 @@ async function keluarRoom() {
     }
     
     // Lempar user balik ke Lobby
-    window.location.href = 'lobby';
+    window.location.href = 'lobby.html';
 }
 
 async function openRoomSetting() {
@@ -1028,7 +1028,7 @@ fixMobileHeight();
 
 async function checkUser() {
     const { data: { session } } = await sb.auth.getSession();
-    if (!session) { window.location.href = 'index'; return false; }
+    if (!session) { window.location.href = 'index.html'; return false; }
     MY_USER_ID = session.user.id;
     const myProfile = await getCachedProfile(MY_USER_ID);
     const { data: roomData } = await sb.from('rooms').select('owner_id, is_active').eq('id', CURRENT_ROOM_ID).maybeSingle();
@@ -1047,7 +1047,7 @@ async function checkUser() {
         if (IS_OWNER) {
             if (document.getElementById('menu-setting')) document.getElementById('menu-setting').style.display = 'flex'; 
             await sb.from('rooms').update({ is_active: true }).eq('id', CURRENT_ROOM_ID);
-        } else if (!roomData.is_active) { alert("Room tutup!"); window.location.href = 'lobby'; return false; }
+        } else if (!roomData.is_active) { alert("Room tutup!"); window.location.href = 'lobby.html'; return false; }
     }
     fetchStage();
     return true; 
@@ -1070,8 +1070,8 @@ async function fetchTopGifters() {
         if (!container) return; // Kalau div-nya ga ada di HTML, skip aja
 
         // Render HTML-nya: Tulisan TOP + 3 Avatar numpuk
-        let = `<span style="font-size: 11px; color: #FFD700; font-weight: 800; margin-right: 6px; letter-spacing: 0.5px;">🏆 TOP</span>`;
-        += `<div style="display: flex; align-items: center;">`;
+        let html = `<span style="font-size: 11px; color: #FFD700; font-weight: 800; margin-right: 6px; letter-spacing: 0.5px;">🏆 TOP</span>`;
+        html += `<div style="display: flex; align-items: center;">`;
         
         // Warna border: Juara 1 Emas, 2 Perak, 3 Perunggu
         const bingkaiWarna = ['#FFD700', '#C0C0C0', '#CD7F32']; 
@@ -1080,7 +1080,7 @@ async function fetchTopGifters() {
             const marginKiri = index === 0 ? '0' : '-12px'; // Biar fotonya numpuk
             const zIndex = 3 - index; // Juara 1 posisinya paling depan
             
-            += `
+            html += `
                 <img src="${user.avatar_url || 'asets/png/profile.png'}" 
                      title="${user.username} (Total: ${user.total_gift_sent} koin)"
                      style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; 
@@ -1091,8 +1091,8 @@ async function fetchTopGifters() {
             `;
         });
         
-        += `</div>`;
-        container.innerHTML =;
+        html += `</div>`;
+        container.innerHTML = html;
 
     } catch (err) {
         console.error("Gagal memuat Top Gifters:", err.message);
@@ -1193,7 +1193,7 @@ async function openTopGiftersModal() {
         <div style="width: 30px; display: flex; justify-content: center;">${rankHtml}</div>
         <img src="${user.avatar_url || 'asets/png/profile.png'}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #555;">
         <div style="flex: 1; min-width: 0;">
-            <div onclick="window.location.href='data?username=${encodeURIComponent(user.username)}'" 
+            <div onclick="window.location.href='data.html?username=${encodeURIComponent(user.username)}'" 
                  style="color: #fff; font-weight: bold; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; cursor: pointer;">
                 ${user.username} ${lvlBadge} ${roleBadge}
             </div>
@@ -1266,7 +1266,7 @@ function closeTopGiftersModal() {
 }
 
 // BIAR MODAL BISA DIKLIK, update sedikit fungsi fetchTopGifters lo:
-// Cari baris `container.innerHTML =;` di dalam fungsi fetchTopGifters yang barusan lo buat.
+// Cari baris `container.innerHTML = html;` di dalam fungsi fetchTopGifters yang barusan lo buat.
 // Terus tambahin ini di bawahnya:
 // container.onclick = openTopGiftersModal;
 
@@ -1325,11 +1325,11 @@ initApp();
     padding: 0;
 }
 
-body, {
+body, html {
     width: 100%;
     height: 100%;
     background-color: var(--bg-base); 
-    background-image: url('../asets/png/voice.png'); 
+    background-image: url('/asets/png/voice.png'); 
     background-size: cover; 
     background-position: center; 
     background-repeat: no-repeat; 

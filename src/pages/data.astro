@@ -93,7 +93,7 @@ import Layout from '../layouts/Layout.astro';
     </div>
 
     <div class="menu-category-label">Aset</div>
-    <div class="menu-item-tiktok" onclick="window.location.href='/saldo'">
+    <div class="menu-item-tiktok" onclick="window.location.href='/saldo.html'">
       <div class="icon-wrapper">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
       </div>
@@ -272,7 +272,7 @@ import Layout from '../layouts/Layout.astro';
     function renderGrid(data, container, type) {
         if (data && data.length > 0) {
             container.innerHTML = data.map(p => {
-                let targetPage = (type === 'musik') ? '/music' : '/post';
+                let targetPage = (type === 'musik') ? '/music.html' : '/post.html';
                 return `<div class="grid-item"><a href="${targetPage}?id=${p.id}"><img src="${p.image_url}" loading="lazy"></a></div>`;
             }).join('');
         } else {

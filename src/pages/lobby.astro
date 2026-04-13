@@ -5,7 +5,7 @@ import Layout from '../layouts/Layout.astro';
 <Layout title="HypeVoice - Lobby">
   <div class="lobby-container">
     <header class="top-nav">
-      <div class="user-pill" onclick="window.location.href='/data'">
+      <div class="user-pill" onclick="window.location.href='/data.html'">
         <img src="/asets/png/profile.png" id="lobby-avatar" alt="User" />
         <div class="user-meta">
           <span id="lobby-username">Loading...</span>
@@ -215,7 +215,7 @@ async function loadRooms() {
 
         const card = document.createElement('div');
         card.className = 'room-card';
-        card.onclick = () => window.location.href = `voice?id=${room.id}&name=${encodeURIComponent(room.name)}`;
+        card.onclick = () => window.location.href = `voice.html?id=${room.id}&name=${encodeURIComponent(room.name)}`;
         
         card.innerHTML = `
             <div class="room-thumb">
@@ -289,7 +289,7 @@ async function confirmCreateRoom() {
         closeModal();
 
         setTimeout(() => {
-            window.location.href = `voice?id=${roomId}&name=${encodeURIComponent(name)}`;
+            window.location.href = `voice.html?id=${roomId}&name=${encodeURIComponent(name)}`;
         }, 1200);
 
     } catch (e) {
@@ -315,7 +315,7 @@ async function handleStartSinging() {
 
     if (existingRoom) {
         console.log("🚀 Lo udah punya room, meluncur...");
-        window.location.href = `voice?id=${existingRoom.id}&name=${encodeURIComponent(existingRoom.name)}`;
+        window.location.href = `voice.html?id=${existingRoom.id}&name=${encodeURIComponent(existingRoom.name)}`;
     } else {
         createRoom();
     }

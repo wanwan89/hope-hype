@@ -7,7 +7,7 @@ import Layout from '../layouts/Layout.astro';
   <link rel="stylesheet" href="/css/toast.css" />
 
   <div class="wd-container">
-    <a href="/saldo" class="back-btn">
+    <a href="/saldo.html" class="back-btn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6"></polyline>
       </svg>
@@ -160,8 +160,8 @@ import Layout from '../layouts/Layout.astro';
         showMsg("Berhasil", "Permintaan tarik koin terkirim!", "success");
 
         setTimeout(() => {
-          // Tambahin cache-buster biar HP maksa reload /saldo
-          window.location.replace('/saldo?t=' + new Date().getTime());
+          // Tambahin cache-buster biar HP maksa reload /saldo.html
+          window.location.replace('/saldo.html?t=' + new Date().getTime());
         }, 2500);
 
       } catch (err) {
