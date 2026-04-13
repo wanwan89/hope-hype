@@ -992,13 +992,13 @@ async function prosesTurunMic() {
     document.getElementById('confirm-modal').style.display = 'none';
     
     try {
-        // 1. Kosongkan Kursi
-        await sb.from('room_slots').update({ profile_id: null }).eq('profile_id', MY_USER_ID);
-        
-        // 2. Matikan Mic
+        // 1. Matikan Mic Duluan (Biar instan!)
         if (room && room.localParticipant) {
             await room.localParticipant.setMicrophoneEnabled(false);
         }
+
+        // 2. Kosongkan Kursi di Database
+        await sb.from('room_slots').update({ profile_id: null }).eq('profile_id', MY_USER_ID);
         
         // 3. Update Status Mute di DB
         await sb.from('profiles').update({ mic_off: true }).eq('id', MY_USER_ID);
@@ -1014,6 +1014,7 @@ async function prosesTurunMic() {
         console.error("Gagal turun:", err);
     }
 }
+
 async function kickUser(targetId, targetName) {
     if (!confirm(`Kick ${targetName}?`)) return;
     await sb.from('room_slots').update({ profile_id: null }).match({ room_id: CURRENT_ROOM_ID, profile_id: targetId });
