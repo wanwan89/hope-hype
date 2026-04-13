@@ -1505,23 +1505,22 @@ if (installAdBtn) {
   });
 }
 
-  </script>
-</Layout>
-<style is:global>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: "Poppins", sans-serif;
-}
+  </script> </Layout> <style is:global>
+  /* Semua CSS Global ditaruh di sini */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "Poppins", sans-serif;
+  }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-
+ , body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    /* Tambahin ini biar pas Dark Mode nggak ada putih-putih di pinggir */
+    background: #8ea2db; 
+  }
 body {
   min-height: 100dvh;
   display: flex;
@@ -1849,10 +1848,6 @@ body.dark {
   background: #1f2335;
 }
 
-/* Update bagian ini di CSS kamu */
-
-/* --- Ganti blok Dark Mode lu pake ini biar rapi --- */
-
 body.dark .container {
   background: #2b3050;
   color: white;
@@ -1919,16 +1914,16 @@ body.dark .slider {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
+/* Biar gambar di dalem tag <img> beneran muncul dan gak bentrok sama background */
 .saweria-logo img {
   width: 48px;
   height: 48px;
-  background-image: url("/asets/saweria.png"); /* Udah dibenerin */
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-radius: 12px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
 }
 
 .sawer-link:hover .saweria-logo img {
@@ -1944,15 +1939,22 @@ body.dark .slider {
 .zodiac-logo {
   width: 48px;
   height: 48px;
-  background-image: url("/asets/zodiac.png"); /* Udah dibenerin */
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zodiac-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .job-card.music {
   background: linear-gradient(135deg, #7f7cff, #a18bff);
+  text-decoration: none;
 }
 
 .job-card.music .material-icons {
@@ -1960,20 +1962,8 @@ body.dark .slider {
   color: #fff;
 }
 
+/* Link Reset */
 a {
-  text-decoration: none;
-  color: inherit;
-}
-
-.job-card.music {
-  text-decoration: none;
-}
-
-.job-card h2 {
-  text-decoration: none;
-}
-
-.job-card {
   text-decoration: none;
   color: inherit;
 }

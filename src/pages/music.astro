@@ -202,9 +202,9 @@ function getUserBadge(role) {
   }
 
   const crowBadges = {
-    crown1: "asets/png/crown1.png",
-    crown2: "asets/png/crown2.png",
-    crown3: "asets/png/crown3.png",
+    crown1: "/asets/png/crown1.png",
+    crown2: "/asets/png/crown2.png",
+    crown3: "/asets/png/crown3.png",
   };
 
   if (crowBadges[role]) {
@@ -314,7 +314,7 @@ const MY_PLAYLIST = "PLFcGX84jKOu7DYhWdfpOfgDcEyRzTXFE9";
             id: `yt-${item.snippet.resourceId.videoId}`,
             title: cleanTitle,
             artist: channelName,
-            cover_url: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || 'asets/png/music.png',
+            cover_url: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '/asets/png/music.png',
             audio_src: '', 
             source: 'youtube',
             play_count: Math.floor(Math.random() * 5000), 
