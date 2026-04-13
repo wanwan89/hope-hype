@@ -1151,43 +1151,6 @@ async function getRoomLeaderboard() {
 }
 
 // ==========================================
-// --- 2. RENDER TOP 3 AVATAR DI ATAS ---
-// ==========================================
-async function fetchTopGifters() {
-    const topUsers = await getRoomLeaderboard();
-    const container = document.getElementById('top-gifters-container');
-    if (!container) return;
-
-    if (topUsers.length === 0) {
-        container.innerHTML = ''; // Sembunyikan kalau room belum ada yang nyawer
-        return;
-    }
-
-    const top3 = topUsers.slice(0, 3); // Ambil 3 aja buat header
-    let html = `<span style="font-size: 11px; color: #FFD700; font-weight: 800; margin-right: 6px; letter-spacing: 0.5px;">🏆 TOP</span>`;
-    html += `<div style="display: flex; align-items: center;">`;
-    
-    const bingkaiWarna = ['#FFD700', '#C0C0C0', '#CD7F32']; 
-    
-    top3.forEach((user, index) => {
-        const marginKiri = index === 0 ? '0' : '-12px';
-        const zIndex = 3 - index; 
-        
-        html += `
-            <img src="${user.avatar_url || 'asets/png/profile.png'}" 
-                 title="${user.username} (${user.room_total} koin)"
-                 style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; 
-                        border: 2px solid ${bingkaiWarna[index]}; 
-                        margin-left: ${marginKiri}; z-index: ${zIndex}; position: relative; background: #222;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-        `;
-    });
-    
-    html += `</div>`;
-    container.innerHTML = html;
-}
-
-// ==========================================
 // --- 3. MODAL LEADERBOARD PERSESI ---
 // ==========================================
 async function openTopGiftersModal() {
