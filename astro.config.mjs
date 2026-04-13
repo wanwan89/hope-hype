@@ -1,7 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
-import vercel from '@astrojs/vercel/serverless'; // 1. Import adapternya
+import vercel from '@astrojs/vercel'; // <--- FIX: Hapus /serverless di sini
 
 // https://astro.build/config
 export default defineConfig({
