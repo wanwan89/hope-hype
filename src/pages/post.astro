@@ -843,6 +843,18 @@ async function uploadImageToCloudinary(file) {
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: "POST", body: fd });
   return await res.json();
 }
+// --- FUNGSI TAMBAHAN (Wajib ada biar overlay gambar bisa ditutup) ---
+function closeBigImage() {
+  const container = document.getElementById("bigImageContainer");
+  if (container) container.style.display = "none";
+}
+
+// --- DAFTARKAN FUNGSI KE WINDOW BIAR BISA DIBACA HTML ---
+window.selectGift = selectGift;
+window.processGiftTransaction = processGiftTransaction;
+window.closeGiftSheet = closeGiftSheet;
+window.closeBigImage = closeBigImage;
+
 
   </script>
 </Layout>

@@ -23,7 +23,8 @@ import Layout from '../layouts/Layout.astro';
         <span>Profil</span>
       </a>
       
-      <a href="#" id="menu-mic" onclick="toggleMicSidebar()">
+<a href="#" id="menu-mic" onclick="toggleMicSidebar(event)">
+
         <span class="material-icons" id="mic-icon">mic</span> 
         <span id="mic-text">Matikan Mic</span>
       </a>
@@ -832,22 +833,33 @@ function toggleSidebar() {
     document.getElementById('sidebar-overlay').classList.toggle('active');
 }
 
-async function toggleMicSidebar() {
-    if (!room || !room.localParticipant) return alert("Belum naik panggung!");
+async function toggleMicSidebar(event) {
+    if (event) event.preventDefault(); 
+
+    if (!room || !room.localParticipant) {
+        return alert("Koneksi audio belum siap!");
+    }
+
     try {
+        const { data: slotInfo } = await sb.from('room_slots')
+            .select('profile_id')
+            .eq('room_id', CURRENT_ROOM_ID)
+            .eq('profile_id', MY_USER_ID)
+            .single();
+
+        if (!slotInfo) {
+            return alert("Kamu belum naik panggung! Naik dulu untuk memakai Mic.");
+        }
+
         const isMicOn = room.localParticipant.isMicrophoneEnabled;
-        const newStatus = !isMicOn; 
-        
-        // 1. Matikan Mic di LiveKit
+        const newStatus = !isMicOn;
+
         await room.localParticipant.setMicrophoneEnabled(newStatus);
-        
-        // 2. Update database agar orang lain bisa lihat icon mic mati
         await sb.from('profiles').update({ mic_off: !newStatus }).eq('id', MY_USER_ID);
-        
-        // 3. Update UI tombol di sidebar
+
         const micIcon = document.getElementById('mic-icon');
         const micText = document.getElementById('mic-text');
-        
+
         if (newStatus) { 
             if(micIcon) { micIcon.innerText = "mic"; micIcon.style.color = "#2ecc71"; }
             if(micText) micText.innerText = "Matikan Mic"; 
@@ -856,11 +868,12 @@ async function toggleMicSidebar() {
             if(micText) micText.innerText = "Hidupkan Mic";
         }
 
-        // Panggil fetchStage agar icon mic kamu langsung muncul di layar kamu sendiri
         fetchStage(); 
+        toggleSidebar(); 
 
     } catch (err) { 
-        alert("Gagal mengubah status Mic!"); 
+        console.error("LiveKit Mic Error:", err);
+        alert("Gagal! Pastikan kamu sudah memberikan Izin Mikrofon (Microphone Permission) di browser."); 
     }
 }
 
