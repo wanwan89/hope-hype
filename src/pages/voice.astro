@@ -840,23 +840,22 @@ async function toggleMicSidebar(event) {
         return alert("Koneksi audio belum siap!");
     }
 
+    // Cek posisi panggung langsung dari UI (tanpa nunggu Database)
+    const myAvatarOnStage = document.querySelector(`.avatar[data-user-id="${MY_USER_ID}"]`);
+    if (!myAvatarOnStage) {
+        return alert("Kamu belum naik panggung! Naik dulu untuk memakai Mic.");
+    }
+
     try {
-        const { data: slotInfo } = await sb.from('room_slots')
-            .select('profile_id')
-            .eq('room_id', CURRENT_ROOM_ID)
-            .eq('profile_id', MY_USER_ID)
-            .single();
-
-        if (!slotInfo) {
-            return alert("Kamu belum naik panggung! Naik dulu untuk memakai Mic.");
-        }
-
+        // 1. LANGSUNG EKSEKUSI MIC (Biar izin klik browser tidak hangus)
         const isMicOn = room.localParticipant.isMicrophoneEnabled;
         const newStatus = !isMicOn;
-
         await room.localParticipant.setMicrophoneEnabled(newStatus);
+
+        // 2. SETELAH MIC NYALA, BARU UPDATE DATABASE
         await sb.from('profiles').update({ mic_off: !newStatus }).eq('id', MY_USER_ID);
 
+        // 3. UPDATE TAMPILAN SIDEBAR
         const micIcon = document.getElementById('mic-icon');
         const micText = document.getElementById('mic-text');
 
@@ -873,7 +872,7 @@ async function toggleMicSidebar(event) {
 
     } catch (err) { 
         console.error("LiveKit Mic Error:", err);
-        alert("Gagal! Pastikan kamu sudah memberikan Izin Mikrofon (Microphone Permission) di browser."); 
+        alert("Gagal mengakses mic! Cek Izin Mikrofon di Pengaturan Situs Chrome kamu."); 
     }
 }
 
@@ -951,14 +950,37 @@ async function mintaNaik() {
 
 async function naikKeStage(index) {
     if (!MY_USER_ID) return alert("Login dulu!");
+
     try {
+        // 1. NYALAKAN MIC DULU SAAT KLIK (Biar lolos sistem keamanan browser)
+        if (room && room.state === "connected") {
+            await room.localParticipant.setMicrophoneEnabled(true);
+        }
+
+        // 2. Cek apakah kursi kosong
         const { data: checkSlot } = await sb.from('room_slots').select('profile_id').match({ room_id: CURRENT_ROOM_ID, slot_index: index }).single();
-        if (checkSlot && checkSlot.profile_id !== null) return alert("Kursi sudah ada yang menempati!");
+        if (checkSlot && checkSlot.profile_id !== null) {
+            // Kalau penuh, matikan mic-nya lagi dan batal naik
+            await room.localParticipant.setMicrophoneEnabled(false);
+            return alert("Kursi sudah ada yang menempati!");
+        }
+        
+        // 3. Update Database (Ambil Kursi & Hapus Ikon Mute)
         await sb.from('room_slots').update({ profile_id: null }).eq('profile_id', MY_USER_ID);
-        await new Promise(r => setTimeout(r, 300));
         await sb.from('room_slots').update({ profile_id: MY_USER_ID }).match({ room_id: CURRENT_ROOM_ID, slot_index: index });
-        if (room && room.state === "connected") await room.localParticipant.setMicrophoneEnabled(true);
-    } catch (err) {}
+        await sb.from('profiles').update({ mic_off: false }).eq('id', MY_USER_ID);
+
+        // 4. Update Tampilan Sidebar
+        const micIcon = document.getElementById('mic-icon');
+        const micText = document.getElementById('mic-text');
+        if(micIcon) { micIcon.innerText = "mic"; micIcon.style.color = "#2ecc71"; }
+        if(micText) micText.innerText = "Matikan Mic";
+
+        fetchStage();
+    } catch (err) {
+        console.error("Gagal naik panggung:", err);
+        alert("Gagal naik! Pastikan HP kamu tidak memblokir akses mikrofon.");
+    }
 }
 
 function turunMic(index) {
@@ -968,10 +990,30 @@ function turunMic(index) {
 
 async function prosesTurunMic() {
     document.getElementById('confirm-modal').style.display = 'none';
-    await sb.from('room_slots').update({ profile_id: null }).eq('profile_id', MY_USER_ID);
-    if (room && room.localParticipant) await room.localParticipant.setMicrophoneEnabled(false);
-}
+    
+    try {
+        // 1. Kosongkan Kursi
+        await sb.from('room_slots').update({ profile_id: null }).eq('profile_id', MY_USER_ID);
+        
+        // 2. Matikan Mic
+        if (room && room.localParticipant) {
+            await room.localParticipant.setMicrophoneEnabled(false);
+        }
+        
+        // 3. Update Status Mute di DB
+        await sb.from('profiles').update({ mic_off: true }).eq('id', MY_USER_ID);
 
+        // 4. Reset Tampilan Sidebar
+        const micIcon = document.getElementById('mic-icon');
+        const micText = document.getElementById('mic-text');
+        if(micIcon) { micIcon.innerText = "mic_off"; micIcon.style.color = "#e74c3c"; }
+        if(micText) micText.innerText = "Hidupkan Mic";
+
+        fetchStage();
+    } catch (err) {
+        console.error("Gagal turun:", err);
+    }
+}
 async function kickUser(targetId, targetName) {
     if (!confirm(`Kick ${targetName}?`)) return;
     await sb.from('room_slots').update({ profile_id: null }).match({ room_id: CURRENT_ROOM_ID, profile_id: targetId });
