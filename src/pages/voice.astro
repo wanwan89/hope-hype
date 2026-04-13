@@ -366,14 +366,34 @@ fetchTopGifters();
 async function initLiveKit() {
     if (typeof LivekitClient === 'undefined') return console.error("SDK LiveKit Hilang!");
     try {
+        // --- 1. PASTIKAN ROOM ID ADA ---
+        const roomName = CURRENT_ROOM_ID || "main-room"; 
+
         const response = await fetch(`${supabaseUrl}/functions/v1/get-livekit-token`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` },
-            body: JSON.stringify({ username: myUsername, identity: MY_USER_ID })
+            headers: { 
+                'Content-Type': 'application/json', 
+                'apikey': supabaseKey, 
+                'Authorization': `Bearer ${supabaseKey}` 
+            },
+            // --- 2. KIRIM roomName KE SERVER ---
+            body: JSON.stringify({ 
+                username: myUsername, 
+                identity: MY_USER_ID,
+                roomName: roomName 
+            })
         });
+
         const data = await response.json();
+        
+        // Cek apakah server ngasih token atau malah error
+        if (!data.token) {
+            throw new Error("Server tidak memberikan Token. Cek Edge Function kamu!");
+        }
+
         room = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
         
+        // Listener untuk deteksi siapa yang lagi ngomong (Efek Sonar)
         room.on(LivekitClient.RoomEvent.ActiveSpeakersChanged, (speakers) => {
             document.querySelectorAll('.avatar').forEach(el => el.classList.remove('speaking'));
             speakers.forEach((s) => {
@@ -383,6 +403,7 @@ async function initLiveKit() {
             });
         });
 
+        // Listener supaya bisa denger suara orang lain
         room.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
             if (track.kind === "audio") {
                 const element = track.attach();
@@ -391,9 +412,17 @@ async function initLiveKit() {
             }
         });
 
+        // --- 3. HUBUNGKAN KE SERVER ---
         await room.connect(LIVEKIT_URL, data.token);
+        console.log("✅ Terhubung ke Room:", roomName);
+
+        // Standby mic mati dulu
         await room.localParticipant.setMicrophoneEnabled(false);
-    } catch (e) { console.error("LiveKit Error:", e.message); }
+
+    } catch (e) { 
+        console.error("❌ LiveKit Connection Error:", e.message);
+        // Kalau error di sini, biasanya karena Token kadaluarsa atau URL salah
+    }
 }
 
 // 4. LOGIKA PANGGUNG
