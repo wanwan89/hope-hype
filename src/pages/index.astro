@@ -1851,38 +1851,34 @@ body.dark {
 
 /* Update bagian ini di CSS kamu */
 
+/* --- Ganti blok Dark Mode lu pake ini biar rapi --- */
+
 body.dark .container {
   background: #2b3050;
   color: white;
-  /* Tambahkan ini agar bayangan tetap ada & ukuran tidak geser */
   box-shadow: 10px 10px 0px #00000020; 
 }
 
 body.dark .icon.profile {
-  /* Pastikan border tetap 2px meski di mode gelap */
   border: 2px solid #000; 
   background: #000; 
 }
 
 body.dark .recent-card {
   background: #3a3f63;
-  /* Samakan border & shadow dengan mode terang agar tidak 'nyusut' */
   border: 2px solid #000;
   box-shadow: 5px 5px 0px #00000030;
 }
 
 body.dark .search {
-  /* Tambahkan ini agar search bar tidak berubah ukurannya */
   border: 2px solid #000;
 }
 
 body.dark .switch {
-  /* Pastikan variabel warna berubah tapi ukuran box-shadow tetap 4px */
   --bg-color: #1e1e1e;
   --main-color: #fff;
 }
 
-/* Tambahkan ini untuk mengunci ukuran slider */
 body.dark .slider {
   box-shadow: 4px 4px var(--main-color);
   border: 2px solid var(--main-color);
@@ -1928,7 +1924,7 @@ body.dark .slider {
 .saweria-logo img {
   width: 48px;
   height: 48px;
-  background-image: url("asets/saweria.png"); /* Udah dibenerin */
+  background-image: url("/asets/saweria.png"); /* Udah dibenerin */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -1948,7 +1944,7 @@ body.dark .slider {
 .zodiac-logo {
   width: 48px;
   height: 48px;
-  background-image: url("asets/zodiac.png"); /* Udah dibenerin */
+  background-image: url("/asets/zodiac.png"); /* Udah dibenerin */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -2341,7 +2337,7 @@ header,
 /* ========================= */
 .job-card.full {
   position: relative;
-  background: url("asets/job1.png") center center / cover no-repeat !important;
+  background: url("/asets/job1.png") center center / cover no-repeat !important;
   color: white;
   overflow: hidden;
 }
@@ -2364,7 +2360,7 @@ header,
 /* ===================== */
 .karya-card {
   position: relative;
-  background: url("asets/job1.png") center/cover no-repeat !important;
+  background: url("/asets/job1.png") center/cover no-repeat !important;
   color: white;
   overflow: hidden;
 }
@@ -2374,7 +2370,7 @@ header,
 /* ===================== */
 .music-card {
   position: relative;
-  background: url("asets/job.png") center/cover no-repeat !important;
+  background: url("/asets/job.png") center/cover no-repeat !important;
   color: white;
   overflow: visible;
 }
