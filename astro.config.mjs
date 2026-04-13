@@ -2,7 +2,6 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import vercel from '@astrojs/vercel'; // <--- FIX: Hapus /serverless di sini
-
 // https://astro.build/config
 export default defineConfig({
   output: 'server', // 2. WAJIB: Ubah dari static ke server
