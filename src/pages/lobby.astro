@@ -77,15 +77,13 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script is:inline>
-    // Inisialisasi Supabase aman (try-catch)
     try {
         const supabaseUrl = 'https://hqetnqnvmdxdgfnnluew.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZXRucW52bWR4ZGdmbm5sdWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MzUyODIsImV4cCI6MjA4NzMxMTI4Mn0.Cr9lDBZMqfeONi1dfyFzHpBtawBzZTQLBEWKmPJVAOA';
         
-        // Simpan ke window biar bisa dibaca semua fungsi
         window.sb = window.supabase.createClient(supabaseUrl, supabaseKey);
     } catch (err) {
         console.error("Supabase gagal dimuat:", err);
@@ -94,7 +92,6 @@ import Layout from '../layouts/Layout.astro';
     let MY_USER_ID = null; 
     let kategoriAktif = 'Populer';
 
-    // Pengaman fungsi toast (kalau toast.js gagal load, pakai alert biasa)
     const showMsg = (title, msg, type) => {
         if (typeof toast === "function") toast(title, msg, type);
         else alert(title + " - " + msg);
@@ -149,7 +146,6 @@ import Layout from '../layouts/Layout.astro';
         btn.innerText = "SEDANG MEMBUAT...";
 
         try {
-            // Hapus room dan slot lama biar bersih dari error
             const { data: oldRooms } = await window.sb.from('rooms').select('id').eq('owner_id', MY_USER_ID);
             if (oldRooms && oldRooms.length > 0) {
                 const oldRoomIds = oldRooms.map(r => r.id);
@@ -157,7 +153,6 @@ import Layout from '../layouts/Layout.astro';
                 await window.sb.from('rooms').delete().in('id', oldRoomIds);
             }
 
-            // Insert Panggung Baru
             const { data: newRoom, error: roomError } = await window.sb.from('rooms').insert([{
                 name: name,
                 description: desc,
@@ -168,7 +163,6 @@ import Layout from '../layouts/Layout.astro';
 
             if (roomError) throw roomError;
 
-            // Bikin 6 Slot Kosong untuk mic
             const slots = Array.from({ length: 6 }, (_, i) => ({
                 room_id: newRoom.id,
                 slot_index: i,
@@ -216,7 +210,6 @@ import Layout from '../layouts/Layout.astro';
         if (!window.sb) return;
         const list = document.getElementById('room-list');
         
-        // Animasi Skeleton Shimmer
         list.innerHTML = `
             <div class="skeleton-card"><div class="skeleton skeleton-thumb"></div><div class="skeleton-info"><div class="skeleton skeleton-text skeleton-title"></div><div class="skeleton skeleton-text skeleton-desc" style="width: 70%"></div></div></div>
             <div class="skeleton-card"><div class="skeleton skeleton-thumb"></div><div class="skeleton-info"><div class="skeleton skeleton-text skeleton-title"></div><div class="skeleton skeleton-text skeleton-desc" style="width: 40%"></div></div></div>
@@ -264,7 +257,6 @@ import Layout from '../layouts/Layout.astro';
         });
     }
 
-    // Tunggu 0.5 detik biar library Supabase selesai ter-download baru jalanin script
     setTimeout(() => {
         loadUserProfile().then(() => loadRooms());
     }, 500); 
@@ -476,7 +468,6 @@ body {
 .btn-cancel { background: var(--bg-app); color: var(--text-muted); }
 .btn-confirm { background: var(--primary); color: white; }
 
-/* --- SKELETON LOADING ANIMATION --- */
 .skeleton-card { background: var(--bg-card); border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
 .skeleton-info { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 .skeleton {
