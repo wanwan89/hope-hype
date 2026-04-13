@@ -47,21 +47,11 @@ import Layout from '../layouts/Layout.astro';
           </div>
           <div class="skeleton skeleton-pill"></div>
         </div>
-        
         <div class="skeleton-card">
           <div class="skeleton skeleton-thumb"></div>
           <div class="skeleton-info">
             <div class="skeleton skeleton-text skeleton-title"></div>
             <div class="skeleton skeleton-text skeleton-desc" style="width: 50%;"></div>
-          </div>
-          <div class="skeleton skeleton-pill"></div>
-        </div>
-
-        <div class="skeleton-card">
-          <div class="skeleton skeleton-thumb"></div>
-          <div class="skeleton-info">
-            <div class="skeleton skeleton-text skeleton-title" style="width: 80%;"></div>
-            <div class="skeleton skeleton-text skeleton-desc"></div>
           </div>
           <div class="skeleton skeleton-pill"></div>
         </div>
@@ -103,17 +93,19 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </div>
 
-<script>
-// API Config
+<script is:inline>
 const supabaseUrl = 'https://hqetnqnvmdxdgfnnluew.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZXRucW52bWR4ZGdmbm5sdWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MzUyODIsImV4cCI6MjA4NzMxMTI4Mn0.Cr9lDBZMqfeONi1dfyFzHpBtawBzZTQLBEWKmPJVAOA';
-const sb = supabase.createClient(supabaseUrl, supabaseKey);
+const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let MY_USER_ID = null; 
 let kategoriAktif = 'Populer';
 
-// --- [PENTING] AGAR TOMBOL HTML BISA MANGGIL FUNGSI ---
-// Kita tempel fungsi ke 'window' supaya 'onclick' di HTML bisa jalan
+// 🔥 PENGAMAN TOAST: Kalau file toast.js gak ada, fallback ke alert biar JS gak mati
+const showMsg = (title, msg, type) => {
+    if (typeof toast === "function") toast(title, msg, type);
+    else alert(title + " - " + msg);
+};
 
 window.filterKategori = function(kategori, elemen) {
     kategoriAktif = kategori;
@@ -132,7 +124,7 @@ window.closeModal = function() {
 };
 
 window.handleStartSinging = async function() {
-    if (!MY_USER_ID) return toast("Waduh", "Login dulu Bree!", "warning");
+    if (!MY_USER_ID) return showMsg("Waduh", "Login dulu Bree!", "warning");
 
     const { data: existingRoom } = await sb.from('rooms')
         .select('id, name')
@@ -153,29 +145,26 @@ window.confirmCreateRoom = async function() {
     const categoryInput = document.getElementById('new-room-category');
     const btn = document.querySelector('.btn-confirm');
 
-    const name = nameInput.value;
-    const desc = descInput.value;
+    const name = nameInput.value.trim();
+    const desc = descInput.value.trim();
     const category = categoryInput.value;
 
-    if (!name) return toast("Waduh", "Kasih nama panggung dulu dong!", "warning");
-    if (!MY_USER_ID) return toast("Error", "Login dulu bree!", "error");
+    if (!name) return showMsg("Waduh", "Kasih nama panggung dulu dong!", "warning");
+    if (!MY_USER_ID) return showMsg("Error", "Sesi login hilang, coba refresh/login ulang.", "error");
 
     btn.disabled = true;
     btn.innerText = "SEDANG MEMBUAT...";
 
     try {
-        // 1. [FIX BIKIN ROOM] Hapus data lama biar gak Error Foreign Key
-        // Cari tau dulu ID room lama
+        // Hapus room & slot lama punya user ini biar bersih
         const { data: oldRooms } = await sb.from('rooms').select('id').eq('owner_id', MY_USER_ID);
-        
         if (oldRooms && oldRooms.length > 0) {
             const oldRoomIds = oldRooms.map(r => r.id);
-            // Hapus SLOT dulu baru ROOM (Wajib urut!)
             await sb.from('room_slots').delete().in('room_id', oldRoomIds);
             await sb.from('rooms').delete().in('id', oldRoomIds);
         }
 
-        // 2. Insert Room Baru
+        // Bikin Room Baru
         const { data: newRoom, error: roomError } = await sb.from('rooms').insert([{
             name: name,
             description: desc,
@@ -186,7 +175,7 @@ window.confirmCreateRoom = async function() {
 
         if (roomError) throw roomError;
 
-        // 3. Generate 6 Slots untuk Mic
+        // Generate 6 Slots buat Mic
         const slots = Array.from({ length: 6 }, (_, i) => ({
             room_id: newRoom.id,
             slot_index: i,
@@ -196,7 +185,7 @@ window.confirmCreateRoom = async function() {
         const { error: slotError } = await sb.from('room_slots').insert(slots);
         if (slotError) throw slotError;
 
-        toast("Berhasil", "Panggung lo udah siap!", "success");
+        showMsg("Berhasil", "Panggung lo udah siap!", "success");
         window.closeModal();
 
         setTimeout(() => {
@@ -204,14 +193,12 @@ window.confirmCreateRoom = async function() {
         }, 1000);
 
     } catch (e) {
-        console.error(e);
-        toast("Error", "Gagal bikin panggung nih.", "error");
+        console.error("Gagal bikin panggung:", e);
+        showMsg("Error", "Gagal bikin panggung nih.", "error");
         btn.disabled = false;
         btn.innerText = "BUAT SEKARANG";
     }
 };
-
-// --- LOGIKA INTERNAL LOBBY ---
 
 async function loadUserProfile() {
     const { data: { user } } = await sb.auth.getUser();
@@ -233,7 +220,24 @@ async function loadUserProfile() {
 
 async function loadRooms() {
     const list = document.getElementById('room-list');
-    list.innerHTML = `<div class="loader">Memanggil Panggung...</div>`;
+    
+    // Tampilkan Skeleton animasi pas loading pindah kategori
+    list.innerHTML = `
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-thumb"></div>
+          <div class="skeleton-info">
+            <div class="skeleton skeleton-text skeleton-title"></div>
+            <div class="skeleton skeleton-text skeleton-desc" style="width: 70%"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-thumb"></div>
+          <div class="skeleton-info">
+            <div class="skeleton skeleton-text skeleton-title"></div>
+            <div class="skeleton skeleton-text skeleton-desc" style="width: 40%"></div>
+          </div>
+        </div>
+    `;
     
     let query = sb.from('rooms').select('id, name, description').eq('is_active', true);
 
@@ -244,11 +248,15 @@ async function loadRooms() {
     }
 
     const { data: rooms, error } = await query;
-    if (error) return list.innerHTML = `<div class="loader">Gagal memuat.</div>`;
+    
+    if (error) {
+        return list.innerHTML = `<div style="text-align:center; padding: 20px; color: #ff4d4d;">Gagal memuat room.</div>`;
+    }
+
     list.innerHTML = "";
 
     if (!rooms || rooms.length === 0) {
-        list.innerHTML = `<div class="loader">Belum ada panggung ${kategoriAktif}.</div>`;
+        list.innerHTML = `<div style="text-align:center; padding: 40px 20px; color: #888; font-size: 13px;">Belum ada panggung di kategori ${kategoriAktif}.</div>`;
         return;
     }
 
@@ -274,7 +282,7 @@ async function loadRooms() {
             <div class="room-thumb"><span class="material-icons">graphic_eq</span></div>
             <div class="room-info">
                 <h4>${room.name.toUpperCase()}</h4>
-                <p>${room.description || 'Ayo nyanyi bareng!'}</p>
+                <p>${room.description || 'Ayo nyanyi bareng di panggung ini!'}</p>
             </div>
             <div class="room-status"><div class="online-pill">${onlineCount} Online</div></div>
         `;
@@ -282,23 +290,16 @@ async function loadRooms() {
     });
 }
 
-// Init
+// Inisialisasi awal
 loadUserProfile().then(() => loadRooms());
 </script>
-
-
 </Layout>
 
 <style is:global>
-/* ====================================================
-   HYPEVOICE LOBBY - FINAL CLEAN & MINIMALIST
-   (Sudah termasuk Profil Transparan & Koin Proporsional)
-   ==================================================== */
-
 :root {
-    --bg-app: #f4f7fc;       /* Abu-abu kebiruan sangat lembut */
+    --bg-app: #f4f7fc;
     --bg-card: #ffffff;      
-    --primary: #2563eb;      /* Biru modern (Tailwind Blue 600) */
+    --primary: #2563eb;
     --primary-light: #eff6ff; 
     --text-dark: #0f172a;    
     --text-muted: #64748b;   
@@ -315,12 +316,10 @@ loadUserProfile().then(() => loadRooms());
 
 body {
     background-color: var(--bg-app);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', sans-serif;
     color: var(--text-dark);
-    -webkit-font-smoothing: antialiased;
 }
 
-/* --- LAYOUT UTAMA --- */
 .lobby-container {
     padding-bottom: 100px; 
     max-width: 480px; 
@@ -328,7 +327,6 @@ body {
     min-height: 100vh;
 }
 
-/* --- HEADER & PROFIL (BORDERLESS & CLEAN) --- */
 .top-nav {
     display: flex;
     padding: 24px 24px 16px; 
@@ -338,54 +336,33 @@ body {
     z-index: 100;
 }
 
-/* --- HEADER & PROFIL (UKURAN LEBIH PAS) --- */
 .user-pill {
     display: flex;
     align-items: center;
-    gap: 10px; /* Jarak dirapatkan sedikit agar tidak renggang */
+    gap: 10px;
     cursor: pointer;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-    transition: opacity 0.2s;
 }
 
 .user-pill img {
-    width: 42px; /* Dikecilkan dari 52px */
+    width: 42px;
     height: 42px;
     border-radius: 50%;
     object-fit: cover;
     background: #ffffff;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
 }
 
 .user-meta #lobby-username {
-    font-size: 16px; /* Dikecilkan dari 19px */
+    font-size: 16px;
     font-weight: 800;
     color: var(--text-dark);
-    letter-spacing: -0.3px;
-    line-height: 1.2;
 }
 
 .coin-badge {
     display: flex;
     align-items: center;
-    gap: 4px; /* Jarak koin dan angka dirapatkan */
+    gap: 4px;
 }
 
-.coin-badge img {
-    width: 12px !important; /* Dikecilkan dari 15px */
-    height: 12px !important;
-}
-
-.coin-badge span {
-    font-size: 12px !important; /* Dikecilkan dari 14px */
-    font-weight: 700 !important;
-    color: var(--accent-coin) !important; 
-}
-
-/* --- HERO CARD (SOFT BLUE) --- */
 .hero-section {
     padding: 12px 24px;
 }
@@ -395,24 +372,11 @@ body {
     border-radius: 28px;
     padding: 32px 24px;
     color: white;
-    text-align: left;
     box-shadow: 0 12px 24px rgba(37, 99, 235, 0.15);
 }
 
-.hero-text h2 {
-    font-size: 24px;
-    font-weight: 800;
-    margin-bottom: 6px;
-    letter-spacing: -0.5px;
-}
-
-.hero-text p {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 24px;
-    line-height: 1.5;
-    max-width: 90%;
-}
+.hero-text h2 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+.hero-text p { font-size: 13px; color: rgba(255, 255, 255, 0.8); margin-bottom: 24px; line-height: 1.5; max-width: 90%; }
 
 .btn-primary-neon {
     background: white;
@@ -425,25 +389,11 @@ body {
     cursor: pointer;
     transition: transform 0.2s ease;
 }
+.btn-primary-neon:active { transform: scale(0.95); }
 
-.btn-primary-neon:active {
-    transform: scale(0.95);
-}
-
-/* --- TABS KATEGORI (GAYA iOS) --- */
-.room-section {
-    padding: 10px 24px 0;
-}
-
-.section-header {
-    margin-bottom: 20px;
-}
-
-.section-header h3 {
-    font-size: 18px;
-    font-weight: 800;
-    margin-bottom: 16px;
-}
+.room-section { padding: 10px 24px 0; }
+.section-header { margin-bottom: 20px; }
+.section-header h3 { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
 
 .tabs {
     background: #e2e8f0;
@@ -471,7 +421,6 @@ body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-/* --- ROOM CARDS (MINIMALIST) --- */
 .room-list-container {
     display: flex;
     flex-direction: column;
@@ -487,12 +436,9 @@ body {
     gap: 16px;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-    transition: background 0.2s;
 }
 
-.room-card:active {
-    background: var(--primary-light);
-}
+.room-card:active { background: var(--primary-light); }
 
 .room-thumb {
     width: 56px;
@@ -504,47 +450,14 @@ body {
     justify-content: center;
     flex-shrink: 0;
 }
+.room-thumb .material-icons { font-size: 28px; color: var(--primary); }
 
-.room-thumb .material-icons {
-    font-size: 28px;
-    color: var(--primary);
-}
+.room-info { flex: 1; min-width: 0; }
+.room-info h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.room-info p { font-size: 12px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-.room-info {
-    flex: 1;
-    min-width: 0;
-}
+.online-pill { background: #fff1f2; color: #e11d48; padding: 6px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; }
 
-.room-info h4 {
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 4px;
-    color: var(--text-dark);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.room-info p {
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.online-pill {
-    background: #fff1f2;
-    color: #e11d48;
-    padding: 6px 10px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-/* --- FLOATING BUTTON (SIMPLE) --- */
 .fab-create {
     position: fixed;
     bottom: 30px;
@@ -563,11 +476,6 @@ body {
     z-index: 99;
 }
 
-.fab-create .material-icons {
-    font-size: 32px;
-}
-
-/* --- MODAL (CLEAN) --- */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -579,124 +487,36 @@ body {
     backdrop-filter: blur(4px);
 }
 
-.modal-content {
-    background: white;
-    width: 85%;
-    max-width: 380px;
-    padding: 24px;
-    border-radius: 24px;
-}
-
+.modal-content { background: white; width: 85%; max-width: 380px; padding: 24px; border-radius: 24px; }
 .modal-content h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
 .modal-content p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
 
 .input-group { margin-bottom: 16px; }
 .input-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
-.input-group input, .input-group textarea, .custom-select {
-    width: 100%;
-    padding: 14px;
-    border-radius: 14px;
-    border: none;
-    background: var(--bg-app);
-    font-family: inherit;
-    font-size: 14px;
-}
-
+.input-group input, .input-group textarea, .custom-select { width: 100%; padding: 14px; border-radius: 14px; border: none; background: var(--bg-app); font-family: inherit; font-size: 14px; }
 .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
 .modal-actions button { flex: 1; padding: 14px; border-radius: 14px; font-weight: 700; border: none; cursor: pointer; }
 
 .btn-cancel { background: var(--bg-app); color: var(--text-muted); }
 .btn-confirm { background: var(--primary); color: white; }
 
-/* --- LOADER --- */
-.loader {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 600;
-}
-/* ====================================================
-   EFEK SKELETON LOADING (SHIMMER)
-   ==================================================== */
-
-/* Mengganti class .loader lama jika masih ada yang tersisa */
-.loader {
-    display: none; 
-}
-
-/* Struktur dasar kartu skeleton (mirip .room-card) */
-.skeleton-card {
-    background: var(--bg-card);
-    border-radius: 20px;
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-}
-
-.skeleton-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-/* INTI ANIMASI SHIMMER: 
-   Membuat latar abu-abu dasar dengan garis putih (gradient) di tengahnya,
-   lalu menggeser background tersebut dari kiri ke kanan.
-*/
+/* --- SKELETON LOADING ANIMATION --- */
+.skeleton-card { background: var(--bg-card); border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+.skeleton-info { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 .skeleton {
-    background: #e2e8f0; /* Warna dasar abu-abu terang */
-    background-image: linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0) 0,
-        rgba(255, 255, 255, 0.6) 50%,
-        rgba(255, 255, 255, 0) 100%
-    );
-    background-size: 200% 100%; /* Memperlebar area agar animasi mulus */
-    background-repeat: no-repeat;
+    background: #e2e8f0;
+    background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0) 100%);
+    background-size: 200% 100%;
     animation: shimmer 1.5s infinite linear;
 }
+.skeleton-thumb { width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0; }
+.skeleton-text { height: 12px; border-radius: 6px; }
+.skeleton-title { width: 70%; height: 16px; }
+.skeleton-desc { width: 90%; }
+.skeleton-pill { width: 60px; height: 24px; border-radius: 12px; flex-shrink: 0; }
 
-/* Mengatur bentuk masing-masing bagian kerangka */
-.skeleton-thumb {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    flex-shrink: 0;
-}
-
-.skeleton-text {
-    height: 12px;
-    border-radius: 6px;
-}
-
-.skeleton-title {
-    width: 70%;
-    height: 16px; /* Judul sedikit lebih tebal */
-}
-
-.skeleton-desc {
-    width: 90%;
-}
-
-.skeleton-pill {
-    width: 60px;
-    height: 24px;
-    border-radius: 12px;
-    flex-shrink: 0;
-}
-
-/* Keyframes untuk menggeser cahaya (gradient) dari ujung ke ujung */
 @keyframes shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-    100% {
-        background-position: 200% 0;
-    }
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
 }
-
 </style>
