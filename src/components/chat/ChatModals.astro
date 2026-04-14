@@ -1,0 +1,343 @@
+---
+// src/components/chat/ChatModals.astro
+---
+
+<div id="bio-modal" class="delete-overlay" style="display: none; align-items: center; justify-content: center;">
+  <div class="delete-menu" style="width: 90%; max-width: 350px; text-align: left; padding: 25px;">
+    <h2 style="margin: 0 0 10px 0; font-size: 18px; color: #3a7bd5; text-align: center;">Lengkapi Profilmu</h2>
+    <p style="font-size: 11px; color: #666; margin-bottom: 20px; text-align: center;">Data ini membantu kami mencari teman yang paling cocok untukmu.</p>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+      <div style="flex: 1;">
+        <label style="font-size: 11px; font-weight: 600;">Umur</label>
+        <input type="number" id="in-umur" placeholder="20" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" />
+      </div>
+      <div style="flex: 1;">
+        <label style="font-size: 11px; font-weight: 600;">Gender</label>
+        <select id="in-gender" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: white;">
+          <option value="Pria">Pria</option>
+          <option value="Wanita">Wanita</option>
+        </select>
+      </div>
+    </div>
+
+    <label style="font-size: 11px; font-weight: 600;">Zodiak</label>
+    <select id="in-zodiak" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: white; margin-bottom: 15px;">
+      <option value="Aries">Aries</option>
+      <option value="Taurus">Taurus</option>
+      <option value="Gemini">Gemini</option>
+      <option value="Cancer">Cancer</option>
+      <option value="Leo">Leo</option>
+      <option value="Virgo">Virgo</option>
+      <option value="Libra">Libra</option>
+      <option value="Scorpio">Scorpio</option>
+      <option value="Sagitarius">Sagitarius</option>
+      <option value="Capricorn">Capricorn</option>
+      <option value="Aquarius">Aquarius</option>
+      <option value="Pisces">Pisces</option>
+    </select>
+
+    <label style="font-size: 11px; font-weight: 600;">Hobi</label>
+    <input type="text" id="in-hobi" placeholder="Apa kegemaranmu?" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px;" />
+
+    <label style="font-size: 11px; font-weight: 600;">Pekerjaan / Kegiatan</label>
+    <input type="text" id="in-kerja" placeholder="Contoh: Mahasiswa" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px;" />
+
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-confirm" id="btn-save-bio" style="flex: 2;">Simpan & Cari</button>
+      <button type="button" class="btn-cancel" onclick="window.closeBioModal()" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: #ccc; color: #333; font-weight: 600; cursor: pointer;">
+        Batal
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="group-modal" class="delete-overlay" style="display: none; align-items: center; justify-content: center;">
+  <div class="delete-menu" style="width: 90%; max-width: 350px; padding: 25px; text-align: center;">
+    <h2 style="margin: 0 0 10px 0; font-size: 18px; color: #3a7bd5;">Buat Grup Baru</h2>
+
+    <div style="margin-bottom: 20px; position: relative; display: inline-block;">
+      <label for="group-photo-input" style="cursor: pointer;">
+        <img id="group-photo-preview" src="/asets/png/profile.png" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #3a7bd5; background: #eee;" />
+        <div style="position: absolute; bottom: 0; right: 0; background: #3a7bd5; color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-weight: bold; font-size: 14px;">+</div>
+      </label>
+      <input type="file" id="group-photo-input" accept="image/*" style="display: none;" />
+    </div>
+
+    <div style="text-align: left;">
+      <label style="font-size: 11px; font-weight: 600;">Nama Grup</label>
+      <input type="text" id="in-group-name" placeholder="Contoh: Gibah Squad" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; box-sizing: border-box;" />
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-confirm" id="btn-create-group" style="flex: 2;">Buat Sekarang</button>
+      <button onclick="document.getElementById('group-modal').style.display='none'" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: #ccc; color: #333; font-weight: 600; cursor: pointer;">Batal</button>
+    </div>
+  </div>
+</div>
+
+<div id="group-settings-modal" class="modal-overlay" style="display:none; z-index:99999; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+  <div class="modal-content" style="background:#fff; width:90%; max-width:350px; border-radius:15px; padding:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:15px;">
+      <h3 style="margin:0; font-size:16px; color:#333;">Pengaturan Grup</h3>
+      <span onclick="document.getElementById('group-settings-modal').style.display='none'" style="cursor:pointer; font-size:20px; color:#999;">&times;</span>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 20px;">
+      <label for="edit-group-photo-input" style="cursor: pointer; display: inline-block; position: relative;">
+        <img id="edit-group-photo-preview" src="/asets/png/profile.png" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #3a7bd5; background: #eee;" />
+        <div style="position: absolute; bottom: 0; right: 0; background: #3a7bd5; color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">+</div>
+      </label>
+      <input type="file" id="edit-group-photo-input" accept="image/*" style="display: none;" />
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <label style="font-size:11px; color:#888; font-weight:bold; display:block; margin-bottom:5px;">Nama Grup</label>
+      <input type="text" id="edit-group-name" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px; font-size:14px; box-sizing:border-box;" />
+      <button id="btn-save-group-info" onclick="window.updateGroupInfo()" style="width:100%; background:#0088cc; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">Simpan Perubahan</button>
+    </div>
+
+    <div>
+      <label style="font-size:11px; color:#888; font-weight:bold; display:block; margin-bottom:5px;">Daftar Anggota</label>
+      <div id="member-list-container" style="max-height:200px; overflow-y:auto; border:1px solid #eee; border-radius:8px; padding:5px 10px;"></div>
+    </div>
+
+    <button onclick="window.leaveGroup()" style="width:100%; background:#fff; color:#ff4757; border:1px solid #ff4757; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:20px;">Keluar dari Grup</button>
+  </div>
+</div>
+
+<div id="invite-modal" class="delete-overlay" style="display: none; align-items: center; justify-content: center;">
+  <div class="delete-menu" style="width: 90%; max-width: 350px; padding: 25px;">
+    <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #3a7bd5; text-align: center;">Undang ke Grup</h3>
+    <p style="font-size: 11px; color: #666; margin-bottom: 20px; text-align: center;">Masukkan ID Unik (tanpa #) atau Username temanmu.</p>
+
+    <input type="text" id="in-invite-search" placeholder="Contoh: 08179 atau MELL" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; box-sizing: border-box;" />
+
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-confirm" id="btn-invite-now" style="flex: 2;">Tambah Member</button>
+      <button onclick="document.getElementById('invite-modal').style.display='none'" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: #ccc; color: #333; font-weight: 600; cursor: pointer;">Batal</button>
+    </div>
+  </div>
+</div>
+
+<div id="delete-overlay" class="delete-overlay">
+  <div class="delete-menu">
+    <p>Hapus pesan ini?</p>
+    <div class="delete-menu-btns">
+      <button id="confirm-delete">Hapus</button>
+      <button class="btn-cancel" onclick="document.getElementById('delete-overlay').style.display='none'">Batal</button>
+    </div>
+  </div>
+</div>
+
+<div id="doi-card-modal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+  <div class="doi-card" style="background:#fff; width:100%; max-width:340px; border-radius:24px; overflow:hidden; position:relative;">
+    <div style="position:relative; height:320px; background:#222;">
+      <img id="doi-photo" src="" style="width:100%; height:100%; object-fit:cover;" />
+      <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(to top, rgba(0,0,0,0.9), transparent); padding:24px 20px; color:white;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <h2 id="doi-name-age" style="margin:0; font-size:24px; font-weight:700;">Nama, 20</h2>
+          <span id="doi-gender-icon" style="font-size:18px;"></span>
+        </div>
+        <p id="doi-zodiac" style="margin:4px 0 0 0; font-size:14px; opacity:0.8; letter-spacing:0.5px;"></p>
+      </div>
+    </div>
+
+    <div style="padding:20px; background:#fff;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;">
+        <div>
+          <small style="color:#aaa; text-transform:uppercase; font-size:10px; font-weight:700;">Pekerjaan</small>
+          <div id="doi-job" style="font-size:14px; color:#333; font-weight:600;">-</div>
+        </div>
+        <div>
+          <small style="color:#aaa; text-transform:uppercase; font-size:10px; font-weight:700;">Hobi</small>
+          <div id="doi-hobby" style="font-size:14px; color:#333; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">-</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <button onclick="window.tutupDoiCard()" class="btn-lewati" style="flex:1; padding:14px; border:none; border-radius:15px; background:#f5f5f5; color:#666; font-weight:700; cursor:pointer;">Skip</button>
+        <button id="btn-gas-chat" class="btn-action" style="flex:2; padding:14px; border:none; border-radius:15px; background:linear-gradient(45deg, #3a7bd5, #00d2ff); color:white; font-weight:700; cursor:pointer; box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3);">Chat Sekarang</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="reaction-menu" class="reaction-menu">
+  <span class="reaction-emoji" onclick="sendReaction('👍')">👍</span>
+  <span class="reaction-emoji" onclick="sendReaction('❤️')">❤️</span>
+  <span class="reaction-emoji" onclick="sendReaction('😂')">😂</span>
+  <span class="reaction-emoji" onclick="sendReaction('😮')">😮</span>
+  <span class="reaction-emoji" onclick="sendReaction('😢')">😢</span>
+  <span class="reaction-emoji" onclick="sendReaction('🙏')">🙏</span>
+</div>
+
+<div id="call-overlay" style="display:none; position:fixed; inset:0; background:rgba(18, 24, 34, 0.98); z-index:99999; flex-direction:column; align-items:center; justify-content:center; color:white; font-family: 'Poppins', sans-serif;">
+  <div class="call-animation" style="position:relative; margin-bottom:20px;">
+    <img id="call-avatar" src="/asets/png/profile.png" style="width:120px; height:120px; border-radius:50%; border:3px solid #3a7bd5; object-fit: cover;" />
+    <div class="sonar-wave" style="position:absolute; inset:0; border-radius:50%; background:#3a7bd5; opacity:0.3; z-index:-1; animation: sonar-effect 2s infinite;"></div>
+  </div>
+  <h2 id="call-name" style="margin:0; font-size:22px;">Username</h2>
+  <p id="call-status" style="margin:10px 0 30px 0; opacity:0.7; letter-spacing:1px;">MEMANGGIL...</p>
+
+  <div style="display:flex; gap:30px;">
+    <button id="btn-end-call" onclick="window.endCall()" style="background:#ff4757; color:white; border:none; width:65px; height:65px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" transform="rotate(135 12 12)" />
+      </svg>
+    </button>
+  </div>
+</div>
+
+<div id="incoming-call-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100000; flex-direction:column; align-items:center; justify-content:center; color:white; font-family: 'Poppins', sans-serif;">
+  <div class="call-animation" style="margin-bottom:20px;">
+    <img id="incoming-avatar" src="/asets/png/profile.png" style="width:120px; height:120px; border-radius:50%; border:3px solid #2ecc71; object-fit: cover;" />
+  </div>
+  <h2 id="incoming-name" style="margin:0;">Teman kamu</h2>
+  <p style="opacity:0.7; margin:10px 0 40px 0;">MENGHUBUNGI...</p>
+  
+  <div style="display:flex; gap:50px;">
+    <div onclick="window.rejectCall()" style="cursor:pointer; text-align:center;">
+      <div style="background:#ff4757; width:65px; height:65px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:10px; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" transform="rotate(135 12 12)"/></svg>
+      </div>
+      <span style="font-size:12px;">TOLAK</span>
+    </div>
+
+    <div onclick="window.answerCall()" style="cursor:pointer; text-align:center;">
+      <div style="background:#2ecc71; width:65px; height:65px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:10px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4); animation: pulse 1.5s infinite;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.24l-2.2 2.2c-2.83-1.44-5.14-3.76-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg>
+      </div>
+      <span style="font-size:12px;">ANGKAT</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* --- CSS Khusus Modals dan Animasi --- */
+  
+  .delete-overlay, .searching-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .delete-overlay {
+    background: rgba(0, 31, 63, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10005;
+    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .delete-menu {
+    background: #ffffff;
+    width: 100%;
+    max-width: 280px;
+    padding: 25px;
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(58, 123, 213, 0.2) !important; 
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .delete-menu p { font-size: 16px; font-weight: 700; color: #004466; margin: 0 0 20px 0; }
+  .delete-menu-btns { display: flex; gap: 12px; }
+
+  .delete-menu button {
+    flex: 1; padding: 12px; border: none; border-radius: 14px;
+    font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  }
+
+  #confirm-delete {
+    background: linear-gradient(135deg, #3a7bd5, #00d2ff) !important;
+    color: white;
+    box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3) !important;
+  }
+
+  #confirm-delete:active { transform: scale(0.95); filter: brightness(0.9); }
+  .btn-cancel { background: #eef2f5; color: #708090; }
+  .btn-cancel:active { transform: scale(0.95); background: #e1e8ed; }
+
+  /* Reaction Menu */
+  .reaction-menu {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 8px 12px;
+    border-radius: 30px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    display: none;
+    gap: 12px;
+    z-index: 10006;
+    border: 1px solid rgba(255,255,255,0.3);
+    animation: reactionPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: auto;
+  }
+  .reaction-emoji { font-size: 24px; cursor: pointer; transition: transform 0.2s; user-select: none; }
+  .reaction-emoji:hover { transform: scale(1.4) translateY(-5px); }
+
+  /* Call Animation */
+  .sonar-wave {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 50%; background: #3a7bd5; opacity: 0.3; z-index: -1;
+    animation: sonar-effect 2s infinite;
+  }
+
+  .anim-calling-avatar {
+    animation: radar-pulse 1.5s infinite cubic-bezier(0.66, 0, 0, 1);
+    border: 3px solid #00d2ff; border-radius: 50%;
+  }
+
+  .anim-calling-text {
+    animation: text-blink 1.5s infinite ease-in-out;
+    color: #00d2ff !important; font-weight: bold; letter-spacing: 2px;
+  }
+
+  /* Keyframes */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes reactionPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes sonar-effect { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(2.2); opacity: 0; } }
+  @keyframes text-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  
+  @keyframes radar-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(0, 210, 255, 0.7), 0 0 0 0 rgba(0, 210, 255, 0.4); transform: scale(0.95); }
+    50% { box-shadow: 0 0 0 15px rgba(0, 210, 255, 0), 0 0 0 30px rgba(0, 210, 255, 0.2); transform: scale(1); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 210, 255, 0), 0 0 0 45px rgba(0, 210, 255, 0); transform: scale(0.95); }
+  }
+
+  /* CSS untuk overlay "Mencari Doi" yang di-generate Javascript */
+  :global(.doi-search-overlay) {
+    position: fixed; inset: 0; background: rgba(15, 20, 30, 0.95);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 100000; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    animation: fadeInOverlay 0.3s ease-out; font-family: 'Poppins', sans-serif;
+  }
+  :global(.radar-container) { position: relative; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; margin-bottom: 30px; }
+  :global(.radar-wave) {
+    position: absolute; width: 100%; height: 100%; border-radius: 50%;
+    border: 2px solid #00d2ff; opacity: 0;
+    animation: rippleWave 2s cubic-bezier(0.21, 0.53, 0.56, 0.8) infinite;
+    box-shadow: 0 0 20px rgba(0, 210, 255, 0.5) inset;
+  }
+  :global(.radar-wave:nth-child(2)) { animation-delay: 0.6s; }
+  :global(.radar-wave:nth-child(3)) { animation-delay: 1.2s; }
+  :global(.search-title-glow) {
+    margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 2px;
+    background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: textPulse 1.5s infinite alternate;
+  }
+  :global(.search-subtitle-glow) { margin: 10px 0 0 0; font-size: 13px; color: #b2bec3; letter-spacing: 1px; }
+
+  @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rippleWave { 0% { transform: scale(0.2); opacity: 1; border-width: 4px; } 100% { transform: scale(2.5); opacity: 0; border-width: 0px; } }
+  @keyframes textPulse { 0% { opacity: 0.6; filter: drop-shadow(0 0 5px rgba(0, 210, 255, 0.3)); } 100% { opacity: 1; filter: drop-shadow(0 0 15px rgba(0, 210, 255, 0.8)); } }
+</style>

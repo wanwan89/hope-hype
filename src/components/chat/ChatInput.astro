@@ -1,0 +1,130 @@
+---
+// src/components/chat/ChatInput.astro
+---
+
+<div id="sticker-menu" style="display:none; flex-direction:column; padding:10px; background:#f9f9f9; border-top:1px solid #ccc; height: 300px;">
+  <div style="display:flex; gap:8px; margin-bottom:10px; padding: 5px;">
+    <input type="text" id="sticker-search-input" placeholder="Cari stiker lucu..." style="flex:1; padding:8px 12px; border-radius:20px; border:1px solid #ddd; outline:none; font-size:14px;" />
+    <button id="sticker-search-btn" style="background:#3a7bd5; color:white; border:none; border-radius:20px; padding:8px 15px; cursor:pointer; font-weight:600; font-size:12px;">Cari</button>
+  </div>
+  <div id="sticker-list" style="display:flex; flex-wrap:wrap; overflow-y:auto; flex:1; justify-content:center; gap:5px;"></div>
+</div>
+
+<div id="reply-preview-box" style="display:none; width:100%; position: relative;"></div>
+
+<div class="chat-input-container" style="display: flex; align-items: flex-end; gap: 10px; padding: 10px 15px; background: #ffffff; width: 100%; box-sizing: border-box; border-top: 1px solid #eaeaea;">
+  <div class="input-group-wrapper" style="flex: 1; display: flex; align-items: center; background: #f4f5f7; border-radius: 30px; padding: 4px 16px; position: relative; min-height: 48px; box-sizing: border-box; border: 1px solid #e0e0e0;">
+    
+    <button id="sticker-btn" style="background: none; border: none; cursor: pointer; padding: 0; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; outline: none;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+        <line x1="9" y1="9" x2="9.01" y2="9"></line>
+        <line x1="15" y1="9" x2="15.01" y2="9"></line>
+      </svg>
+    </button>
+
+    <textarea id="chat-input" placeholder="Tulis pesan..." rows="1" style="flex: 1; border: none; outline: none; background: transparent !important; resize: none; max-height: 100px; padding: 12px 0; font-family: 'Poppins', sans-serif; font-size: 14px; color: #333; line-height: 1.4; -webkit-appearance: none; box-shadow: none;"></textarea>
+
+    <div id="vn-overlay" style="display: none; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: #f4f5f7; border-radius: 30px; align-items: center; padding: 0 16px; box-sizing: border-box; z-index: 10;">
+      <div style="display: flex; align-items: center; width: 100%; gap: 12px;">
+        <div style="width: 10px; height: 10px; background: #ff4757; border-radius: 50%; animation: pulse 1s infinite;"></div>
+        <span id="vn-timer" style="font-weight: 600; font-size: 14px; color: #333;">00:00</span>
+        <span style="color: #888; font-size: 12px; margin-left: auto; font-style: italic;">&laquo; Geser batal</span>
+      </div>
+    </div>
+  </div>
+
+  <button id="action-btn" style="width: 48px; height: 48px; border-radius: 50%; background: #3a7bd5; border: none; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3); outline: none;">
+    <div class="icon-stack" style="display: flex; align-items: center; justify-content: center;">
+      <span class="svg-send" style="position: absolute; display: flex;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>
+      <span class="svg-mic" style="position: absolute; display: none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <rect x="9" y="2" width="6" height="11" rx="3" fill="white" />
+          <path d="M5 10V11C5 14.866 8.13401 18 12 18C15.866 18 19 14.866 19 11V10" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+          <line x1="12" y1="18" x2="12" y2="22" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+        </svg>
+      </span>
+    </div>
+  </button>
+</div>
+
+<style>
+  /* --- CSS Khusus Input, Stiker, dan VN --- */
+  #sticker-menu {
+    display: none;
+    flex-wrap: wrap;
+    padding: 8px;
+    background: #f9f9f9;
+    border-top: 1px solid #ccc;
+    height: 250px;
+    overflow-y: auto;
+    justify-content: center;
+  }
+
+  #reply-preview-box {
+    display: none;
+    position: relative;
+    width: 100%;
+    background: #f0f0f0;
+    border-left: 4px solid #3a7bd5 !important;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    z-index: 10;
+  }
+
+  .reply-content-wrapper { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .reply-title { font-size: 11px; color: #3a7bd5 !important; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .reply-text-preview { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .close-reply-btn { font-size: 24px; color: #ff4757; font-weight: bold; cursor: pointer; flex-shrink: 0; padding: 0 5px; line-height: 1; }
+
+  #action-btn {
+    width: 48px;
+    height: 48px;
+    background-color: #3a7bd5 !important;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+  #action-btn:active {
+    top: 0px;
+    box-shadow: 0 2px 0 #2D5DA3, 0 3px 6px rgba(0,0,0,0.2);
+  }
+
+  .icon-stack { position: relative; width: 24px; height: 24px; }
+  .svg-send, .svg-mic { position: absolute; inset: 0; transition: all 0.3s ease; }
+  .svg-mic { opacity: 0; transform: scale(0.5) rotate(-45deg); }
+
+  #action-btn.is-recording { background-color: #ff4757; transform: scale(1.1); }
+  #action-btn.is-recording .svg-send { opacity: 0; transform: scale(0) rotate(45deg); }
+  #action-btn.is-recording .svg-mic { opacity: 1; transform: scale(1) rotate(0); }
+
+  #vn-overlay { position: absolute; inset: 0; background: #fff; display: none; align-items: center; padding: 0 15px; border-radius: 24px; z-index: 10; }
+
+  .vn-custom-player { display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.05); padding: 8px 12px; border-radius: 20px; min-width: 190px; margin: 5px 0; box-sizing: border-box; }
+  .vn-play-btn { width: 32px !important; height: 32px !important; border-radius: 50% !important; border: none !important; background: #00d2ff !important; color: white !important; display: flex !important; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; padding: 0; }
+  .vn-play-btn svg { width: 18px; height: 18px; fill: white; }
+
+  .vn-waveform { display: flex; align-items: center; gap: 3px; height: 20px; flex-grow: 1; }
+  .vn-waveform .bar { width: 3px; height: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 2px; display: inline-block; }
+  .vn-waveform .bar:nth-child(odd) { height: 18px; }
+  .vn-waveform .bar:nth-child(3n) { height: 8px; }
+  .vn-time { font-size: 10px; font-weight: 600; color: #666; white-space: nowrap; margin-left: 5px; }
+
+  .playing .bar { animation: waveAnim 0.6s infinite alternate; background: #00d2ff; }
+
+  @keyframes waveAnim { from { transform: scaleY(0.8); } to { transform: scaleY(1.4); } }
+</style>
