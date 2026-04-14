@@ -84,3 +84,15 @@ body.dark .container { background: #2b3050; color: white; box-shadow: 10px 10px 
 .social-icon:hover {
   transform: scale(1.1); /* Efek membesar dikit kalau disentuh */
 }
+/* ========================================= */
+/* 7. CSS UNTUK CONTACT US & SOSIAL MEDIA    */
+/* ========================================= */
+.contact-wrapper { position: fixed; bottom: 20px; left: 20px; z-index: 999; display: flex; align-items: center; gap: 12px; }
+.contact-text { background-color: #ffffff; color: #007BFF; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; user-select: none; -webkit-user-select: none; }
+body.dark .contact-text { background-color: #2b3050; color: #ffffff; } /* Biar nyambung kalau mode dark */
+.contact-text:active { transform: scale(0.95); }
+.social-icons-container { display: flex; flex-direction: row; gap: 10px; opacity: 0; transform: translateX(-20px); pointer-events: none; transition: all 0.4s ease-out; }
+#contact-toggle:checked ~ .social-icons-container { opacity: 1; transform: translateX(0); pointer-events: auto; }
+#contact-toggle:checked ~ .contact-text { background-color: #007BFF; color: #ffffff; }
+.social-icon { width: 24px; height: 24px; object-fit: contain; filter: drop-shadow(1px 2px 4px rgba(0, 0, 0, 0.3)); transition: transform 0.2s ease-in-out; display: inline-block; }
+.social-icon:hover { transform: scale(1.2); }
