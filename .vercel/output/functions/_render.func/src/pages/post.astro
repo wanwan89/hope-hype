@@ -1,0 +1,3023 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Creator Gallery - Hope POST">
+  <script is:inline src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-logo">Menu</h2>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-category="all">All</a>
+      <a href="#" class="nav-item" data-category="karya">Karya</a>
+      <a href="#" class="nav-item" data-category="prestasi">Prestasi</a>
+      <a href="#" class="nav-item" data-category="photography">Photography</a>
+      <a href="#" class="nav-item" data-category="mountain">Mountain</a>
+
+      <hr class="nav-divider" />
+
+      <button type="button" class="sidebar-post-btn" id="openPostModalBtn">+ Post Karya</button>
+    </nav>
+  </div>
+
+  <div class="search-wrapper">
+    <div class="menu-toggle" id="mobileMenuBtn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
+    <div class="brutal-input-container">
+      <input
+        type="text"
+        id="searchCreator"
+        placeholder="Cari kreator..."
+        class="brutal-input"
+        required
+      />
+    </div>
+  </div>
+
+  <div class="gallery" id="mainGallery">
+    <div class="loading-state" style="color: white; text-align: center; grid-column: 1/-1; padding: 50px;">
+      <p>Memuat karya terbaru...</p>
+    </div>
+  </div>
+
+  <div id="notif"></div>
+
+  <div id="commentModal">
+    <div class="comment-box">
+      <div class="comment-header">
+        Komentar
+        <button class="comment-close">×</button>
+      </div>
+      <div class="comment-list"></div>
+      <div class="comment-input-wrap">
+        <input type="text" class="comment-input" placeholder="Tulis komentar..." />
+      </div>
+    </div>
+  </div>
+
+  <div id="loginPopup" class="popup-overlay">
+    <div class="popup-content">
+      <span class="close-login">X</span>
+      <h2 style="text-align: center; margin-bottom: 20px;">LOGIN DULU BRO</h2>
+
+      <form class="form">
+        <div class="flex-column"><label>Email</label></div>
+        <div class="inputForm">
+          <svg height="20" viewBox="0 0 32 32" width="20">
+            <path d="m30.853 13.87a15 15 0 0 0 -29.729 4.082 15.1 15.1 0 0 0 12.876 12.918 15.6 15.6 0 0 0 2.016.13 14.85 14.85 0 0 0 7.715-2.145 1 1 0 1 0 -1.031-1.711 13.007 13.007 0 1 1 5.458-6.529 2.149 2.149 0 0 1 -4.158-.759v-10.856a1 1 0 0 0 -2 0v1.726a8 8 0 1 0 .2 10.325 4.135 4.135 0 0 0 7.83.274 15.2 15.2 0 0 0 .823-7.455zm-14.853 8.13a6 6 0 1 1 6-6 6.006 6.006 0 0 1 -6 6z"></path>
+          </svg>
+          <input type="email" class="input" placeholder="Enter your Email" required />
+        </div>
+
+        <div class="flex-column"><label>Password</label></div>
+        <div class="inputForm">
+          <svg height="20" viewBox="0 0 24 24" width="20">
+            <path d="M12.1 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 9.24 3 10.91 3.81 12 5.09 13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 22 12.28 18.6 15.36 13.55 20.04z"/>
+          </svg>
+          <input type="password" class="input" placeholder="Enter your Password" required />
+        </div>
+
+        <button class="button-submit" type="submit">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="postModal" class="post-modal">
+    <div class="post-modal-content">
+      <button class="post-close-btn" id="closePostModalBtn">×</button>
+
+      <h2 class="post-modal-title">Upload Post</h2>
+      <p class="post-modal-subtitle">Karya kamu akan dikirim untuk direview dulu ya</p>
+
+      <form id="postForm" class="post-form">
+        <div class="post-upload-area" id="postUploadArea">
+          <input type="file" id="postImageInput" accept="image/*" hidden />
+          
+          <div class="post-upload-placeholder" id="postUploadPlaceholder">
+            <span class="post-upload-text">Pilih foto karya</span>
+            <small>JPG, PNG, WEBP • Max 5MB</small>
+          </div>
+
+          <img id="postPreviewImage" class="post-preview-image" style="display:none;" alt="Preview karya" />
+        </div>
+
+        <textarea
+          id="postCaption"
+          class="post-textarea"
+          placeholder="Tulis caption...."
+          maxlength="300"
+        ></textarea>
+
+        <div class="category-dropdown" id="categoryDropdown">
+          <div class="select-trigger">
+            <span id="selectedCategoryText">Pilih kategori</span>
+            <i class="arrow-icon">▼</i>
+          </div>
+          
+          <div class="options-container">
+            <div class="option-item" data-value="Karya">Karya</div>
+            <div class="option-item" data-value="Prestasi">Prestasi</div>
+            <div class="option-item" data-value="Photography">Photography</div>
+            <div class="option-item" data-value="Mountain">Mountain</div>
+          </div>
+          
+          <input type="hidden" id="postCategory" name="category" />
+        </div>
+
+        <button type="submit" id="submitPostBtn" class="post-submit-btn">
+          Kirim ke Review
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div id="giftSheet" class="gift-sheet">
+    <div class="gift-sheet-overlay" onclick="closeGiftSheet()"></div>
+    
+    <div class="gift-sheet-content">
+      <div class="sheet-handle"></div>
+
+      <div class="gift-header">
+        <span>Kirim hadiah untuk mendukung kreator</span>
+        <span class="gift-close-x" onclick="closeGiftSheet()">&times;</span>
+      </div>
+
+      <div class="gift-grid">
+        <div class="gift-item" data-amount="10" onclick="selectGift(this, 10, '/asets/png/gift1.png')">
+          <div class="gift-img-container">
+            <img src="/asets/png/gift1.png" class="img-gift" alt="Gift 1" />
+          </div>
+          <span class="gift-name">troi</span>
+          <span class="gift-price">
+            <img src="/asets/svg/koin.svg" class="img-coin-inline" /> 10
+          </span>
+        </div>
+
+        <div class="gift-item" data-amount="20" onclick="selectGift(this, 20, '/asets/png/gift2.png')">
+          <div class="gift-img-container">
+            <img src="/asets/png/gift2.png" class="img-gift" alt="Gift 2" />
+          </div>
+          <span class="gift-name">fox</span>
+          <span class="gift-price">
+            <img src="/asets/svg/koin.svg" class="img-coin-inline" /> 20
+          </span>
+        </div>
+
+        <div class="gift-item" data-amount="20" onclick="selectGift(this, 20, '/asets/png/gift3.png')">
+          <div class="gift-img-container">
+            <img src="/asets/png/gift3.png" class="img-gift" alt="Gift 3" />
+          </div>
+          <span class="gift-name">panda</span>
+          <span class="gift-price">
+            <img src="/asets/svg/koin.svg" class="img-coin-inline" /> 20
+          </span>
+        </div>
+
+        <div class="gift-item" data-amount="25" onclick="selectGift(this, 25, '/asets/png/gift4.png')">
+          <div class="gift-img-container">
+            <img src="/asets/png/gift4.png" class="img-gift" alt="Gift 4" />
+          </div>
+          <span class="gift-name">Rabbit</span>
+          <span class="gift-price">
+            <img src="/asets/svg/koin.svg" class="img-coin-inline" /> 25
+          </span>
+        </div>
+
+        <div class="gift-item" data-amount="100" onclick="selectGift(this, 100, '/asets/png/gift5.png')">
+          <div class="gift-img-container">
+            <img src="/asets/png/gift5.png" class="img-gift" alt="Gift 5" />
+          </div>
+          <span class="gift-name">Catglow</span>
+          <span class="gift-price">
+            <img src="/asets/svg/koin.svg" class="img-coin-inline" /> 100
+          </span>
+        </div>
+      </div>
+      
+      <div class="gift-footer">
+        <div class="user-coins-info">
+          <img src="/asets/svg/koin.svg" class="img-coin-footer" />
+          <span id="giftUserCoins">0</span>
+          <span style="color: rgba(255,255,255,0.3); margin-left: 5px;">&rsaquo;</span>
+        </div>
+        <button id="sendGiftBtn" class="btn-send-gift" disabled onclick="processGiftTransaction()">
+          Kirim
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bigImageContainer" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 99999; pointer-events: auto;">
+    <div id="bigImageOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 1;" onclick="closeBigImage()"></div>
+    <img id="bigImage" src="" style="max-width: 90vw; max-height: 90vh; position: relative; z-index: 2; border-radius: 15px; box-shadow: 0 0 20px #000;" />
+  </div>
+
+  <div id="giftAnimationContainer" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99999;"></div>
+
+  <script>
+// Ganti namanya biar gak bentrok sama library (Recursion Fix)
+function showNotif(msg, type = "info") {
+  console.log(`[Notif]: ${msg} (${type})`);
+  if (typeof window.toast === "function" && window.toast !== showNotif) {
+    const title = type === "success" ? "Berhasil" : type === "error" ? "Gagal" : "Info";
+    try {
+      window.toast(title, msg, type);
+      return;
+    } catch (e) {
+      console.warn("Gagal panggil library toast, pakai fallback alert.");
+    }
+  }
+  alert(`${type.toUpperCase()}: ${msg}`);
+}
+
+console.log("JS CONNECTED - EGRESS OPTIMIZED 🔥");
+const CLOUDINARY_CLOUD_NAME = "dhhmkb8kl";
+const CLOUDINARY_UPLOAD_PRESET = "post_hope";
+
+// =======================
+// SUPABASE INIT
+// =======================
+const SUPABASE_URL = "https://hqetnqnvmdxdgfnnluew.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZXRucW52bWR4ZGdmbm5sdWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MzUyODIsImV4cCI6MjA4NzMxMTI4Mn0.Cr9lDBZMqfeONi1dfyFzHpBtawBzZTQLBEWKmPJVAOA"; 
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let currentPostId = null;
+let currentPostCreator = null; 
+let replyTo = null;
+let replyToUsername = null;
+let giftState = { postId: null, creatorId: null, creatorName: "", userCoins: 0, selectedAmount: 0 };
+
+// =======================
+// CACHE HELPER (OPTIMIZED)
+// =======================
+async function getMyProfile(userId) {
+  const cacheKey = `hh_profile_${userId}`;
+  const cached = sessionStorage.getItem(cacheKey);
+  if (cached) return JSON.parse(cached);
+  
+  // FIX: Hanya ambil kolom yang ditampilkan
+  const { data } = await supabaseClient.from("profiles")
+    .select("username, role, coins, avatar_url")
+    .eq("id", userId)
+    .single();
+    
+  if (data) sessionStorage.setItem(cacheKey, JSON.stringify(data));
+  return data;
+}
+
+// [FUNGSI BARU DITAMBAHKAN] - Panggil ini saat tombol Ganti Foto Profil diklik!
+async function updateProfileAvatar(file) {
+  if (!file) return;
+  showNotif("Sedang mengunggah foto profil...", "info");
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return openLogin();
+
+    // 1. Upload ke Cloudinary biar IRIT
+    const cData = await uploadImageToCloudinary(file);
+    const linkIrit = cData.secure_url;
+
+    // 2. Simpan link-nya aja ke Supabase
+    const { error } = await supabaseClient
+      .from("profiles")
+      .update({ avatar_url: linkIrit })
+      .eq("id", session.user.id);
+
+    if (error) throw error;
+
+    sessionStorage.removeItem(`hh_profile_${session.user.id}`);
+    showNotif("Foto profil diperbarui!", "success");
+    setTimeout(() => location.reload(), 1000);
+  } catch (err) {
+    showNotif("Gagal update profil: " + err.message, "error");
+  }
+}
+
+// =======================
+// CREATE NOTIFICATION
+// =======================
+async function createNotification({ user_id, actor_id, post_id, type, message }) {
+  try {
+    const finalActorId = actor_id; 
+    let finalTargetUserId = user_id;
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(finalTargetUserId)) return;
+    if (finalTargetUserId === finalActorId) return;
+
+    await supabaseClient.from("notifications").insert({
+      user_id: finalTargetUserId,
+      actor_id: finalActorId,
+      post_id: parseInt(post_id),
+      type: type,
+      message: message,
+      is_read: false,
+    });
+  } catch (err) {
+    console.error("❌ Error System Notif:", err.message);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const startApp = async () => {
+    try {
+      await getUser();
+      await fetchPosts("all");
+    } catch (err) {
+      fetchPosts("all");
+    }
+
+    const safeInit = (name, fn) => {
+      try { if (typeof fn === "function") fn(); } catch (e) {}
+    };
+
+    safeInit("Search", initSearch);
+    safeInit("ReplyClick", initReplyClick);
+    safeInit("Auth", initAuth);
+    safeInit("Realtime", initRealtime);
+    safeInit("CloseButtons", initCloseButtons);
+    safeInit("PostModal", initPostModal);
+    if (typeof initGiftSheet === "function") safeInit("GiftSheet", initGiftSheet);
+  };
+
+  startApp();
+
+  const navItems = document.querySelectorAll(".nav-item");
+  const sidebar = document.querySelector(".sidebar");
+  const menuBtn = document.getElementById("mobileMenuBtn");
+
+  navItems.forEach((item) => {
+    item.addEventListener("click", (e) => {
+      if (item.id === "adminPanelBtn") return;
+      e.preventDefault();
+      navItems.forEach((n) => n.classList.remove("active"));
+      item.classList.add("active");
+      fetchPosts(item.getAttribute("data-category"));
+      if (sidebar) sidebar.classList.remove("active");
+    });
+  });
+
+  if (menuBtn && sidebar) {
+    menuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle("active");
+    });
+    document.addEventListener("click", (e) => {
+      if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+        sidebar.classList.remove("active");
+      }
+    });
+  }
+});
+
+// Taruh variabel ini di paling atas file JS kamu (di luar fungsi)
+let isFetchingPosts = false;
+
+async function fetchPosts(category = "all") {
+  // [ANTI-SPAM] Cegah pemanggilan ganda
+  if (isFetchingPosts) return;
+  isFetchingPosts = true;
+
+  const gallery = document.getElementById("mainGallery");
+  if (!gallery) { isFetchingPosts = false; return; }
+
+  // Tampilkan loading skeleton
+  gallery.innerHTML = `<div class="skeleton-wrapper" style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%;">${Array(6).fill(0).map(() => `<div class="skeleton-card"><div class="skeleton-shimmer"></div></div>`).join("")}</div>`;
+
+  try {
+    // Pastikan 'bio' tetap ada di select
+    let query = supabaseClient
+      .from("posts")
+      .select(`
+        id, 
+        image_url, 
+        bio,
+        created_at, 
+        creator_id, 
+        profiles (username, role, avatar_url)
+      `) 
+      .eq("status", "approved")
+      .limit(10); 
+
+    if (category && category !== "all") {
+      query = query.ilike("category", `%${category.trim()}%`);
+    }
+
+    const { data: posts, error } = await query.order("created_at", { ascending: false });
+    if (error) throw error;
+
+    gallery.innerHTML = "";
+
+    if (!posts || posts.length === 0) {
+      gallery.innerHTML = '<p style="color:gray; text-align:center; grid-column:1/-1; padding:50px;">Tidak ada postingan.</p>';
+      isFetchingPosts = false;
+      return;
+    }
+
+    const postIds = posts.map(p => p.id);
+
+    const [likesRes, commentsRes] = await Promise.all([
+      supabaseClient.from("likes").select("post_id").in("post_id", postIds),
+      supabaseClient.from("comments").select("post_id").in("post_id", postIds)
+    ]);
+
+    const likeCounts = {};
+    const commentCounts = {};
+    postIds.forEach(id => { likeCounts[id] = 0; commentCounts[id] = 0; });
+    
+    if (likesRes.data) likesRes.data.forEach(l => { if(likeCounts[l.post_id] !== undefined) likeCounts[l.post_id]++; });
+    if (commentsRes.data) commentsRes.data.forEach(c => { if(commentCounts[c.post_id] !== undefined) commentCounts[c.post_id]++; });
+
+    // --- RENDER ---
+    posts.forEach((post) => {
+      const card = document.createElement("div");
+      card.className = "card post-fade-in";
+      
+      const userRole = (post.profiles?.role || "user").toLowerCase().trim();
+      const badge = getUserBadge(userRole);
+      
+      const dateObj = new Date(post.created_at);
+      const formattedDate = dateObj.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+
+      // POSISI DIUBAH: Name -> Bio -> Date -> Actions
+      card.innerHTML = `
+        <div class="slider">
+          <img src="${post.image_url || "/asets/png/karya.png"}" class="active" loading="lazy">
+          <div class="watermark-overlay"><img src="/asets/svg/watermark.svg"></div>
+        </div>
+        <div class="overlay">
+          <h2 class="name" onclick="window.location.href='/data?id=${post.creator_id}'" style="cursor:pointer; display:flex; align-items:center; margin-bottom: 6px;">
+            ${post.profiles?.username || "User"} ${badge} 
+          </h2>
+
+          <p class="post-bio" style="font-size: 13px; color: #eee; margin-bottom: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 400;">
+            ${post.bio || ""}
+          </p>
+
+          <div class="post-date-wrapper" style="margin-bottom: 12px;">
+            <span style="font-size: 10px; color: rgba(255,255,255,0.5);">Diunggah ${formattedDate}</span>
+          </div>
+
+          <div class="actions">
+            <a href="/data?id=${post.creator_id}" class="primary">Detail</a>
+            <div class="engagement-group">
+               <button class="icon-btn gift-btn" data-post="${post.id}" data-creator="${post.creator_id}" data-name="${post.profiles?.username}"><svg viewBox="0 0 24 24" class="icon"><path d="M20 7h-2.18A3 3 0 0 0 12 3a3 3 0 0 0-5.82 4H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1Zm-8-2a1 1 0 0 1 1 1v1h-2V6a1 1 0 0 1 1-1Zm-4 1a1 1 0 0 1 2 0v1H8a1 1 0 0 1 0-2Zm9 13h-4v-7h4Zm-6 0H7v-7h4Zm8-9H5V9h14Z"/></svg></button>
+               <button class="icon-btn like-btn" data-post="${post.id}" data-creator="${post.creator_id}"><svg viewBox="0 0 24 24" class="icon heart"><path d="M12.1 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 9.24 3 10.91 3.81 12 5.09 13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 22 12.28 18.6 15.36 13.55 20.04z"/></svg><span class="like-count">${likeCounts[post.id]}</span></button>
+               <button class="icon-btn comment-toggle" data-post="${post.id}" data-creator="${post.creator_id}"><svg viewBox="0 0 24 24" class="icon"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg><span class="comment-count">${commentCounts[post.id]}</span></button>
+            </div>
+          </div>
+        </div>`;
+      gallery.appendChild(card);
+    });
+
+    initGiftButtons(); initLikeButtons(); initComments(); loadLikes(); 
+  } catch (err) {
+    console.error(err);
+  } finally {
+    isFetchingPosts = false;
+  }
+}
+
+// =======================
+// GIFT SYSTEM
+// =======================
+function initGiftButtons() {
+  document.querySelectorAll(".gift-btn").forEach((btn) => {
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    newBtn.addEventListener("click", async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { openLogin(); return; }
+
+      const postId = newBtn.dataset.post;
+      const creatorId = newBtn.dataset.creator;
+      if (session.user.id === creatorId) { showNotif("Gak bisa gift diri sendiri", "warning"); return; }
+
+      const prof = await getMyProfile(session.user.id);
+      openGiftSheet({ postId, creatorId, creatorName: newBtn.dataset.name, userCoins: prof?.coins || 0 });
+    });
+  });
+}
+
+function openGiftSheet({ postId, creatorId, creatorName, userCoins }) {
+  const sheet = document.getElementById("giftSheet");
+  if (!sheet) return;
+  giftState = { postId, creatorId, creatorName, userCoins, selectedAmount: 0 };
+  document.getElementById("giftUserCoins").textContent = userCoins;
+  const sendBtn = document.getElementById("sendGiftBtn");
+  sendBtn.disabled = true; sendBtn.textContent = "Kirim";
+  document.querySelectorAll(".gift-item").forEach((i) => i.classList.remove("active"));
+  sheet.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+let selectedGiftImage = null;
+function selectGift(element, amount, imageName) {
+  document.querySelectorAll(".gift-item").forEach((item) => item.classList.remove("selected-gift"));
+  element.classList.add("selected-gift");
+  selectedGiftImage = imageName;
+  giftState.selectedAmount = amount;
+  const sendBtn = document.getElementById("sendGiftBtn");
+  sendBtn.disabled = false; sendBtn.textContent = `Kirim (${amount} Koin)`;
+}
+
+async function processGiftTransaction() {
+  const amount = giftState.selectedAmount;
+  const sendBtn = document.getElementById("sendGiftBtn");
+  if (!selectedGiftImage || amount <= 0) return;
+  if (amount > giftState.userCoins) { showNotif("Koin tidak cukup", "error"); return; }
+  sendBtn.disabled = true; sendBtn.textContent = "Mengirim...";
+
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { error: rpcErr } = await supabaseClient.rpc("transfer_coins", { sender_id: session.user.id, receiver_id: giftState.creatorId, amount });
+    if (rpcErr) throw rpcErr;
+
+    await supabaseClient.from("gift_transactions").insert({ sender_id: session.user.id, receiver_id: giftState.creatorId, post_id: parseInt(giftState.postId), amount });
+    showBigImage(selectedGiftImage);
+    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+
+    const sProf = await getMyProfile(session.user.id);
+    await createNotification({ user_id: giftState.creatorId, actor_id: session.user.id, post_id: giftState.postId, type: "gift", message: `${sProf?.username} mengirim ${amount} coin ke karyamu` });
+
+    giftState.userCoins -= amount;
+    document.getElementById("giftUserCoins").textContent = giftState.userCoins;
+    
+    sProf.coins = giftState.userCoins;
+    sessionStorage.setItem(`hh_profile_${session.user.id}`, JSON.stringify(sProf));
+    
+    closeGiftSheet();
+  } catch (err) { showNotif("Gagal: " + err.message, "error"); }
+  finally { sendBtn.disabled = false; sendBtn.textContent = "Kirim"; }
+}
+
+function showBigImage(imageName) {
+  const container = document.getElementById("giftAnimationContainer");
+  if (!container) return;
+  container.innerHTML = `<img src="${imageName}" class="gift-main-img">`;
+  setTimeout(() => { container.innerHTML = ""; }, 2500);
+}
+
+function closeGiftSheet() {
+  const sheet = document.getElementById("giftSheet");
+  if (sheet) sheet.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+// =======================
+// COMMENTS SYSTEM (OPTIMIZED)
+// =======================
+function initComments() {
+  const modal = document.getElementById("commentModal");
+  if (!modal) return;
+  const list = modal.querySelector(".comment-list");
+  const input = modal.querySelector(".comment-input");
+
+  document.querySelectorAll(".comment-toggle").forEach((btn) => {
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    newBtn.addEventListener("click", async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { openLogin(); return; }
+      currentPostId = newBtn.dataset.post;
+      currentPostCreator = newBtn.dataset.creator; 
+      modal.classList.add("active");
+      list.innerHTML = "<li style='color:#aaa; text-align:center; padding:20px;'>Loading...</li>";
+      await loadCommentsStructured();
+    });
+  });
+
+  input.onkeydown = async (e) => {
+    if (e.key === "Enter" && input.value.trim()) {
+      e.preventDefault();
+      const content = input.value.trim();
+      const sReplyTo = replyTo;
+      const sReplyUser = replyToUsername;
+      input.value = ""; input.placeholder = "Mengirim...";
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        await supabaseClient.from("comments").insert({ post_id: parseInt(currentPostId), user_id: session.user.id, content, parent_id: sReplyTo ? parseInt(sReplyTo) : null, reply_to_username: sReplyUser || null });
+        replyTo = null; replyToUsername = null; input.placeholder = "Tulis komentar...";
+        
+        const sProf = await getMyProfile(session.user.id);
+        await createNotification({ user_id: currentPostCreator, actor_id: session.user.id, post_id: currentPostId, type: "comment", message: `${sProf?.username} mengomentari karyamu` });
+        
+        await updateCommentCount(currentPostId);
+        await loadCommentsStructured();
+      } catch (err) { input.placeholder = "Gagal..."; }
+    }
+  };
+}
+
+function createComment(comment, isReply, postOwnerId) {
+  const div = document.createElement("div");
+  div.className = isReply ? "comment-item reply" : "comment-item";
+  const isPostOwner = comment.user_id === postOwnerId;
+  const creatorBadge = isPostOwner ? `<span style="background:#444; color:#eee; padding:2px 6px; border-radius:4px; font-size:9px; margin-left:5px; font-weight:800;">CREATOR</span>` : "";
+  const p = comment.profiles;
+  div.innerHTML = `<div class="comment-left"><img class="comment-avatar" src="${p?.avatar_url || "https://via.placeholder.com/40"}" onclick="window.location.href='/data?id=${p?.id}'"></div><div class="comment-right"><div class="comment-topline"><span class="comment-username" onclick="window.location.href='/data?id=${p?.id}'">${p?.username} ${getUserBadge(p?.role, true)} ${creatorBadge}</span></div><div class="comment-text">${comment.reply_to_username ? `<span class="reply-tag">@${comment.reply_to_username}</span> ` : ""}${comment.content}</div><div class="comment-actions"><span class="reply-btn" data-id="${comment.id}">Balas</span></div></div>`;
+  return div;
+}
+
+async function loadCommentsStructured() {
+  const list = document.querySelector(".comment-list");
+  if (!list || !currentPostId) return;
+  
+  // FIX: Seleksi kolom profil agar tidak boros
+  const { data } = await supabaseClient.from("comments")
+    .select("id, content, created_at, user_id, parent_id, reply_to_username, profiles(id, username, avatar_url, role)")
+    .eq("post_id", currentPostId)
+    .order("created_at", { ascending: true });
+  
+  const ownerId = currentPostCreator;
+  list.innerHTML = (!data || data.length === 0) ? "<li style='text-align:center; padding:20px; color:#aaa;'>Belum ada komentar.</li>" : "";
+  if(!data) return;
+
+  const parents = data.filter(c => !c.parent_id);
+  parents.forEach(p => {
+    const wrap = document.createElement("div"); wrap.className = "comment-thread";
+    wrap.appendChild(createComment(p, false, ownerId));
+    
+    const childs = data.filter(r => String(r.parent_id) === String(p.id));
+    if (childs.length > 0) {
+      const toggleBtn = document.createElement("div");
+      toggleBtn.className = "view-replies-btn";
+      toggleBtn.style.cssText = "margin-left: 55px; font-size: 11px; color: #aaa; cursor: pointer; padding: 5px 0; font-weight: bold;";
+      toggleBtn.innerHTML = `——— Lihat ${childs.length} balasan`;
+
+      const replyWrap = document.createElement("div");
+      replyWrap.className = "reply-group";
+      replyWrap.style.display = "none"; 
+
+      childs.forEach(c => replyWrap.appendChild(createComment(c, true, ownerId)));
+
+      toggleBtn.onclick = () => {
+        const isHidden = replyWrap.style.display === "none";
+        replyWrap.style.display = isHidden ? "block" : "none";
+        toggleBtn.innerHTML = isHidden ? `——— Sembunyikan balasan` : `——— Lihat ${childs.length} balasan`;
+      };
+
+      wrap.appendChild(toggleBtn);
+      wrap.appendChild(replyWrap);
+    }
+    list.appendChild(wrap);
+  });
+}
+
+function initReplyClick() {
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("reply-btn")) {
+      replyTo = e.target.dataset.id;
+      replyToUsername = e.target.closest(".comment-item").querySelector(".comment-username").childNodes[0].textContent.trim();
+      const input = document.querySelector(".comment-input");
+      if (input) { input.placeholder = "Membalas @" + replyToUsername + "..."; input.focus(); }
+    }
+  });
+}
+
+// =======================
+// LIKES SYSTEM (CLEAN OPTIMIZED)
+// =======================
+function initLikeButtons() {
+  document.querySelectorAll(".like-btn").forEach((btn) => {
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    newBtn.addEventListener("click", async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { openLogin(); return; }
+      
+      const pId = newBtn.dataset.post;
+      const creatorId = newBtn.dataset.creator; 
+      const isCurrentlyLiked = newBtn.classList.contains("liked");
+      let currentCount = parseInt(newBtn.querySelector(".like-count").textContent || "0");
+
+      if (isCurrentlyLiked) {
+        newBtn.classList.remove("liked");
+        newBtn.querySelector(".like-count").textContent = Math.max(0, currentCount - 1);
+        await supabaseClient.from("likes").delete().match({ post_id: pId, user_id: session.user.id });
+      } else {
+        newBtn.classList.add("liked");
+        newBtn.querySelector(".like-count").textContent = currentCount + 1;
+        await supabaseClient.from("likes").insert({ post_id: pId, user_id: session.user.id });
+        
+        const sP = await getMyProfile(session.user.id);
+        await createNotification({ user_id: creatorId, actor_id: session.user.id, post_id: pId, type: "like", message: `${sP?.username} menyukai karyamu` });
+      }
+    });
+  });
+}
+
+async function loadLikes() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return; 
+
+  const likeBtns = document.querySelectorAll(".like-btn");
+  if (likeBtns.length === 0) return;
+
+  const postIds = Array.from(likeBtns).map(btn => btn.dataset.post);
+
+  // FIX: Gunakan .in untuk request borongan tunggal
+  const { data } = await supabaseClient.from("likes")
+      .select("post_id")
+      .eq("user_id", session.user.id)
+      .in("post_id", postIds);
+
+  const myLikedPostIds = data ? data.map(row => String(row.post_id)) : [];
+  likeBtns.forEach(btn => {
+      if (myLikedPostIds.includes(btn.dataset.post)) btn.classList.add("liked");
+  });
+}
+
+async function updateCommentCount(postId) {
+  const { count } = await supabaseClient.from("comments").select("id", { count: "exact", head: true }).eq("post_id", postId);
+  const el = document.querySelector(`.comment-toggle[data-post="${postId}"] .comment-count`);
+  if (el) el.textContent = count || 0;
+}
+
+// =======================
+// AUTH & UTILS
+// =======================
+async function getUser() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    const prof = await getMyProfile(currentUser.id); 
+    currentUser.role = prof?.role || "user";
+    const adminBtn = document.getElementById("adminPanelBtn");
+    if (adminBtn) adminBtn.style.display = currentUser.role === "admin" ? "flex" : "none";
+  }
+}
+
+function getUserBadge(role, isComment = false) {
+  const r = (role || "user").toLowerCase().trim();
+  let b = "";
+  if (r === "admin") b += `<span class="admin-badge" style="background:#ff4757; color:white; padding:2px 8px; border-radius:4px; font-size:10px; margin-left:5px; font-weight:bold;">🛡 Dev</span>`;
+  const crowns = { crown1: "/asets/png/crown1.png", crown2: "/asets/png/crown2.png", crown3: "/asets/png/crown3.png" };
+  if (isComment && crowns[r]) b += `<img src="${crowns[r]}" style="width:18px; margin-left:5px; vertical-align:middle;">`;
+  else if (r === "verified" || (!isComment && crowns[r])) b += `<span class="verified-badge" style="margin-left:5px;"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1DA1F2"/><path d="M7 12.5l3 3 7-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+  return b;
+}
+
+function initSearch() {
+  const input = document.getElementById("searchCreator");
+  input?.addEventListener("input", () => {
+    const val = input.value.toLowerCase();
+    document.querySelectorAll(".card").forEach((c) => c.style.display = c.innerText.toLowerCase().includes(val) ? "block" : "none");
+  });
+}
+
+function initAuth() {
+  const form = document.querySelector(".form");
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const { error } = await supabaseClient.auth.signInWithPassword({ email: form.querySelectorAll("input")[0].value, password: form.querySelectorAll("input")[1].value });
+    if (error) showNotif(error.message, "error"); else location.reload();
+  });
+}
+
+function openLogin() { const p = document.getElementById("loginPopup"); if (p) p.style.display = "flex"; }
+
+function initCloseButtons() {
+  document.querySelector(".comment-close")?.addEventListener("click", () => document.getElementById("commentModal").classList.remove("active"));
+  document.querySelector(".close-login")?.addEventListener("click", () => document.getElementById("loginPopup").style.display = "none");
+}
+
+function initRealtime() {
+  supabaseClient.channel("updates").on("postgres_changes", { event: "*", schema: "public", table: "comments" }, (payload) => {
+    if(payload.new && payload.new.post_id) updateCommentCount(payload.new.post_id);
+  }).subscribe();
+}
+
+function initPostModal() {
+  const modal = document.getElementById("postModal");
+  document.getElementById("openPostModalBtn")?.addEventListener("click", async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) { openLogin(); return; }
+    modal.classList.add("active");
+  });
+  document.getElementById("closePostModalBtn")?.addEventListener("click", () => modal.classList.remove("active"));
+  document.getElementById("postUploadArea")?.addEventListener("click", () => document.getElementById("postImageInput").click());
+  document.getElementById("postImageInput")?.addEventListener("change", (e) => {
+    const f = e.target.files[0];
+    if (f) { selectedPostFile = f; const r = new FileReader(); r.onload = (ev) => { document.getElementById("postPreviewImage").src = ev.target.result; document.getElementById("postPreviewImage").style.display = "block"; document.getElementById("postUploadPlaceholder").style.display = "none"; }; r.readAsDataURL(f); }
+  });
+  document.getElementById("postForm")?.addEventListener("submit", handlePostSubmit);
+  setupCustomCategory();
+}
+
+function setupCustomCategory() {
+  const d = document.getElementById("categoryDropdown");
+  if (!d) return;
+  d.querySelector(".select-trigger").onclick = () => d.classList.toggle("active");
+  d.querySelectorAll(".option-item").forEach(o => {
+    o.onclick = () => { document.getElementById("selectedCategoryText").innerText = o.innerText; document.getElementById("postCategory").value = o.dataset.value; d.classList.remove("active"); };
+  });
+}
+
+async function handlePostSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById("submitPostBtn");
+  if (!selectedPostFile) return showNotif("Pilih foto dulu", "warning");
+  btn.disabled = true; btn.textContent = "Mengirim...";
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const cData = await uploadImageToCloudinary(selectedPostFile);
+    const prof = await getMyProfile(session.user.id);
+    await supabaseClient.from("posts").insert({ creator_id: session.user.id, name: prof.username, bio: document.getElementById("postCaption").value, category: document.getElementById("postCategory").value, image_url: cData.secure_url, status: "pending" });
+    showNotif("Karya dikirim! Menunggu review", "success");
+    document.getElementById("postModal").classList.remove("active");
+  } catch (err) { showNotif(err.message, "error"); }
+  finally { btn.disabled = false; btn.textContent = "Kirim ke Review"; }
+}
+
+async function uploadImageToCloudinary(file) {
+  const fd = new FormData(); fd.append("file", file); fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: "POST", body: fd });
+  return await res.json();
+}
+// --- FUNGSI TAMBAHAN (Wajib ada biar overlay gambar bisa ditutup) ---
+function closeBigImage() {
+  const container = document.getElementById("bigImageContainer");
+  if (container) container.style.display = "none";
+}
+
+// --- DAFTARKAN FUNGSI KE WINDOW BIAR BISA DIBACA HTML ---
+window.selectGift = selectGift;
+window.processGiftTransaction = processGiftTransaction;
+window.closeGiftSheet = closeGiftSheet;
+window.closeBigImage = closeBigImage;
+
+
+  </script>
+</Layout>
+
+<style is:global>
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+/*search-wrapper*/
+body{ 
+  font-family:'Poppins', sans-serif; 
+  background:#121212; 
+  color:#e0e0e0; 
+}
+.search-wrapper{
+  position:sticky;
+  top:0;
+  z-index:999;
+  padding:15px 20px;
+  display:flex;
+  justify-content:center;
+  background:transparent;
+}
+.brutal-input-container{
+  position:relative;
+  width:100%;
+  max-width:270px;
+}
+
+.brutal-input{
+  width:100%;
+  height:60px;
+  padding:12px;
+  font-size:18px;
+  font-family:"Courier New", monospace;
+  color:#000;
+  background:#fff;
+  border:4px solid #000;
+  outline:none;
+  transition:0.3s ease;
+  box-shadow:8px 8px 0 #000;
+}
+
+/* Hover */
+.brutal-input:hover{
+  transform:translate(-4px,-4px);
+  box-shadow:12px 12px 0 #000;
+}
+
+/* Focus */
+.brutal-input:focus{
+  background:#000;
+  color:#fff;
+  border-color:#fff;
+  animation:shake 0.5s ease-in-out;
+}
+
+/* Typing glitch */
+.brutal-input:not(:placeholder-shown){
+  animation:glitch 0.7s linear infinite;
+  font-weight:bold;
+  letter-spacing:1px;
+}
+
+/* Cursor line */
+.brutal-input-container::after{
+  content:"|";
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  animation:blink 0.7s step-end infinite;
+}
+
+/* Animations */
+@keyframes blink{
+  50%{opacity:0;}
+}
+
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-5px);}
+  75%{transform:translateX(5px);}
+}
+
+@keyframes glitch{
+  0%{transform:none;}
+  20%{transform:skew(-1deg);}
+  40%{transform:skew(1deg);}
+  60%{transform:skew(-0.5deg);}
+  80%{transform:skew(0.5deg);}
+  100%{transform:none;}
+}
+
+/*POST*/
+.gallery{ 
+  max-width:420px; 
+  margin:auto; 
+  padding:10px 20px 40px; 
+}
+/* ======CARD POST======= */
+.card{ 
+  background:#1e1e1e; 
+  border-radius:16px; 
+  margin-bottom:25px; 
+  overflow:hidden; 
+  box-shadow:0 4px 15px rgba(0,0,0,0.6);
+  border:1px solid #2c2c2c;
+  display:flex;
+  flex-direction:column;
+  transition:0.2s ease;
+}
+
+.card:hover{
+  transform:translateY(-3px);
+}
+
+
+/* ===========IMAGE =========== */
+
+/* Container gambar */
+.slider {
+  position: relative;
+  width: 100%;
+  background: #252525; /* Warna dasar kalau gambar telat muat */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Gambar utama */
+.slider img {
+  width: 100%;
+  height: auto; /* Biar tinggi ngikutin lebar asli gambar */
+  display: block;
+  object-fit: cover; /* Menjaga proporsi kalau kamu tentukan height tetap */
+}
+
+/* Watermark diperkecil dan nempel di pojok kiri atas */
+.watermark-overlay {
+  position: absolute;
+  top: 5px;          /* Jarak tipis dari atas */
+  left: 5px;         /* Jarak tipis dari kiri */
+  width: 90px;       /* Ukuran diperkecil (sebelumnya ~140px) */
+  height: auto;
+  opacity: 0.8;      /* Opasitas pas agar tidak terlalu mencolok */
+  pointer-events: none; /* Biar tetap bisa klik/long press gambarnya */
+  z-index: 10;       /* Pastikan di atas gambar utama */
+  
+  /* Bayangan halus biar kalau fotonya putih tetap kontras */
+  filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.4));
+}
+
+.watermark-overlay img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ===========OVERLAY =========== */
+.overlay{ 
+  padding:15px; 
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+
+/* ================= NAME ================= */
+
+.overlay h2{ 
+  font-size:16px; 
+  display:flex;
+  align-items:center;
+  gap:6px;
+  color:#fff;
+}
+
+
+/* ================= VERIFIED ================= */
+
+.verified{
+  display:flex;
+  align-items:center;
+}
+
+.verified-icon{
+  width:16px;
+  height:16px;
+}
+
+.verified-icon circle{
+  fill:#1DA1F2;
+}
+
+.verified-icon path{
+  stroke:#fff;
+  stroke-width:3;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  fill:none;
+}
+
+
+/* ================= BIO ================= */
+
+.overlay p{ 
+  font-size:14px; 
+  color:#bbb;
+}
+
+
+/* ================= STATS ================= */
+
+.stats{ 
+  display:flex; 
+  gap:15px;
+  font-size:12px; 
+  color:#888;
+}
+
+
+/* ================= ACTIONS ================= */
+
+.actions{ 
+  display:flex; 
+  align-items:center;
+  justify-content:space-between;
+  margin-top:10px; 
+}
+
+.primary{ 
+  padding:7px 14px; 
+  border:none; 
+  border-radius:8px; 
+  background:#0095f6; 
+  color:#fff; 
+  font-size:13px;
+  text-decoration:none; 
+  cursor:pointer; 
+  transition:0.2s;
+}
+
+.primary:hover{
+  background:#0b84e3;
+}
+
+
+/* ================= ICON BUTTONS ================= */
+
+.icon-btn{
+  background:none;
+  border:none;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  cursor:pointer;
+}
+
+.icon{
+  width:22px;
+  height:22px;
+  fill:#e0e0e0;
+  transition:0.2s;
+}
+
+.icon-btn.liked .icon {
+  fill: #ff2e63;
+}
+}
+
+.like-count,
+.comment-count{
+  font-size:13px;
+  color:#e0e0e0;
+}
+.icon{
+  width:22px;
+  height:22px;
+  fill:currentColor;
+}
+
+.icon-btn{
+  background:none;
+  border:none;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+  font-size:14px;
+  transition:0.2s;
+}
+
+.icon-btn:hover{
+  transform:scale(1.1);
+  opacity:0.8;
+}
+ 
+/* =========================
+   COMMENT SHEET STYLE
+========================= */
+#commentModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .25s ease, visibility .25s ease;
+}
+
+#commentModal.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+#commentModal .comment-box {
+  width: 100%;
+  max-width: 500px;
+  height: 78vh;
+  background: #111;
+  border-radius: 22px 22px 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform .35s ease;
+  box-shadow: 0 -12px 30px rgba(0,0,0,.4);
+}
+
+#commentModal.active .comment-box {
+  transform: translateY(0);
+}
+
+#commentModal .comment-box::before {
+  content: "";
+  width: 48px;
+  height: 5px;
+  background: rgba(255,255,255,.25);
+  border-radius: 999px;
+  margin: 10px auto 8px;
+  display: block;
+}
+
+#commentModal .comment-header {
+  color: #fff;
+  text-align: center;
+  font-weight: 700;
+  padding: 10px 16px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  position: relative;
+}
+
+#commentModal .comment-close {
+  position: absolute;
+  right: 14px;
+  top: 6px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+#commentModal .comment-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 14px 16px;
+}
+
+/* Thread */
+.comment-thread {
+  margin-bottom: 16px;
+}
+
+/* Komentar utama / reply */
+.comment-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.comment-item.reply {
+  margin-left: 42px;
+  opacity: 0.95;
+}
+
+.comment-left {
+  flex-shrink: 0;
+}
+
+.comment-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-item.reply .comment-avatar {
+  width: 30px;
+  height: 30px;
+}
+
+.comment-right {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-topline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.comment-username {
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.comment-time {
+  color: #8e8e8e;
+  font-size: 12px;
+}
+
+.comment-text {
+  color: #f1f1f1;
+  font-size: 14px;
+  line-height: 1.45;
+  margin-top: 2px;
+  word-break: break-word;
+}
+
+.reply-tag {
+  color: #4da3ff;
+  font-weight: 600;
+}
+
+.comment-actions {
+  margin-top: 4px;
+}
+
+.reply-btn {
+  color: #9aa0a6;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.reply-btn:hover {
+  color: #fff;
+}
+
+/* Tombol lihat balasan */
+.view-replies-btn {
+  margin-left: 48px;
+  margin-top: 4px;
+  margin-bottom: 6px;
+  color: #8ab4f8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.reply-group {
+  margin-top: 6px;
+}
+
+/* Input bawah */
+.comment-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  background: #111;
+}
+
+.comment-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: #1d1d1d;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.comment-input::placeholder {
+  color: #888;
+}
+@keyframes popLike {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+/* From Uiverse.io by micaelgomestavares */ 
+.form {
+  background: transparent;
+  padding: 0;
+  width: 100%;
+}
+
+::placeholder {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.form button {
+  align-self: flex-end;
+}
+
+.flex-column > label {
+  color: #151717;
+  font-weight: 600;
+}
+
+.inputForm {
+  border: 1.5px solid #ecedec;
+  border-radius: 10px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  transition: 0.2s ease-in-out;
+}
+
+.input {
+  margin-left: 10px;
+  border-radius: 10px;
+  border: none;
+  width: 85%;
+  height: 100%;
+}
+
+.input:focus {
+  outline: none;
+}
+
+.inputForm:focus-within {
+  border: 1.5px solid #2d79f3;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.flex-row > div > label {
+  font-size: 14px;
+  color: black;
+  font-weight: 400;
+}
+
+.span {
+  font-size: 14px;
+  margin-left: 5px;
+  color: #2d79f3;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.button-submit {
+  margin: 20px 0 10px 0;
+  background-color: #151717;
+  border: none;
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 10px;
+  height: 50px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.button-submit:hover {
+  background-color: #252727;
+}
+
+.p {
+  text-align: center;
+  color: black;
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+.btn {
+  margin-top: 10px;
+  width: 100%;
+  height: 50px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 500;
+  gap: 10px;
+  border: 1px solid #ededef;
+  background-color: white;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.btn:hover {
+  border: 1px solid #2d79f3;
+  ;
+}
+ 
+/* Popup in */
+#inPopup {
+  position: fixed;     
+  top: 0;
+  left: 0;
+  width: 100vw;         
+  height: 100vh;      
+  background: rgba(0,0,0,0.5); 
+  display: none;        
+  justify-content: center; 
+  align-items: center;     
+  z-index: 9999;      
+}
+#inPopup .popup-content {
+  background: #fff;
+  padding: 25px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 350px;
+  box-sizing: border-box;
+}
+
+#inPopup .close-popup {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.close-popup {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+/* ================= POPUP IN FIX ================= */
+
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.popup-content {
+  background: #fff;
+  width: 90%;
+  max-width: 360px;
+  padding: 25px;
+  border-radius: 18px;
+  position: relative;
+}
+
+@keyframes popupFade {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.close-popup {
+  position: absolute;
+  top: 12px;
+  right: 15px;
+  font-size: 22px;
+  cursor: pointer;
+}
+/* BUTTON */ 
+.Btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 45px;
+  height: 45px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition-duration: 0.3s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.199);
+  background-color: white;
+}
+
+/* plus sign */
+.sign {
+  width: 100%;
+  transition-duration: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sign svg {
+  width: 17px;
+}
+
+.sign svg path {
+  fill: black;
+}
+/* text */
+.text {
+  position: absolute;
+  right: 0%;
+  width: 0%;
+  opacity: 0;
+  color: white;
+  font-size: 1.2em;
+  font-weight: 600;
+  transition-duration: 0.3s;
+}
+/* hover effect on button width */
+.Btn:hover {
+  background-color: blue;
+  width: 125px;
+  border-radius: 40px;
+  transition-duration: 0.3s;
+}
+
+.Btn:hover .sign {
+  width: 30%;
+  transition-duration: 0.3s;
+  padding-left: 20px;
+}
+
+.Btn:hover .sign svg path {
+  fill: white;
+}
+
+/* hover effect button's text */
+.Btn:hover .text {
+  opacity: 1;
+  width: 70%;
+  transition-duration: 0.3s;
+  padding-right: 10px;
+}
+/* button click effect*/
+.Btn:active {
+  transform: translate(2px, 2px);
+}
+/* ========NOTIF SIMPEL ============ */
+#notif {
+  position: fixed;
+  top: 20px;
+  right: -300px; 
+  background-color: #4facfe;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.4s ease;
+  z-index: 9999;
+}
+
+#notif.show {
+  right: 20px;
+  opacity: 1;
+}
+
+#notif.hide {
+  right: -300px;
+  opacity: 0;
+}
+.comment-item{
+display:flex;
+gap:10px;
+padding:8px;
+align-items:flex-start;
+}
+
+.comment-avatar{
+width:35px;
+height:35px;
+border-radius:50%;
+}
+
+.comment-body{
+display:flex;
+flex-direction:column;
+}
+
+.comment-username{
+font-weight:600;
+font-size:13px;
+color:#fff;
+}
+
+.comment-text {
+  font-size: 14px;
+  color: white;
+}
+.reply-toggle{
+  font-size:13px;
+  color:#aaa;
+  cursor:pointer;
+  margin-top:5px;
+}
+
+.reply-toggle:hover{
+  color:white;
+}
+.comment-item {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  transition: background 0.2s;
+}
+
+.comment-item:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-right {
+  flex: 1;
+}
+
+.comment-header {
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  gap: 5px;
+}
+
+.comment-text {
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.reply-tag {
+  color: #888;
+}
+
+.comment-actions {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.reply {
+  margin-left: 50px; /* indent balasan */
+}
+.admin-badge{
+  font-size:9px;
+  color:white;
+  padding:1px 4px;
+  border-radius:4px;
+  margin-left:4px;
+  font-weight:600;
+  animation: rgbGlow 3s linear infinite;
+}
+
+@keyframes rgbGlow{
+  0%{ background: rgb(255,0,0); }
+  33%{ background: rgb(0,255,0); }
+  66%{ background: rgb(0,0,255); }
+  100%{ background: rgb(255,0,0); }
+}
+.toast-notification {
+  position: fixed;
+  top: 20px;      
+  left: 20px;      
+  background: #4facfe; 
+  color: white;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(-20px); 
+  transition: all 0.3s ease;
+  z-index: 9999;
+}
+
+.toast-notification.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-notification.success {
+  background: #4facfe;
+}
+
+.toast-notification.error {
+  background: #ff4757;
+}
+:root {
+  --bg-black: #000000;
+  --bg-sidebar: #050505;
+  --accent-blue: #00a2ff;
+  --glass-white: rgba(255, 255, 255, 0.1);
+  --border-white: rgba(255, 255, 255, 0.5); /* Garis putih semi-transparan agar tidak kaku */
+}
+
+/* Wrapper Utama - Benar-benar transparan & Rapi */
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  background: transparent; /* Full transparan */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 15px;
+}
+
+/* Garis Tiga Putih */
+.menu-toggle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.menu-toggle span {
+  display: block;
+  width: 100%;
+  height: 2.5px;
+  background-color: #ffffff;
+  border-radius: 2px;
+}
+
+/* Kotak Search Transparan */
+.brutal-input-container {
+  flex-grow: 1;
+}
+
+.brutal-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1); /* Putih tipis banget biar kelihatan kaca */
+  border: 2px solid #ffffff; /* Garis kotak putih tegas */
+  padding: 10px 15px;
+  color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  outline: none;
+  border-radius: 0; /* Tetap kotak (Brutal style) tapi transparan */
+  backdrop-filter: blur(5px); /* Efek blur halus di dalam kotak search */
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* Placeholder warna putih agak pudar */
+.brutal-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Efek saat diklik - makin terang */
+.brutal-input:focus {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #00a2ff; /* Berubah biru dikit pas ngetik */
+}
+
+/* --- Sidebar Premium --- */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  background: var(--bg-sidebar);
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
+  z-index: 2000;
+  transform: translateX(-100%);
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  padding: 60px 30px;
+  box-sizing: border-box;
+}
+
+.sidebar.active {
+  transform: translateX(0);
+}
+
+.sidebar-logo {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 5px; /* Jarak huruf lebar ala brand mewah */
+  margin-bottom: 60px;
+  opacity: 0.8;
+}
+
+/* --- Nav Item (Teks Putih + Glow Biru Halus) --- */
+.nav-item {
+  display: block;
+  padding: 12px 0;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 300; /* Font lebih tipis agar estetik */
+  margin-bottom: 20px;
+  transition: 0.4s;
+  opacity: 0.6; /* Agak redup saat tidak aktif */
+}
+
+.nav-item:hover {
+  opacity: 1;
+  color: var(--accent-blue);
+  letter-spacing: 2px; /* Efek teks melebar sedikit saat hover */
+}
+
+.nav-item.active {
+  opacity: 1;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Dot Biru untuk menandakan menu aktif */
+.nav-item.active::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent-blue);
+  border-radius: 50%;
+  margin-left: 10px;
+  box-shadow: 0 0 10px var(--accent-blue); /* Efek cahaya biru */
+}
+.comment-username:hover {
+    text-decoration: underline;
+    color: var(--primary-blue);
+}
+.comment-avatar:active {
+    transform: scale(0.95);
+}
+.name {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* Jarak antara nama dan badge */
+    white-space: nowrap; /* Biar gak pindah baris */
+}
+
+.verified {
+    display: inline-flex;
+    flex-shrink: 0; /* Biar badge-nya gak gepeng kalau nama kepanjangan */
+}
+
+/* Biar bio dan rating di bawahnya gak ikutan geser ke samping */
+.overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+/* Container utama untuk tombol */
+.actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Detail di kiri, sisanya di kanan */
+    margin-top: 12px;
+    width: 100%;
+}
+
+/* Grup untuk Like dan Komentar */
+.engagement-group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Standarisasi tombol ikon */
+.icon-btn {
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 0;
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+}
+
+.icon-btn svg {
+    width: 22px;
+    height: 22px;
+    transition: transform 0.2s;
+}
+
+.icon-btn:active svg {
+    transform: scale(0.8); /* Efek membal saat diklik */
+}
+/* =========================
+   TIKTOK STYLE GIFT SHEET
+========================= */
+.gift-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: none;
+}
+
+.gift-sheet.active {
+  display: block;
+}
+
+.gift-sheet-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px);
+}
+
+.gift-sheet-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 72vh;
+  background: #171717;
+  color: #fff;
+  border-radius: 22px 22px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.32s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+}
+
+.gift-sheet.active .gift-sheet-panel {
+  transform: translateY(0);
+}
+
+/* TOP BAR */
+.gift-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px 10px;
+  font-size: 13px;
+  color: #d5d5d5;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.gift-pin-btn {
+  background: transparent;
+  border: none;
+  color: #ff2d6f;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* TARGET BAR */
+.gift-target-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+}
+
+.gift-target-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.gift-target-label {
+  font-size: 13px;
+  color: #9a9a9a;
+}
+
+.gift-target-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.gift-balance-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #232323;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.coin-icon {
+  font-size: 14px;
+}
+/* Container Utama */
+.gift-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none; /* Default sembunyi */
+  align-items: flex-end;
+}
+
+.gift-sheet.active {
+  display: flex;
+}
+
+.gift-sheet-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+/* Konten Slide Up */
+.gift-sheet-content {
+  position: relative;
+  width: 100%;
+  background: #181818;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px 20px 0 0;
+  padding: 10px 15px 30px 15px;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: 10001;
+}
+
+.gift-sheet.active .gift-sheet-content {
+  transform: translateY(0);
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  margin: 0 auto 15px auto;
+}
+
+.gift-header {
+  display: flex;
+  justify-content: space-between;
+  color: #aaa;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.gift-close-x {
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* Grid & Item */
+.gift-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.gift-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: rgba(255,255,255,0.03);
+  transition: 0.2s;
+}
+
+.gift-item.active {
+  background: rgba(255, 45, 85, 0.1);
+  border-color: #ff2d55;
+}
+
+.gift-img-container {
+  width: 55px;
+  height: 55px;
+  margin-bottom: 5px;
+}
+
+.img-gift {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.gift-name { font-size: 11px; color: #fff; }
+.gift-price { font-size: 12px; color: #ffd700; display: flex; align-items: center; gap: 3px; }
+.img-coin-inline { width: 12px; }
+
+/* Footer */
+.gift-footer {
+  margin-top: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.user-coins-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.img-coin-footer { width: 20px; }
+
+.btn-send-gift {
+  background: #ff2d55;
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 25px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-send-gift:disabled { background: #333; color: #666; }
+ 
+/* Efek Cahaya Meledak di Latar */
+.glow-bg {
+    position: absolute;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,215,0,0) 70%);
+    border-radius: 50%;
+    animation: explodeGlow 2.5s ease-out forwards;
+}
+
+.meriah-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 5rem;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -5px; /* Awalnya rapet banget */
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1;
+    
+    /* Efek Bayangan Cinematic */
+    filter: drop-shadow(0 0 20px rgba(255,255,255,0.5));
+    
+    /* Animasi Teks Meledak */
+    animation: cinematicText 2.5s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+}
+
+/* Animasi Cahaya Latar */
+@keyframes explodeGlow {
+    0% { transform: scale(0); opacity: 1; filter: blur(0px); }
+    30% { transform: scale(30); opacity: 0.5; filter: blur(50px); }
+    100% { transform: scale(50); opacity: 0; filter: blur(100px); }
+}
+
+/* Animasi Teks Utama */
+@keyframes cinematicText {
+    0% { 
+        transform: scale(0.5); 
+        letter-spacing: -20px; 
+        opacity: 0; 
+        filter: blur(20px) brightness(5);
+    }
+    15% { 
+        opacity: 1; 
+        filter: blur(0px) brightness(1.5);
+    }
+    25% {
+        letter-spacing: 15px; /* Hurufnya merenggang drastis */
+    }
+    80% { 
+        opacity: 1; 
+        transform: scale(1.1);
+        letter-spacing: 20px;
+        filter: blur(0px) brightness(1);
+    }
+    100% { 
+        transform: scale(1.5); 
+        opacity: 0; 
+        filter: blur(15px) brightness(2);
+        letter-spacing: 30px;
+    }
+}
+
+/* Biar gak aneh di HP */
+@media (max-width: 768px) {
+    .meriah-text { font-size: 1.5rem; letter-spacing: -2px; }
+}
+/* =========================================
+   ANIMASI SMOOTH GAYA TIKTOK
+   ========================================= */
+
+/* 1. Wrapper Utama (Memastikan di Tengah & Di Atas Semuanya) */
+#giftAnimationContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none; /* Penting! Supaya nggak menghalangi klik setelah animasi */
+  z-index: 999999; /* Sangat tinggi */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden; /* Sembunyikan elemen yang keluar layar */
+}
+
+/* 2. Gambar Utama (Gede di Tengah) */
+.gift-main-img {
+  width: 320px; /* Sedikit lebih gede biar bombastis */
+  height: auto;
+  filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.7));
+  opacity: 0;
+  transform: scale(0.5) rotate(-15deg); /* Start: Kecil, miring, transparan */
+  
+  /* Animasi Masuk: Halus & Sedikit Membal */
+  animation: tiktokPopIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes tiktokPopIn {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.5) rotate(-15deg); 
+  }
+  40% { 
+    opacity: 1; 
+    transform: scale(1.1) rotate(5deg); /* Sedikit membesar */
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) rotate(0deg); /* Kembali normal */
+  }
+}
+
+/* 3. Floating Icons (Hujan Gift) */
+.gift-mini-icon {
+  position: absolute;
+  width: 60px; /* Ukuran ikon mini */
+  height: auto;
+  opacity: 0;
+  
+  /* Animasi Meluncur: Halus & Cepat */
+  animation: tiktokFloatUp 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes tiktokFloatUp {
+  0% { 
+    opacity: 0; 
+    transform: translateY(100vh) rotate(0deg) scale(0.8); /* Start: Di bawah layar */
+  }
+  15% { 
+    opacity: 1; 
+    transform: translateY(80vh) rotate(10deg) scale(1); /* Mulai muncul */
+  }
+  80% { 
+    opacity: 1; /* Tetap muncul saat di tengah */
+  }
+  100% { 
+    opacity: 0; 
+    transform: translateY(-20vh) rotate(360deg) scale(1.1); /* End: Di atas layar, muter, hilang */
+  }
+}
+/* State saat gift dipilih */
+.gift-item.selected-gift {
+  border: 2px solid #ff4757 !important; /* Warna pink/merah biar kontras */
+  background: rgba(255, 71, 87, 0.1) !important;
+  transform: scale(1.05); /* Sedikit membesar biar kerasa interaksinya */
+  box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Tambahkan animasi goyang dikit pas diklik */
+.gift-item.selected-gift img {
+  animation: bounceMini 0.4s ease;
+}
+
+@keyframes bounceMini {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* Efek hover biar user tahu itu bisa diklik */
+.gift-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-3px);
+}
+.sidebar-post-btn {
+  width: 100%;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  margin-top: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  background: #2d79f3;
+  color: white;
+  box-shadow: 0 8px 20px rgba(45, 121, 243, 0.25);
+  transition: all 0.25s ease;
+}
+
+.sidebar-post-btn:hover {
+  background: #256de0;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(45, 121, 243, 0.35);
+}
+
+.sidebar-post-btn:active {
+  transform: scale(0.98);
+  background: #1f63cf;
+}
+/* =======================
+   POST MODAL
+======================= */
+.post-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 18, 40, 0.7);
+  backdrop-filter: blur(8px);
+  display: none; /* hidden default */
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  padding: 20px;
+}
+
+.post-modal.active {
+  display: flex; /* muncul saat diklik */
+}
+
+.post-modal-content {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 24px;
+  position: relative;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.22);
+  animation: postPop 0.25s ease;
+}
+
+@keyframes postPop {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.post-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(45, 121, 243, 0.12);
+  color: #2d79f3;
+  font-size: 24px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.post-close-btn:hover {
+  background: #2d79f3;
+  color: #fff;
+}
+
+.post-modal-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1b2b4b;
+  margin-bottom: 6px;
+}
+
+.post-modal-subtitle {
+  font-size: 14px;
+  color: #6b7a99;
+  margin-bottom: 20px;
+}
+
+.post-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.post-upload-area {
+  border: 2px dashed rgba(45, 121, 243, 0.35);
+  border-radius: 18px;
+  background: rgba(45, 121, 243, 0.05);
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: 0.25s ease;
+}
+
+.post-upload-area:hover {
+  border-color: #2d79f3;
+  background: rgba(45, 121, 243, 0.08);
+}
+
+.post-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #2d79f3;
+  font-weight: 600;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+}
+
+.post-upload-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2d79f3;
+}
+
+.post-upload-placeholder small {
+  font-size: 12px;
+  color: #7a8aa8;
+  font-weight: 500;
+}
+
+.post-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  max-height: 320px;
+  display: block;
+}
+
+.post-textarea {
+  width: 100%;
+  min-height: 110px;
+  resize: none;
+  border: 1.5px solid #d9e6ff;
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  outline: none;
+  color: #1b2b4b;
+  transition: 0.2s ease;
+}
+
+.post-textarea:focus {
+  border-color: #2d79f3;
+  box-shadow: 0 0 0 4px rgba(45, 121, 243, 0.12);
+}
+
+.post-select {
+  width: 100%;
+  border: 1.5px solid #d9e6ff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+  color: #1b2b4b;
+}
+
+.post-select:focus {
+  border-color: #2d79f3;
+  box-shadow: 0 0 0 4px rgba(45, 121, 243, 0.12);
+}
+
+.post-submit-btn {
+  border: none;
+  outline: none;
+  background: #2d79f3;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 15px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: 0.25s ease;
+  box-shadow: 0 12px 24px rgba(45, 121, 243, 0.22);
+}
+
+.post-submit-btn:hover {
+  background: #256de0;
+  transform: translateY(-2px);
+}
+
+.post-submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+/* =======================
+   POST MODAL - CLEAN HUMAN STYLE
+======================= */
+.post-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  padding: 20px;
+}
+
+.post-modal.active {
+  display: flex;
+}
+
+.post-modal-content {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 22px;
+  position: relative;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  animation: postFadeUp 0.18s ease;
+}
+
+@keyframes postFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.post-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 20px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.post-close-btn:hover {
+  background: #e2e8f0;
+}
+
+.post-modal-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.post-modal-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.post-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.post-upload-area {
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+  min-height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: 0.2s ease;
+}
+
+.post-upload-area:hover {
+  border-color: #2d79f3;
+  background: #f1f6ff;
+}
+
+.post-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 20px;
+}
+
+.post-upload-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.post-upload-placeholder small {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.post-preview-image {
+  width: 100%;
+  height: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  display: block;
+}
+
+.post-textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: none;
+  border: 1px solid #dbe2ea;
+  border-radius: 12px;
+  padding: 13px 14px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  outline: none;
+  color: #0f172a;
+  background: #fff;
+  transition: 0.2s ease;
+}
+
+.post-textarea::placeholder {
+  color: #94a3b8;
+}
+
+.post-textarea:focus {
+  border-color: #2d79f3;
+  box-shadow: 0 0 0 3px rgba(45, 121, 243, 0.12);
+}
+
+.post-select {
+  width: 100%;
+  border: 1px solid #dbe2ea;
+  border-radius: 12px;
+  padding: 13px 14px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+  color: #0f172a;
+  transition: 0.2s ease;
+}
+
+.post-select:focus {
+  border-color: #2d79f3;
+  box-shadow: 0 0 0 3px rgba(45, 121, 243, 0.12);
+}
+
+.post-submit-btn {
+  border: none;
+  background: #2d79f3;
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.post-submit-btn:hover {
+  background: #256de0;
+}
+
+.post-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .post-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .post-modal-content {
+    max-width: 100%;
+    width: 100%;
+    border-radius: 18px 18px 0 0;
+    padding: 20px 16px;
+  }
+
+  .post-upload-area {
+    min-height: 170px;
+  }
+}
+/* =========================================
+   CUSTOM DROPUP CATEGORY - DARK THEME
+   ========================================= */
+
+/* Container utama untuk mengatur posisi */
+.custom-select-container {
+  position: relative;
+  width: 100%;
+  margin: 15px 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Tombol pemicu (Box yang diklik) */
+.select-trigger {
+  width: 100%;
+  background: #1a1a1a; /* Hitam elegan */
+  color: #ffffff;
+  padding: 14px 18px;
+  border: 1px solid #333;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.select-trigger:hover {
+  background: #242424;
+  border-color: #2d79f3; /* Glow biru tipis saat hover */
+}
+
+/* Icon Panah (Segitiga kecil) */
+.arrow-icon {
+  font-size: 12px;
+  color: #888;
+  transition: transform 0.3s ease;
+}
+
+/* Efek saat dropdown terbuka (Class .active) */
+.custom-select-container.active .select-trigger {
+  border-color: #2d79f3;
+  box-shadow: 0 0 0 3px rgba(45, 121, 243, 0.15);
+}
+
+.custom-select-container.active .arrow-icon {
+  transform: rotate(180deg); /* Panah berputar saat buka */
+}
+
+/* =========================================
+   LIST PILIHAN (MENU KE ATAS)
+   ========================================= */
+
+.select-options-list {
+  /* HAPUS !important DI SINI */
+  display: none; 
+  
+  position: absolute;
+  bottom: calc(100% + 10px); 
+  left: 0;
+  right: 0;
+  
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 14px;
+  z-index: 999999; 
+  
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 -12px 30px rgba(0,0,0,0.6); 
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+/* Tampilkan saat parent aktif */
+.custom-select-container.active .select-options-list {
+  /* Kasih !important di sini saja supaya dia menang saat aktif */
+  display: block !important;
+  animation: dropUpAnim 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+
+/* Item di dalam list */
+.option-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  color: #ccc;
+  cursor: pointer;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  margin-bottom: 2px;
+}
+
+.option-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Hover pada pilihan */
+.option-item:hover {
+  background: #2d79f3;
+  color: #fff;
+}
+
+/* Item yang sedang dipilih */
+.option-item.selected {
+  background: rgba(45, 121, 243, 0.15);
+  color: #2d79f3;
+  font-weight: 600;
+}
+
+/* Penanda Checkmark (Opsional jika lo pakai icon) */
+.option-item.selected::after {
+  content: '✓';
+  font-size: 12px;
+}
+
+/* =========================================
+   ANIMASI & SCROLLBAR
+   ========================================= */
+
+@keyframes dropUpAnim {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Scrollbar biar nggak kaku */
+.select-options-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.select-options-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.select-options-list::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 10px;
+}
+/* Menghilangkan kotak biru/abu-abu saat elemen diklik di mobile */
+* {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+}
+
+/* Khusus untuk tombol atau menu agar tidak ada outline saat difokuskan */
+.menu-item-tiktok, .btn, .tab, button {
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    user-select: none; /* Biar teksnya nggak gak sengaja kepilih/keblok */
+}
+/* Container Skeleton */
+.skeleton-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+/* Base Style Skeleton Card */
+.skeleton-card {
+  background: #1a1a1a;
+  border-radius: 20px;
+  height: 400px; /* Samakan dengan tinggi .card kamu */
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #333;
+}
+
+/* Animasi Cahaya Lewat (Shimmer) */
+.skeleton-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.05) 20%,
+    rgba(255, 255, 255, 0.1) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Detail di dalam skeleton */
+.skeleton-info {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+}
+
+.skeleton-text {
+  background: #333;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.skeleton-name { width: 60%; height: 18px; }
+.skeleton-bio { width: 40%; height: 12px; }
+
+ 
+</style>
