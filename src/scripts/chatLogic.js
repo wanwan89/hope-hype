@@ -396,7 +396,7 @@ function renderMessage(msg) {
   if (!messagesEl) return;
   if (document.getElementById(`msg-${msg.id}`)) return;
 
-  // [NEW FITUR] PESAN SISTEM (Keluar, Masuk, Kick)
+  // PESAN SISTEM
   if (msg.is_system) {
     const sysEl = document.createElement("div");
     sysEl.id = `msg-${msg.id}`;
@@ -424,10 +424,15 @@ function renderMessage(msg) {
   if (!replyTextContent && msg.reply_to_msg?.sticker_url) replyTextContent = "🖼 Stiker";
   if (!replyTextContent && msg.reply_to_msg?.audio_url) replyTextContent = "🎤 Voice Note";
 
+  const isMe = msg.user_id === currentUser.id;
+  const replyBorderColor = isMe ? '#25D366' : '#3a7bd5'; 
+  const replyBgColor = isMe ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.03)';
+
+  // DESAIN REPLY DI DALAM BUBBLE
   const replyHtml = msg.reply_to_msg
-    ? `<div class="reply-preview-in-chat" onclick="window.scrollToMessage('${msg.reply_to_msg.id}')" style="cursor:pointer; background:rgba(0,0,0,0.08); border-left:3px solid #0088cc; padding:5px 8px; border-radius:4px; margin-bottom:5px;">
-        <div style="font-size:10px; color:#0088cc; font-weight:bold;">${escapeHtml(msg.reply_to_msg.username)}</div>
-        <div style="font-size:11px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(replyTextContent)}</div>
+    ? `<div class="reply-preview-in-chat" onclick="window.scrollToMessage('${msg.reply_to_msg.id}')" style="cursor:pointer; background:${replyBgColor}; border-left:4px solid ${replyBorderColor}; padding:6px 10px; border-radius:6px; margin-bottom:8px;">
+        <div style="font-size:12px; color:${replyBorderColor}; font-weight:bold; margin-bottom:2px;">${escapeHtml(msg.reply_to_msg.username)}</div>
+        <div style="font-size:13px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(replyTextContent)}</div>
       </div>`
     : "";
 
@@ -435,11 +440,14 @@ function renderMessage(msg) {
   if (msg.sticker_url) {
     contentHtml = `<img src="${msg.sticker_url}" style="width:100px;height:100px;border-radius:12px;object-fit:cover;">`;
   } else if (msg.audio_url) {
+    // 🔥 WADAH GELOMBANG SUARA ASLI 🔥
     contentHtml = `
-      <div class="vn-custom-player">
-        <button class="vn-play-btn" onclick="playVN(this, '${msg.audio_url}')"><svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M8 5v14l11-7z"/></svg></button>
-        <div class="vn-waveform"><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span></div>
-        <div class="vn-time">Voice Note</div>
+      <div class="vn-custom-player" style="min-width: 220px; display: flex; align-items: center; padding: 5px 0;">
+        <button class="vn-play-btn" onclick="toggleVN('${msg.id}')" style="background: #00d2ff; border: none; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <div id="waveform-${msg.id}" style="flex-grow: 1; height: 30px; margin: 0 12px;"></div>
+        <div class="vn-time" id="vn-time-${msg.id}" style="font-size: 10px; color: #666; min-width: 35px;">--:--</div>
       </div>`;
   } else {
     contentHtml = escapeHtml(msg.message || "");
@@ -455,8 +463,6 @@ function renderMessage(msg) {
       ${reactionIcons.length > 1 ? `<span style="font-size:9px; color:#999; margin-left:2px;">${reactionIcons.length}</span>` : ""}
     </div>` : "";
 
-  const isMe = msg.user_id === currentUser.id;
-
   msgEl.innerHTML = `
     <img class="avatar" src="${avatarUrl}" onerror="this.src='/asets/png/profile.webp'">
     <div class="content" onclick="window.openReactionMenu('${msg.id}', event)" ${isMe ? `oncontextmenu="window.showDeleteMenu('${msg.id}'); return false;"` : ""} style="position: relative; min-width: 80px; transition: transform 0.2s ease; margin-bottom: ${uniqueIcons.length > 0 ? '15px' : '5px'};">
@@ -470,8 +476,8 @@ function renderMessage(msg) {
       </div>
     </div>`;
 
+  // --- LOGIKA SWIPE TO REPLY (SAMA SEPERTI SEBELUMNYA) ---
   let startX = 0; let currentX = 0; let swiping = false;
-
   msgEl.addEventListener("touchstart", (e) => { startX = e.touches[0].clientX; currentX = startX; swiping = true; msgEl.style.transition = "none"; }, { passive: true });
   msgEl.addEventListener("touchmove", (e) => {
     if (!swiping) return;
@@ -479,11 +485,9 @@ function renderMessage(msg) {
     if (msgEl.classList.contains("self")) { if (diff < 0) { if (diff < -70) diff = -70; msgEl.style.transform = `translateX(${diff}px)`; } } 
     else { if (diff > 0) { if (diff > 70) diff = 70; msgEl.style.transform = `translateX(${diff}px)`; } }
   }, { passive: true });
-
   msgEl.addEventListener("touchend", () => {
     let diff = currentX - startX;
     msgEl.style.transition = "transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)"; msgEl.style.transform = "translateX(0)";
-
     const isSelf = msgEl.classList.contains("self");
     if ((isSelf && diff < -50) || (!isSelf && diff > 50)) {
       currentReplyId = msg.id;
@@ -494,7 +498,13 @@ function renderMessage(msg) {
         if (msg.sticker_url) previewText = "Stiker";
         if (msg.audio_url) previewText = "Voice Note";
         replyBox.style.display = "flex";
-        replyBox.innerHTML = `<div class="reply-content-wrapper"><div class="reply-title">Membalas ${escapeHtml(currentUsername)}</div><div class="reply-text-preview">${escapeHtml(previewText || "")}</div></div><div class="close-reply-btn" onclick="window.cancelReply()">&times;</div>`;
+        replyBox.innerHTML = `
+          <div class="reply-content-wrapper">
+            <div class="reply-title">${escapeHtml(currentUsername)}</div>
+            <div class="reply-text-preview">${escapeHtml(previewText || "")}</div>
+          </div>
+          <div class="close-reply-btn" onclick="window.cancelReply()">&times;</div>
+        `;
       }
       if (inputEl) inputEl.focus();
       if (navigator.vibrate) navigator.vibrate(30);
@@ -503,6 +513,33 @@ function renderMessage(msg) {
   });
 
   messagesEl.appendChild(msgEl);
+
+  // 🔥 RENDER GELOMBANG SUARA DENGAN WAVESURFER 🔥
+  if (msg.audio_url && !window.waveSurfers[msg.id]) {
+    setTimeout(() => {
+      const ws = WaveSurfer.create({
+        container: `#waveform-${msg.id}`,
+        waveColor: isMe ? '#94db9c' : '#A0B2C6',
+        progressColor: isMe ? '#128C7E' : '#3a7bd5',
+        barWidth: 2,
+        barGap: 3,
+        barRadius: 2,
+        height: 25,
+        url: msg.audio_url,
+      });
+
+      window.waveSurfers[msg.id] = ws;
+      const timeEl = document.getElementById(`vn-time-${msg.id}`);
+      const btnEl = document.querySelector(`#msg-${msg.id} .vn-play-btn`);
+
+      ws.on('ready', () => { if(timeEl) timeEl.innerText = formatVNTime(ws.getDuration()); });
+      ws.on('audioprocess', () => { if(timeEl) timeEl.innerText = formatVNTime(ws.getCurrentTime()); });
+      ws.on('finish', () => {
+        if(btnEl) btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M8 5v14l11-7z"/></svg>`;
+        if(timeEl) timeEl.innerText = formatVNTime(ws.getDuration());
+      });
+    }, 100);
+  }
 }
 
 function updateMessageStatusUI(messageId, status) {
@@ -1228,18 +1265,49 @@ async function uploadToCloudinary(blob) {
   } catch (err) { showToast("Koneksi bermasalah saat mengirim VN"); }
 }
 
-window.playVN = function (btn, audioUrl) {
-  if (window.currentAudio && !window.currentAudio.paused) {
-    window.currentAudio.pause();
-    document.querySelectorAll(".vn-custom-player").forEach((p) => p.classList.remove("playing"));
-    document.querySelectorAll(".vn-play-btn").forEach((b) => { b.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M8 5v14l11-7z"/></svg>`; });
-    if (window.currentAudio.src === audioUrl) { window.currentAudio = null; return; }
+// ==========================================
+// 🔥 FUNGSI VOICE NOTE (WAVESURFER) 🔥
+// ==========================================
+window.waveSurfers = {};
+window.currentPlayingVN = null;
+
+function formatVNTime(seconds) {
+  if (isNaN(seconds)) return "0:00";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+window.toggleVN = function (msgId) {
+  const ws = window.waveSurfers[msgId];
+  if (!ws) return;
+
+  const btn = document.querySelector(`#msg-${msgId} .vn-play-btn`);
+  const playIcon = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M8 5v14l11-7z"/></svg>`;
+  const pauseIcon = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
+
+  // Matikan audio lain kalau ada yang lagi nyala
+  if (window.currentPlayingVN && window.currentPlayingVN !== ws) {
+    window.currentPlayingVN.pause();
+    const oldId = Object.keys(window.waveSurfers).find(key => window.waveSurfers[key] === window.currentPlayingVN);
+    if (oldId) {
+      const oldBtn = document.querySelector(`#msg-${oldId} .vn-play-btn`);
+      if (oldBtn) oldBtn.innerHTML = playIcon;
+    }
   }
-  const audio = new Audio(audioUrl); window.currentAudio = audio; const playerContainer = btn.closest(".vn-custom-player");
-  audio.play().then(() => { playerContainer.classList.add("playing"); btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }).catch(() => showToast("Gagal memutar pesan suara."));
-  audio.onended = () => { playerContainer.classList.remove("playing"); btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M8 5v14l11-7z"/></svg>`; window.currentAudio = null; };
+
+  // Play / Pause logic
+  if (ws.isPlaying()) {
+    ws.pause();
+    if (btn) btn.innerHTML = playIcon;
+  } else {
+    ws.play();
+    window.currentPlayingVN = ws;
+    if (btn) btn.innerHTML = pauseIcon;
+  }
 };
 
+// --- BAGIAN INI TETAP ADA (JANGAN DIHAPUS) ---
 const urlParams = new URLSearchParams(window.location.search);
 const fromId = urlParams.get('from');
 

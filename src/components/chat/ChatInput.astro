@@ -10,7 +10,8 @@
   <div id="sticker-list" style="display:flex; flex-wrap:wrap; overflow-y:auto; flex:1; justify-content:center; gap:5px;"></div>
 </div>
 
-<div id="reply-preview-box" style="display:none; width:100%; position: relative;"></div>
+<div id="reply-preview-box" style="display:none; width:100%; position: relative; background: #f0f0f0; border-left: 4px solid #3a7bd5; padding: 8px 12px; box-sizing: border-box; align-items: center; justify-content: space-between; gap: 10px; z-index: 10; border-top-right-radius: 8px; border-top-left-radius: 8px;">
+</div>
 
 <div class="chat-input-container" style="display: flex; align-items: flex-end; gap: 10px; padding: 10px 15px; background: #ffffff; width: 100%; box-sizing: border-box; border-top: 1px solid #eaeaea;">
   <div class="input-group-wrapper" style="flex: 1; display: flex; align-items: center; background: #f4f5f7; border-radius: 30px; padding: 4px 16px; position: relative; min-height: 48px; box-sizing: border-box; border: 1px solid #e0e0e0;">
@@ -66,24 +67,11 @@
     justify-content: center;
   }
 
-  #reply-preview-box {
-    display: none;
-    position: relative;
-    width: 100%;
-    background: #f0f0f0;
-    border-left: 4px solid #3a7bd5 !important;
-    padding: 8px 12px;
-    box-sizing: border-box;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    z-index: 10;
-  }
-
-  .reply-content-wrapper { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
-  .reply-title { font-size: 11px; color: #3a7bd5 !important; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .reply-text-preview { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .close-reply-btn { font-size: 24px; color: #ff4757; font-weight: bold; cursor: pointer; flex-shrink: 0; padding: 0 5px; line-height: 1; }
+  /* 🔥 CSS BARU UNTUK PREVIEW REPLY DI ATAS INPUT 🔥 */
+  .reply-content-wrapper { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; background: rgba(255,255,255,0.7); padding: 4px 8px; border-radius: 4px;}
+  .reply-title { font-size: 13px; color: #3a7bd5 !important; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .reply-text-preview { font-size: 13px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .close-reply-btn { font-size: 24px; color: #888; cursor: pointer; flex-shrink: 0; padding: 0 5px; line-height: 1; }
 
   #action-btn {
     width: 48px;
