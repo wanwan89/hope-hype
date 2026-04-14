@@ -81,7 +81,7 @@ html, body {
   font-family: "Poppins", sans-serif;
   background-color: var(--bg-chat-solid) !important;
   color: var(--text-main);
-  overflow: hidden; /* Kunci body agar tidak scroll */
+  overflow: hidden; 
 }
 
 .telegram-chat {
@@ -89,11 +89,13 @@ html, body {
   flex-direction: column; 
   height: 100%; 
   width: 100%;
+  overflow: hidden; 
   background-color: var(--bg-chat-solid) !important;
   background-image: url("/asets/png/chat.png");
   background-blend-mode: overlay;
   background-size: 400px;
-  position: relative;
+  position: relative; 
+  z-index: 1;
 }
 
 :root.dark .telegram-chat {
@@ -101,104 +103,72 @@ html, body {
   background-blend-mode: normal;
 }
 
-/* Header Kunci di Atas */
-.chat-header {
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1000;
-}
+.chat-header { flex-shrink: 0; position: relative; z-index: 1000; }
+.chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; -webkit-overflow-scrolling: touch; }
+.chat-input-wrapper { flex-shrink: 0; position: relative; z-index: 1000; background: var(--bg-input-bar) !important; padding-bottom: env(safe-area-inset-bottom, 12px); }
 
-/* Area Chat Scrollable */
-.chat-messages {
-  flex: 1; 
-  padding: 15px 12px; 
-  overflow-y: auto; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 12px;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Input Kunci di Bawah */
-.chat-input-wrapper {
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1000;
-  background: var(--bg-input-bar);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* --- 🖼️ CHAT BUBBLES (AVATAR INSIDE) --- */
+/* ========================================================= */
+/* 🔥 FIX TOTAL BUBBLE CHAT (FOTO DI DALAM BUBBLE) 🔥        */
+/* ========================================================= */
 .chat-message {
   display: flex;
+  align-items: flex-start; /* Sejajarkan foto dan teks di atas */
   width: fit-content;
   max-width: 85%; 
   position: relative;
   margin-bottom: 4px;
+  padding: 8px 10px; /* Padding ditaruh di bungkus luar */
+  border-radius: 15px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  gap: 8px; /* Jarak antara foto profil dan teks */
 }
 
-.chat-message.self { align-self: flex-end; }
-.chat-message.other { align-self: flex-start; }
+/* Pengaturan Pesan Sendiri (Self) */
+.chat-message.self { 
+  align-self: flex-end; 
+  flex-direction: row-reverse; /* Foto di kanan, teks di kiri */
+  background: var(--bg-bubble-self) !important;
+  border-bottom-right-radius: 4px;
+}
 
-/* Kontainer Bubble */
+/* Pengaturan Pesan Orang Lain (Other) */
+.chat-message.other { 
+  align-self: flex-start; 
+  flex-direction: row; /* Foto di kiri, teks di kanan */
+  background: var(--bg-bubble-other) !important;
+  border-bottom-left-radius: 4px;
+}
+
+/* Reset Background Content (Karena Background pindah ke luar) */
 .chat-message .content {
   display: flex;
-  flex-direction: row; /* Avatar sejajar dengan teks */
-  align-items: flex-start;
-  padding: 6px 10px;
-  border-radius: 15px;
+  flex-direction: column;
   max-width: 100%; 
   overflow: hidden; 
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  background: transparent !important; /* Wajib transparan */
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
 }
 
-.chat-message.self .content {
-  background: var(--bg-bubble-self) !important;
-  border-bottom-right-radius: 2px;
-  flex-direction: row-reverse; /* Avatar di kanan buat pengirim */
-}
-
-.chat-message.other .content {
-  background: var(--bg-bubble-other) !important;
-  border-bottom-left-radius: 2px;
-}
-
-/* Avatar di dalam Bubble */
+/* Foto Profil Masuk ke Dalam Bubble */
 .chat-message .avatar {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 2px;
+  flex-shrink: 0; /* Biar gak gepeng */
   object-fit: cover;
+  display: block !important;
+  margin: 0 !important; 
+  margin-top: 2px !important; /* Sejajarkan dengan nama */
 }
 
-.chat-message.other .avatar { margin-right: 8px; }
-.chat-message.self .avatar { margin-left: 8px; }
-
-/* Teks Pesan */
-.chat-message .text-wrapper {
-    display: flex;
-    flex-direction: column;
-}
-
-.chat-message .text { 
-  color: var(--text-msg); 
-  line-height: 1.4; 
-  word-break: break-word; 
-  font-size: 14px; 
-}
-
-.chat-message .username { 
-  color: var(--bg-header); 
-  font-weight: 700; 
-  font-size: 12px; 
-  margin-bottom: 2px; 
-}
-
+/* Teks & Nama */
+.chat-message .text { color: var(--text-msg); line-height: 1.4; word-break: break-word; font-size: 14px; }
+.chat-message .username { color: var(--bg-header); font-weight: 700; font-size: 12px; margin-bottom: 2px; }
 :root.dark .chat-message .username { color: #00a884; }
 
-/* Fix Gambar di Bubble */
+/* Fix Gambar & Stiker di Dalam Chat */
 .chat-message .text img {
   width: 100% !important; 
   max-width: 220px !important; 
@@ -207,19 +177,25 @@ html, body {
   margin: 5px 0;
   display: block;
 }
+.chat-message .text img[src*="sticker"] { max-width: 120px !important; }
+/* ========================================================= */
 
-/* --- 💀 ULTRA SKELETON LOADING --- */
-.chat-loading-screen { display: flex; flex-direction: column; gap: 20px; padding: 20px 15px; animation: fadeInChat 0.5s ease; }
-.skeleton-msg { display: flex; align-items: flex-start; gap: 10px; max-width: 80%; }
+
+/* --- 💀 ADAPTIVE SKELETON LOADING --- */
+.chat-loading-screen { display: flex; flex-direction: column; gap: 20px; padding: 20px 15px; animation: fadeInChatLoading 0.25s ease; }
+.skeleton-msg { display: flex; align-items: flex-end; gap: 8px; max-width: 80%; }
 .skeleton-msg.left { align-self: flex-start; }
 .skeleton-msg.right { align-self: flex-end; flex-direction: row-reverse; }
 .skeleton-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--border-color); flex-shrink: 0; opacity: 0.6; }
-.skeleton-bubble { background: var(--bg-bubble-other); border-radius: 15px; padding: 12px; min-width: 140px; }
+.skeleton-bubble { background: var(--bg-bubble-other); border-radius: 15px; padding: 12px; min-width: 140px; opacity: 0.6; position: relative; overflow: hidden; }
 .skeleton-bubble.me { background: var(--bg-bubble-self); min-width: 100px; }
+
 .shimmer { position: relative; overflow: hidden; background-color: rgba(0,0,0,0.05) !important; }
 :root.dark .shimmer { background-color: rgba(255,255,255,0.05) !important; }
 .shimmer::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmerMove 1.5s infinite; transform: translateX(-100%); }
+
 .skeleton-line { height: 10px; border-radius: 5px; margin-bottom: 8px; }
+.skeleton-line:last-child { margin-bottom: 0; }
 .w1 { width: 150px; } .w2 { width: 120px; } .w3 { width: 80px; } .w4 { width: 100px; } .w5 { width: 60px; }
 
 /* Typing Bubble */
@@ -229,11 +205,6 @@ html, body {
 .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
 .loading-chat-hint { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px; font-style: italic; }
 
-/* --- ANIMATIONS --- */
-@keyframes shimmerMove { 100% { transform: translateX(100%); } }
-@keyframes typingBounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-5px); } }
-@keyframes fadeInChat { from { opacity: 0; } to { opacity: 1; } }
-
 /* Sidebar UI Fix */
 .sidebar { background: var(--bg-sidebar) !important; border-right: 1px solid var(--border-color); height: 100%; position: fixed; z-index: 2000; }
 :root.dark :global(#private-chat-list), :root.dark :global(.sidebar-chat-item) { background-color: var(--bg-sidebar) !important; }
@@ -241,6 +212,11 @@ html, body {
 /* Scrollbar */
 .chat-messages::-webkit-scrollbar { width: 5px; }
 .chat-messages::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.3); border-radius: 10px; }
+
+/* Animations */
+@keyframes shimmerMove { 100% { transform: translateX(100%); } }
+@keyframes typingBounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-5px); } }
+@keyframes fadeInChatLoading { from { opacity: 0; } to { opacity: 1; } }
 
 @media (max-width: 480px) {
   .chat-message { max-width: 88%; }
