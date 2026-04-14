@@ -2370,3 +2370,14 @@ body.dark .ad-banner-container {
 .skel-main-card { flex: 1; height: 220px; border-radius: 18px; }
 
 .skel-bar { width: 100%; height: 72px; border-radius: 18px; margin-top: 5px; }
+/* ========================================= */
+/* FIX TOMBOL PRO, KOIN & SETTINGS (Z-INDEX) */
+/* ========================================= */
+#buyVerified,
+#topupKoinBtn,
+#settingsBtn {
+  position: relative !important; 
+  z-index: 99999 !important;      /* Paksa selalu di lapisan paling atas */
+  cursor: pointer !important;
+  pointer-events: auto !important; /* Paksa agar selalu merespon sentuhan/klik */
+}

@@ -8,11 +8,10 @@ const SUPABASE_ANON_KEY =
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // =======================
-// MAINTENANCE SYSTEM (FIX EGRESS CACHE)
+// MAINTENANCE SYSTEM
 // =======================
 async function checkMaintenance() {
     try {
-        // Cek Cache di Memori HP dulu
         const cachedMaint = sessionStorage.getItem('hh_maintenance');
         let isMaintenance = false;
 
@@ -30,29 +29,20 @@ async function checkMaintenance() {
 
             document.body.innerHTML = `
                 <div style="
-                    height: 100vh; width: 100vw;
-                    display: flex; flex-direction: column; justify-content: center; align-items: center;
-                    text-align: center; padding: 20px;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-                    background: #ffffff; color: #000000;
-                    position: fixed; top: 0; left: 0; z-index: 999999;
+                    height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; align-items: center;
+                    text-align: center; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+                    background: #ffffff; color: #000000; position: fixed; top: 0; left: 0; z-index: 999999;
                 ">
                     <div style="max-width: 280px; width: 100%;">
-                        <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; text-transform: uppercase;">
-                            HopeHype
-                        </h1>
+                        <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; text-transform: uppercase;">HopeHype</h1>
                         <div style="height: 1px; width: 40px; background: #000; margin: 0 auto 24px;"></div>
                         <p style="font-size: 15px; font-weight: 600; margin-bottom: 8px;">Lagi rehat sebentar.</p>
                         <p style="color: #666; font-size: 13px; line-height: 1.6; margin-bottom: 40px;">Sistem lagi dirapiin biar makin asik dipake.</p>
                         <div style="width: 100%; height: 2px; background: #f0f0f0; position: relative; overflow: hidden;">
                             <div style="position: absolute; width: 40%; height: 100%; background: #000; animation: lineMove 1.5s infinite ease-in-out;"></div>
                         </div>
-                        <p style="margin-top: 15px; font-size: 10px; color: #aaa; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Maintenance Mode</p>
                     </div>
-                    <style>
-                        @keyframes lineMove { 0% { left: -40%; } 100% { left: 100%; } }
-                        body { overflow: hidden !important; margin: 0 !important; padding: 0 !important; }
-                    </style>
+                    <style>@keyframes lineMove { 0% { left: -40%; } 100% { left: 100%; } } body { overflow: hidden !important; }</style>
                 </div>`;
             return true; 
         }
@@ -62,11 +52,8 @@ async function checkMaintenance() {
     return false;
 }
 
-// Eksekusi Pengecekan
 checkMaintenance().then((isMaintenance) => {
-    if (!isMaintenance) {
-        initApp();
-    }
+    if (!isMaintenance) initApp();
 });
 
 // =======================
@@ -84,7 +71,6 @@ function loadMidtrans() {
   script.onerror = () => { isMidtransLoading = false; };
   document.head.appendChild(script);
 }
-loadMidtrans();
 
 // =======================
 // DYNAMIC BADGE SYSTEM
@@ -157,27 +143,8 @@ if (toggleBtn) {
   });
 } else {
   const savedTheme = localStorage.getItem("theme");
-  const isAutoDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const isDark = savedTheme ? savedTheme === "dark" : isAutoDark;
-  applyTheme(isDark);
+  applyTheme(savedTheme ? savedTheme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
 }
-
-// =======================
-// 3D HOVER TILT
-// =======================
-document.querySelectorAll(".job-card, .recent-card").forEach((card) => {
-  card.addEventListener("mousemove", (e) => {
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const rotateX = -(y - rect.height / 2) / 12;
-    const rotateY = (x - rect.width / 2) / 12;
-    card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-  });
-  card.addEventListener("mouseleave", () => {
-    card.style.transform = "rotateX(0) rotateY(0)";
-  });
-});
 
 // =======================
 // SEARCH FILTER
@@ -185,32 +152,16 @@ document.querySelectorAll(".job-card, .recent-card").forEach((card) => {
 const searchInput = document.querySelector(".search input") || document.getElementById("searchInput") || document.querySelector('input[type="search"]');
 const cards = document.querySelectorAll(".job-card, .recent-card");
 if (searchInput) {
+  let searchTimeout = null;
   searchInput.addEventListener("keyup", function () {
-    const value = this.value.toLowerCase();
-    cards.forEach((card) => {
-      const text = card.innerText.toLowerCase();
-      card.style.display = text.includes(value) ? "" : "none";
-    });
-  });
-}
-
-// =======================
-// CARD BUTTON REDIRECT
-// =======================
-const artButton = document.getElementById("artButton");
-if (artButton && karyaCard) {
-  artButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    karyaCard.style.setProperty("background-image", "url('/asets/png/art.png')", "important");
-    setTimeout(() => (window.location.href = "/post"), 100);
-  });
-}
-const songButton = document.querySelector(".music-card .button");
-if (songButton && musicCard) {
-  songButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    musicCard.style.setProperty("background-image", "url('/asets/png/song.png')", "important");
-    setTimeout(() => (window.location.href = "/music"), 100);
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const value = this.value.toLowerCase();
+      cards.forEach((card) => {
+        const text = card.innerText.toLowerCase();
+        card.style.display = text.includes(value) ? "" : "none";
+      });
+    }, 300); // Dioptimalkan pakai Debounce
   });
 }
 
@@ -221,8 +172,7 @@ function preloadImages(urls, callback) {
   let loaded = 0;
   if (!urls.length) { if (callback) callback(); return; }
   urls.forEach((url) => {
-    const img = new Image();
-    img.src = url;
+    const img = new Image(); img.src = url;
     img.onload = () => { loaded++; if (loaded === urls.length && callback) callback(); };
     img.onerror = () => { loaded++; if (loaded === urls.length && callback) callback(); };
   });
@@ -259,11 +209,8 @@ if (avatar && avatarMenu) {
 }
 
 // =======================
-// SETTINGS MODAL + PROFILE (EGRESS FIX 🛡️)
+// UPLOAD AVATAR & SAVE PROFILE
 // =======================
-const settingsBtn = document.getElementById("settingsBtn");
-const settingsModal = document.getElementById("settingsModal");
-const closeSettings = document.getElementById("closeSettings");
 const saveSettings = document.getElementById("saveSettings");
 const newUsernameInput = document.getElementById("newUsername");
 const avatarPreview = document.getElementById("avatarPreview");
@@ -271,28 +218,9 @@ const avatarUpload = document.getElementById("avatarUpload");
 const avatarOptions = document.querySelectorAll("#avatarOptions .avatar-choice");
 
 let selectedAvatar = null;
-let uploadedAvatarFile = null; // KITA SIMPAN FILE ASLINYA, BUKAN BASE64
+let uploadedAvatarFile = null;
 
-if (settingsBtn && settingsModal) {
-  settingsBtn.addEventListener("click", () => {
-    settingsModal.classList.add("active");
-    avatarMenu && (avatarMenu.style.display = "none");
-    const usernameEl = document.getElementById("username");
-    if (usernameEl && newUsernameInput) {
-      const clone = usernameEl.cloneNode(true);
-      clone.querySelectorAll(".admin-badge, .verified-badge, img").forEach((el) => el.remove());
-      newUsernameInput.value = clone.textContent.trim();
-    }
-  });
-}
-
-if (closeSettings && settingsModal) {
-  closeSettings.addEventListener("click", () => settingsModal.classList.remove("active"));
-}
-if (settingsModal) {
-  settingsModal.addEventListener("click", (e) => { if (e.target === settingsModal) settingsModal.classList.remove("active"); });
-}
-
+// Pilihan Avatar Default
 avatarOptions.forEach((img) => {
   img.addEventListener("click", () => {
     selectedAvatar = img.getAttribute("src");
@@ -303,20 +231,19 @@ avatarOptions.forEach((img) => {
   });
 });
 
-// PREVIEW FOTO TANPA BASE64 (0 EGRESS)
+// Pilihan Upload File Lokal
 if (avatarUpload && avatarPreview) {
   avatarUpload.addEventListener("change", (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
     uploadedAvatarFile = file;
     selectedAvatar = null;
-    avatarPreview.src = URL.createObjectURL(file); // Cepat & ringan
+    avatarPreview.src = URL.createObjectURL(file);
     avatarOptions.forEach((i) => i.classList.remove("selected"));
   });
 }
 
-// PROSES SIMPAN (UPLOAD KE CLOUDINARY DULU)
+// Tombol Simpan ke Supabase & Cloudinary
 if (saveSettings) {
   saveSettings.addEventListener("click", async () => {
     const originalText = saveSettings.innerText;
@@ -332,12 +259,11 @@ if (saveSettings) {
 
       let finalAvatarUrl = selectedAvatar;
 
-      // JIKA USER UPLOAD FOTO DARI HP -> KIRIM KE CLOUDINARY
       if (uploadedAvatarFile) {
         showToast("Sedang mengunggah foto...", "Mohon tunggu", "info");
         const fd = new FormData();
         fd.append("file", uploadedAvatarFile);
-        fd.append("upload_preset", "post_hope"); // Sesuai preset Cloudinary kamu
+        fd.append("upload_preset", "post_hope"); 
 
         const res = await fetch("https://api.cloudinary.com/v1_1/dhhmkb8kl/image/upload", { 
           method: "POST", body: fd 
@@ -345,13 +271,12 @@ if (saveSettings) {
         
         if (!res.ok) throw new Error("Gagal mengunggah gambar ke server");
         const cData = await res.json();
-        finalAvatarUrl = cData.secure_url; // Dapat deh link iritnya!
+        finalAvatarUrl = cData.secure_url; 
       }
 
       const updatePayload = { username: newUsername };
       if (finalAvatarUrl) updatePayload.avatar_url = finalAvatarUrl;
 
-      // UPDATE KE SUPABASE (HANYA MENGIRIM LINK URL PENDEK)
       const { data: updatedProfile, error } = await db
         .from("profiles")
         .update(updatePayload)
@@ -365,9 +290,8 @@ if (saveSettings) {
       }
 
       sessionStorage.setItem(`hh_profile_${user.id}`, JSON.stringify(updatedProfile));
-      
       showToast("Profil diperbarui", "Foto berhasil diubah!", "success");
-      setTimeout(() => location.reload(), 1200); // Reload biar bersih semuanya
+      setTimeout(() => location.reload(), 1200); 
       
     } catch (err) {
       showToast("Gagal update profil", err.message, "error");
@@ -378,9 +302,9 @@ if (saveSettings) {
   });
 }
 
-/* =======================
-   TOAST MODERN
-======================= */
+// =======================
+// TOAST MODERN
+// =======================
 let toastTimer;
 function showToast(title, message = "", type = "info") {
   let toast = document.getElementById("toast");
@@ -415,7 +339,7 @@ function getToastIcon(type) {
 }
 
 // =======================
-// POPUP CHECK (FIX EGRESS CACHE)
+// POPUP CHECK
 // =======================
 async function checkPopup() {
   try {
@@ -425,7 +349,6 @@ async function checkPopup() {
     if (cachedPopup) {
       popupData = JSON.parse(cachedPopup);
     } else {
-      // Hapus select(*) ganti spesifik
       const { data, error } = await db.from("site_settings").select("popup_active, popup_text, popup_image").eq("id", 1).single();
       if (error || !data) return;
       popupData = data;
@@ -439,22 +362,16 @@ async function checkPopup() {
 
         if (desc) desc.textContent = popupData.popup_text || "";
         if (img) {
-            if (popupData.popup_image) {
-                img.src = popupData.popup_image;
-                img.style.display = "block";
-            } else {
-                img.style.display = "none";
-            }
+            if (popupData.popup_image) { img.src = popupData.popup_image; img.style.display = "block"; } 
+            else { img.style.display = "none"; }
         }
         if (popup) popup.style.display = "flex";
     }
-  } catch (err) {
-    console.error("checkPopup error:", err);
-  }
+  } catch (err) { console.error("checkPopup error:", err); }
 }
 
 // =======================
-// LOGIN / LOGOUT & PROFILE (FIX EGRESS CACHE)
+// AUTH SYSTEM & LOAD USER
 // =======================
 async function loadUser() {
   try {
@@ -462,28 +379,16 @@ async function loadUser() {
     if (sessionError || !session) return;
 
     const user = session.user;
-    
-    // --- TAMBAHKAN BARIS INI ---
-    // Panggil fungsi notifikasi segera setelah user terdeteksi login
     aktifkanNotifikasi(user.id); 
-    // ---------------------------
 
     const cacheKey = `hh_profile_${user.id}`;
-    // ... sisa kode loadUser kamu dibawahnya ...
-
     let profile = null;
-
-    // Cek Profile di Memori (Biar Hemat Egress)
     const cachedProfileStr = sessionStorage.getItem(cacheKey);
+    
     if (cachedProfileStr) {
       profile = JSON.parse(cachedProfileStr);
     } else {
-      const { data, error: profileError } = await db
-        .from("profiles")
-        .select("username, role, avatar_url, coins") // FIX EGRESS
-        .eq("id", user.id)
-        .single();
-        
+      const { data, error: profileError } = await db.from("profiles").select("username, role, avatar_url, coins").eq("id", user.id).single();
       if (profileError) return;
       profile = data;
       if (profile) sessionStorage.setItem(cacheKey, JSON.stringify(profile));
@@ -492,9 +397,7 @@ async function loadUser() {
     if (profile) {
       if (profile.role === 'banned') {
         showToast("Akun Anda telah ditangguhkan oleh Admin!");
-        await db.auth.signOut(); 
-        window.location.href = "/login"; 
-        return; 
+        await db.auth.signOut(); window.location.href = "/login"; return; 
       }
 
       const usernameEl = document.getElementById("username");
@@ -514,43 +417,9 @@ async function loadUser() {
       }
       if (coinEl) coinEl.textContent = profile.coins ?? 0;
     }
-  } catch (err) {
-    console.error("loadUser error:", err);
-  }
+  } catch (err) { console.error("loadUser error:", err); }
 }
 
-// =======================
-// TOMBOL PRO & LIVECHAT
-// =======================
-const buyBtnElement = document.getElementById("buyVerified");
-const bSheet = document.getElementById("vip-bottom-sheet");
-const bOverlay = document.querySelector(".sheet-overlay");
-
-if (buyBtnElement && bSheet) {
-  buyBtnElement.onclick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    bSheet.style.display = "flex";
-    if (window.LiveChatWidget && typeof window.LiveChatWidget.call === "function") {
-      try { window.LiveChatWidget.call("hide_widget"); } catch (err) {}
-    }
-    setTimeout(() => bSheet.classList.add("active"), 10);
-  };
-}
-
-if (bOverlay && bSheet) {
-  bOverlay.onclick = () => {
-    bSheet.classList.remove("active");
-    if (window.LiveChatWidget && typeof window.LiveChatWidget.call === "function") {
-      try { window.LiveChatWidget.call("maximize_widget"); } catch (err) {}
-    }
-    setTimeout(() => bSheet.style.display = "none", 400);
-  };
-}
-
-// =======================
-// AUTH MENU
-// =======================
 async function updateAuthMenu() {
   try {
     const logoutBtn = document.getElementById("logoutBtn");
@@ -571,30 +440,23 @@ document.getElementById("logoutBtn")?.addEventListener("click", async () => {
       const { error } = await db.auth.signOut();
       if (error && error.message !== "Auth session missing!") throw error;
     }
-    localStorage.clear();
-    sessionStorage.clear(); // Bersihkan semua cache
-    window.location.href = "/login";
+    localStorage.clear(); sessionStorage.clear(); window.location.href = "/login";
   } catch (err) {
     if (err.message === "Auth session missing!") {
-localStorage.clear(); 
-sessionStorage.clear(); 
-window.location.href = "/"; // <--- Cukup garis miring doang, Bree!
-return;
-
+      localStorage.clear(); sessionStorage.clear(); window.location.href = "/"; return;
     }
     showToast("Gagal logout", err.message, "error");
   }
 });
 
 // =======================
-// INIT APP (OPTIMIZED WITH SKELETON)
+// INIT APP
 // =======================
 const initApp = async () => {
   const skeleton = document.getElementById('skeleton-screen');
   const mainContent = document.querySelector('.container');
 
   try {
-    // Jalankan semua proses secara PARALEL (Barengan) biar hemat waktu
     await Promise.all([
       updateAuthMenu(),
       loadUser(),
@@ -606,11 +468,9 @@ const initApp = async () => {
   } catch (err) {
     console.error("initApp error:", err);
   } finally {
-    // Matikan skeleton dan munculkan konten utama
     if (skeleton) skeleton.style.display = 'none';
     if (mainContent) {
       mainContent.style.display = 'block';
-      // Pastikan loader spinner lama (jika ada) juga hilang
       const oldLoader = document.querySelector('.loader');
       if (oldLoader) oldLoader.style.display = 'none';
     }
@@ -618,39 +478,32 @@ const initApp = async () => {
 };
 
 // ==========================================
-// PARTICLES
+// PARTICLES & PAYMENTS (MIDTRANS)
 // ==========================================
 function createParticles(x, y) {
   const colors = ["#f09f33", "#00d2ff", "#4ade80", "#ff758c", "#ffffff"];
   for (let i = 0; i < 15; i++) {
-    const p = document.createElement("div");
-    p.className = "particle";
+    const p = document.createElement("div"); p.className = "particle";
     const size = Math.random() * 8 + 4;
     p.style.width = `${size}px`; p.style.height = `${size}px`;
     p.style.background = colors[Math.floor(Math.random() * colors.length)];
     p.style.left = `${x}px`; p.style.top = `${y}px`;
-    p.style.position = "fixed"; p.style.pointerEvents = "none";
-    p.style.borderRadius = "50%"; p.style.zIndex = "10001";
+    p.style.position = "fixed"; p.style.pointerEvents = "none"; p.style.borderRadius = "50%"; p.style.zIndex = "10001";
     document.body.appendChild(p);
 
     const angle = Math.random() * Math.PI * 2;
     const velocity = Math.random() * 100 + 50;
-    const destinationX = Math.cos(angle) * velocity;
-    const destinationY = Math.sin(angle) * velocity;
+    const destinationX = Math.cos(angle) * velocity; const destinationY = Math.sin(angle) * velocity;
 
-    p.animate([
-      { transform: "translate(0, 0) scale(1)", opacity: 1 },
-      { transform: `translate(${destinationX}px, ${destinationY}px) scale(0)`, opacity: 0 },
-    ], { duration: 600 + Math.random() * 400, easing: "cubic-bezier(0, .9, .57, 1)", fill: "forwards" });
+    p.animate([ { transform: "translate(0, 0) scale(1)", opacity: 1 }, { transform: `translate(${destinationX}px, ${destinationY}px) scale(0)`, opacity: 0 } ], 
+    { duration: 600 + Math.random() * 400, easing: "cubic-bezier(0, .9, .57, 1)", fill: "forwards" });
     setTimeout(() => p.remove(), 1000);
   }
 }
 
-// ==========================================
-// PAYMENT LOGIC 1: BELI PREMIUM 
-// ==========================================
+// Beli Premium
 document.querySelectorAll(".buy-now-btn").forEach((button) => {
-  button.onclick = async (e) => {
+  button.addEventListener("click", async (e) => {
     const btn = e.currentTarget;
     createParticles(e.clientX, e.clientY);
     btn.classList.add("btn-loading");
@@ -665,14 +518,10 @@ document.querySelectorAll(".buy-now-btn").forEach((button) => {
     try {
       const { data: { user }, error: userError } = await db.auth.getUser();
       if (userError || !user) throw new Error("Silakan login dulu!");
-
       const { data: { session }, error: sessionError } = await db.auth.getSession();
       if (sessionError || !session) throw new Error("Silakan login ulang.");
 
-      if (!window.snap) {
-        loadMidtrans(); btn.classList.remove("btn-loading");
-        return showToast("Menyiapkan koneksi", "Silakan klik lagi", "info");
-      }
+      if (!window.snap) { loadMidtrans(); btn.classList.remove("btn-loading"); return showToast("Menyiapkan koneksi", "Silakan klik lagi", "info"); }
 
       const response = await fetch("https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/pay-premium", {
         method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
@@ -680,66 +529,24 @@ document.querySelectorAll(".buy-now-btn").forEach((button) => {
       });
 
       if (!response.ok) throw new Error("Gagal menghubungi server");
-      const result = await response.json();
-      const token = result?.token;
+      const result = await response.json(); const token = result?.token;
       btn.classList.remove("btn-loading");
-
       if (!token) throw new Error("Token tidak ditemukan");
 
       window.snap.pay(token, {
-        onSuccess: () => {
-          sessionStorage.removeItem(`hh_profile_${user.id}`); // Clear cache biar data update
-          showToast("Pembayaran berhasil", "Status akun akan diperbarui", "success");
-          setTimeout(() => location.reload(), 1200);
-        },
+        onSuccess: () => { sessionStorage.removeItem(`hh_profile_${user.id}`); showToast("Pembayaran berhasil", "Status akun akan diperbarui", "success"); setTimeout(() => location.reload(), 1200); },
         onPending: () => showToast("Menunggu pembayaran", "Selesaikan transaksi terlebih dahulu", "warning"),
         onError: () => showToast("Pembayaran gagal", "Silakan coba lagi", "error"),
-        onClose: async () => {
-          try {
-            await db.from("notifications").insert({ user_id: user.id, type: "payment_pending", message: `Kamu punya transaksi paket ${name} yang tertunda. Klik di sini untuk melanjutkan.`, token: token, is_read: false });
-            showToast("Tersimpan!", "Cek lonceng notifikasi ya", "success");
-            if (typeof loadUnreadNotifications === "function") loadUnreadNotifications();
-          } catch (err) {}
-        },
+        onClose: async () => { try { await db.from("notifications").insert({ user_id: user.id, type: "payment_pending", message: `Transaksi ${name} tertunda. Lanjutkan?`, token: token, is_read: false }); showToast("Tersimpan!", "Cek lonceng notifikasi", "success"); if (typeof loadUnreadNotifications === "function") loadUnreadNotifications(); } catch (err) {} }
       });
-    } catch (err) {
-      btn.classList.remove("btn-loading"); showToast("Koneksi gagal", err.message, "error");
-    }
-  };
+    } catch (err) { btn.classList.remove("btn-loading"); showToast("Koneksi gagal", err.message, "error"); }
+  });
 });
 
-// =======================
-// TOMBOL KOIN + SLIDE UP
-// =======================
-const topupKoinBtn = document.getElementById("topupKoinBtn");
-const coinSheet = document.getElementById("coin-bottom-sheet");
-const coinOverlay = document.querySelector(".coin-sheet-overlay");
-
-if (topupKoinBtn && coinSheet) {
-  topupKoinBtn.onclick = (e) => {
-    e.preventDefault(); e.stopPropagation();
-    coinSheet.style.display = "flex";
-    if (window.LiveChatWidget && typeof window.LiveChatWidget.call === "function") { try { window.LiveChatWidget.call("hide_widget"); } catch (err) {} }
-    setTimeout(() => coinSheet.classList.add("active"), 10);
-  };
-}
-
-if (coinOverlay && coinSheet) {
-  coinOverlay.onclick = () => {
-    coinSheet.classList.remove("active");
-    if (window.LiveChatWidget && typeof window.LiveChatWidget.call === "function") { try { window.LiveChatWidget.call("maximize_widget"); } catch (err) {} }
-    setTimeout(() => coinSheet.style.display = "none", 400);
-  };
-}
-
-// ==========================================
-// PAYMENT LOGIC 2: BELI PAKET KOIN
-// ==========================================
+// Beli Paket Koin
 document.querySelectorAll(".buy-coin-btn").forEach((button) => {
-  button.onclick = async (e) => {
-    const btn = e.currentTarget;
-    btn.classList.add("btn-loading");
-
+  button.addEventListener("click", async (e) => {
+    const btn = e.currentTarget; btn.classList.add("btn-loading");
     const card = btn.closest(".coin-product-card");
     if (!card) return btn.classList.remove("btn-loading");
 
@@ -753,10 +560,7 @@ document.querySelectorAll(".buy-coin-btn").forEach((button) => {
       const { data: { session }, error: sessionError } = await db.auth.getSession();
       if (sessionError || !session) throw new Error("Silakan login ulang");
 
-      if (!window.snap) {
-        loadMidtrans(); btn.classList.remove("btn-loading");
-        return showToast("Menyiapkan pembayaran", "Silakan klik beli lagi", "info");
-      }
+      if (!window.snap) { loadMidtrans(); btn.classList.remove("btn-loading"); return showToast("Menyiapkan pembayaran", "Silakan klik beli lagi", "info"); }
 
       const response = await fetch("https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/pay-coins", {
         method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
@@ -767,37 +571,22 @@ document.querySelectorAll(".buy-coin-btn").forEach((button) => {
       if (!response.ok) throw new Error(`HTTP ${response.status} - ${rawText}`);
       let result; try { result = JSON.parse(rawText); } catch (jsonErr) { throw new Error("Response bukan JSON valid"); }
 
-      const token = result?.token;
-      btn.classList.remove("btn-loading");
+      const token = result?.token; btn.classList.remove("btn-loading");
       if (!token) throw new Error("Token pembayaran tidak ditemukan");
 
       window.snap.pay(token, {
-        onSuccess: function () {
-          sessionStorage.removeItem(`hh_profile_${user.id}`); // Clear Cache
-          showToast("Pembayaran berhasil", "Koin akan masuk setelah dikonfirmasi", "success");
-          setTimeout(() => location.reload(), 1200);
-        },
+        onSuccess: function () { sessionStorage.removeItem(`hh_profile_${user.id}`); showToast("Pembayaran berhasil", "Koin akan masuk", "success"); setTimeout(() => location.reload(), 1200); },
         onPending: function () { showToast("Menunggu pembayaran", "Selesaikan transaksi terlebih dahulu", "warning"); },
         onError: function () { showToast("Pembayaran gagal", "Terjadi kesalahan", "error"); },
-        onClose: async function () {
-          try {
-            await db.from("notifications").insert({ user_id: user.id, type: "payment_pending", message: `Kamu punya transaksi ${name} yang tertunda. Klik di sini untuk melanjutkan.`, token: token, is_read: false });
-            showToast("Tersimpan!", "Cek lonceng notifikasi ya", "success");
-            if (typeof loadUnreadNotifications === "function") loadUnreadNotifications();
-          } catch (err) {}
-        },
+        onClose: async function () { try { await db.from("notifications").insert({ user_id: user.id, type: "payment_pending", message: `Transaksi ${name} tertunda. Lanjutkan?`, token: token, is_read: false }); showToast("Tersimpan!", "Cek lonceng notifikasi", "success"); if (typeof loadUnreadNotifications === "function") loadUnreadNotifications(); } catch (err) {} }
       });
     } catch (err) { btn.classList.remove("btn-loading"); showToast("Gagal", err.message, "error"); }
-  };
+  });
 });
 
-// ==========================================
-// PAYMENT LOGIC 3: KOIN CUSTOM
-// ==========================================
+// Beli Koin Custom
 (() => {
-  const COIN_PRICE = 100;
-  const MIN_TRANSACTION = 10000;
-  const MAX_COINS = 5000;
+  const COIN_PRICE = 100; const MIN_TRANSACTION = 10000; const MAX_COINS = 5000;
   const customInput = document.getElementById("custom-coins");
   const customBtn = document.getElementById("buy-custom-coin-btn");
   const priceDisplay = document.getElementById("custom-price-display");
@@ -805,18 +594,13 @@ document.querySelectorAll(".buy-coin-btn").forEach((button) => {
   if (!customInput || !customBtn || !priceDisplay) return;
 
   customInput.addEventListener("input", () => {
-    const coins = parseInt(customInput.value) || 0;
-    const price = coins * COIN_PRICE;
-    if (coins > 0) {
-      priceDisplay.textContent = `Total: Rp ${price.toLocaleString("id-ID")}`;
-      priceDisplay.style.color = price < MIN_TRANSACTION ? "#ff4757" : "#4ade80";
-    } else { priceDisplay.textContent = ""; }
+    const coins = parseInt(customInput.value) || 0; const price = coins * COIN_PRICE;
+    if (coins > 0) { priceDisplay.textContent = `Total: Rp ${price.toLocaleString("id-ID")}`; priceDisplay.style.color = price < MIN_TRANSACTION ? "#ff4757" : "#4ade80"; } 
+    else { priceDisplay.textContent = ""; }
   });
 
   customBtn.addEventListener("click", async () => {
-    const coins = parseInt(customInput.value);
-    const price = coins * COIN_PRICE;
-
+    const coins = parseInt(customInput.value); const price = coins * COIN_PRICE;
     if (!coins || coins <= 0) return showToast("Masukkan jumlah koin!", "", "warning");
     if (price < MIN_TRANSACTION) return showToast("Minimal Rp 10.000", `Butuh minimal ${MIN_TRANSACTION / COIN_PRICE} koin untuk lanjut.`, "warning");
     if (coins > MAX_COINS) return showToast(`Maksimal ${MAX_COINS} koin`, "", "warning");
@@ -838,25 +622,14 @@ document.querySelectorAll(".buy-coin-btn").forEach((button) => {
       });
 
       if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.message || "Gagal membuat transaksi"); }
-      const result = await response.json();
-      const token = result?.token;
+      const result = await response.json(); const token = result?.token;
       if (!token) throw new Error("Token pembayaran tidak ditemukan.");
 
       window.snap.pay(token, {
-        onSuccess: () => {
-          sessionStorage.removeItem(`hh_profile_${user.id}`); // Clear Cache
-          showToast("Berhasil!", "Koin segera ditambahkan", "success");
-          setTimeout(() => location.reload(), 1500);
-        },
+        onSuccess: () => { sessionStorage.removeItem(`hh_profile_${user.id}`); showToast("Berhasil!", "Koin segera ditambahkan", "success"); setTimeout(() => location.reload(), 1500); },
         onPending: () => showToast("Menunggu pembayaran", "", "warning"),
         onError: () => showToast("Pembayaran gagal", "", "error"),
-        onClose: async () => {
-          try {
-            await db.from("notifications").insert({ user_id: user.id, type: "payment_pending", message: `Kamu punya transaksi ${coins} Koin (Custom) yang tertunda. Klik di sini untuk melanjutkan.`, token: token, is_read: false });
-            showToast("Tersimpan!", "Cek lonceng notifikasi ya", "success");
-            if (typeof loadUnreadNotifications === "function") loadUnreadNotifications();
-          } catch (err) {}
-        },
+        onClose: async () => { try { await db.from("notifications").insert({ user_id: user.id, type: "payment_pending", message: `Transaksi ${coins} Koin tertunda. Lanjutkan?`, token: token, is_read: false }); showToast("Tersimpan!", "Cek lonceng notifikasi", "success"); if (typeof loadUnreadNotifications === "function") loadUnreadNotifications(); } catch (err) {} }
       });
     } catch (err) { showToast("Gagal", err.message, "error"); } finally { customBtn.classList.remove("btn-loading"); }
   });
@@ -875,10 +648,8 @@ let notificationsPaused = false;
 function updateHopeTalkBadge(count) {
   const badge = document.getElementById('hopeTalkBadge');
   if (!badge) return;
-  if (count > 0) {
-    badge.textContent = count > 99 ? "99+" : String(count); badge.style.display = 'flex';
-    badge.animate([{ transform: "translateY(-50%) scale(1)" }, { transform: "translateY(-50%) scale(1.3)" }, { transform: "translateY(-50%) scale(1)" }], { duration: 300, easing: "ease-out" });
-  } else { badge.style.display = 'none'; }
+  if (count > 0) { badge.textContent = count > 99 ? "99+" : String(count); badge.style.display = 'flex'; badge.animate([{ transform: "translateY(-50%) scale(1)" }, { transform: "translateY(-50%) scale(1.3)" }, { transform: "translateY(-50%) scale(1)" }], { duration: 300, easing: "ease-out" }); } 
+  else { badge.style.display = 'none'; }
 }
 
 function updateNotifBadge(count) {
@@ -893,7 +664,6 @@ async function loadUnreadNotifications() {
     const { data: { user } } = await db.auth.getUser();
     if (!user) return updateNotifBadge(0);
     currentUserId = user.id;
-    // count: exact, head: true -> INI SANGAT HEMAT EGRESS KARENA GAK NGAMBIL BARIS DATA
     const { count, error } = await db.from("notifications").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("is_read", false);
     if (!error) updateNotifBadge(count || 0);
   } catch (err) {}
@@ -918,27 +688,16 @@ if (hopeTalkBoxElement) {
   });
 }
 
-// ===== LOAD NOTIF LIST (FIX EGRESS: SELECT SPESIFIK) =====
 async function loadNotificationList() {
   if (!currentUserId) return;
-  if (!notifList) {
-    notifList = document.createElement("div"); notifList.id = "notificationList"; document.body.appendChild(notifList);
-  }
+  if (!notifList) { notifList = document.createElement("div"); notifList.id = "notificationList"; document.body.appendChild(notifList); }
 
   try {
-    // FIX EGRESS: Hapus * dan ganti dengan kolom spesifik
-    const { data, error } = await db
-      .from("notifications")
-      .select("id, type, message, created_at, is_read, post_id, token") 
-      .eq("user_id", currentUserId)
-      .order("created_at", { ascending: false })
-      .limit(20);
-
+    const { data, error } = await db.from("notifications").select("id, type, message, created_at, is_read, post_id, token").eq("user_id", currentUserId).order("created_at", { ascending: false }).limit(20);
     if (error) throw error;
 
     const isDark = document.body.classList.contains("dark");
-    const headerBorder = isDark ? "#3f445e" : "#f0f0f0";
-    const titleColor = isDark ? "#ffffff" : "#1a1a1a";
+    const headerBorder = isDark ? "#3f445e" : "#f0f0f0"; const titleColor = isDark ? "#ffffff" : "#1a1a1a";
 
     notifList.innerHTML = `
       <div style="padding:5px 5px 15px 5px; border-bottom:1px solid ${headerBorder}; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
@@ -949,68 +708,37 @@ async function loadNotificationList() {
     `;
 
     const container = notifList.querySelector("#notifItemsContainer");
-    if (!data || data.length === 0) {
-      container.innerHTML = `<div style="text-align:center; padding:40px 10px; color:#bbb; font-size:13px;">Belum ada kabar terbaru... 🍃</div>`;
-      return;
-    }
+    if (!data || data.length === 0) { container.innerHTML = `<div style="text-align:center; padding:40px 10px; color:#bbb; font-size:13px;">Belum ada kabar terbaru... 🍃</div>`; return; }
 
     data.forEach((n) => {
       const li = document.createElement("li");
-      const bgUnread = isDark ? "rgba(29,161,242,0.15)" : "rgba(29,161,242,0.05)";
-      const bgRead = isDark ? "#363b5e" : "#ffffff";
-      const borderColor = n.is_read ? (isDark ? "#444b75" : "#f0f0f0") : "rgba(29,161,242,0.2)";
-      const textColor = isDark ? "#eeeeee" : "#333333";
+      const bgUnread = isDark ? "rgba(29,161,242,0.15)" : "rgba(29,161,242,0.05)"; const bgRead = isDark ? "#363b5e" : "#ffffff";
+      const borderColor = n.is_read ? (isDark ? "#444b75" : "#f0f0f0") : "rgba(29,161,242,0.2)"; const textColor = isDark ? "#eeeeee" : "#333333";
       const type = n.type ? n.type.toLowerCase() : "";
 
       let iconName = type === "like" ? "favorite" : type === "comment" ? "chat_bubble" : type === "follow" ? "person_add" : type === "withdraw" ? "payments" : type === "payment_pending" ? "account_balance_wallet" : "notifications";
       let iconColor = type === "like" ? "#FF3040" : type === "comment" ? "#00D084" : type === "follow" ? "#9b59b6" : type === "withdraw" ? "#f09f33" : type === "payment_pending" ? "#e67e22" : "#1DA1F2";
       const time = n.created_at ? new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
 
-      Object.assign(li.style, {
-        padding: "14px", marginBottom: "10px", borderRadius: "18px", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", background: n.is_read ? bgRead : bgUnread, border: "1px solid " + borderColor, transition: "all 0.2s ease"
-      });
+      Object.assign(li.style, { padding: "14px", marginBottom: "10px", borderRadius: "18px", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", background: n.is_read ? bgRead : bgUnread, border: "1px solid " + borderColor, transition: "all 0.2s ease" });
 
-      li.innerHTML = `
-        <div style="background:${iconColor}20; width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-          <span class="material-icons" style="color:${iconColor}; font-size:18px;">${iconName}</span>
-        </div>
-        <div style="flex:1;">
-          <p style="margin:0; font-size:12px; color:${textColor}; line-height:1.4; font-weight:500;">${n.message}</p>
-          <span style="font-size:10px; color:#888; margin-top:4px; display:block;">${time}</span>
-        </div>
-        ${!n.is_read ? '<div style="width:6px; height:6px; background:#1DA1F2; border-radius:50%;"></div>' : ""}
-      `;
+      li.innerHTML = `<div style="background:${iconColor}20; width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><span class="material-icons" style="color:${iconColor}; font-size:18px;">${iconName}</span></div><div style="flex:1;"><p style="margin:0; font-size:12px; color:${textColor}; line-height:1.4; font-weight:500;">${n.message}</p><span style="font-size:10px; color:#888; margin-top:4px; display:block;">${time}</span></div>${!n.is_read ? '<div style="width:6px; height:6px; background:#1DA1F2; border-radius:50%;"></div>' : ""}`;
 
       li.onclick = async () => {
         try {
           await db.from("notifications").update({ is_read: true }).eq("id", n.id);
           switch (type) {
             case "payment_pending":
-              if (n.token) {
-                closeNotif();
-                if (!window.snap) { loadMidtrans(); showToast("Menyiapkan pembayaran...", "Tunggu sebentar", "info"); }
-                setTimeout(() => {
-                  if (window.snap) {
-                    window.snap.pay(n.token, {
-                      onSuccess: () => { showToast("Berhasil!", "Pembayaran selesai", "success"); setTimeout(() => location.reload(), 1200); },
-                      onPending: () => showToast("Pending", "Selesaikan pembayaranmu", "warning"),
-                      onError: () => showToast("Gagal", "Pembayaran gagal", "error"),
-                      onClose: () => showToast("Popup ditutup", "Buka notifikasi lagi jika ingin lanjut", "info")
-                    });
-                  }
-                }, 800);
-              }
+              if (n.token) { closeNotif(); if (!window.snap) { loadMidtrans(); showToast("Menyiapkan pembayaran...", "Tunggu", "info"); } setTimeout(() => { if (window.snap) { window.snap.pay(n.token, { onSuccess: () => { showToast("Berhasil!", "", "success"); setTimeout(() => location.reload(), 1200); }, onPending: () => showToast("Pending", "", "warning"), onError: () => showToast("Gagal", "", "error") }); } }, 800); }
               break;
             case "follow":
               const { data: prof } = await db.from("profiles").select("username").eq("id", n.post_id).single();
               if (prof?.username) window.location.href = `/data?id=${prof.username}`;
               break;
             case "withdraw": window.location.href = "/saldo"; break;
-            default:
-              if (n.post_id) { window.location.href = `/post?id=${n.post_id}`; } else { closeNotif(); }
-              break;
+            default: if (n.post_id) { window.location.href = `/post?id=${n.post_id}`; } else { closeNotif(); } break;
           }
-        } catch (e) { console.error("Redirect error:", e); }
+        } catch (e) {}
       };
       container.appendChild(li);
     });
@@ -1020,183 +748,82 @@ async function loadNotificationList() {
 async function subscribeNotifications() {
   try {
     const { data: { user } } = await db.auth.getUser();
-    if (!user) return;
-    currentUserId = user.id;
-
+    if (!user) return; currentUserId = user.id;
     if (notifChannel) db.removeChannel(notifChannel);
-    notifChannel = db.channel("user-notifications").on(
-      "postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-      async (payload) => {
-        if (!notificationsPaused) {
-          await loadUnreadNotifications();
-          const cleanMsg = payload.new.message.replace(/<[^>]*>/g, "");
-          showToast("Notifikasi Baru", cleanMsg, "info");
-        }
-      }
+    notifChannel = db.channel("user-notifications").on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+      async (payload) => { if (!notificationsPaused) { await loadUnreadNotifications(); const cleanMsg = payload.new.message.replace(/<[^>]*>/g, ""); showToast("Notifikasi Baru", cleanMsg, "info"); } }
     ).subscribe();
   } catch (err) {}
 }
 
 if (notifBell) {
   notifBell.onclick = async (e) => {
-    e.stopPropagation();
-    notificationsPaused = true;
+    e.stopPropagation(); notificationsPaused = true;
     if (notifCountEl) { notifCountEl.style.display = "none"; notifCountEl.textContent = "0"; }
     try { await db.from("notifications").update({ is_read: true }).eq("user_id", currentUserId).eq("is_read", false); } catch (err) {}
-    await loadNotificationList();
-    setTimeout(() => notificationsPaused = false, 2000);
+    await loadNotificationList(); setTimeout(() => notificationsPaused = false, 2000);
 
     let overlay = document.getElementById("notifOverlay");
     if (!overlay) { overlay = document.createElement("div"); overlay.id = "notifOverlay"; document.body.appendChild(overlay); }
-
-    Object.assign(overlay.style, {
-      display: "block", position: "fixed", top: "0", left: "0", width: "100vw", height: "100vh",
-      background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)", zIndex: "10000", opacity: "0", transition: "opacity 0.3s ease"
-    });
+    Object.assign(overlay.style, { display: "block", position: "fixed", top: "0", left: "0", width: "100vw", height: "100vh", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)", zIndex: "10000", opacity: "0", transition: "opacity 0.3s ease" });
     overlay.onclick = closeNotif;
 
-    Object.assign(notifList.style, {
-      display: "flex", flexDirection: "column", position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-      width: "88vw", maxWidth: "380px", maxHeight: "75vh", background: document.body.classList.contains("dark") ? "#2b3050" : "#ffffff",
-      zIndex: "10001", borderRadius: "28px", boxShadow: "0 20px 60px rgba(0,0,0,0.4)", padding: "20px", overflowY: "auto",
-      opacity: "0", transition: "opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-    });
-
+    Object.assign(notifList.style, { display: "flex", flexDirection: "column", position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "88vw", maxWidth: "380px", maxHeight: "75vh", background: document.body.classList.contains("dark") ? "#2b3050" : "#ffffff", zIndex: "10001", borderRadius: "28px", boxShadow: "0 20px 60px rgba(0,0,0,0.4)", padding: "20px", overflowY: "auto", opacity: "0", transition: "opacity 0.3s" });
     requestAnimationFrame(() => { overlay.style.opacity = "1"; notifList.style.opacity = "1"; });
   };
 }
 
 function closeNotif() {
   const overlay = document.getElementById("notifOverlay");
-  if (notifList) notifList.style.opacity = "0";
-  if (overlay) overlay.style.opacity = "0";
+  if (notifList) notifList.style.opacity = "0"; if (overlay) overlay.style.opacity = "0";
   setTimeout(() => { if (notifList) notifList.style.display = "none"; if (overlay) overlay.remove(); }, 300);
 }
 
 // ==========================================
-// PUSH NOTIFICATION SYSTEM (HOPECREATE FULL)
+// PUSH NOTIFICATION SYSTEM (FIREBASE)
 // ==========================================
-
 async function aktifkanNotifikasi(userId) {
-  // 1. Tunggu sampai SDK Firebase terload
-  if (typeof firebase === 'undefined') {
-    setTimeout(() => aktifkanNotifikasi(userId), 1000);
-    return;
-  }
+  if (typeof firebase === 'undefined') { setTimeout(() => aktifkanNotifikasi(userId), 1000); return; }
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCRnwkcydQK2LkdQj7H3WmIKdEyZ9giD9I",
-    authDomain: "hopecreate-b21d8.firebaseapp.com",
-    projectId: "hopecreate-b21d8",
-    storageBucket: "hopecreate-b21d8.firebasestorage.app",
-    messagingSenderId: "313569930727",
-    appId: "1:313569930727:web:afd1e2757cd0fe0867a142"
-  };
+  const firebaseConfig = { apiKey: "AIzaSyCRnwkcydQK2LkdQj7H3WmIKdEyZ9giD9I", authDomain: "hopecreate-b21d8.firebaseapp.com", projectId: "hopecreate-b21d8", storageBucket: "hopecreate-b21d8.firebasestorage.app", messagingSenderId: "313569930727", appId: "1:313569930727:web:afd1e2757cd0fe0867a142" };
 
   try {
-    // 2. Inisialisasi Firebase
-    if (firebase.apps.length === 0) {
-      firebase.initializeApp(firebaseConfig);
-      console.log("Firebase HopeCreate Siap! 🚀");
-    }
-
+    if (firebase.apps.length === 0) { firebase.initializeApp(firebaseConfig); console.log("Firebase HopeCreate Siap! 🚀"); }
     const messaging = firebase.messaging();
     
-    // 3. DAFTARKAN SERVICE WORKER SECARA MANUAL (SOLUSI STUCK)
     console.log("Mendaftarkan Satpam (SW)...");
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-    
-    // Tunggu sampai SW benar-benar aktif
     await navigator.serviceWorker.ready;
     console.log("Satpam Aktif & Siap Jaga! ✅");
 
-    // 4. Minta Izin Notifikasi
     const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-        console.log("Izin ditolak. Klik ikon gembok di browser lalu 'Reset Permission'!");
-        return;
-    }
+    if (permission !== 'granted') { console.log("Izin ditolak. Klik ikon gembok di browser lalu 'Reset Permission'!"); return; }
 
-    // 5. Ambil Token (Gunakan registration agar tidak 'No Active SW')
     console.log("Sedang mengambil token...");
-const token = await messaging.getToken({ 
-  serviceWorkerRegistration: registration,
-vapidKey: 'BJ-fS0SMZxgXvwFL8AGRf4dxL9ijWXAONctGak7-4SGM0UxojMSeWpufhfE_kiIbBBx4iFtWUkYyks-8n36ztYo'
-});
-
+    const token = await messaging.getToken({ serviceWorkerRegistration: registration, vapidKey: 'BJ-fS0SMZxgXvwFL8AGRf4dxL9ijWXAONctGak7-4SGM0UxojMSeWpufhfE_kiIbBBx4iFtWUkYyks-8n36ztYo' });
 
     if (token) {
-      // 6. Simpan ke Supabase
-      const { error } = await db.from('user_push_tokens').upsert({ 
-        user_id: userId, 
-        token: token 
-      }, { onConflict: 'user_id' }); // Update jika user_id sudah ada
-
-      if (error) {
-        console.error("Gagal simpan ke Supabase:", error.message);
-      } else {
-        console.log("Notifikasi HopeHype Aktif! ✅ Token aman di database.");
-      }
+      const { error } = await db.from('user_push_tokens').upsert({ user_id: userId, token: token }, { onConflict: 'user_id' });
+      if (error) console.error("Gagal simpan ke Supabase:", error.message);
+      else console.log("Notifikasi HopeHype Aktif! ✅ Token aman di database.");
     }
   } catch (err) {
     console.error("DEBUG ERROR NOTIF:", err.message);
-    
-    // Jika error karena 'Permission Denied' atau 403, sarankan hapus DB
-    if (err.message.includes('403') || err.message.includes('permission')) {
-        console.log("Saran: Jalankan perintah 'indexedDB.deleteDatabase' di console.");
-    }
+    if (err.message.includes('403') || err.message.includes('permission')) console.log("Saran: Jalankan perintah 'indexedDB.deleteDatabase' di console.");
   }
 }
-  // 1. Kita pilih elemen slider-nya
-  const slider = document.querySelector('.ad-slider');
-  let autoSlideTimer;
 
-  // 2. Fungsi untuk mulai geser otomatis
-  function startAutoSlide() {
-    autoSlideTimer = setInterval(() => {
-      // Cek apakah slider sudah mentok di ujung kanan
-      // (Kita beri toleransi -5 pixel agar perhitungannya aman di semua HP)
-      if (slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 5) {
-        // Kalau sudah di ujung, kembalikan ke iklan pertama (kiri mentok)
-        slider.scrollLeft = 0; 
-      } else {
-        // Kalau belum di ujung, geser sejauh 1 lebar iklan
-        slider.scrollLeft += slider.clientWidth; 
-      }
-    }, 5000); // Angka 4000 = 4 detik. Kamu bisa ubah kecepatan gantinya di sini!
-  }
-
-  // 3. Fungsi untuk menyetop otomatis (saat user sedang geser manual)
-  function stopAutoSlide() {
-    clearInterval(autoSlideTimer);
-  }
-
-  // 4. Jalankan slide otomatis saat halaman dibuka
-  startAutoSlide();
-
-  // 5. Logika pintar: Stop otomatis kalau user sedang menyentuh/menggeser, 
-  // dan nyalakan lagi kalau jarinya sudah dilepas agar tidak bentrok.
-  slider.addEventListener('touchstart', stopAutoSlide); // Jari nempel di HP
-  slider.addEventListener('touchend', startAutoSlide);  // Jari lepas dari HP
-  slider.addEventListener('mouseenter', stopAutoSlide); // Mouse masuk (di laptop)
-  slider.addEventListener('mouseleave', startAutoSlide);// Mouse keluar (di laptop)
 // =======================
 // PWA INSTALL SYSTEM
 // =======================
 const installAdBtn = document.getElementById('installPwaAd');
-
 if (installAdBtn) {
   installAdBtn.addEventListener('click', async () => {
-    // Kita cek variabel window.pwaPrompt yang ditangkap HTML tadi
     if (window.pwaPrompt) {
-      window.pwaPrompt.prompt(); // Munculkan popup install
-      
+      window.pwaPrompt.prompt(); 
       const { outcome } = await window.pwaPrompt.userChoice;
-      if (outcome === 'accepted') {
-        console.log('PWA diinstal!');
-      }
-      
-      window.pwaPrompt = null; // Kosongkan setelah dipakai
+      if (outcome === 'accepted') console.log('PWA diinstal!');
+      window.pwaPrompt = null; 
     } else {
       showToast("Info", "Aplikasi sudah terinstal, atau gunakan menu 'Add to Home Screen' di browser kamu.", "info");
     }

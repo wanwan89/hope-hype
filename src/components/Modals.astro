@@ -142,3 +142,57 @@
     </div>
   </div>
 </div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // 1. TUTUP VIP SHEET
+    const bOverlay = document.querySelector(".sheet-overlay:not(.coin-sheet-overlay)");
+    const bSheet = document.getElementById("vip-bottom-sheet");
+    if (bOverlay && bSheet) {
+      bOverlay.addEventListener("click", () => {
+        bSheet.classList.remove("active");
+        setTimeout(() => bSheet.style.display = "none", 400);
+      });
+    }
+
+    // 2. TUTUP COIN SHEET
+    const coinOverlay = document.querySelector(".coin-sheet-overlay");
+    const coinSheet = document.getElementById("coin-bottom-sheet");
+    if (coinOverlay && coinSheet) {
+      coinOverlay.addEventListener("click", () => {
+        coinSheet.classList.remove("active");
+        setTimeout(() => coinSheet.style.display = "none", 400);
+      });
+    }
+
+    // 3. BUKA & TUTUP SETTINGS MODAL
+    const settingsBtn = document.getElementById("settingsBtn");
+    const settingsModal = document.getElementById("settingsModal");
+    const closeSettings = document.getElementById("closeSettings");
+
+    if (settingsBtn && settingsModal) {
+      settingsBtn.addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        settingsModal.classList.add("active");
+        const avatarMenu = document.getElementById("avatarMenu");
+        if (avatarMenu) avatarMenu.style.display = "none";
+        
+        const usernameEl = document.getElementById("username");
+        const newUsernameInput = document.getElementById("newUsername");
+        if (usernameEl && newUsernameInput) {
+          const clone = usernameEl.cloneNode(true);
+          clone.querySelectorAll(".admin-badge, .verified-badge, img").forEach((el) => el.remove());
+          newUsernameInput.value = clone.textContent.trim();
+        }
+      });
+    }
+
+    if (closeSettings && settingsModal) {
+      closeSettings.addEventListener("click", () => settingsModal.classList.remove("active"));
+    }
+    if (settingsModal) {
+      settingsModal.addEventListener("click", (e) => { 
+        if (e.target === settingsModal) settingsModal.classList.remove("active"); 
+      });
+    }
+  });
+</script>

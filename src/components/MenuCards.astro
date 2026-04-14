@@ -69,3 +69,66 @@
     <h4>Voicehype</h4>
   </div>
 </a>
+
+<script>
+  // 1. LOGIKA 3D HOVER TILT
+  document.querySelectorAll(".job-card, .recent-card").forEach((card) => {
+    card.addEventListener("mousemove", (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const rotateX = -(y - rect.height / 2) / 12;
+      const rotateY = (x - rect.width / 2) / 12;
+      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    });
+    card.addEventListener("mouseleave", () => {
+      card.style.transform = "rotateX(0) rotateY(0)";
+    });
+  });
+
+  // 2. LOGIKA EFEK KLIK TOMBOL KARTU
+  const artButton = document.getElementById("artButton");
+  const karyaCard = document.querySelector(".job-card.karya-card");
+  if (artButton && karyaCard) {
+    artButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      karyaCard.style.setProperty("background-image", "url('/asets/png/art.png')", "important");
+      setTimeout(() => (window.location.href = "/post"), 100);
+    });
+  }
+
+  const songButton = document.querySelector(".music-card .button");
+  const musicCard = document.querySelector(".job-card.music-card");
+  if (songButton && musicCard) {
+    songButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      musicCard.style.setProperty("background-image", "url('/asets/png/song.png')", "important");
+      setTimeout(() => (window.location.href = "/music"), 100);
+    });
+  }
+
+  // 3. LOGIKA BUKA BOTTOM SHEET (PRO & KOIN)
+  const buyProBtn = document.getElementById("buyVerified");
+  const vipSheet = document.getElementById("vip-bottom-sheet");
+  if (buyProBtn) {
+    buyProBtn.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      if (vipSheet) {
+        vipSheet.style.display = "flex";
+        setTimeout(() => vipSheet.classList.add("active"), 10);
+      }
+    });
+  }
+
+  const koinBtn = document.getElementById("topupKoinBtn");
+  const coinSheet = document.getElementById("coin-bottom-sheet");
+  if (koinBtn) {
+    koinBtn.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      if (coinSheet) {
+        coinSheet.style.display = "flex";
+        setTimeout(() => coinSheet.classList.add("active"), 10);
+      }
+    });
+  }
+</script>

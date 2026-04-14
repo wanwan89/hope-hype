@@ -8,3 +8,26 @@
     <img src="/asets/gif/iklan4.gif" alt="Install Aplikasi" class="ad-slide" id="installPwaAd" style="cursor: pointer;">
   </div>
 </div>
+
+<script>
+  const slider = document.querySelector('.ad-slider');
+  if (slider) {
+    let autoSlideTimer;
+    function startAutoSlide() {
+      autoSlideTimer = setInterval(() => {
+        if (slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 5) {
+          slider.scrollLeft = 0; 
+        } else {
+          slider.scrollLeft += slider.clientWidth; 
+        }
+      }, 5000); 
+    }
+    function stopAutoSlide() { clearInterval(autoSlideTimer); }
+    
+    startAutoSlide();
+    slider.addEventListener('touchstart', stopAutoSlide); 
+    slider.addEventListener('touchend', startAutoSlide);  
+    slider.addEventListener('mouseenter', stopAutoSlide); 
+    slider.addEventListener('mouseleave', startAutoSlide);
+  }
+</script>
