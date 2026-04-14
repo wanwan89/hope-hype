@@ -1,3 +1,5 @@
+ 
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
 // ===== Supabase config =====
@@ -13,6 +15,7 @@ const receiveSound = new Audio("asets/sound/receive.mp3");
 // 🔥 TAMBAHKAN DUA BARIS INI UNTUK RINGTONE 🔥
 const ringtoneSound = new Audio("asets/sound/call.wav");
 ringtoneSound.loop = true; // Biar nadanya bunyi berulang-ulang
+
 
 // ===== Global State =====
 let currentRoomId = "room-1";
@@ -31,6 +34,8 @@ let totalOnlineUsers = 0;
 let isSidebarLoading = false; 
 let selectedGroupFile = null;
 let callRoom; // Ini buat nyimpen instance room LiveKit pas telponan
+
+
 
 // ===== DOM =====
 const messagesEl = document.getElementById("chat-messages");
@@ -154,7 +159,7 @@ function triggerPushNotif(teksPesan) {
   .catch(err => console.error("Gagal kirim sinyal notif:", err));
 }
 
-function showToast(message, type = "warning") {
+function showToast(message) {
   let container = document.getElementById("toast");
   if (!container) {
     container = document.createElement("div");
@@ -162,40 +167,25 @@ function showToast(message, type = "warning") {
     document.body.appendChild(container);
   }
 
-  // Tentukan ikon berdasarkan tipe
-  let icon = "!";
-  let title = "Pemberitahuan";
-  
-  if (type === "success") { icon = "✓"; title = "Berhasil"; }
-  else if (type === "error") { icon = "✕"; title = "Gagal"; }
-  else if (type === "info") { icon = "i"; title = "Info"; }
-
   const toast = document.createElement("div");
   toast.className = "toast-card";
   toast.innerHTML = `
-    <div class="toast-icon-wrap ${type}">
-      <span class="toast-icon">${icon}</span>
+    <div class="toast-icon-wrap warning">
+      <span class="toast-icon">!</span>
     </div>
     <div class="toast-content">
-      <span class="toast-title">${title}</span>
+      <span class="toast-title">Pemberitahuan</span>
       <span class="toast-subtitle">${message}</span>
     </div>
     <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
   `;
 
   container.appendChild(toast);
-  
-  // Kasih jeda sedikit biar animasi transisinya jalan
-  requestAnimationFrame(() => { 
-    requestAnimationFrame(() => {
-      toast.classList.add("show"); 
-    });
-  });
+  requestAnimationFrame(() => { toast.classList.add("show"); });
 
-  // Hapus otomatis setelah 3 detik
   setTimeout(() => {
     toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300); // Tunggu animasi selesai baru dihapus dari DOM
+    setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
 
@@ -226,7 +216,7 @@ function getBadge(role) {
   role = role.toLowerCase().trim();
   if (role === "admin") return `<span class="badge" style="background:#ff4757; font-size:7px; padding:0 4px; border-radius:3px; margin-left:2px; font-weight:600;">🛡 Admin</span>`;
   if (role === "verified") return `<span class="verified-icon" style="margin-left:4px; display:inline-flex; align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1DA1F2"/><path d="M7 12.5l3 3 7-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
-  const crownBadges = { crown1: "/asets/png/crown1.png", crown2: "/asets/png/crown2.png", crown3: "/asets/png/crown3.png" };
+  const crownBadges = { crown1: "asets/png/crown1.png", crown2: "asets/png/crown2.png", crown3: "asets/png/crown3.png" };
   if (crownBadges[role]) return `<img src="${crownBadges[role]}" alt="${role}" style="width:16px;height:16px;margin-left:4px;vertical-align:middle;object-fit:contain;display:inline-block;" onerror="this.style.display='none';">`;
   return "";
 }
@@ -276,7 +266,7 @@ async function requireLogin() {
   const { data: { session }, error } = await supabase.auth.getSession();
   if (error || !session || !session.user) {
     showToast("Kamu harus login dulu!");
-    window.location.href = "/login";
+    window.location.href = "login.html";
     return false;
   }
   currentUser = { id: session.user.id };
@@ -396,7 +386,7 @@ function renderMessage(msg) {
   if (!messagesEl) return;
   if (document.getElementById(`msg-${msg.id}`)) return;
 
-  // PESAN SISTEM
+  // [NEW FITUR] PESAN SISTEM (Keluar, Masuk, Kick)
   if (msg.is_system) {
     const sysEl = document.createElement("div");
     sysEl.id = `msg-${msg.id}`;
@@ -416,7 +406,7 @@ function renderMessage(msg) {
   msgEl.className = `chat-message ${msg.user_id === currentUser.id ? "self" : "other"}`;
 
   const currentUsername = msg.profiles?.username || msg.username || "User";
-  const avatarUrl = msg.profiles?.avatar_url || msg.avatar || "/asets/png/profile.webp";
+  const avatarUrl = msg.profiles?.avatar_url || msg.avatar || "asets/png/profile.png";
   const currentRole = msg.profiles?.role || msg.role || "user";
   const statusIcon = msg.user_id === currentUser.id ? getStatusIcon(msg.status || "sent") : "";
 
@@ -424,15 +414,10 @@ function renderMessage(msg) {
   if (!replyTextContent && msg.reply_to_msg?.sticker_url) replyTextContent = "🖼 Stiker";
   if (!replyTextContent && msg.reply_to_msg?.audio_url) replyTextContent = "🎤 Voice Note";
 
-  const isMe = msg.user_id === currentUser.id;
-  const replyBorderColor = isMe ? '#25D366' : '#3a7bd5'; 
-  const replyBgColor = isMe ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.03)';
-
-  // DESAIN REPLY DI DALAM BUBBLE
   const replyHtml = msg.reply_to_msg
-    ? `<div class="reply-preview-in-chat" onclick="window.scrollToMessage('${msg.reply_to_msg.id}')" style="cursor:pointer; background:${replyBgColor}; border-left:4px solid ${replyBorderColor}; padding:6px 10px; border-radius:6px; margin-bottom:8px;">
-        <div style="font-size:12px; color:${replyBorderColor}; font-weight:bold; margin-bottom:2px;">${escapeHtml(msg.reply_to_msg.username)}</div>
-        <div style="font-size:13px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(replyTextContent)}</div>
+    ? `<div class="reply-preview-in-chat" onclick="window.scrollToMessage('${msg.reply_to_msg.id}')" style="cursor:pointer; background:rgba(0,0,0,0.08); border-left:3px solid #0088cc; padding:5px 8px; border-radius:4px; margin-bottom:5px;">
+        <div style="font-size:10px; color:#0088cc; font-weight:bold;">${escapeHtml(msg.reply_to_msg.username)}</div>
+        <div style="font-size:11px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(replyTextContent)}</div>
       </div>`
     : "";
 
@@ -440,14 +425,11 @@ function renderMessage(msg) {
   if (msg.sticker_url) {
     contentHtml = `<img src="${msg.sticker_url}" style="width:100px;height:100px;border-radius:12px;object-fit:cover;">`;
   } else if (msg.audio_url) {
-    // 🔥 WADAH GELOMBANG SUARA ASLI 🔥
     contentHtml = `
-      <div class="vn-custom-player" style="min-width: 220px; display: flex; align-items: center; padding: 5px 0;">
-        <button class="vn-play-btn" onclick="toggleVN('${msg.id}')" style="background: #00d2ff; border: none; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M8 5v14l11-7z"/></svg>
-        </button>
-        <div id="waveform-${msg.id}" style="flex-grow: 1; height: 30px; margin: 0 12px;"></div>
-        <div class="vn-time" id="vn-time-${msg.id}" style="font-size: 10px; color: #666; min-width: 35px;">--:--</div>
+      <div class="vn-custom-player">
+        <button class="vn-play-btn" onclick="playVN(this, '${msg.audio_url}')"><svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M8 5v14l11-7z"/></svg></button>
+        <div class="vn-waveform"><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span></div>
+        <div class="vn-time">Voice Note</div>
       </div>`;
   } else {
     contentHtml = escapeHtml(msg.message || "");
@@ -463,8 +445,10 @@ function renderMessage(msg) {
       ${reactionIcons.length > 1 ? `<span style="font-size:9px; color:#999; margin-left:2px;">${reactionIcons.length}</span>` : ""}
     </div>` : "";
 
+  const isMe = msg.user_id === currentUser.id;
+
   msgEl.innerHTML = `
-    <img class="avatar" src="${avatarUrl}" onerror="this.src='/asets/png/profile.webp'">
+    <img class="avatar" src="${avatarUrl}" onerror="this.src='asets/png/profile.png'">
     <div class="content" onclick="window.openReactionMenu('${msg.id}', event)" ${isMe ? `oncontextmenu="window.showDeleteMenu('${msg.id}'); return false;"` : ""} style="position: relative; min-width: 80px; transition: transform 0.2s ease; margin-bottom: ${uniqueIcons.length > 0 ? '15px' : '5px'};">
       <div class="username">${escapeHtml(currentUsername)}${getBadge(currentRole)}</div>
       ${replyHtml}
@@ -476,8 +460,8 @@ function renderMessage(msg) {
       </div>
     </div>`;
 
-  // --- LOGIKA SWIPE TO REPLY (SAMA SEPERTI SEBELUMNYA) ---
   let startX = 0; let currentX = 0; let swiping = false;
+
   msgEl.addEventListener("touchstart", (e) => { startX = e.touches[0].clientX; currentX = startX; swiping = true; msgEl.style.transition = "none"; }, { passive: true });
   msgEl.addEventListener("touchmove", (e) => {
     if (!swiping) return;
@@ -485,9 +469,11 @@ function renderMessage(msg) {
     if (msgEl.classList.contains("self")) { if (diff < 0) { if (diff < -70) diff = -70; msgEl.style.transform = `translateX(${diff}px)`; } } 
     else { if (diff > 0) { if (diff > 70) diff = 70; msgEl.style.transform = `translateX(${diff}px)`; } }
   }, { passive: true });
+
   msgEl.addEventListener("touchend", () => {
     let diff = currentX - startX;
     msgEl.style.transition = "transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)"; msgEl.style.transform = "translateX(0)";
+
     const isSelf = msgEl.classList.contains("self");
     if ((isSelf && diff < -50) || (!isSelf && diff > 50)) {
       currentReplyId = msg.id;
@@ -498,14 +484,7 @@ function renderMessage(msg) {
         if (msg.sticker_url) previewText = "Stiker";
         if (msg.audio_url) previewText = "Voice Note";
         replyBox.style.display = "flex";
-replyBox.innerHTML = `
-  <div class="reply-content-wrapper">
-    <div class="reply-title">${escapeHtml(currentUsername)}</div>
-    <div class="reply-text-preview">${escapeHtml(previewText || "")}</div>
-  </div>
-  <div class="close-reply-btn" onclick="window.cancelReply()">&times;</div>
-`;
-
+        replyBox.innerHTML = `<div class="reply-content-wrapper"><div class="reply-title">Membalas ${escapeHtml(currentUsername)}</div><div class="reply-text-preview">${escapeHtml(previewText || "")}</div></div><div class="close-reply-btn" onclick="window.cancelReply()">&times;</div>`;
       }
       if (inputEl) inputEl.focus();
       if (navigator.vibrate) navigator.vibrate(30);
@@ -514,33 +493,6 @@ replyBox.innerHTML = `
   });
 
   messagesEl.appendChild(msgEl);
-
-  // 🔥 RENDER GELOMBANG SUARA DENGAN WAVESURFER 🔥
-  if (msg.audio_url && !window.waveSurfers[msg.id]) {
-    setTimeout(() => {
-      const ws = WaveSurfer.create({
-        container: `#waveform-${msg.id}`,
-        waveColor: isMe ? '#94db9c' : '#A0B2C6',
-        progressColor: isMe ? '#128C7E' : '#3a7bd5',
-        barWidth: 2,
-        barGap: 3,
-        barRadius: 2,
-        height: 25,
-        url: msg.audio_url,
-      });
-
-      window.waveSurfers[msg.id] = ws;
-      const timeEl = document.getElementById(`vn-time-${msg.id}`);
-      const btnEl = document.querySelector(`#msg-${msg.id} .vn-play-btn`);
-
-      ws.on('ready', () => { if(timeEl) timeEl.innerText = formatVNTime(ws.getDuration()); });
-      ws.on('audioprocess', () => { if(timeEl) timeEl.innerText = formatVNTime(ws.getCurrentTime()); });
-      ws.on('finish', () => {
-        if(btnEl) btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M8 5v14l11-7z"/></svg>`;
-        if(timeEl) timeEl.innerText = formatVNTime(ws.getDuration());
-      });
-    }, 100);
-  }
 }
 
 function updateMessageStatusUI(messageId, status) {
@@ -629,7 +581,7 @@ async function Message() {
     message: text,
     user_id: currentUser.id,
     username: myUsername,
-    avatar: sideAvatar?.src || "/asets/png/profile.webp",
+    avatar: sideAvatar?.src || "asets/png/profile.png",
     role: myRole || "user",
     created_at: new Date().toISOString(),
     room_id: currentRoomId, 
@@ -688,7 +640,7 @@ if (inputEl) {
 
 async function sendAudioMessage(url) {
   const tempId = "temp-" + Date.now();
-  renderMessage({ id: tempId, message: "🎤 Voice Note", audio_url: url, user_id: currentUser.id, username: myUsername, avatar: sideAvatar?.src || "/asets/png/profile.webp", role: myRole || "user", created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
+  renderMessage({ id: tempId, message: "🎤 Voice Note", audio_url: url, user_id: currentUser.id, username: myUsername, avatar: sideAvatar?.src || "asets/png/profile.png", role: myRole || "user", created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
   scrollToBottom();
 
   try {
@@ -728,8 +680,9 @@ function initRealtimeMessages() {
         // A. Deteksi Panggilan Masuk (Untuk Penerima)
         if (newMsg.message.includes("📞 Memanggil")) {
           if (newMsg.user_id !== currentUser.id) {
-            if (typeof window.showIncomingCall === "function") {
-              window.showIncomingCall(newMsg);
+            // Pastikan fungsi showIncomingCall sudah kamu buat di bagian bawah file
+            if (typeof showIncomingCall === "function") {
+              showIncomingCall(newMsg);
             }
           }
         }
@@ -751,7 +704,7 @@ function initRealtimeMessages() {
         const senderProfile = await getCachedProfile(newMsg.user_id);
         newMsg.profiles = {
           username: senderProfile?.username || "User",
-          avatar_url: senderProfile?.avatar_url || "/asets/png/profile.webp",
+          avatar_url: senderProfile?.avatar_url || "asets/png/profile.png",
           role: senderProfile?.role || "user"
         };
 
@@ -774,12 +727,13 @@ function initRealtimeMessages() {
       const updated = payload.new;
       const old = payload.old;
 
-      // Logika Update Status (Read/Delivered)
+      // Logika Update Status (Read/Delivered) - Hapus Object.keys biar ceklis update instan!
       if (updated.status !== old?.status) {
         if (updated.user_id === currentUser.id) {
           updateMessageStatusUI(updated.id, updated.status || "sent");
         }
       }
+
 
       if (updated.room_id !== currentRoomId) return;
 
@@ -868,7 +822,7 @@ globalBtn.onclick = async () => {
     
     if (btnOpenInvite) btnOpenInvite.style.display = 'none';
     
-    // Sembunyikan tombol telpon
+    // Sembunyikan tombol telpon (Hapus duplikatnya)
     const btnCall = document.getElementById('btn-start-call');
     if (btnCall) btnCall.style.display = 'none';
     
@@ -994,9 +948,10 @@ async function bukaChatPribadi(partnerId, partnerName, partnerShortId = "") {
   const btnInvite = document.getElementById('btn-open-invite');
   if (btnInvite) btnInvite.style.display = 'none';
 
+  // ✅ PASTIKAN ID NYA btn-start-call SESUAI HTML
   const btnCall = document.getElementById('btn-start-call'); 
   if (btnCall) {
-    btnCall.style.setProperty('display', 'flex', 'important'); 
+    btnCall.style.setProperty('display', 'flex', 'important'); // Paksa muncul
     btnCall.dataset.targetId = partnerId;
     btnCall.dataset.targetName = partnerName;
     btnCall.onclick = () => window.startLiveKitCall();
@@ -1045,9 +1000,9 @@ async function sendSticker(url) {
   const tempId = "temp-" + Date.now();
   try {
     const profile = await getCachedProfile(currentUser.id);
-    renderMessage({ id: tempId, message: "", user_id: currentUser.id, username: profile?.username || "User", avatar: profile?.avatar_url || "/asets/png/profile.webp", role: profile?.role || "user", sticker_url: url, created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
+    renderMessage({ id: tempId, message: "", user_id: currentUser.id, username: profile?.username || "User", avatar: profile?.avatar_url || "asets/png/profile.png", role: profile?.role || "user", sticker_url: url, created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
     scrollToBottom(); sendSound.play().catch(() => {});
-    const { data, error } = await supabase.from("messages").insert([{ message: "", user_id: currentUser.id, username: profile?.username || "User", avatar: profile?.avatar_url || "/asets/png/profile.webp", role: profile?.role || "user", sticker_url: url, room_id: currentRoomId, status: "sent" }]).select().single();
+    const { data, error } = await supabase.from("messages").insert([{ message: "", user_id: currentUser.id, username: profile?.username || "User", avatar: profile?.avatar_url || "asets/png/profile.png", role: profile?.role || "user", sticker_url: url, room_id: currentRoomId, status: "sent" }]).select().single();
     
     if (error) throw error;
     const tempEl = document.getElementById(`msg-${tempId}`);
@@ -1156,42 +1111,33 @@ if (btnCariDoiActual) {
     
     closeSidebar();
 
-    // --- FULL FIX LOGIKA RADAR BARU ---
-const loadingOverlay = document.createElement("div"); 
-loadingOverlay.className = "searching-overlay"; // Kita ganti class-nya agar sesuai CSS baru
-loadingOverlay.id = "active-search-overlay";
-
-loadingOverlay.innerHTML = `
-  <div class="radar-pencari-ghaib">
-    <div class="radar-inner">
-      <div class="radar-scan"></div>
-      <div class="radar-waves">
-        <div class="wave"></div>
-        <div class="wave"></div>
-        <div class="wave"></div>
-        <div class="wave"></div>
+    // 1. TAMPILKAN LAYAR ANIMASI RADAR (TANPA IKON)
+    const loadingOverlay = document.createElement("div"); 
+    loadingOverlay.className = "doi-search-overlay"; 
+    loadingOverlay.id = "active-search-overlay";
+    loadingOverlay.innerHTML = `
+      <div class="radar-container">
+        <div class="radar-wave"></div>
+        <div class="radar-wave"></div>
+        <div class="radar-wave"></div>
       </div>
-      <div class="radar-dots">
-        <div class="dot d1"></div>
-        <div class="dot d2"></div>
+      <div style="text-align: center;">
+        <h3 class="search-title-glow">MENCARI DOI...</h3>
+        <p class="search-subtitle-glow">Memindai area sekitarmu</p>
       </div>
-      <img id="my-search-avatar" src="${sideAvatar?.src || '/asets/png/profile.webp'}" class="radar-center-avatar" />
-    </div>
-  </div>
-  <div style="text-align: center; margin-top: 25px; z-index: 10001;">
-    <h3 class="search-title-romantic">MEMINDAI DOI...</h3>
-    <p class="search-subtitle-romantic">Area: Seluruh Jagad Raya</p>
-  </div>
-`;
-
+    `; 
     document.body.appendChild(loadingOverlay);
     
     const lawanJenis = myProfile.gender === "Pria" ? "Wanita" : "Pria";
+    
+    // 🔥 TRIK BIAR MAKIN REALISTIS: Waktu tunggu diacak antara 4 sampai 7 detik
     const waktuTungguAcak = Math.floor(Math.random() * 3000) + 4000; 
     
+    // 2. PROSES PENCARIAN (Menunggu sesuai waktu acak)
     setTimeout(async () => {
       const { data: users } = await supabase.from("profiles").select("*").neq("id", currentUser.id).eq("gender", lawanJenis);
       
+      // Hapus layar animasi setelah selesai
       const overlayToRemove = document.getElementById("active-search-overlay");
       if (overlayToRemove) overlayToRemove.remove();
 
@@ -1200,10 +1146,12 @@ loadingOverlay.innerHTML = `
         return; 
       }
       
+      // Munculkan Kartu Doi
       tampilkanDoiCard(users[Math.floor(Math.random() * users.length)]);
       
+      // HP bergetar tanda Doi berhasil ditemukan!
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
-    }, waktuTungguAcak); 
+    }, waktuTungguAcak); // <--- Sekarang pakai waktu yang diacak tadi
   };
 }
 
@@ -1280,49 +1228,18 @@ async function uploadToCloudinary(blob) {
   } catch (err) { showToast("Koneksi bermasalah saat mengirim VN"); }
 }
 
-// ==========================================
-// 🔥 FUNGSI VOICE NOTE (WAVESURFER) 🔥
-// ==========================================
-window.waveSurfers = {};
-window.currentPlayingVN = null;
-
-function formatVNTime(seconds) {
-  if (isNaN(seconds)) return "0:00";
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
-}
-
-window.toggleVN = function (msgId) {
-  const ws = window.waveSurfers[msgId];
-  if (!ws) return;
-
-  const btn = document.querySelector(`#msg-${msgId} .vn-play-btn`);
-  const playIcon = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M8 5v14l11-7z"/></svg>`;
-  const pauseIcon = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
-
-  // Matikan audio lain kalau ada yang lagi nyala
-  if (window.currentPlayingVN && window.currentPlayingVN !== ws) {
-    window.currentPlayingVN.pause();
-    const oldId = Object.keys(window.waveSurfers).find(key => window.waveSurfers[key] === window.currentPlayingVN);
-    if (oldId) {
-      const oldBtn = document.querySelector(`#msg-${oldId} .vn-play-btn`);
-      if (oldBtn) oldBtn.innerHTML = playIcon;
-    }
+window.playVN = function (btn, audioUrl) {
+  if (window.currentAudio && !window.currentAudio.paused) {
+    window.currentAudio.pause();
+    document.querySelectorAll(".vn-custom-player").forEach((p) => p.classList.remove("playing"));
+    document.querySelectorAll(".vn-play-btn").forEach((b) => { b.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M8 5v14l11-7z"/></svg>`; });
+    if (window.currentAudio.src === audioUrl) { window.currentAudio = null; return; }
   }
-
-  // Play / Pause logic
-  if (ws.isPlaying()) {
-    ws.pause();
-    if (btn) btn.innerHTML = playIcon;
-  } else {
-    ws.play();
-    window.currentPlayingVN = ws;
-    if (btn) btn.innerHTML = pauseIcon;
-  }
+  const audio = new Audio(audioUrl); window.currentAudio = audio; const playerContainer = btn.closest(".vn-custom-player");
+  audio.play().then(() => { playerContainer.classList.add("playing"); btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; }).catch(() => showToast("Gagal memutar pesan suara."));
+  audio.onended = () => { playerContainer.classList.remove("playing"); btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M8 5v14l11-7z"/></svg>`; window.currentAudio = null; };
 };
 
-// --- BAGIAN INI TETAP ADA (JANGAN DIHAPUS) ---
 const urlParams = new URLSearchParams(window.location.search);
 const fromId = urlParams.get('from');
 
@@ -1364,7 +1281,7 @@ document.getElementById('btn-create-group').onclick = async () => {
     btn.disabled = true;
 
     try {
-        let finalPhotoUrl = "/asets/png/profile.webp";
+        let finalPhotoUrl = "asets/png/profile.png";
 
         if (selectedGroupFile) {
             const fd = new FormData();
@@ -1394,7 +1311,7 @@ document.getElementById('btn-create-group').onclick = async () => {
         
         document.getElementById('group-modal').style.display = 'none';
         document.getElementById('in-group-name').value = '';
-        document.getElementById('group-photo-preview').src = '/asets/png/profile.webp';
+        document.getElementById('group-photo-preview').src = 'asets/png/profile.png';
         selectedGroupFile = null;
 
         await refreshSidebar();
@@ -1450,6 +1367,7 @@ function mulaiChatGrup(groupId, groupName) {
     window.activeGroupId = groupId;
     currentRoomId = `group_${groupId}`; 
 
+    // 1. SEMBUNYIKAN TOMBOL TELPON (Cukup panggil sekali saja)
     const btnCall = document.getElementById('btn-start-call');
     if (btnCall) {
         btnCall.style.display = 'none';
@@ -1458,6 +1376,7 @@ function mulaiChatGrup(groupId, groupName) {
     const btnInvite = document.getElementById('btn-open-invite');
     if (btnInvite) btnInvite.style.display = 'flex'; 
 
+    // 2. LOGIKA HEADER & IKON GEAR
     const headerTitle = document.querySelector('.chat-header h3');
     if (headerTitle) {
       const customIcon = `
@@ -1480,6 +1399,7 @@ function mulaiChatGrup(groupId, groupName) {
     const statusHeader = document.getElementById('status-header');
     if (statusHeader) statusHeader.innerText = "Grup Chat Terbuka";
 
+    // 3. RESET TAMPILAN PESAN
     document.getElementById('chat-messages').innerHTML = ''; 
     if (window.innerWidth <= 768) closeSidebar();
 
@@ -1505,6 +1425,7 @@ if (btnOpenInvite) {
   };
 }
 
+// [NEW FITUR] PESAN SISTEM SAAT INVITE
 const btnInviteNow = document.getElementById('btn-invite-now');
 if (btnInviteNow) {
   btnInviteNow.onclick = async () => {
@@ -1534,6 +1455,7 @@ if (btnInviteNow) {
         .from('group_members').insert([{ group_id: window.activeGroupId, user_id: targetUser.id }]);
       if (insertError) throw insertError;
 
+      // [KIRIM PESAN SISTEM]
       const systemMsg = `${myUsername} mengundang ${targetUser.username}`;
       await supabase.from('messages').insert([{
           room_id: `group_${window.activeGroupId}`,
@@ -1555,15 +1477,18 @@ if (btnInviteNow) {
 // ==========================================
 // [NEW FITUR] LOGIKA PENGATURAN GRUP FULL
 // ==========================================
+
+// Variabel untuk menyimpan file foto yang dipilih saat edit
 let selectedEditGroupFile = null;
 
+// Logika Preview Foto Edit Grup
 const editGroupPhotoInput = document.getElementById('edit-group-photo-input');
 if (editGroupPhotoInput) {
     editGroupPhotoInput.onchange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            selectedEditGroupFile = file; 
-            document.getElementById('edit-group-photo-preview').src = URL.createObjectURL(file); 
+            selectedEditGroupFile = file; // Simpan ke memori
+            document.getElementById('edit-group-photo-preview').src = URL.createObjectURL(file); // Tampilkan langsung
         }
     };
 }
@@ -1585,12 +1510,15 @@ window.openGroupSettings = async () => {
         
         const isAdmin = group && group.created_by === currentUser.id;
         
+        // Isi Nama Grup
         const editNameInput = document.getElementById('edit-group-name');
         if(editNameInput && group) editNameInput.value = group.name || '';
 
+        // [NEW] Isi Foto Grup Saat Ini
         const editPhotoPreview = document.getElementById('edit-group-photo-preview');
-        if (editPhotoPreview && group) editPhotoPreview.src = group.photo_url || '/asets/png/profile.webp';
+        if (editPhotoPreview && group) editPhotoPreview.src = group.photo_url || 'asets/png/profile.png';
         
+        // Reset file memori agar tidak bentrok dengan sisa foto sebelumnya
         selectedEditGroupFile = null;
 
         const { data: members, error: membersErr } = await supabase
@@ -1605,7 +1533,7 @@ window.openGroupSettings = async () => {
             if (members && members.length > 0) {
                 members.forEach(m => {
                     const profileName = m.profiles?.username || "User";
-                    const profileAvatar = m.profiles?.avatar_url || '/asets/png/profile.webp';
+                    const profileAvatar = m.profiles?.avatar_url || 'asets/png/profile.png';
                     const isMe = m.user_id === currentUser.id;
                     
                     const div = document.createElement('div');
@@ -1630,6 +1558,7 @@ window.updateGroupInfo = async () => {
     const newName = document.getElementById('edit-group-name')?.value.trim();
     const btn = document.getElementById('btn-save-group-info');
     
+    // Cek kalau user gak ngubah apa-apa (gak ganti nama & gak ganti foto)
     if (!newName && !selectedEditGroupFile) {
         return showToast("Tidak ada yang diubah");
     }
@@ -1639,6 +1568,7 @@ window.updateGroupInfo = async () => {
     try {
         let finalPhotoUrl = null;
 
+        // [NEW] LOGIKA UPLOAD KE CLOUDINARY (Sama persis kayak pas bikin grup)
         if (selectedEditGroupFile) {
             const fd = new FormData();
             fd.append("file", selectedEditGroupFile);
@@ -1656,15 +1586,18 @@ window.updateGroupInfo = async () => {
             }
         }
 
+        // Siapkan paket data yang mau dikirim ke Supabase
         const updateData = {};
         if (newName) updateData.name = newName;
         if (finalPhotoUrl) updateData.photo_url = finalPhotoUrl;
 
+        // Tembak ke Supabase untuk Update
         const { error } = await supabase.from('groups').update(updateData).eq('id', window.activeGroupId);
         if(error) throw error;
         
         showToast("Info grup berhasil diperbarui!");
         
+        // Update Nama & Ikon di Header Chat secara instan
         if (newName) {
             const headerTitle = document.querySelector('.chat-header h3');
             if(headerTitle) {
@@ -1679,6 +1612,7 @@ window.updateGroupInfo = async () => {
             }
         }
         
+        // Bersihkan memori dan segarkan sidebar biar foto baru muncul
         selectedEditGroupFile = null;
         refreshSidebar();
         document.getElementById('group-settings-modal').style.display = 'none';
@@ -1697,6 +1631,7 @@ window.leaveGroup = async () => {
             .eq('group_id', window.activeGroupId).eq('user_id', currentUser.id);
         if (error) throw error;
         
+        // Kirim Notifikasi Sistem
         await supabase.from('messages').insert([{
             room_id: `group_${window.activeGroupId}`,
             message: `${myUsername} telah meninggalkan grup`,
@@ -1709,6 +1644,7 @@ window.leaveGroup = async () => {
         const modal = document.getElementById('group-settings-modal');
         if(modal) modal.style.display = 'none';
         
+        // Reset Chat ke Global
         window.currentChatMode = null;
         window.activeGroupId = null;
         currentRoomId = "room-1";
@@ -1731,7 +1667,7 @@ window.kickMember = async (targetId, targetName) => {
         if (error) throw error;
         
         showToast(`${targetName} dikeluarkan`);
-        window.openGroupSettings(); 
+        window.openGroupSettings(); // Refresh list member
         
         await supabase.from('messages').insert([{
             room_id: `group_${window.activeGroupId}`,
@@ -1742,6 +1678,24 @@ window.kickMember = async (targetId, targetName) => {
     } catch(err) { showToast("Gagal mengeluarkan member"); }
 };
 
+window.updateGroupInfo = async () => {
+    const newName = document.getElementById('edit-group-name')?.value.trim();
+    if(!newName) return;
+    const btn = document.getElementById('btn-save-group-info');
+    if(btn) { btn.innerText = "Menyimpan..."; btn.disabled = true; }
+    try {
+        const { error } = await supabase.from('groups').update({ name: newName }).eq('id', window.activeGroupId);
+        if(error) throw error;
+        showToast("Info grup diperbarui");
+        
+        // Langsung update nama di Header Chat
+        const headerTitle = document.querySelector('.chat-header h3');
+        if(headerTitle) headerTitle.innerHTML = `${newName} <span style="font-size:14px; cursor:pointer; margin-left:8px;" onclick="window.openGroupSettings()">⚙️</span>`;
+        
+        refreshSidebar();
+    } catch(err) { showToast("Gagal update grup"); } 
+    finally { if(btn) { btn.innerText = "Simpan Perubahan"; btn.disabled = false; } }
+};
 // ==========================================
 // 🔥 VARIABEL AUDIO & TIMER TELPON 🔥
 // ==========================================
@@ -1749,6 +1703,7 @@ let callRingingTimeout = null;
 let callTalkTimer = null;      
 let callSeconds = 0;           
 
+// Fungsi untuk matikan nada dering
 function stopRingtone() {
     ringtoneSound.pause();
     ringtoneSound.currentTime = 0;
@@ -1791,6 +1746,7 @@ window.startLiveKitCall = async () => {
     if (overlay) overlay.style.display = 'flex';
     if (nameEl) nameEl.innerText = partnerName;
     
+    // 🔥 NYALAKAN ANIMASI 🔥
     if (statusEl) {
         statusEl.innerText = "MEMANGGIL...";
         statusEl.classList.add('anim-calling-text');
@@ -1801,7 +1757,7 @@ window.startLiveKitCall = async () => {
 
     const profile = await getCachedProfile(partnerId);
     if (profile && avatarEl) {
-        avatarEl.src = profile.avatar_url || '/asets/png/profile.webp';
+        avatarEl.src = profile.avatar_url || 'asets/png/profile.png';
     }
 
     try {
@@ -1829,7 +1785,7 @@ window.startLiveKitCall = async () => {
     } catch (err) {
         console.error("Panggilan Gagal:", err);
         showToast("Gagal menyambung panggilan.");
-        window.endCall(true); 
+        window.endCall(true); // Tambahkan 'true' di dalam kurung ini ya
     }
 };
 
@@ -1838,27 +1794,32 @@ window.endCall = (isSilent = false) => {
     clearTimeout(callRingingTimeout);
     stopCallTimer();
 
+    // 🔥 MATIKAN ANIMASI 🔥
     const avatarEl = document.getElementById('call-avatar');
     const statusEl = document.getElementById('call-status');
     if (avatarEl) avatarEl.classList.remove('anim-calling-avatar');
     if (statusEl) {
         statusEl.classList.remove('anim-calling-text');
-        statusEl.style.color = ""; 
+        statusEl.style.color = ""; // Reset warna
     }
 
+    // 🔥 CEK APAKAH LAYAR TELEPON MASIH TERBUKA (Cegah Spam) 🔥
     const callOverlay = document.getElementById('call-overlay');
     const incomingOverlay = document.getElementById('incoming-call-overlay');
     let isOverlayOpen = (callOverlay && callOverlay.style.display !== 'none') || 
                         (incomingOverlay && incomingOverlay.style.display !== 'none');
 
+    // Putuskan sambungan LiveKit
     if (callRoom) {
         callRoom.disconnect();
         callRoom = null;
     }
     
+    // Tutup layar
     if (callOverlay) callOverlay.style.display = 'none';
     if (incomingOverlay) incomingOverlay.style.display = 'none';
     
+    // 🔥 MUNCULKAN NOTIF HANYA JIKA TIDAK SILENT & LAYAR SEBELUMNYA AKTIF 🔥
     if (isOverlayOpen && !isSilent) {
         if (callSeconds > 0) {
             const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
@@ -1872,28 +1833,32 @@ window.endCall = (isSilent = false) => {
 
 let callSignalData = null;
 
+// Tampilkan Pop-up buat Penerima
 window.showIncomingCall = async function(msgData) {
-    callSignalData = msgData; 
+    callSignalData = msgData; // Simpan data buat dipake pas angkat
     const overlay = document.getElementById('incoming-call-overlay');
     const nameEl = document.getElementById('incoming-name');
     const avatarEl = document.getElementById('incoming-avatar'); 
     
     if (overlay) overlay.style.display = 'flex';
-    if (nameEl) nameEl.innerText = "Memuat..."; 
+    if (nameEl) nameEl.innerText = "Memuat..."; // Teks sementara sebelum nama asli ditarik
 
+    // 🔥 TARIK PROFIL PENELPON DARI DATABASE (NAMA & FOTO) 🔥
     if (msgData.user_id) {
         const profile = await getCachedProfile(msgData.user_id);
         if (profile) {
-            if (avatarEl) avatarEl.src = profile.avatar_url || '/asets/png/profile.webp';
-            if (nameEl) nameEl.innerText = profile.username || "Teman"; 
+            if (avatarEl) avatarEl.src = profile.avatar_url || 'asets/png/profile.png';
+            if (nameEl) nameEl.innerText = profile.username || "Teman"; // Nama asli dimasukkan ke sini!
         }
     }
 
+    // 🔥 MAINKAN NADA DERING 🔥
     ringtoneSound.play().catch(e => console.log("Browser blokir autoplay:", e));
 };
 
+// AKSI: Lawan bicara mencet ANGKAT
 window.answerCall = async () => {
-    stopRingtone(); 
+    stopRingtone(); // 🔥 MATIKAN NADA DERING 🔥
 
     const incomingOverlay = document.getElementById('incoming-call-overlay');
     if (incomingOverlay) incomingOverlay.style.display = 'none';
@@ -1904,11 +1869,12 @@ window.answerCall = async () => {
     const callStatus = document.getElementById('call-status');
     if (callStatus) callStatus.innerText = "CONNECTING...";
 
+    // 🔥 PINDAHKAN FOTO KE LAYAR CALL 🔥
     const callAvatar = document.getElementById('call-avatar');
     if (callAvatar && callSignalData?.user_id) {
         const profile = await getCachedProfile(callSignalData.user_id);
         if (profile) {
-            callAvatar.src = profile.avatar_url || '/asets/png/profile.webp';
+            callAvatar.src = profile.avatar_url || 'asets/png/profile.png';
         }
     }
 
@@ -1918,8 +1884,9 @@ window.answerCall = async () => {
     }
 };
 
+// AKSI: Lawan bicara mencet TOLAK
 window.rejectCall = async () => {
-    stopRingtone(); 
+    stopRingtone(); // 🔥 MATIKAN NADA DERING 🔥
 
     const incomingOverlay = document.getElementById('incoming-call-overlay');
     if (incomingOverlay) incomingOverlay.style.display = 'none';
@@ -1958,43 +1925,48 @@ async function connectToCall(roomName) {
                 element.play().catch(() => {});
             }
         });
-
+        // 🔥 DETEKSI KALAU LAWAN MEMATIKAN TELEPON 🔥
         callRoom.on(LivekitClient.RoomEvent.ParticipantDisconnected, (participant) => {
             showToast("Panggilan diakhiri oleh lawan bicara.");
             window.endCall();
         });
 
+        // 🔥 DETEKSI KALAU ROOM DITUTUP 🔥
         callRoom.on(LivekitClient.RoomEvent.Disconnected, () => {
             window.endCall();
         });
 
+        // 🔥 DETEKSI KALAU LAWAN UDAH MASUK ROOM 🔥
         callRoom.on(LivekitClient.RoomEvent.ParticipantConnected, (participant) => {
-            clearTimeout(callRingingTimeout); 
+            clearTimeout(callRingingTimeout); // Batalin missed call
             
+            // 🔥 MATIKAN ANIMASI & UBAH TEKS JADI IJO SAAT DIANGKAT 🔥
             const avatarEl = document.getElementById('call-avatar');
             const statusEl = document.getElementById('call-status');
             if (avatarEl) avatarEl.classList.remove('anim-calling-avatar');
             if (statusEl) {
                 statusEl.classList.remove('anim-calling-text');
-                statusEl.style.color = "#2ecc71"; 
+                statusEl.style.color = "#2ecc71"; // Warna hijau
             }
 
-            startCallTimer(); 
+            startCallTimer(); // Mulai ngitung 00:01
         });
 
         const LIVEKIT_URL = "wss://voicegrup-zxmeibkn.livekit.cloud"; 
         await callRoom.connect(LIVEKIT_URL, data.token);
         await callRoom.localParticipant.setMicrophoneEnabled(true);
 
+        // Kalau pas kita connect, ternyata lawan udah di dalam (buat penerima yang angkat telpon)
         if (callRoom.remoteParticipants.size > 0) {
             clearTimeout(callRingingTimeout);
             
+            // 🔥 SAMA, MATIKAN ANIMASI DI SINI JUGA 🔥
             const avatarEl = document.getElementById('call-avatar');
             const statusEl = document.getElementById('call-status');
             if (avatarEl) avatarEl.classList.remove('anim-calling-avatar');
             if (statusEl) {
                 statusEl.classList.remove('anim-calling-text');
-                statusEl.style.color = "#2ecc71"; 
+                statusEl.style.color = "#2ecc71"; // Warna hijau
             }
 
             startCallTimer();
