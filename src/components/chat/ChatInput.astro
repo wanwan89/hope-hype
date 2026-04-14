@@ -3,11 +3,11 @@
 ---
 
 <div id="sticker-menu" class="sticker-menu-adaptive">
-  <div style="display:flex; gap:8px; margin-bottom:10px; padding: 5px;">
-    <input type="text" id="sticker-search-input" placeholder="Cari stiker lucu..." class="sticker-search-input" />
+  <div class="sticker-header">
+    <input type="text" id="sticker-search-input" placeholder="Cari stiker lucu..." class="sticker-search-input" autocomplete="off" />
     <button id="sticker-search-btn" class="btn-search-stiker">Cari</button>
   </div>
-  <div id="sticker-list" class="sticker-list-grid"></div>
+  <div id="sticker-list" class="sticker-list-grid custom-scrollbar"></div>
 </div>
 
 <div id="reply-preview-box" class="reply-preview-adaptive">
@@ -16,7 +16,7 @@
 <div class="chat-input-container-main">
   <div class="input-group-wrapper-adaptive">
     
-    <button id="sticker-btn" class="icon-btn-chat">
+    <button id="sticker-btn" class="icon-btn-chat" title="Buka Stiker">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
         <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
@@ -28,10 +28,10 @@
     <textarea id="chat-input" placeholder="Tulis pesan..." rows="1"></textarea>
 
     <div id="vn-overlay" class="vn-overlay-adaptive">
-      <div style="display: flex; align-items: center; width: 100%; gap: 12px;">
+      <div class="vn-content">
         <div class="record-dot"></div>
         <span id="vn-timer" class="timer-text">00:00</span>
-        <span class="cancel-hint">&laquo; Geser batal</span>
+        <span class="cancel-hint">&laquo; Geser untuk batal</span>
       </div>
     </div>
   </div>
@@ -55,108 +55,157 @@
 </div>
 
 <style>
- /* --- LAYOUT ADAPTIVE --- */
+  /* --- LAYOUT UTAMA INPUT --- */
   .chat-input-container-main {
     display: flex; 
     align-items: flex-end; 
-    gap: 10px; 
+    gap: 12px; 
     padding: 10px 15px;
     background: var(--bg-input-bar) !important;
     width: 100%; 
     box-sizing: border-box;
     border-top: 1px solid var(--border-color);
-    transition: background 0.3s ease;
-    /* 🔥 TAMBAHKAN INI 🔥 */
     position: relative;
     z-index: 100; 
-    padding-bottom: env(safe-area-inset-bottom, 10px); /* Jaga jarak buat HP berponi bawah */
   }
-  
+
+  /* --- WRAPPER KOTAK KETIK --- */
   .input-group-wrapper-adaptive {
     flex: 1; display: flex; align-items: center;
     background: var(--bg-input-field) !important;
-    border-radius: 30px; padding: 4px 16px; position: relative;
+    border-radius: 24px; padding: 4px 16px; position: relative;
     min-height: 48px; box-sizing: border-box;
     border: 1px solid var(--border-color);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  /* Efek Glow saat ngetik */
+  .input-group-wrapper-adaptive:focus-within {
+    border-color: #3a7bd5;
+    box-shadow: 0 0 0 2px rgba(58, 123, 213, 0.15);
   }
 
   #chat-input {
     flex: 1; border: none; outline: none;
     background: transparent !important; resize: none;
-    max-height: 100px; padding: 12px 0;
+    max-height: 120px; padding: 12px 0;
     font-family: 'Poppins', sans-serif; font-size: 14px;
     color: var(--text-main) !important; line-height: 1.4;
   }
+  
+  #chat-input::placeholder { color: var(--text-muted); opacity: 0.7; }
 
-  /* --- REPLY PREVIEW --- */
+  /* --- TOMBOL STIKER & ICON --- */
+  .icon-btn-chat { 
+    background: none; border: none; cursor: pointer; 
+    padding: 0; margin-right: 12px; color: var(--text-muted); 
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s, transform 0.2s;
+  }
+  .icon-btn-chat:hover { color: #3a7bd5; }
+  .icon-btn-chat:active { transform: scale(0.9); }
+
+  /* --- TOMBOL KIRIM / MIC --- */
+  .btn-action-send {
+    width: 48px; height: 48px; flex-shrink: 0;
+    border-radius: 50%; background: #3a7bd5; border: none; 
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(58, 123, 213, 0.3); 
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s;
+  }
+  .btn-action-send:hover { filter: brightness(1.1); }
+  .btn-action-send:active { transform: scale(0.9); }
+  .btn-action-send.is-recording { background: #ff4757 !important; transform: scale(1.15); box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4); }
+
+  .icon-stack { position: relative; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+  .svg-send, .svg-mic { position: absolute; transition: opacity 0.2s; }
+
+  /* --- MENU STIKER --- */
+  .sticker-menu-adaptive {
+    display: none; flex-direction: column; padding: 12px 15px;
+    background: var(--bg-input-bar) !important; /* Pakai warna bar agar nyatu */
+    border-top: 1px solid var(--border-color); height: 260px;
+    position: relative; z-index: 101;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.03);
+  }
+
+  .sticker-header { display: flex; gap: 10px; margin-bottom: 15px; }
+
+  .sticker-search-input {
+    flex: 1; padding: 10px 16px; border-radius: 20px;
+    border: 1px solid var(--border-color); outline: none;
+    background: var(--bg-input-field); color: var(--text-main); font-size: 13px;
+    transition: all 0.3s;
+  }
+  .sticker-search-input:focus { border-color: #3a7bd5; box-shadow: 0 0 0 2px rgba(58, 123, 213, 0.15); }
+
+  .btn-search-stiker {
+    background: #3a7bd5; color: white; border: none;
+    border-radius: 20px; padding: 0 16px; cursor: pointer; 
+    font-weight: 600; font-size: 13px; transition: 0.2s;
+  }
+  .btn-search-stiker:active { transform: scale(0.95); }
+
+  /* Custom Scrollbar Stiker */
+  .sticker-list-grid { flex: 1; overflow-y: auto; padding-right: 5px; }
+  .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+
+  /* --- KOTAK PREVIEW REPLY --- */
   .reply-preview-adaptive {
     display: none; width: 100%; position: relative;
     background: var(--bg-input-bar) !important;
-    border-left: 5px solid #3a7bd5; padding: 10px 15px;
+    border-left: 4px solid #3a7bd5; padding: 10px 15px;
     box-sizing: border-box; align-items: center;
     justify-content: space-between; gap: 12px; z-index: 10;
     border-top: 1px solid var(--border-color);
+    animation: slideUpReply 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  @keyframes slideUpReply {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   :global(.reply-content-wrapper) {
     flex: 1; min-width: 0; overflow: hidden;
     display: flex; flex-direction: column;
-    border-left: 3px solid var(--border-color);
+    border-left: 2px solid var(--border-color);
     padding-left: 10px;
   }
 
-  :global(.reply-title) { font-size: 13px; color: #3a7bd5 !important; font-weight: 700; margin-bottom: 2px; }
+  :global(.reply-title) { font-size: 13px; color: #3a7bd5 !important; font-weight: 700; margin-bottom: 3px; }
   :global(.reply-text-preview) { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  :global(.close-reply-btn) { font-size: 22px; color: var(--text-muted); cursor: pointer; padding: 5px; }
+  :global(.close-reply-btn) { font-size: 24px; color: var(--text-muted); cursor: pointer; padding: 0 5px; line-height: 1; transition: 0.2s; }
+  :global(.close-reply-btn:hover) { color: #ff4757; }
 
-  /* --- STICKER MENU --- */
-  .sticker-menu-adaptive {
-    display: none; flex-direction: column; padding: 10px;
-    background: var(--bg-sidebar) !important;
-    border-top: 1px solid var(--border-color); height: 250px;
-  }
-
-  .sticker-search-input {
-    flex: 1; padding: 8px 12px; border-radius: 20px;
-    border: 1px solid var(--border-color); outline: none;
-    background: var(--bg-input-field); color: var(--text-main); font-size: 14px;
-  }
-
-  .btn-search-stiker {
-    background: #3a7bd5; color: white; border: none;
-    border-radius: 20px; padding: 8px 15px; cursor: pointer; font-weight: 600;
-  }
-
-  /* --- VN OVERLAY --- */
+  /* --- OVERLAY MEREKAM VN --- */
   .vn-overlay-adaptive {
     position: absolute; inset: 0;
     background: var(--bg-input-field) !important;
-    border-radius: 30px; display: none; align-items: center;
+    border-radius: 24px; display: none; align-items: center;
     padding: 0 16px; z-index: 10;
   }
 
-  .record-dot { width: 10px; height: 10px; background: #ff4757; border-radius: 50%; animation: pulse 1s infinite; }
-  .timer-text { font-weight: 600; font-size: 14px; color: var(--text-main); }
-  .cancel-hint { color: var(--text-muted); font-size: 12px; margin-left: auto; font-style: italic; }
-
-  /* --- BUTTONS --- */
-  .icon-btn-chat { background: none; border: none; cursor: pointer; padding: 0; margin-right: 10px; color: var(--text-muted); }
-
-  .btn-action-send {
-    width: 48px; height: 48px; border-radius: 50%;
-    background: #3a7bd5; border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3); transition: 0.3s;
+  .vn-content { display: flex; align-items: center; width: 100%; gap: 12px; }
+  
+  .record-dot { 
+    width: 10px; height: 10px; background: #ff4757; 
+    border-radius: 50%; box-shadow: 0 0 5px rgba(255, 71, 87, 0.5);
+    animation: vnPulse 1s infinite alternate; 
   }
+  
+  .timer-text { font-weight: 700; font-size: 14px; color: var(--text-main); letter-spacing: 0.5px; }
+  .cancel-hint { color: var(--text-muted); font-size: 12px; margin-left: auto; font-style: italic; opacity: 0.8; animation: slideLeftHint 2s infinite; }
 
-  .btn-action-send:active { transform: scale(0.9); }
-  .btn-action-send.is-recording { background: #ff4757 !important; transform: scale(1.1); }
-
-  .icon-stack { position: relative; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
-  .svg-send, .svg-mic { position: absolute; }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.2); opacity: 0.7; }
+  /* Animasi VN */
+  @keyframes vnPulse {
+    0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4); }
+    100% { transform: scale(1.3); opacity: 0.7; box-shadow: 0 0 0 6px rgba(255, 71, 87, 0); }
+  }
+  
+  @keyframes slideLeftHint {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-5px); }
   }
 </style>
