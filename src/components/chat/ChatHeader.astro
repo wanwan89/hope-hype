@@ -18,14 +18,14 @@
       </div>
     </div>
 
-    <button id="btn-open-invite" style="display:none;">
+    <button id="btn-open-invite" class="btn-invite" style="display:none;">
       UNDANG
     </button>
   </div>
 
   <div class="header-right">
-    <div id="btn-start-call" style="display: none;">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <div id="btn-start-call" class="call-btn" style="display: none;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.19-2.19a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
       </svg>
     </div>
@@ -40,12 +40,14 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 15px;
-    background: var(--bg-header) !important; /* 🔥 Pakai Variabel dari chat.astro */
+    background: var(--bg-header) !important;
     color: white;
-    height: 65px;
+    height: 60px; /* Gue turunin dikit biar gak terlalu makan tempat */
+    min-height: 60px; /* Kunci tinggi biar gak kependem */
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     z-index: 1000;
     transition: background 0.3s ease;
+    flex-shrink: 0; /* 🔥 Kunci header biar gak kegencet area pesan */
   }
 
   .header-left {
@@ -53,20 +55,19 @@
     align-items: center;
     gap: 12px;
     flex: 1;
-    overflow: hidden;
+    min-width: 0; /* Wajib buat text-overflow bekerja */
   }
 
   .header-info {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    overflow: hidden;
-    max-width: 140px;
+    min-width: 0; /* Wajib biar gak melar */
   }
 
   .header-info h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     letter-spacing: 0.3px;
     white-space: nowrap;
@@ -77,44 +78,32 @@
   #status-container {
     font-size: 10px;
     margin-top: 1px;
+    white-space: nowrap;
   }
 
-  #status-header {
-    opacity: 0.85;
-  }
-
-  #typing-header {
-    display: none;
-    color: #a2c9ff;
-    font-weight: 600;
-    font-style: italic;
-  }
-
-  #btn-open-invite {
+  .btn-invite {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.4);
     color: white;
-    padding: 5px 10px;
-    border-radius: 15px;
+    padding: 4px 8px;
+    border-radius: 12px;
     font-size: 9px;
     font-weight: 800;
     cursor: pointer;
     flex-shrink: 0;
-    margin-left: 5px;
   }
 
   .header-right {
-    flex-shrink: 0;
-    margin-left: 10px;
     display: flex;
     align-items: center;
     gap: 15px;
+    flex-shrink: 0; /* 🔥 Jangan biarkan logo/tombol call kegencet */
   }
 
-  /* Hamburger Button */
+  /* Hamburger */
   .hamburger-btn {
-    width: 24px;
-    height: 18px;
+    width: 20px;
+    height: 14px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -127,26 +116,28 @@
     height: 2px;
     background-color: white;
     border-radius: 2px;
-    transition: all 0.3s ease;
   }
 
   /* Logo */
   .logo-besar-header {
-    height: 50px;
+    height: 40px; /* Ukuran lebih pas */
     width: auto;
     object-fit: contain;
-    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.2));
   }
 
-  #btn-start-call {
+  .call-btn {
     cursor: pointer;
     color: white;
     display: flex;
     align-items: center;
+    opacity: 0.9;
   }
+
+  .call-btn:active { transform: scale(0.9); }
 
   /* Dark Mode Adjustments */
   :global(.dark) #typing-header {
-    color: #00a884; /* Hijau WA pas mode gelap */
+    color: #00a884; 
   }
 </style>
