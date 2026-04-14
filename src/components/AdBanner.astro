@@ -2,32 +2,150 @@
 ---
 <div class="ad-banner-container">
   <div class="ad-slider">
-    <img src="/asets/gif/iklan1.gif" alt="Iklan PRO" class="ad-slide">
-    <img src="/asets/gif/iklan2.gif" alt="Iklan HopeTalk" class="ad-slide">
-    <img src="/asets/gif/iklan3.gif" alt="Iklan Sawer" class="ad-slide">
-    <img src="/asets/gif/iklan4.gif" alt="Install Aplikasi" class="ad-slide" id="installPwaAd" style="cursor: pointer;">
+    <video autoplay loop muted playsinline class="ad-slide" decoding="async">
+      <source src="/asets/gif/iklan1.webm" type="video/webm">
+    </video>
+
+    <video autoplay loop muted playsinline class="ad-slide" decoding="async">
+      <source src="/asets/gif/iklan2.webm" type="video/webm">
+    </video>
+
+    <video autoplay loop muted playsinline class="ad-slide" decoding="async">
+      <source src="/asets/gif/iklan3.webm" type="video/webm">
+    </video>
+
+    <video 
+      autoplay 
+      loop 
+      muted 
+      playsinline 
+      class="ad-slide" 
+      id="installPwaAd" 
+      decoding="async" 
+      style="cursor: pointer;"
+    >
+      <source src="/asets/gif/iklan4.webm" type="video/webm">
+    </video>
   </div>
 </div>
 
 <script>
-  const slider = document.querySelector('.ad-slider');
-  if (slider) {
-    let autoSlideTimer;
-    function startAutoSlide() {
-      autoSlideTimer = setInterval(() => {
-        if (slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 5) {
-          slider.scrollLeft = 0; 
-        } else {
-          slider.scrollLeft += slider.clientWidth; 
-        }
-      }, 5000); 
-    }
-    function stopAutoSlide() { clearInterval(autoSlideTimer); }
+  // Kita bungkus DOMContentLoaded biar aman dari bug urutan baca di Astro
+  document.addEventListener("DOMContentLoaded", () => {
+    const slider = document.querySelector('.ad-slider');
     
-    startAutoSlide();
-    slider.addEventListener('touchstart', stopAutoSlide); 
-    slider.addEventListener('touchend', startAutoSlide);  
-    slider.addEventListener('mouseenter', stopAutoSlide); 
-    slider.addEventListener('mouseleave', startAutoSlide);
-  }
+    if (slider) {
+      let autoSlideTimer;
+
+      function startAutoSlide() {
+        autoSlideTimer = setInterval(() => {
+          // Cek jika sudah di ujung kanan
+          if (slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 5) {
+            slider.scrollLeft = 0; 
+          } else {
+            slider.scrollLeft += slider.clientWidth; 
+          }
+        }, 5000); 
+      }
+
+      function stopAutoSlide() { 
+        clearInterval(autoSlideTimer); 
+      }
+      
+      // Jalankan slider
+      startAutoSlide();
+
+      // Event Listeners agar tidak bentrok saat user geser manual
+      slider.addEventListener('touchstart', stopAutoSlide); 
+      slider.addEventListener('touchend', startAutoSlide);  
+      slider.addEventListener('mouseenter', stopAutoSlide); 
+      slider.addEventListener('mouseleave', startAutoSlide);
+
+      // --- LOGIKA INSTALL PWA KHUSUS VIDEO ---
+      const installVideo = document.getElementById('installPwaAd');
+      if (installVideo) {
+        installVideo.addEventListener('click', async () => {
+          if (window.pwaPrompt) {
+            window.pwaPrompt.prompt();
+            const { outcome } = await window.pwaPrompt.userChoice;
+            if (outcome === 'accepted') console.log('User menginstal HopeHype!');
+            window.pwaPrompt = null;
+          } else {
+            // Kita panggil toast global yang ada di main.js
+            if (typeof window.showToast === 'function') {
+                window.showToast("Info", "PWA sudah terinstal atau belum didukung browser kamu.", "info");
+            } else {
+                alert("Aplikasi sudah terinstal!");
+            }
+          }
+        });
+      }
+    }
+  });
 </script>
+
+<style is:global>
+/* AD BANNER (IKLAN) */
+.ad-banner-container { 
+  position: fixed; 
+  top: 10px; 
+  left: 50%; 
+  transform: translateX(-50%); 
+  width: 380px; 
+  max-width: 95%; 
+  height: 80px; 
+  border: 2px solid #000; 
+  border-radius: 16px; 
+  box-shadow: 4px 4px 0px #00000030; 
+  z-index: 9999; 
+  background: #fff; 
+  overflow: hidden; /* Bikin iklannya nge-pas di dalam lengkungan */
+}
+
+.ad-slider { 
+  display: flex; 
+  width: 100%; 
+  height: 100%; 
+  overflow-x: auto; 
+  scroll-snap-type: x mandatory; 
+  scroll-behavior: smooth; 
+  border-radius: 14px; 
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+
+.ad-slider::-webkit-scrollbar { display: none; }
+
+/* INI YANG DITAMBAHIN (.ad-slider > video) BIAR VIDEONYA PRESISI */
+.ad-slider > img, .ad-slider > a, .ad-slider > video { 
+  flex: 0 0 100%; 
+  height: 100%; 
+  scroll-snap-align: center; 
+  display: block; 
+}
+
+.ad-slide { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+}
+
+body.dark .ad-banner-container { 
+  border: 2px solid #fff; 
+}
+
+.topup-ad-container { 
+  width: 100%; 
+  margin-top: 15px; 
+  margin-bottom: 20px; 
+  padding: 0 5px; 
+  box-sizing: border-box; 
+}
+
+.topup-ad-img { 
+  width: 100%; 
+  height: auto; 
+  border-radius: 12px; 
+  display: block; 
+}
+</style>

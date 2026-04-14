@@ -91,20 +91,6 @@ function getUserBadge(role) {
 }
 
 // =======================
-// AUDIO PLAYER
-// =======================
-const audioPlayer = document.getElementById("audio-player");
-const savedSong = localStorage.getItem("currentSong");
-const savedTime = localStorage.getItem("currentTime");
-if (savedSong && audioPlayer) {
-  audioPlayer.src = savedSong;
-  audioPlayer.addEventListener("loadedmetadata", () => {
-    audioPlayer.currentTime = savedTime ? parseFloat(savedTime) : 0;
-    audioPlayer.play().catch(() => { console.log("Autoplay dicegah browser."); });
-  });
-}
-
-// =======================
 // CARDS & THEME
 // =======================
 const karyaCard = document.querySelector(".job-card.karya-card");
@@ -114,11 +100,11 @@ const toggleBtn = document.querySelector(".toggle-dark");
 function CardImages(isDark) {
   if (!karyaCard || !musicCard) return;
   if (isDark) {
-    karyaCard.style.setProperty("background-image", "url('/asets/png/job1.png')", "important");
-    musicCard.style.setProperty("background-image", "url('/asets/png/job.png')", "important");
+    karyaCard.style.setProperty("background-image", "url('/asets/png/job1.webp')", "important");
+    musicCard.style.setProperty("background-image", "url('/asets/png/job.webp')", "important");
   } else {
-    karyaCard.style.setProperty("background-image", "url('/asets/png/art.png')", "important");
-    musicCard.style.setProperty("background-image", "url('/asets/png/song.png')", "important");
+    karyaCard.style.setProperty("background-image", "url('/asets/png/art.webp')", "important");
+    musicCard.style.setProperty("background-image", "url('/asets/png/song.webp')", "important");
   }
 }
 
@@ -146,24 +132,6 @@ if (toggleBtn) {
   applyTheme(savedTheme ? savedTheme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
 }
 
-// =======================
-// SEARCH FILTER
-// =======================
-const searchInput = document.querySelector(".search input") || document.getElementById("searchInput") || document.querySelector('input[type="search"]');
-const cards = document.querySelectorAll(".job-card, .recent-card");
-if (searchInput) {
-  let searchTimeout = null;
-  searchInput.addEventListener("keyup", function () {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      const value = this.value.toLowerCase();
-      cards.forEach((card) => {
-        const text = card.innerText.toLowerCase();
-        card.style.display = text.includes(value) ? "" : "none";
-      });
-    }, 300); // Dioptimalkan pakai Debounce
-  });
-}
 
 // =======================
 // PRELOAD IMAGES
@@ -177,7 +145,7 @@ function preloadImages(urls, callback) {
     img.onerror = () => { loaded++; if (loaded === urls.length && callback) callback(); };
   });
 }
-preloadImages(["/asets/png/job1.png", "/asets/png/job.png", "/asets/png/art.png", "/asets/png/song.png"], () => {
+preloadImages(["/asets/png/job1.webp", "/asets/png/job.webp", "/asets/png/art.webp", "/asets/png/song.webp"], () => {
   CardImages(document.body.classList.contains("dark"));
 });
 
@@ -708,7 +676,7 @@ async function loadNotificationList() {
     `;
 
     const container = notifList.querySelector("#notifItemsContainer");
-    if (!data || data.length === 0) { container.innerHTML = `<div style="text-align:center; padding:40px 10px; color:#bbb; font-size:13px;">Belum ada kabar terbaru... 🍃</div>`; return; }
+    if (!data || data.length === 0) { container.innerHTML = `<div style="text-align:center; padding:40px 10px; color:#bbb; font-size:13px;">Belum ada kabar terbaru... </div>`; return; }
 
     data.forEach((n) => {
       const li = document.createElement("li");

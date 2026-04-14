@@ -131,7 +131,7 @@
       </div>
     </div>
     <div class="topup-ad-container">
-      <img src="/asets/png/topup.png" alt="Promo Top Up" class="topup-ad-img">
+      <img src="/asets/png/topup.webp" alt="Promo Top Up" class="topup-ad-img">
     </div>
 
     <div class="custom-topup">
@@ -196,3 +196,93 @@
     }
   });
 </script>
+<style is:global>
+/* MODAL SETTINGS */
+.modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); justify-content: center; align-items: center; z-index: 1000000; animation: fadeIn 0.4s ease forwards; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+.modal.active { display: flex; opacity: 1; pointer-events: auto; }
+.modal-content { background: #2a2d31; border-radius: 16px; padding: 24px; width: 300px; max-width: 90%; color: #fff; box-shadow: 0 15px 30px rgba(0, 0, 0, 0.8); transform: translateY(-20px); transition: transform 0.3s ease, opacity 0.3s ease; }
+.modal.active .modal-content { transform: translateY(0); }
+.modal-content h3 { display: flex; justify-content: space-between; align-items: center; font-size: 18px; margin-bottom: 12px; }
+.modal-content h3 span.close { cursor: pointer; font-size: 20px; color: #ff6b6b; transition: transform 0.2s ease; }
+.modal-content h3 span.close:hover { transform: rotate(90deg) scale(1.2); }
+.modal-content input { width: 100%; padding: 10px 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.1); color: #fff; outline: none; transition: all 0.3s ease; }
+.modal-content input:focus { border-color: #ffde59; box-shadow: 0 0 10px rgba(255, 222, 89, 0.5); }
+.modal-content button { width: 100%; padding: 10px; border-radius: 10px; border: none; background: linear-gradient(135deg, #ff7eb3, #ff758c); color: #fff; font-weight: 600; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.modal-content button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 118, 118, 0.5); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.avatar-choice { cursor: pointer; width: 50px; height: 50px; border-radius: 50%; border: 2px solid transparent; }
+.avatar-choice.selected { border-color: blue; }
+.upload-avatar-label { display: inline-block; cursor: pointer; }
+#avatarPreview { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
+
+/* BOTTOM SHEETS (PRO & KOIN) */
+.bottom-sheet { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; justify-content: flex-end; z-index: 10000; }
+.bottom-sheet.active { display: flex; }
+.sheet-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); }
+.sheet-content { position: relative; background: #1a1a1a; width: 100%; padding: 20px; border-top-left-radius: 25px; border-top-right-radius: 25px; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); box-sizing: border-box; }
+.bottom-sheet.active .sheet-content { transform: translateY(0); }
+.drag-handle { width: 40px; height: 4px; background: #444; border-radius: 10px; margin: 0 auto 20px; }
+h3 { color: white; margin-bottom: 20px; font-size: 18px; }
+.product-list { display: flex; flex-direction: column; gap: 12px; padding: 10px 5px 15px 5px; }
+.product-card { background: #252525; border: 1px solid #333; border-radius: 16px; padding: 15px; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s ease; cursor: pointer; }
+.product-info-wrapper { display: flex; align-items: center; gap: 15px; }
+.product-icon { font-size: 24px; display: flex; align-items: center; justify-content: center; min-width: 40px; }
+.product-text { display: flex; flex-direction: column; }
+.p-name { color: white; font-weight: 700; font-size: 14px; }
+.p-price { color: #4ade80; font-size: 12px; font-weight: 600; }
+.buy-now-btn { background: #3a7bd5; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: bold; font-size: 12px; }
+.crown-img { width: 30px; height: 30px; object-fit: contain; display: block; }
+.product-card:active { transform: translateY(2px) scale(0.98); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2); background-color: #f7df1e; color: black; border-color: #f7df1e; }
+.product-card:active .p-name, .product-card:active .p-price, .product-card:active .product-icon { color: black; }
+.buy-now-btn:active { animation: button-push 0.3s ease; }
+
+/* COIN BOTTOM SHEET */
+.coin-sheet-content { background: #1b1b1f; border-top-left-radius: 22px; border-top-right-radius: 22px; padding: 18px 16px 20px; }
+.coin-sheet-content h3 { color: #fff; font-size: 16px; font-weight: 600; margin-bottom: 14px; }
+.coin-sheet-content .drag-handle { width: 38px; height: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); margin: 0 auto 14px; }
+.coin-sheet-overlay { background: rgba(0, 0, 0, 0.4); }
+.coin-product-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; margin-bottom: 10px; border-radius: 14px; background: #242429; border: 1px solid rgba(255, 255, 255, 0.04); transition: all 0.2s ease; cursor: pointer; }
+.coin-product-card .product-info-wrapper { display: flex; align-items: center; gap: 12px; flex: 1; }
+.coin-product-card .product-icon { width: 38px; height: 38px; border-radius: 10px; background: #2d2d33; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.coin-product-card .crown-img { width: 18px !important; height: 18px !important; object-fit: contain; }
+.coin-product-card .product-text { display: flex; flex-direction: column; gap: 2px; }
+.coin-product-card .p-name { color: #fff; font-size: 14px; font-weight: 600; }
+.coin-product-card .p-price { color: #bdbdbd; font-size: 12px; font-weight: 500; }
+.buy-coin-btn { min-width: 64px; height: 30px; padding: 0 12px; border: none; border-radius: 999px; background: #f7b500; color: #1a1a1a; font-size: 11px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+.buy-coin-btn:hover { opacity: 0.92; }
+.buy-coin-btn.btn-loading { opacity: 0.7; pointer-events: none; }
+.coin-product-card:active { transform: translateY(2px) scale(0.98); background-color: #f7df1e; color: black; border-color: #f7df1e; }
+.custom-topup { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.custom-topup h4 { color: #fff; font-size: 14px; font-weight: 600; }
+.custom-topup input { padding: 10px 12px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.1); background: #2d2d33; color: #fff; font-size: 14px; outline: none; }
+.custom-topup input::placeholder { color: rgba(255, 255, 255, 0.4); }
+#buy-custom-coin-btn { min-width: 64px; height: 34px; padding: 0 12px; border: none; border-radius: 999px; background: #f7b500; color: #1a1a1a; font-size: 12px; font-weight: 700; cursor: pointer; align-self: flex-start; transition: opacity 0.2s; }
+#buy-custom-coin-btn:hover { opacity: 0.92; }
+#custom-price-display { color: #bdbdbd; font-size: 12px; font-weight: 500; }
+
+/* TOAST / NOTIF LIST */
+#toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 99999; width: calc(100% - 24px); max-width: 420px; pointer-events: none; }
+.toast-card { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.96); color: #1f2937; border-radius: 20px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); opacity: 0; transform: translateY(-20px) scale(0.96); transition: all 0.28s ease; pointer-events: auto; min-height: 64px; border: 1px solid rgba(255, 255, 255, 0.6); }
+.toast-card.show { opacity: 1; transform: translateY(0) scale(1); }
+.toast-icon-wrap { flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
+.toast-icon-wrap.success { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.toast-icon-wrap.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.toast-icon-wrap.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.toast-icon-wrap.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.toast-icon { font-size: 22px; font-weight: 800; line-height: 1; }
+.toast-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.toast-title { font-size: 14px; font-weight: 800; line-height: 1.2; margin-bottom: 2px; color: #111827; }
+.toast-subtitle { font-size: 12px; line-height: 1.3; color: #6b7280; word-break: break-word; }
+.toast-close { background: transparent; border: none; color: #9ca3af; font-size: 22px; cursor: pointer; padding: 0; margin-left: 4px; line-height: 1; flex-shrink: 0; width: 24px; height: 24px; }
+
+@media (max-width: 480px) {
+  #toast { top: 10px; width: calc(100% - 16px); }
+  .toast-card { border-radius: 18px; padding: 10px 12px; gap: 8px; min-height: 56px; }
+  .toast-icon-wrap { width: 38px; height: 38px; }
+  .toast-icon { font-size: 18px; }
+  .toast-title { font-size: 13px; margin-bottom: 1px; }
+  .toast-subtitle { font-size: 11px; line-height: 1.25; }
+  .toast-close { font-size: 18px; width: 20px; height: 20px; }
+}
+
+#notificationList { display: none; flex-direction: column; position: fixed; z-index: 10001; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 380px;

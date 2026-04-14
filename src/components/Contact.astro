@@ -4,15 +4,27 @@
   <input type="checkbox" id="contact-toggle" style="display: none;">
   <label for="contact-toggle" class="contact-text">Contact us</label>
   <div class="social-icons-container">
-    <a href="https://www.tiktok.com/@hopehypeofficial" target="_blank" rel="noopener noreferrer">
-      <img src="/asets/png/tiktok.png" alt="TikTok" class="social-icon">
+    <a href="https://www.tiktok.com/@hopehypeoffcial" target="_blank" rel="noopener noreferrer">
+      <img src="/asets/png/tiktok.webp" alt="TikTok" class="social-icon">
     </a>
     <a href="https://www.instagram.com/hopehypeofficial" target="_blank" rel="noopener noreferrer">
       <img src="/asets/png/instagram.png" alt="Instagram" class="social-icon">
     </a>
     <a href="mailto:hopeofficial2811@gmail.com">
-      <img src="/asets/png/mail.png" alt="Email" class="social-icon">
+      <img src="/asets/png/mail.webp" alt="Email" class="social-icon">
     </a>
   </div>
 </div>
 <ul id="notifList" style="display: none; list-style: none; margin: 0; padding: 0;"></ul>
+<style is:global>
+/* CSS UNTUK CONTACT US & SOSIAL MEDIA */
+.contact-wrapper { position: fixed; bottom: 2px; left: 12px; z-index: 999; display: flex; align-items: center; gap: 12px; }
+.contact-text { background-color: #ffffff; color: #007BFF; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; user-select: none; -webkit-user-select: none; }
+.contact-text:active { transform: scale(0.95); }
+.social-icons-container { display: flex; flex-direction: row; gap: 10px; opacity: 0; transform: translateX(-20px); pointer-events: none; transition: all 0.4s ease-out; }
+#contact-toggle:checked ~ .social-icons-container { opacity: 1; transform: translateX(0); pointer-events: auto; }
+#contact-toggle:checked ~ .contact-text { background-color: #007BFF; color: #ffffff; }
+.social-icon { width: 24px; height: 24px; object-fit: contain; filter: drop-shadow(1px 2px 4px rgba(0, 0, 0, 0.3)); transition: transform 0.2s ease-in-out; }
+.social-icon:hover { transform: scale(1.2); }
+.contact-us { -webkit-tap-highlight-color: transparent; text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; touch-action: manipulation; }
+</style>
