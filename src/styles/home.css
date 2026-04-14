@@ -17,13 +17,35 @@ img, video {
   display: block;
 }
 
-html, body { margin: 0; padding: 0; min-height: 100%; background: #8ea2db; }
+/* ========================================= */
+/* FIX GLOBAL SCROLL & REFRESH               */
+/* ========================================= */
+html, body { 
+  margin: 0; 
+  padding: 0; 
+  width: 100%;
+  height: 100%;
 
-/* FIX UTAMA: Hapus flex dari body biar halaman feed normal ke bawah */
+  overflow-x: hidden;
+  overflow-y: auto; /* ✅ wajib buat refresh */
+
+  background: #0b84e3;
+  touch-action: auto;
+
+  overscroll-behavior-y: auto; /* ✅ biar refresh tetap aktif */
+}
+
+/* ========================================= */
+/* FIX POSISI (ANTI GOYANG + TETAP TENGAH)   */
+/* ========================================= */
 body { 
-  min-height: 100dvh; 
-  display: block !important; 
-  overflow-x: hidden; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  min-height: 100vh; /* ganti dari 100dvh */
+  padding: 12px; /* biar ada jarak dikit dari pinggir HP */
+
   transition: background-color 0.4s ease, color 0.4s ease; 
 }
 body.dark { background: #1f2335; }
@@ -38,32 +60,75 @@ body.dark .animated-text { color: #ffffff; text-shadow: 3px 3px 0 #000, 6px 6px 
 /* ========================================= */
 /* 2. BACKGROUND & GRID                      */
 /* ========================================= */
-.grid-bg { position: fixed; inset: 0; background-color: #0b84e3; z-index: -1; overflow: hidden; pointer-events: none !important; }
+.grid-bg { 
+  position: fixed; 
+  inset: 0; 
+  background-color: #0b84e3; 
+  z-index: -1; 
+  overflow: hidden; 
+  pointer-events: none !important; 
+}
 .grid-bg::before { content: ""; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background-color: #1f2335; border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1), height 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
 body.dark .grid-bg::before { width: 300vmax; height: 300vmax; }
 
 /* ========================================= */
-/* 3. WADAH UTAMA (CONTAINER)                */
+/* CONTAINER FIX FINAL                       */
 /* ========================================= */
-/* FIX: Kasih margin auto buat nengahin containernya */
 .container { 
   position: relative; 
   width: 380px; 
-  margin: 100px auto 50px auto; 
+  max-width: 92%;
+  
+  margin: auto; /* ✅ center */
+
   background: #fdf9f1; 
   border-radius: 28px; 
-  padding: 28px; 
-  box-shadow: 10px 10px 0px #00000020; 
+  padding: 24px; 
+  box-shadow: 10px 10px 0px rgba(0,0,0,0.1); 
   z-index: 2; 
   animation: fadeUp 0.8s ease forwards; 
   opacity: 0; 
+  
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  max-height: 85vh;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  touch-action: pan-y;
+
+  overscroll-behavior: contain; /* ✅ kunci scroll di dalam */
+  -webkit-overflow-scrolling: touch; /* ✅ smooth di iOS */
 }
-body.dark .container { background: #2b3050; color: white; box-shadow: 10px 10px 0px #00000020; }
+
+/* hide scrollbar */
+.container::-webkit-scrollbar { 
+  width: 0; 
+  display: none; 
+}
+body.dark .container { background: #2b3050; color: white; box-shadow: 10px 10px 0px rgba(0,0,0,0.2); }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ========================================= */
-/* 4. ANIMASI GLOBAL (LOADING & PARTICLES)   */
+/* 4. FIX BANNER & MEDIA (AGAR TIDAK GEPENG) */
 /* ========================================= */
+/* Paksa banner creator tetep di rasio yang bener */
+.ad-banner-container {
+  width: 100%;
+  aspect-ratio: 16 / 5; 
+  overflow: hidden;
+  border-radius: 18px;
+  flex-shrink: 0;
+}
+.ad-banner-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .particle { position: fixed; pointer-events: none; border-radius: 50%; z-index: 10001; }
 .btn-loading { position: relative; color: transparent !important; pointer-events: none; }
 .btn-loading::after { content: ""; position: absolute; width: 16px; height: 16px; top: 50%; left: 50%; margin: -8px 0 0 -8px; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; }

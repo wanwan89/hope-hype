@@ -1,6 +1,6 @@
 ---
 ---
-<div id="skeleton-screen" class="skeleton-wrapper">
+<div id="skeleton-screen">
   <div class="skeleton-main-card-ui">
     <div class="skel-header">
       <div style="display: flex; align-items: center;">
@@ -21,9 +21,20 @@
     <div class="skel-bar shim"></div>
   </div>
 </div>
+
 <style is:global>
-/* WRAPPER SKELETON (Meniru Body) */
-#skeleton-screen { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; background-color: #0b84e3; z-index: 9999; padding: 0 20px; }
+/* Tambahin transition biar pas ilang smooth (fade out) */
+#skeleton-screen { 
+  position: fixed; 
+  inset: 0; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  background-color: #0b84e3; 
+  z-index: 9999; 
+  padding: 0 20px; 
+  transition: opacity 0.5s ease, visibility 0.5s;
+}
 .skeleton-main-card-ui { width: 380px; background-color: #fdf9f1; border-radius: 28px; padding: 28px; box-shadow: 10px 10px 0px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 20px; }
 .shim { position: relative; overflow: hidden; background-color: #e2e8f0; border-radius: 12px; }
 .shim::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient( 90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0) 100% ); animation: shimmer 1.2s infinite ease-in-out; }
@@ -35,3 +46,26 @@
 .skel-main-card { flex: 1; height: 220px; border-radius: 18px; }
 .skel-bar { width: 100%; height: 72px; border-radius: 18px; margin-top: 5px; }
 </style>
+
+<script is:inline>
+  // Fungsi darurat buat ngilangin skeleton
+  function removeSkeleton() {
+    const skel = document.getElementById('skeleton-screen');
+    const container = document.querySelector('.container');
+    
+    if (skel) {
+      skel.style.opacity = '0';
+      skel.style.visibility = 'hidden';
+      setTimeout(() => {
+        skel.remove(); // Hapus dari layar
+        if (container) container.style.display = 'block'; // Munculin menu utama
+      }, 500);
+    }
+  }
+
+  // 1. Ilangin pas semua data keload
+  window.addEventListener('load', removeSkeleton);
+
+  // 2. Safety Net: Kalau 5 detik nggak ilang juga (misal JS error), paksa ilang!
+  setTimeout(removeSkeleton, 5000);
+</script>

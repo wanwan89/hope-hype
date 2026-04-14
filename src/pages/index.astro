@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-// CSS khusus halaman menu dipanggil di sini saja
+// 1. Panggil CSS di area Frontmatter (Atas) biar stabil
 import '../styles/home.css'; 
 
 import SkeletonLoader from '../components/SkeletonLoader.astro';
@@ -12,23 +12,25 @@ import Contact from '../components/Contact.astro';
 ---
 
 <Layout title="HelloHope-web">
-  
-  <SkeletonLoader />
-  <AdBanner />
+  <main>
+    <SkeletonLoader />
+    <AdBanner />
 
-  <div class="loader"></div>
-  <audio id="audio-player"></audio>
-  <iframe src="/music" style="display: none"></iframe>
-  <div class="grid-bg"></div>
+    <div class="loader"></div>
+    <audio id="audio-player"></audio>
+    <iframe src="/music" style="display: none"></iframe>
+    <div class="grid-bg"></div>
 
-  <div class="container" style="display: none;">
-    <Header />
-    <MenuCards />
-  </div>
+    <div class="container" style="display: none;">
+      <Header />
+      <MenuCards />
+    </div>
 
-  <Modals />
-  <Contact />
+    <Modals />
+    <Contact />
 
-  <script src="../scripts/main.js"></script>
-
+    <script>
+      import "../scripts/main.js";
+    </script>
+  </main>
 </Layout>
