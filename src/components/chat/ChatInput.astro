@@ -55,15 +55,23 @@
 </div>
 
 <style>
-  /* --- LAYOUT ADAPTIVE --- */
+ /* --- LAYOUT ADAPTIVE --- */
   .chat-input-container-main {
-    display: flex; align-items: flex-end; gap: 10px; padding: 10px 15px;
+    display: flex; 
+    align-items: flex-end; 
+    gap: 10px; 
+    padding: 10px 15px;
     background: var(--bg-input-bar) !important;
-    width: 100%; box-sizing: border-box;
+    width: 100%; 
+    box-sizing: border-box;
     border-top: 1px solid var(--border-color);
     transition: background 0.3s ease;
+    /* 🔥 TAMBAHKAN INI 🔥 */
+    position: relative;
+    z-index: 100; 
+    padding-bottom: env(safe-area-inset-bottom, 10px); /* Jaga jarak buat HP berponi bawah */
   }
-
+  
   .input-group-wrapper-adaptive {
     flex: 1; display: flex; align-items: center;
     background: var(--bg-input-field) !important;

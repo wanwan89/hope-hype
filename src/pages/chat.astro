@@ -72,21 +72,30 @@ import ChatModals from '../components/chat/ChatModals.astro';
   --border-color: #313d45;
 }
 
-/* --- Base Styles --- */
+/* --- 🛠️ FIX TOTAL STRUKTUR LAYOUT (ANTI-KEPENDEM) --- */
 html, body {
-  margin: 0; padding: 0; height: 100%;
+  margin: 0; 
+  padding: 0; 
+  height: 100vh; /* Wajib */
+  height: 100dvh; /* Support mobile browser agar tidak tertutup bar navigasi */
   font-family: "Poppins", sans-serif;
   background-color: var(--bg-chat-solid) !important;
   color: var(--text-main);
+  overflow: hidden; /* Mencegah body ikutan scroll */
 }
 
 .telegram-chat {
-  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  display: flex; 
+  flex-direction: column; 
+  height: 100%; /* Mengisi seluruh body */
+  width: 100%;
+  overflow: hidden; /* Kunci agar container utama gak melar ke bawah */
   background-color: var(--bg-chat-solid) !important;
   background-image: url("/asets/png/chat.png");
   background-blend-mode: overlay;
   background-size: 400px;
-  position: relative; z-index: 1;
+  position: relative; 
+  z-index: 1;
 }
 
 :root.dark .telegram-chat {
@@ -94,28 +103,43 @@ html, body {
   background-blend-mode: normal;
 }
 
+/* --- Area Pesan (Scrollable) --- */
 .chat-messages {
-  flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; height: 100%;
+  flex: 1; /* Area ini akan mengambil sisa ruang dan mendorong input ke bawah */
+  padding: 12px; 
+  overflow-y: auto; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 15px;
+  -webkit-overflow-scrolling: touch; /* Smooth scroll buat iPhone */
 }
 
-/* --- 🔥 FIX BUBBLE CHAT & GAMBAR (ANTI-MELEDAK) 🔥 --- */
+/* --- Area Input (Tetap di Bawah) --- */
+.chat-input-container-main {
+  flex-shrink: 0; /* Mencegah input tertekan/mengecil */
+  position: relative;
+  z-index: 10;
+  background: var(--bg-input-bar) !important;
+  padding-bottom: env(safe-area-inset-bottom, 12px); /* Fix buat iPhone X ke atas */
+}
+
+/* --- 🖼️ FIX BUBBLE CHAT (ANTI-MELEDAK) --- */
 .chat-message {
   display: flex;
   align-items: flex-end;
   width: fit-content;
-  max-width: 75%; /* Kunci lebar bubble maksimal 75% layar */
+  max-width: 75%; 
   position: relative;
-  transition: transform 0.2s ease;
+  margin-bottom: 2px;
 }
 
-/* Kontainer isi di dalam bubble */
 .chat-message .content {
   display: flex;
   flex-direction: column;
   padding: 6px 10px;
   border-radius: 12px;
-  max-width: 100%; /* Supaya gak keluar dari 75% parent-nya */
-  overflow: hidden; /* Kunci gambar di dalam */
+  max-width: 100%; 
+  overflow: hidden; 
 }
 
 /* Posisi Bubble */
