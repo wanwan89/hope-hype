@@ -77,32 +77,52 @@ import ChatModals from '../components/chat/ChatModals.astro';
 html, body {
   margin: 0; padding: 0; height: 100%;
   font-family: "Poppins", sans-serif;
-  background-color: var(--bg-chat-solid) !important; /* Paksa warna solid agar tidak tembus */
+  background-color: var(--bg-chat-solid) !important;
   color: var(--text-main);
   transition: background 0.3s ease;
 }
 
 .telegram-chat {
   flex: 1; display: flex; flex-direction: column; overflow: hidden;
-  background-color: var(--bg-chat-solid) !important; /* Solid background */
+  background-color: var(--bg-chat-solid) !important;
   background-image: url("/asets/png/chat.png");
   background-blend-mode: overlay;
   background-size: 400px;
   position: relative; z-index: 1;
 }
 
-/* Fix background image transparan di dark mode */
 :root.dark .telegram-chat {
   background-image: linear-gradient(rgba(11,20,26,0.95), rgba(11,20,26,0.95)), url("/asets/png/chat.png") !important;
   background-blend-mode: normal;
 }
 
-/* --- Chat Components --- */
+/* --- Area Pesan --- */
 .chat-messages {
   flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; height: 100%;
-  background-color: var(--bg-chat-solid); /* Pastikan area pesan juga solid */
+  background-color: var(--bg-chat-solid);
 }
 
+/* --- 🖼️ FIX UKURAN GAMBAR/FOTO DI CHAT --- */
+.chat-message .text img {
+  max-width: 200px !important; /* Batasi lebar foto agar tidak raksasa */
+  max-height: 250px !important;
+  border-radius: 10px;
+  object-fit: cover;
+  margin: 5px 0;
+  display: block;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Khusus Sticker */
+.chat-message .text img[src*="sticker"] {
+  width: 120px !important;
+  height: 120px !important;
+  max-width: 120px !important;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+/* --- Chat Bubbles --- */
 .chat-message {
   display: flex; max-width: 85%; padding: 6px 10px; border-radius: 12px; font-size: 14px;
   position: relative; transition: transform 0.2s ease;
@@ -120,17 +140,16 @@ html, body {
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
 }
 
-.chat-message .text { color: var(--text-msg); }
-.chat-message .username { color: var(--bg-header); font-weight: 700; }
+.chat-message .text { color: var(--text-msg); line-height: 1.4; }
+.chat-message .username { color: var(--bg-header); font-weight: 700; margin-bottom: 2px; }
 :root.dark .chat-message .username { color: #00a884; }
 
-/* --- Sidebar & UI Fix --- */
+/* --- Sidebar & UI --- */
 .sidebar { 
   background: var(--bg-sidebar) !important; 
   border-right: 1px solid var(--border-color); 
 }
 
-/* Menghilangkan bocor putih di judul riwayat chat sidebar */
 :root.dark :global(#private-chat-list),
 :root.dark :global(.sidebar-chat-item) {
   background-color: var(--bg-sidebar) !important;
@@ -141,12 +160,12 @@ html, body {
 .input-group-wrapper { background: var(--bg-input-field) !important; border: 1px solid var(--border-color) !important; }
 #chat-input { color: var(--text-main) !important; }
 
-/* Scrollbar dark mode */
-.chat-messages::-webkit-scrollbar { width: 6px; }
-.chat-messages::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.3); border-radius: 3px; }
+/* Scrollbar */
+.chat-messages::-webkit-scrollbar { width: 5px; }
+.chat-messages::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.3); border-radius: 10px; }
 :root.dark .chat-messages::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
 
-/* Toast & Popups */
+/* Toast Notification Adaptive */
 .toast-card {
   background: var(--bg-sidebar) !important;
   color: var(--text-main) !important;
@@ -160,5 +179,6 @@ html, body {
 @media (max-width: 480px) {
   #toast { top: 10px; width: calc(100% - 16px); }
   .toast-card { border-radius: 18px; padding: 10px 12px; min-height: 56px; }
+  .chat-message { max-width: 90%; }
 }
 </style>
