@@ -1,0 +1,31 @@
+---
+---
+<header>
+  <div class="hello-wrapper">
+    <div class="hello-text">
+      <div class="user-profile">
+        <img class="profile-avatar" id="avatar" src="/asets/png/profile.png" alt="User" />
+        <span class="username" id="username">Guest</span>
+        <div class="avatar-menu" id="avatarMenu">
+          <button id="profileBtn" onclick="window.location.href='/data'">Profil</button>
+          <button id="settingsBtn">Settings</button>
+          <button id="logoutBtn">Logout</button>
+        </div>
+      </div>
+      <h1 class="logo-wrapper">
+        <span class="logo-flip"></span>
+      </h1>
+    </div>
+  </div>
+  
+  <div class="header-actions">
+    <div class="notif-wrapper top-notif" id="notifBell">
+      <span class="material-icons notification-icon">notifications</span>
+      <span class="notif-dot" id="notifCount" style="display:none;">0</span>
+    </div>
+    <label class="switch">
+      <input type="checkbox" class="toggle toggle-dark" />
+      <span class="slider"></span>
+    </label>
+  </div>
+</header>
