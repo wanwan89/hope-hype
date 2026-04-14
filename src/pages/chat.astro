@@ -18,7 +18,6 @@ import ChatModals from '../components/chat/ChatModals.astro';
         }
       }
       applyTheme();
-      // Pantau perubahan dari tab lain
       window.addEventListener('storage', (e) => {
         if (e.key === 'theme') applyTheme();
       });
@@ -46,7 +45,7 @@ import ChatModals from '../components/chat/ChatModals.astro';
 <style is:global>
 /* --- 🎨 THEME VARIABLES --- */
 :root {
-  --bg-chat: #e5ddd5;
+  --bg-chat-solid: #e5ddd5;
   --bg-sidebar: #ffffff;
   --bg-header: #3a7bd5;
   --bg-input-bar: #ffffff;
@@ -57,12 +56,11 @@ import ChatModals from '../components/chat/ChatModals.astro';
   --text-msg: #111b21;
   --text-muted: #666666;
   --border-color: #eaeaea;
-  --chat-pattern-opacity: 0.08;
 }
 
-/* --- 🌙 DARK MODE COLORS --- */
+/* --- 🌙 DARK MODE COLORS (SOLID NO LEAK) --- */
 :root.dark {
-  --bg-chat: #0b141a;
+  --bg-chat-solid: #0b141a; /* Hitam Padat WA */
   --bg-sidebar: #111b21;
   --bg-header: #202c33;
   --bg-input-bar: #202c33;
@@ -73,34 +71,36 @@ import ChatModals from '../components/chat/ChatModals.astro';
   --text-msg: #e9edef;
   --text-muted: #8696a0;
   --border-color: #313d45;
-  --chat-pattern-opacity: 0.05;
 }
 
 /* --- Base Styles --- */
 html, body {
   margin: 0; padding: 0; height: 100%;
   font-family: "Poppins", sans-serif;
-  background: var(--bg-chat);
+  background-color: var(--bg-chat-solid) !important; /* Paksa warna solid agar tidak tembus */
   color: var(--text-main);
   transition: background 0.3s ease;
 }
 
 .telegram-chat {
   flex: 1; display: flex; flex-direction: column; overflow: hidden;
-  background-color: var(--bg-chat);
+  background-color: var(--bg-chat-solid) !important; /* Solid background */
   background-image: url("/asets/png/chat.png");
   background-blend-mode: overlay;
   background-size: 400px;
   position: relative; z-index: 1;
 }
 
+/* Fix background image transparan di dark mode */
 :root.dark .telegram-chat {
-  background-image: linear-gradient(rgba(11,20,26,0.92), rgba(11,20,26,0.92)), url("/asets/png/chat.png");
+  background-image: linear-gradient(rgba(11,20,26,0.95), rgba(11,20,26,0.95)), url("/asets/png/chat.png") !important;
+  background-blend-mode: normal;
 }
 
 /* --- Chat Components --- */
 .chat-messages {
   flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; height: 100%;
+  background-color: var(--bg-chat-solid); /* Pastikan area pesan juga solid */
 }
 
 .chat-message {
@@ -111,6 +111,7 @@ html, body {
 .chat-message.self {
   background: var(--bg-bubble-self) !important;
   align-self: flex-end; border-bottom-right-radius: 2px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
 }
 
 .chat-message.other {
@@ -123,32 +124,36 @@ html, body {
 .chat-message .username { color: var(--bg-header); font-weight: 700; }
 :root.dark .chat-message .username { color: #00a884; }
 
-/* Sidebar & Header Fix */
-.sidebar { background: var(--bg-sidebar) !important; border-right: 1px solid var(--border-color); }
+/* --- Sidebar & UI Fix --- */
+.sidebar { 
+  background: var(--bg-sidebar) !important; 
+  border-right: 1px solid var(--border-color); 
+}
+
+/* Menghilangkan bocor putih di judul riwayat chat sidebar */
+:root.dark :global(#private-chat-list),
+:root.dark :global(.sidebar-chat-item) {
+  background-color: var(--bg-sidebar) !important;
+}
+
 .chat-header { background: var(--bg-header) !important; }
 .chat-input-container { background: var(--bg-input-bar) !important; border-top: 1px solid var(--border-color) !important; }
 .input-group-wrapper { background: var(--bg-input-field) !important; border: 1px solid var(--border-color) !important; }
 #chat-input { color: var(--text-main) !important; }
 
-/* Status Icons */
-.status-icon.read { color: #53bdeb; }
-.status-icon.sent, .status-icon.delivered { color: var(--text-muted); }
+/* Scrollbar dark mode */
+.chat-messages::-webkit-scrollbar { width: 6px; }
+.chat-messages::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.3); border-radius: 3px; }
+:root.dark .chat-messages::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
 
-/* --- Skeleton & Loading (Dark Mode Adaptive) --- */
-.skeleton-bubble { background: var(--bg-bubble-other) !important; opacity: 0.6; }
-.skeleton-bubble.me { background: var(--bg-bubble-self) !important; }
-
-/* --- Toast System --- */
+/* Toast & Popups */
 .toast-card {
-  background: var(--bg-sidebar);
-  color: var(--text-main);
+  background: var(--bg-sidebar) !important;
+  color: var(--text-main) !important;
   border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
-/* Scrollbar */
-.chat-messages::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.3); }
-
-/* Animations */
 @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes badgePop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 

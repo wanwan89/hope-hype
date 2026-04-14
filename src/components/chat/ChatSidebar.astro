@@ -35,6 +35,10 @@
     </button>
   </div>
 
+  <div class="history-label">
+    RIWAYAT CHAT PRIBADI
+  </div>
+
   <div class="chat-list-container">
     <div id="private-chat-list">
       <p style="text-align:center; font-size:11px; color:#ccc; margin-top:30px;">Memuat chat...</p>
@@ -63,7 +67,7 @@
     left: -280px;
     width: 280px;
     height: 100%;
-    background: var(--bg-sidebar) !important; /* 🔥 Pakai Variabel */
+    background: var(--bg-sidebar) !important;
     color: var(--text-main);
     z-index: 10001;
     transition: transform 0.3s ease-out, left 0.3s ease-out, background 0.3s ease;
@@ -77,12 +81,26 @@
 
   .sidebar-profile {
     padding: 30px 20px;
-    background: var(--bg-header); /* Tetap biru/gelap ngikut header */
+    background: var(--bg-header);
     color: white;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
+  }
+
+  /* Label Riwayat Chat - Fix Adaptive */
+  .history-label {
+    padding: 10px 15px;
+    background: var(--bg-input-field);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: background 0.3s ease;
   }
 
   .id-badge {
@@ -115,6 +133,7 @@
   .sidebar-section {
     padding: 15px;
     background: var(--bg-sidebar);
+    flex-shrink: 0;
   }
 
   .border-bottom { border-bottom: 1px solid var(--border-color); }
@@ -167,7 +186,12 @@
   .chat-list-container {
     flex: 1;
     overflow-y: auto;
-    background: var(--bg-sidebar);
+    background: var(--bg-sidebar) !important;
+  }
+
+  #private-chat-list {
+    background: var(--bg-sidebar) !important;
+    min-height: 100%;
   }
 
   .sidebar-footer {
@@ -175,6 +199,7 @@
     border-top: 1px solid var(--border-color);
     background: var(--bg-sidebar);
     text-align: center;
+    flex-shrink: 0;
   }
 
   .sidebar-overlay {
@@ -187,7 +212,6 @@
     backdrop-filter: blur(5px);
   }
 
-  /* Status Online Dot */
   .online-dot {
     height: 8px; width: 8px;
     background-color: #2ecc71;
@@ -204,7 +228,6 @@
     100% { opacity: 1; transform: scale(1); }
   }
 
-  /* 🔥 CSS TOMBOL CARI DOI 🔥 */
   .btn-cari-doi {
     position: relative;
     width: 100%;
@@ -254,9 +277,30 @@
     45% { transform: scale(1.15); }
   }
 
-  /* Global styles for dynamic items */
-  :global(.sidebar-chat-item) { border-bottom: 1px solid var(--border-color) !important; color: var(--text-main); }
-  :global(.sidebar-chat-item:hover) { background-color: var(--bg-input-field) !important; }
-  :global(.sidebar-chat-item strong) { color: var(--text-main); }
-  :global(.sidebar-chat-item span) { color: var(--text-muted); }
+  /* 🔥 STYLE UNTUK ITEM CHAT DINAMIS 🔥 */
+  :global(.sidebar-chat-item) { 
+    background: var(--bg-sidebar) !important;
+    border-bottom: 1px solid var(--border-color) !important; 
+    color: var(--text-main) !important;
+    padding: 12px 15px !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: background 0.2s ease;
+  }
+
+  :global(.sidebar-chat-item:hover) { 
+    background-color: var(--bg-input-field) !important; 
+    cursor: pointer; 
+  }
+
+  :global(.sidebar-chat-item strong) { 
+    color: var(--text-main) !important; 
+    font-size: 14px;
+  }
+
+  :global(.sidebar-chat-item span) { 
+    color: var(--text-muted) !important; 
+    font-size: 12px;
+  }
 </style>
