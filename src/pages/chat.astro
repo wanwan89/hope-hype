@@ -30,32 +30,7 @@ import ChatModals from '../components/chat/ChatModals.astro';
   <audio id="receive-sound" src="/asets/sound/receive.mp3" preload="auto"></audio>
   <audio id="ringtone" src="/asets/sound/ringtone.mp3" preload="auto" loop></audio>
 
-  <div id="toast-container" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 999999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none;"></div>
-
-  <div id="call-overlay-active" class="call-screen" style="display: none;">
-    <div class="call-content">
-      <img id="call-active-avatar" src="/asets/png/profile.webp" class="call-avatar pulse-anim" />
-      <h2 id="call-active-name">Mell</h2>
-      <p id="call-active-status">Memanggil...</p>
-      <div class="call-actions">
-        <button id="btn-end-call-active" class="btn-call end" onclick="window.endCall()">
-           <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div id="incoming-call-overlay" class="call-screen" style="display: none;">
-    <div class="call-content">
-      <img id="incoming-caller-avatar" src="/asets/png/profile.webp" class="call-avatar ring-anim" />
-      <h2 id="incoming-caller-name">Seseorang</h2>
-      <p>Panggilan Suara masuk...</p>
-      <div class="call-actions">
-        <button id="btn-reject-call" class="btn-call end" onclick="window.rejectCall()">Tolak</button>
-        <button id="btn-accept-call" class="btn-call accept" onclick="window.acceptCall()">Terima</button>
-      </div>
-    </div>
-  </div>
+  <div id="toast-container" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none;"></div>
 
   <div class="telegram-chat">
     <ChatHeader />
@@ -102,11 +77,10 @@ import ChatModals from '../components/chat/ChatModals.astro';
   --border-color: #313d45;
 }
 
-/* --- 🛠️ BUG FIX 2: LAYOUT KEPOTONG DI APLIKASI (PWA) --- */
+/* --- 🛠️ LAYOUT DASAR --- */
 html, body {
   margin: 0; padding: 0; 
-  height: 100%; /* PWA Fix */
-  min-height: -webkit-fill-available; /* iOS PWA Fix */
+  height: 100%; min-height: -webkit-fill-available;
   font-family: "Poppins", sans-serif;
   background-color: var(--bg-chat-solid) !important;
   color: var(--text-main);
@@ -114,19 +88,13 @@ html, body {
 }
 
 .telegram-chat {
-  display: flex; 
-  flex-direction: column; 
-  height: 100vh; /* Fallback */
-  height: 100dvh; /* Dynamic viewport */
-  height: -webkit-fill-available; /* iOS Fix */
-  width: 100%;
-  overflow: hidden; 
+  display: flex; flex-direction: column; 
+  height: 100vh; height: 100dvh; height: -webkit-fill-available; 
+  width: 100%; overflow: hidden; 
   background-color: var(--bg-chat-solid) !important;
   background-image: url("/asets/png/chat.png");
-  background-blend-mode: overlay;
-  background-size: 400px;
-  position: relative; 
-  z-index: 1;
+  background-blend-mode: overlay; background-size: 400px;
+  position: relative; z-index: 1;
 }
 
 :root.dark .telegram-chat {
@@ -135,29 +103,64 @@ html, body {
 }
 
 .chat-header { flex-shrink: 0; position: relative; z-index: 1000; }
-.chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; -webkit-overflow-scrolling: touch; }
+.chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
 
-/* Wrapper Input Anti Kepotong */
+/* ========================================================= */
+/* 🔥 BUG FIX 1: INPUT TEMBUS STIKER 🔥                      */
+/* ========================================================= */
 .chat-input-wrapper { 
   flex-shrink: 0; 
   position: relative; 
-  z-index: 1000; 
-  background: var(--bg-input-bar) !important; 
-  padding-bottom: max(10px, env(safe-area-inset-bottom)); /* PWA Nav Bar Fix */
+  z-index: 2000; 
+  background-color: var(--bg-input-bar) !important; 
+  /* Kunci area bawah layar HP (Poni/Nav Bar) dengan warna solid */
+  padding-bottom: env(safe-area-inset-bottom, 0px); 
+}
+
+.chat-input-container-main, #sticker-menu {
+  background-color: var(--bg-input-bar) !important;
 }
 
 /* ========================================================= */
-/* 🔥 BUG FIX 3: BUBBLE CHAT RAPI (AVATAR DI DALAM) 🔥       */
+/* 🔥 BUG FIX 2: SIDEBAR MASIH PUTIH DI DARK MODE 🔥         */
 /* ========================================================= */
+/* Paksa hajar semua inline style warna putih di dalam sidebar */
+:root.dark .sidebar,
+:root.dark #sidebar,
+:root.dark .sidebar-section,
+:root.dark .sidebar-footer,
+:root.dark #private-chat-list,
+:root.dark .sidebar div[style*="background: #fff"],
+:root.dark .sidebar div[style*="background: white"],
+:root.dark .sidebar div[style*="background:#fff"],
+:root.dark .sidebar div[style*="background:white"] {
+  background: var(--bg-sidebar) !important;
+  background-color: var(--bg-sidebar) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-color) !important;
+}
 
-/* Rahasianya: .chat-message yang jadi warna background, BUKAN .content */
+/* ========================================================= */
+/* 🔥 BUG FIX 3: MODAL NELPON (CALL UI) GAK MUNCUL 🔥        */
+/* ========================================================= */
+/* Paksa z-index modal dari ChatModals.astro ke level dewa */
+#call-overlay, 
+#incoming-call-overlay,
+.modal-overlay,
+.delete-overlay {
+  z-index: 9999999 !important;
+}
+
+/* ========================================================= */
+/* 🔥 BUG FIX 4: BUBBLE CHAT RAPI (TEKS & NAMA GAK NUMPUK) 🔥*/
+/* ========================================================= */
 .chat-message {
   display: flex;
   align-items: flex-start; 
-  gap: 8px; /* Jarak Avatar & Teks */
+  gap: 8px; 
   width: fit-content;
   max-width: 85%; 
-  padding: 8px 10px; /* Padding dipindah ke luar sini */
+  padding: 8px 10px; 
   border-radius: 15px;
   position: relative;
   box-shadow: 0 1px 2px rgba(0,0,0,0.15);
@@ -166,66 +169,64 @@ html, body {
 
 .chat-message.self { 
   align-self: flex-end; 
-  flex-direction: row-reverse; /* Balik arah: Teks kiri, Avatar kanan */
+  flex-direction: row-reverse; 
   background: var(--bg-bubble-self) !important;
   border-bottom-right-radius: 4px;
 }
 
 .chat-message.other { 
   align-self: flex-start; 
-  flex-direction: row; /* Normal: Avatar kiri, Teks kanan */
+  flex-direction: row; 
   background: var(--bg-bubble-other) !important;
   border-bottom-left-radius: 4px;
 }
 
-/* Avatar Profil */
 .chat-message .avatar {
-  width: 30px;
-  height: 30px;
+  width: 28px; height: 28px;
   border-radius: 50%;
   flex-shrink: 0; 
   object-fit: cover;
-  margin: 0 !important; /* Hapus margin lama */
-  margin-top: 2px !important;
+  margin: 0 !important;
+  margin-top: 2px !important; 
+  display: block !important;
 }
 
-/* Wadah Teks dan Info (Transparan) */
-.chat-message .content {
+/* Paksa Teks dan Nama berbaris ke bawah (Column) biar gak numpuk */
+.chat-message > div:not(.avatar), .chat-message .text {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-width: 0; /* Anti Teks Meluber */
-  background: transparent !important; /* Wajib transparan */
+  min-width: 0; 
+  background: transparent !important; 
   box-shadow: none !important;
   padding: 0 !important;
   border-radius: 0 !important;
 }
 
-.chat-message .username { color: var(--bg-header); font-weight: 700; font-size: 13px; margin-bottom: 2px; }
-:root.dark .chat-message .username { color: #00a884; }
+.chat-message .username { 
+  font-weight: 700; 
+  font-size: 12px; 
+  margin-bottom: 4px; 
+  display: block;
+}
+/* Warna Nama ngikutin pengirimnya */
+.chat-message.self .username { color: #00a884; align-self: flex-end; }
+.chat-message.other .username { color: var(--bg-header); align-self: flex-start; }
+:root.dark .chat-message.other .username { color: #00a884; }
 
 .chat-message .text { color: var(--text-msg); line-height: 1.4; word-break: break-word; font-size: 14px; }
 
-/* Info Jam & Centang */
+/* Jam & Tanda Centang */
 .message-info {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
-  font-size: 10px;
-  color: var(--text-muted);
+  display: flex; justify-content: flex-end; align-items: center;
+  gap: 4px; margin-top: 4px; font-size: 10px; color: var(--text-muted);
+  align-self: flex-end; /* Paksa jam selalu di pojok kanan bawah */
 }
 .status-icon.read { color: #53bdeb; }
 
 /* Fix Gambar & Stiker di Dalam Chat */
 .chat-message .text img {
-  width: 100% !important; 
-  max-width: 220px !important; 
-  height: auto !important;
-  border-radius: 8px;
-  margin: 5px 0;
-  display: block;
+  width: 100% !important; max-width: 220px !important; height: auto !important;
+  border-radius: 8px; margin: 5px 0; display: block;
 }
 .chat-message .text img[src*="sticker"] { max-width: 120px !important; }
 
@@ -242,35 +243,25 @@ html, body {
 .skeleton-line { height: 10px; border-radius: 5px; }
 .w1 { width: 140px; } .w2 { width: 100px; } .w3 { width: 80px; } 
 
-/* --- 📞 STYLING WADAH TELEPON (CALL UI) --- */
-.call-screen {
-  position: fixed; inset: 0; background: rgba(11, 20, 26, 0.95);
-  backdrop-filter: blur(8px); z-index: 9999999;
-  display: flex; justify-content: center; align-items: center;
-  color: white; text-align: center;
-}
-.call-content { display: flex; flex-direction: column; align-items: center; gap: 15px; }
-.call-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #3a7bd5; }
-.call-actions { display: flex; gap: 20px; margin-top: 30px; }
-.btn-call { width: 65px; height: 65px; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center; font-size: 14px; }
-.btn-call.end { background: #ff4757; }
-.btn-call.accept { background: #2ecc71; }
-.pulse-anim { animation: pulse 1.5s infinite; }
-.ring-anim { animation: ring 0.5s ease-in-out infinite alternate; }
+/* Typing Bubble */
+.typing-bubble { display: flex; gap: 4px; padding: 12px 15px; align-items: center; width: fit-content; }
+.typing-bubble span { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; opacity: 0.4; animation: typingBounce 1.4s infinite; }
+.typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+.typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+.loading-chat-hint { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px; font-style: italic; }
 
-/* Sidebar UI & Scrollbar */
+/* Sidebar UI Fix */
 .sidebar { background: var(--bg-sidebar) !important; border-right: 1px solid var(--border-color); height: 100%; position: fixed; z-index: 2000; }
-:root.dark :global(#private-chat-list), :root.dark :global(.sidebar-chat-item) { background-color: var(--bg-sidebar) !important; }
 .chat-messages::-webkit-scrollbar { width: 5px; }
 .chat-messages::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.3); border-radius: 10px; }
 
-/* TOAST STYLE */
+/* Toast Style */
 .toast-msg { background: var(--bg-sidebar); color: var(--text-main); padding: 12px 16px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-left: 4px solid #3a7bd5; font-size: 13px; font-weight: 600; pointer-events: auto; animation: slideDown 0.3s ease; }
 
 /* Animations */
 @keyframes shimmerMove { 100% { transform: translateX(100%); } }
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(58, 123, 213, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(58, 123, 213, 0); } 100% { box-shadow: 0 0 0 0 rgba(58, 123, 213, 0); } }
-@keyframes ring { 0% { transform: rotate(-10deg); } 100% { transform: rotate(10deg); } }
+@keyframes typingBounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-5px); } }
+@keyframes fadeInChatLoading { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 480px) {
