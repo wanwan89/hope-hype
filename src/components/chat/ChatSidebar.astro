@@ -8,18 +8,14 @@
     <div class="profile-info">
       <div id="side-username" class="profile-name">Loading...</div>
       
-      <div onclick="navigator.clipboard.writeText(document.getElementById('my-unique-id').innerText); alert('ID Unik disalin!')" class="id-badge" title="Klik untuk salin">
-        ID UNIK: <span id="my-unique-id" class="id-text">#-----</span>
+      <div onclick="window.copyMyID()" class="id-badge" title="Klik untuk salin">
+        ID: <span id="my-unique-id" class="id-text">#-----</span>
       </div>
       
       <button onclick="window.openEditProfile()" class="edit-bio-btn">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
         Edit Biodata
       </button>
-      
-      <div class="status-indicator">
-        <span class="online-dot"></span> Online
-      </div>
     </div>
   </div>
 
@@ -35,16 +31,13 @@
 
   <div class="sidebar-section border-bottom">
     <button id="btn-open-group-modal" class="btn-group">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
       BUAT GRUP BARU
     </button>
   </div>
 
-  <div class="history-label">
-    Riwayat Chat Pribadi
-  </div>
-
-  <div class="chat-list-container">
+  <div class="history-label">Riwayat Chat</div>
+  <div class="chat-list-container custom-scrollbar">
     <div id="private-chat-list">
       <div class="empty-chat-state">Memuat chat...</div>
     </div>
@@ -66,243 +59,183 @@
 <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
 <style>
-  /* --- LAYOUT UTAMA --- */
   .sidebar {
-    position: fixed;
-    top: 0;
-    left: -280px;
-    width: 280px;
-    height: 100%;
+    position: fixed; top: 0; left: -280px;
+    width: 280px; height: 100%;
     background: var(--bg-sidebar) !important;
-    color: var(--text-main);
     z-index: 2000;
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Transisi lebih smooth */
-    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    will-change: left;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+    display: flex; flex-direction: column;
   }
   .sidebar.open { left: 0; }
 
-  /* --- OVERLAY --- */
   .sidebar-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px);
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px);
     display: none; z-index: 1999;
-    opacity: 0; transition: opacity 0.3s ease;
   }
-  .sidebar-overlay.show { display: block; opacity: 1; }
+  .sidebar-overlay.show { display: block; }
 
-  /* --- HEADER PROFIL --- */
+  /* Header Profile */
   .sidebar-profile {
-    padding: 30px 20px 20px;
-    background: var(--bg-header);
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
+    padding: 30px 20px; background: var(--bg-header);
+    color: white; display: flex; flex-direction: column; align-items: center; text-align: center;
   }
   .profile-avatar {
-    width: 75px; height: 75px;
-    border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.3);
-    object-fit: cover;
-    background: #eee;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    width: 80px; height: 80px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.2); object-fit: cover; margin-bottom: 12px;
   }
-  .profile-info { text-align: center; width: 100%; }
-  .profile-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; letter-spacing: 0.3px; }
-  
+  .profile-name { font-weight: 700; font-size: 17px; }
   .id-badge {
-    font-size: 10px; background: rgba(0,0,0,0.25);
-    padding: 4px 12px; border-radius: 12px;
-    cursor: pointer; display: inline-block;
-    margin-bottom: 6px; transition: background 0.2s;
+    font-size: 11px; background: rgba(0,0,0,0.2); padding: 4px 12px;
+    border-radius: 20px; cursor: pointer; margin: 8px 0;
   }
-  .id-badge:hover { background: rgba(0,0,0,0.4); }
-  .id-badge:active { transform: scale(0.95); }
-  .id-text { font-weight: 700; letter-spacing: 0.5px; }
-
   .edit-bio-btn {
-    font-size: 11px; color: #fff; background: rgba(255,255,255,0.15);
-    padding: 6px 16px; border-radius: 20px;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    border: 1px solid rgba(255,255,255,0.3);
-    font-weight: 600; cursor: pointer; margin: 0 auto;
-    transition: all 0.2s ease;
-  }
-  .edit-bio-btn:hover { background: rgba(255,255,255,0.25); }
-  .edit-bio-btn:active { transform: scale(0.95); }
-
-  .status-indicator { font-size: 10px; opacity: 0.9; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 4px; }
-  .online-dot { height: 8px; width: 8px; background-color: #2ecc71; border-radius: 50%; box-shadow: 0 0 5px #2ecc71; animation: pulse-dot 1.5s infinite; }
-
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.8); }
+    font-size: 11px; color: #fff; background: rgba(255,255,255,0.1);
+    padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
   }
 
-  /* --- SECTION (SEARCH & GROUP) --- */
-  .sidebar-section { padding: 15px; background: var(--bg-sidebar); flex-shrink: 0; }
-  .border-bottom { border-bottom: 1px solid var(--border-color); padding-top: 5px; }
-
+  /* Search Section */
+  .sidebar-section { padding: 15px; }
   .search-input-wrapper {
-    display: flex; align-items: center;
-    background: var(--bg-input-field);
-    border-radius: 15px; padding: 10px 15px;
-    border: 1px solid var(--border-color);
-    transition: border-color 0.3s, box-shadow 0.3s;
+    display: flex; align-items: center; padding: 10px 15px;
+    background: var(--bg-input-field); border-radius: 12px; border: 1px solid var(--border-color);
   }
-  .search-input-wrapper:focus-within {
-    border-color: #3a7bd5;
-    box-shadow: 0 0 0 2px rgba(58, 123, 213, 0.2);
-  }
-  .at-icon { color: #3a7bd5; font-weight: bold; margin-right: 8px; }
-  .search-input-wrapper input {
-    border: none; background: transparent; outline: none;
-    font-size: 13px; width: 100%; color: var(--text-main); font-family: inherit;
-  }
-
+  .at-icon { color: #3a7bd5; font-weight: 800; margin-right: 10px; }
+  .search-input-wrapper input { border: none; background: transparent; outline: none; width: 100%; color: var(--text-main); }
+  
   .btn-main {
-    width: 100%; margin-top: 10px; border: none;
-    background: #3a7bd5; color: white;
-    border-radius: 12px; padding: 10px;
-    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
-    cursor: pointer; transition: 0.2s ease;
+    width: 100%; margin-top: 8px; padding: 10px; border: none;
+    background: #3a7bd5; color: white; border-radius: 10px; font-weight: 700; cursor: pointer;
   }
-  .btn-main:hover { background: #2f65b0; }
-  .btn-main:active { transform: scale(0.97); }
 
   .btn-group {
-    width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
-    border: 2px dashed #3a7bd5; background: transparent;
-    color: #3a7bd5; border-radius: 12px; padding: 12px;
-    font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s ease;
-  }
-  .btn-group:hover { background: rgba(58, 123, 213, 0.05); }
-  .btn-group:active { transform: scale(0.97); }
-
-  /* --- LIST CHAT AREA --- */
-  .history-label {
-    padding: 12px 15px 8px;
-    background: var(--bg-sidebar);
-    color: var(--text-muted);
-    font-size: 10px; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 1px;
+    width: 100%; padding: 12px; background: transparent; color: #3a7bd5;
+    border: 2px dashed #3a7bd5; border-radius: 10px; font-weight: 700; cursor: pointer;
   }
 
-  .chat-list-container {
-    flex: 1; overflow-y: auto; overflow-x: hidden;
-    background: var(--bg-sidebar) !important;
-  }
+  /* History List */
+  .history-label { padding: 15px 15px 5px; font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+  .chat-list-container { flex: 1; overflow-y: auto; }
   
-  /* Custom Scrollbar */
-  .chat-list-container::-webkit-scrollbar { width: 4px; }
-  .chat-list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-
-  #private-chat-list { background: var(--bg-sidebar) !important; min-height: 100%; }
-  .empty-chat-state { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 30px; font-style: italic; }
-
-  /* --- FOOTER CARI DOI --- */
-  .sidebar-footer {
-    padding: 15px; border-top: 1px solid var(--border-color);
-    background: var(--bg-sidebar); flex-shrink: 0;
+  :global(.sidebar-chat-item) {
+    display: flex; align-items: center; gap: 12px; padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color); cursor: pointer; transition: 0.2s;
   }
+  :global(.sidebar-chat-item:hover) { background: var(--bg-input-field); }
+  :global(.sidebar-chat-item img) { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+  :global(.sidebar-chat-item strong) { font-size: 14px; color: var(--text-main); display: block; }
+  :global(.sidebar-chat-item p) { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
 
+  /* Footer */
+  .sidebar-footer { padding: 15px; border-top: 1px solid var(--border-color); }
   .btn-cari-doi {
-    position: relative; width: 100%; border: none; border-radius: 50px;
+    width: 100%; border: none; border-radius: 50px; padding: 15px;
     background: linear-gradient(135deg, #ff4e50, #f9d423); color: white;
-    padding: 16px 20px; font-weight: 800; font-size: 12px; letter-spacing: 0.5px;
-    cursor: pointer; overflow: hidden;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
-    box-shadow: 0 8px 15px rgba(255, 78, 80, 0.25);
-  }
-  .btn-cari-doi:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(255, 78, 80, 0.35); filter: brightness(1.05); }
-  .btn-cari-doi:active { transform: translateY(1px); box-shadow: 0 5px 10px rgba(255, 78, 80, 0.2); }
-
-  .inner-content { display: flex; align-items: center; justify-content: center; gap: 8px; z-index: 2; position: relative; }
-  .heart-icon { animation: heartBeat 1.5s infinite; }
-
-  @keyframes heartBeat {
-    0%, 20%, 40%, 100% { transform: scale(1); }
-    10% { transform: scale(1.25); }
-    30% { transform: scale(1.15); }
+    font-weight: 800; cursor: pointer; position: relative; overflow: hidden;
   }
 
-  .glow-effect {
-    position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-    z-index: 1; transform: skewX(-20deg);
-  }
-  .btn-cari-doi:hover .glow-effect { left: 150%; transition: 0.7s; }
-
-  /* --- CHAT ITEMS (Dibuat oleh JS) --- */
-  :global(.sidebar-chat-item) { 
-    background: var(--bg-sidebar) !important;
-    border-bottom: 1px solid var(--border-color) !important; 
-    color: var(--text-main) !important;
-    padding: 12px 15px !important;
-    display: flex; align-items: center; gap: 12px;
-    transition: background 0.2s ease;
-  }
-  :global(.sidebar-chat-item:hover) { background-color: var(--bg-input-field) !important; cursor: pointer; }
-  :global(.sidebar-chat-item:active) { background-color: var(--border-color) !important; }
-  :global(.sidebar-chat-item strong) { color: var(--text-main) !important; font-size: 14px; font-weight: 600; }
-  :global(.sidebar-chat-item span) { color: var(--text-muted) !important; font-size: 12px; }
-  
-  /* Hilangkan outline saat input difokuskan browser HP */
-  input:focus, button:focus { outline: none; }
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 </style>
+
 <script is:inline>
+  // Logika Refresh Sidebar
   window.refreshSidebar = async function() {
-    const privateChatList = document.getElementById("private-chat-list");
-    if (!privateChatList || !window.currentUser) return;
-    
-    privateChatList.innerHTML = `
-      <div class="sidebar-chat-item" onclick="window.bukaChatGlobal()">
-        <div style="width:40px; height:40px; border-radius:50%; background:#0088cc; display:flex; align-items:center; justify-content:center; margin-right:12px; color:white; font-size:18px;">🌍</div>
-        <div><strong style="color:#0088cc;">Chat Global</strong><br><span style="font-size:11px; color:#888;">Obrolan Umum</span></div>
-      </div>
-    `;
+    const list = document.getElementById("private-chat-list");
+    if (!list || !window.currentUser) return;
 
-    // Load Grup & History bisa lu kembangin disini pakai supabase select
-  };
-
-  window.bukaChatGlobal = async function() {
-    window.currentChatMode = null; window.activeGroupId = null; window.currentRoomId = "room-1";
-    document.querySelector(".chat-header h3").textContent = "HopeTalk Globe";
-    document.getElementById("chat-messages").innerHTML = "";
-    await window.loadMessages();
-    document.querySelector(".sidebar").classList.remove("open");
-  };
-
-  window.bukaChatPribadi = async function(partnerId, partnerName, partnerShortId = "") {
-    window.currentChatMode = 'private'; window.activeGroupId = null;
-    
-    const btnCall = document.getElementById('btn-start-call'); 
-    if (btnCall) { btnCall.style.display = 'flex'; btnCall.dataset.targetId = partnerId; btnCall.dataset.targetName = partnerName; }
-
-    const ids = [window.currentUser.id, partnerId].sort();
-    window.currentRoomId = `pv_${ids[0]}_${ids[1]}`; 
-    
-    document.querySelector(".chat-header h3").innerHTML = `${window.escapeHtml(partnerName)}`;
-    document.getElementById("chat-messages").innerHTML = "";
-    await window.loadMessages();
-    document.querySelector(".sidebar").classList.remove("open");
-  };
-
-  const btnCariDoiActual = document.getElementById("btn-sidebar-search");
-  if (btnCariDoiActual) {
-    btnCariDoiActual.onclick = async () => {
-      window.showToast("Mencari doi...", "info");
-      document.querySelector(".sidebar").classList.remove("open");
+    try {
+      const { data: messages } = await window.supabase
+        .from("messages")
+        .select("room_id, message, created_at, user_id, sticker_url")
+        .ilike("room_id", "pv_%")
+        .ilike("room_id", `%${window.currentUser.id}%`)
+        .order("created_at", { ascending: false });
       
-      setTimeout(async () => {
-        const { data: users } = await window.supabase.from("profiles").select("*").neq("id", window.currentUser.id).limit(1);
-        if (users && users.length > 0 && typeof window.tampilkanDoiCard === "function") window.tampilkanDoiCard(users[0]);
-      }, 3000); 
-    };
-  }
+      list.innerHTML = ""; // Bersihkan
+      
+      // Tombol Chat Global selalu ada di atas
+      list.insertAdjacentHTML('beforeend', `
+        <div class="sidebar-chat-item" onclick="window.bukaChatGlobal()">
+          <div style="width:45px; height:45px; border-radius:50%; background:#3a7bd5; display:flex; align-items:center; justify-content:center; color:white; font-size:20px;">🌍</div>
+          <div style="flex:1;"><strong>Chat Global</strong><p>Obrolan umum HopeTalk</p></div>
+        </div>
+      `);
+
+      if (messages && messages.length > 0) {
+        const uniqueRooms = [...new Set(messages.map(m => m.room_id))];
+        for (const roomId of uniqueRooms) {
+          const partnerId = roomId.replace("pv_", "").split("_").find(id => id !== window.currentUser.id);
+          const partner = await window.getCachedProfile(partnerId);
+          const lastMsg = messages.find(m => m.room_id === roomId);
+          const displayMsg = lastMsg.sticker_url ? "🖼 Stiker" : lastMsg.message;
+
+          list.insertAdjacentHTML('beforeend', `
+            <div class="sidebar-chat-item" onclick="window.bukaChatPribadi('${partnerId}', '${partner.username}', '${partner.short_id}')">
+              <img src="${partner.avatar_url || '/asets/png/profile.webp'}" onerror="this.src='/asets/png/profile.webp'">
+              <div style="flex:1; overflow:hidden;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <strong>${partner.username}</strong>
+                  <span style="font-size:10px; color:#999;">${window.formatTime(lastMsg.created_at)}</span>
+                </div>
+                <p>${displayMsg}</p>
+              </div>
+            </div>
+          `);
+        }
+      } else {
+        list.insertAdjacentHTML('beforeend', `<div class="empty-chat-state">Belum ada riwayat chat</div>`);
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  // Salin ID
+  window.copyMyID = () => {
+    const idText = document.getElementById('my-unique-id').innerText;
+    navigator.clipboard.writeText(idText);
+    window.showToast("ID disalin ke clipboard!");
+  };
+
+  // Tutup Sidebar & Overlay
+  const closeSidebarUI = () => {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebar-overlay").classList.remove("show");
+  };
+
+  // Navigasi PV
+  window.bukaChatPribadi = async function(id, name, shortId) {
+    const ids = [window.currentUser.id, id].sort();
+    window.currentRoomId = `pv_${ids[0]}_${ids[1]}`;
+    
+    if (window.setChatHeaderTitle) window.setChatHeaderTitle(name, `#${shortId}`);
+    
+    const btnCall = document.getElementById("btn-start-call");
+    if (btnCall) {
+      btnCall.style.display = "flex";
+      btnCall.dataset.targetId = id;
+      btnCall.dataset.targetName = name;
+    }
+    
+    document.getElementById("chat-messages").innerHTML = "";
+    window.isFirstMessageLoad = true;
+    await window.loadMessages();
+    closeSidebarUI();
+  };
+
+  // Event pencarian ID manual
+  document.getElementById("btn-search-id").onclick = async () => {
+    const val = document.getElementById("input-search-id").value.trim().toUpperCase().replace("#", "");
+    if (!val) return window.showToast("Masukkan ID!");
+    
+    const { data: user } = await window.supabase.from("profiles").select("id, username, short_id").eq("short_id", val).single();
+    if (user) {
+      if (user.id === window.currentUser.id) return window.showToast("Itu ID kamu sendiri!");
+      window.bukaChatPribadi(user.id, user.username, user.short_id);
+    } else {
+      window.showToast("ID tidak ditemukan!");
+    }
+  };
 </script>

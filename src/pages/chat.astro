@@ -9,28 +9,23 @@ import ChatModals from '../components/chat/ChatModals.astro';
 <Layout title="HopeTalk Globe">
   <script is:inline>
     (function() {
-      function applyTheme() {
+      const applyTheme = () => {
         const theme = localStorage.getItem('theme');
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      }
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+      };
       applyTheme();
-      window.addEventListener('storage', (e) => {
-        if (e.key === 'theme') applyTheme();
-      });
+      window.addEventListener('storage', (e) => { if (e.key === 'theme') applyTheme(); });
     })();
   </script>
 
   <script is:inline src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <script is:inline src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
 
   <audio id="send-sound" src="/asets/sound/send.mp3" preload="auto"></audio>
   <audio id="receive-sound" src="/asets/sound/receive.mp3" preload="auto"></audio>
   <audio id="ringtone" src="/asets/sound/call.wav" preload="auto" loop></audio>
 
-  <div id="toast-container" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none;"></div>
+  <div id="toast-container" class="toast-container"></div>
 
   <div class="telegram-chat">
     <ChatHeader />
@@ -43,141 +38,166 @@ import ChatModals from '../components/chat/ChatModals.astro';
 
   <ChatModals />
 
-  <script is:inline src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
-  
   <script is:inline>
-  // =======================
-  // 1. CORE & GLOBAL STATE
-  // =======================
-  window.SUPABASE_URL = "https://hqetnqnvmdxdgfnnluew.supabase.co";
-  window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZXRucW52bWR4ZGdmbm5sdWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MzUyODIsImV4cCI6MjA4NzMxMTI4Mn0.Cr9lDBZMqfeONi1dfyFzHpBtawBzZTQLBEWKmPJVAOA";
-  // Gunakan Client Supabase dari App (Pastikan sudah terpasang global)
-  window.supabase = window.supabaseClient || window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    // --- GLOBAL CONFIG & STATE ---
+    window.SUPABASE_URL = "https://hqetnqnvmdxdgfnnluew.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZXRucW52bWR4ZGdmbm5sdWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MzUyODIsImV4cCI6MjA4NzMxMTI4Mn0.Cr9lDBZMqfeONi1dfyFzHpBtawBzZTQLBEWKmPJVAOA";
+    window.supabase = window.supabaseClient || window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
-  window.currentRoomId = "room-1";
-  window.currentUser = null;
-  window.myUsername = "Guest";
-  window.myRole = "user";
-  window.profileCache = new Map();
-  window.isFirstMessageLoad = true;
-  window.currentChatMode = null;
-  window.activeGroupId = null;
-  window.totalOnlineUsers = 0;
-  window.waveSurfers = {};
+    window.currentRoomId = "room-1";
+    window.currentUser = null;
+    window.myUsername = "Guest";
+    window.myRole = "user";
+    window.profileCache = new Map();
+    window.isFirstMessageLoad = true;
+    window.currentChatMode = null;
+    window.activeGroupId = null;
+    window.waveSurfers = {};
 
-  window.sendSound = document.getElementById('send-sound');
-  window.receiveSound = document.getElementById('receive-sound');
-  window.ringtoneSound = document.getElementById('ringtone');
+    // Audio Elements Reference
+    const sndSend = document.getElementById("send-sound");
+    const sndReceive = document.getElementById("receive-sound");
+    const sndRingtone = document.getElementById("ringtone");
 
-  // =======================
-  // 2. GLOBAL HELPERS
-  // =======================
-  window.showToast = function(message) {
-    let container = document.getElementById("toast-container");
-    if (!container) return;
-    const toast = document.createElement("div");
-    toast.className = `toast-msg`; toast.innerHTML = message;
-    container.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 3000);
-  };
+    // --- HELPERS ---
+    window.showToast = function(message) {
+      let container = document.getElementById("toast");
+      if (!container) {
+        container = document.createElement("div");
+        container.id = "toast";
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement("div");
+      toast.className = "toast-card";
+      toast.innerHTML = `
+        <div class="toast-icon-wrap warning"><span class="toast-icon">!</span></div>
+        <div class="toast-content"><span class="toast-title">Info</span><span class="toast-subtitle">${message}</span></div>
+      `;
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add("show"));
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    };
 
-  window.escapeHtml = function(str = "") { return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
-  window.formatTime = function(dateString) { const d = new Date(dateString); return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`; };
-  window.scrollToBottom = function() { const msgEl = document.getElementById("chat-messages"); if (msgEl) msgEl.scrollTo({ top: msgEl.scrollHeight, behavior: "smooth" }); };
+    window.escapeHtml = (str = "") => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    window.formatTime = (ds) => {
+      const d = new Date(ds);
+      return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
+    };
+    window.scrollToBottom = () => {
+      const el = document.getElementById("chat-messages");
+      if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    };
 
-  window.showChatLoading = function() {
-    const msgEl = document.getElementById("chat-messages");
-    if (!msgEl) return;
-    msgEl.innerHTML = `
-      <div class="chat-loading-screen">
-        <div class="skeleton-msg left"><div class="skeleton-avatar shimmer"></div><div class="skeleton-bubble"><div class="shimmer skeleton-line w1"></div><div class="shimmer skeleton-line w2"></div></div></div>
-        <div class="skeleton-msg right"><div class="skeleton-bubble me"><div class="shimmer skeleton-line w4"></div></div></div>
-        <div class="skeleton-msg left"><div class="skeleton-bubble typing-bubble"><span></span><span></span><span></span></div></div>
-        <div class="loading-chat-hint">Menyambungkan percakapan...</div>
-      </div>`;
-  };
+    window.getCachedProfile = async function(userId) {
+      if (window.profileCache.has(userId)) return window.profileCache.get(userId);
+      const { data } = await window.supabase.from('profiles').select('username, avatar_url, role, short_id, gender').eq('id', userId).single();
+      if (data) window.profileCache.set(userId, data);
+      return data;
+    };
 
-  window.getCachedProfile = async function(userId) {
-    if (window.profileCache.has(userId)) return window.profileCache.get(userId);
-    const { data } = await window.supabase.from('profiles').select('username, avatar_url, role, short_id, gender').eq('id', userId).single();
-    if (data) window.profileCache.set(userId, data);
-    return data;
-  };
+    // --- CORE RENDERING ---
+    window.renderMessage = function(msg) {
+      const el = document.getElementById("chat-messages");
+      if (!el || document.getElementById(`msg-${msg.id}`)) return;
 
-  // =======================
-  // 3. RENDER & LOGIC
-  // =======================
-  window.renderMessage = function(msg) {
-    const messagesEl = document.getElementById("chat-messages");
-    if (!messagesEl || document.getElementById(`msg-${msg.id}`)) return;
+      if (msg.is_system) {
+        el.insertAdjacentHTML('beforeend', `
+          <div id="msg-${msg.id}" class="system-message-container">
+            <div class="system-bubble">${window.escapeHtml(msg.message)}</div>
+          </div>
+        `);
+        return;
+      }
 
-    if (msg.is_system) {
-      messagesEl.insertAdjacentHTML('beforeend', `<div id="msg-${msg.id}" style="display:flex; justify-content:center; margin:12px 0; width:100%;"><div style="background:rgba(0,0,0,0.06); color:#555; font-size:11px; padding:5px 14px; border-radius:20px;">${window.escapeHtml(msg.message)}</div></div>`);
-      return; 
-    }
+      const isMe = msg.user_id === window.currentUser.id;
+      const profile = msg.profiles || {};
+      const avatar = profile.avatar_url || "/asets/png/profile.webp";
+      
+      let content = msg.sticker_url 
+        ? `<img src="${msg.sticker_url}" class="msg-sticker">` 
+        : window.escapeHtml(msg.message);
 
-    const isMe = msg.user_id === window.currentUser.id;
-    const currentUsername = msg.profiles?.username || msg.username || "User";
-    const avatarUrl = msg.profiles?.avatar_url || msg.avatar || "/asets/png/profile.webp";
-    let contentHtml = msg.sticker_url ? `<img src="${msg.sticker_url}" style="width:100px;border-radius:12px;">` : (msg.audio_url ? `🎤 Voice Note` : window.escapeHtml(msg.message || ""));
+      if (msg.audio_url) {
+        content = `
+          <div class="vn-player">
+            <button class="vn-play-btn" onclick="window.playVN(this, '${msg.audio_url}')">▶</button>
+            <div id="waveform-${msg.id}" class="waveform-box"></div>
+          </div>`;
+      }
 
-    const msgHtml = `
-      <div id="msg-${msg.id}" class="chat-message ${isMe ? 'self' : 'other'}">
-        <img class="avatar" src="${avatarUrl}">
-        <div class="content">
-          <span class="username">${window.escapeHtml(currentUsername)}</span>
-          <div class="text">${contentHtml}</div>
-          <div class="message-info"><span class="timestamp">${window.formatTime(msg.created_at)}</span></div>
-        </div>
-      </div>`;
-    messagesEl.insertAdjacentHTML('beforeend', msgHtml);
-  };
+      const html = `
+        <div id="msg-${msg.id}" class="chat-message ${isMe ? 'self' : 'other'}">
+          <img class="avatar" src="${avatar}" onerror="this.src='/asets/png/profile.webp'">
+          <div class="content">
+            <span class="username">${window.escapeHtml(profile.username || msg.username || "User")}</span>
+            <div class="text">${content}</div>
+            <div class="message-info">
+              <span class="timestamp">${window.formatTime(msg.created_at)}</span>
+            </div>
+          </div>
+        </div>`;
 
-  window.loadMessages = async function() {
-    const messagesEl = document.getElementById("chat-messages");
-    if (!messagesEl || !window.currentUser) return;
-    if (window.isFirstMessageLoad) window.showChatLoading();
-    
-    const { data } = await window.supabase.from("messages").select(`*, profiles:profiles!messages_user_id_fkey(username, avatar_url, role)`).eq("room_id", window.currentRoomId).order("created_at", { ascending: false }).limit(30); 
-    
-    messagesEl.innerHTML = "";
-    window.isFirstMessageLoad = false;
-    if (data) data.reverse().forEach(msg => window.renderMessage(msg));
-    window.scrollToBottom();
-  };
+      el.insertAdjacentHTML('beforeend', html);
+      window.scrollToBottom();
+    };
 
-  window.initRealtimeMessages = function() {
-    window.supabase.channel(`messages-${window.currentRoomId}`).on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, async (payload) => {
-        const newMsg = payload.new;
-        if (newMsg.room_id === window.currentRoomId) {
-          const senderProfile = await window.getCachedProfile(newMsg.user_id);
-          newMsg.profiles = { username: senderProfile?.username, avatar_url: senderProfile?.avatar_url, role: senderProfile?.role };
-          window.renderMessage(newMsg);
-          if (newMsg.user_id !== window.currentUser.id && !newMsg.is_system) window.receiveSound.play().catch(()=>{});
-          window.scrollToBottom();
+    window.loadMessages = async function() {
+      const el = document.getElementById("chat-messages");
+      if (!el || !window.currentUser) return;
+      
+      if (window.isFirstMessageLoad) {
+        el.innerHTML = '<div class="chat-loading-screen"><div class="skeleton-msg left"><div class="skeleton-avatar shimmer"></div><div class="skeleton-bubble shimmer"></div></div></div>';
+      }
+      
+      const { data } = await window.supabase
+        .from("messages")
+        .select(`*, profiles:profiles!messages_user_id_fkey(username, avatar_url, role)`)
+        .eq("room_id", window.currentRoomId)
+        .order("created_at", { ascending: false })
+        .limit(30); 
+      
+      el.innerHTML = "";
+      window.isFirstMessageLoad = false;
+      if (data) data.reverse().forEach(msg => window.renderMessage(msg));
+      window.scrollToBottom();
+    };
+
+    window.initRealtime = function() {
+      window.supabase.channel('global-chat').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
+        const msg = payload.new;
+        if (msg.is_system && msg.message.includes("📞 Memanggil") && msg.user_id !== window.currentUser.id) {
+          if (window.showIncomingCall) window.showIncomingCall(msg);
         }
-    }).subscribe();
-  };
+        if (msg.room_id === window.currentRoomId) {
+          msg.profiles = await window.getCachedProfile(msg.user_id);
+          window.renderMessage(msg);
+          if (msg.user_id !== window.currentUser.id) sndReceive.play().catch(()=>{});
+        }
+        if (window.refreshSidebar) window.refreshSidebar();
+      }).subscribe();
+    };
 
-  async function initApp() {
-    const { data: { session } } = await window.supabase.auth.getSession();
-    if (!session) return window.location.href = "/login";
-    window.currentUser = { id: session.user.id };
-    
-    const prof = await window.getCachedProfile(session.user.id);
-    if(prof) { window.myUsername = prof.username; window.myRole = prof.role; }
-    
-    window.initRealtimeMessages();
-    await window.loadMessages();
-    if (typeof window.refreshSidebar === "function") window.refreshSidebar();
-  }
-  
-  document.addEventListener("DOMContentLoaded", initApp);
+    // --- APP START ---
+    document.addEventListener("DOMContentLoaded", async () => {
+      const { data: { session } } = await window.supabase.auth.getSession();
+      if (!session) return window.location.href = "/login";
+      
+      window.currentUser = { id: session.user.id };
+      const p = await window.getCachedProfile(session.user.id);
+      window.myUsername = p?.username;
+      window.myRole = p?.role;
+      
+      window.initRealtime();
+      await window.loadMessages();
+    });
   </script>
 </Layout>
 
 <style is:global>
-/* --- Tetap gunakan style global lu yang tadi --- */
+/* --- THEME DESIGN --- */
 :root {
   --bg-chat-solid: #e5ddd5;
   --bg-sidebar: #ffffff;
@@ -206,19 +226,19 @@ import ChatModals from '../components/chat/ChatModals.astro';
   --border-color: #313d45;
 }
 
+/* --- BASE LAYOUT --- */
 html, body {
   margin: 0; padding: 0; 
-  height: 100vh; height: 100dvh; 
+  height: 100dvh; 
   font-family: "Poppins", sans-serif;
-  background-color: var(--bg-chat-solid) !important;
+  background-color: var(--bg-chat-solid);
   color: var(--text-main);
   overflow: hidden; 
 }
 
 .telegram-chat {
   display: flex; flex-direction: column; 
-  height: 100%; width: 100%; overflow: hidden; 
-  background-color: var(--bg-chat-solid) !important;
+  height: 100%; width: 100%; 
   background-image: url("/asets/png/chat.png");
   background-blend-mode: overlay; background-size: 400px;
   position: relative; z-index: 1;
@@ -228,39 +248,39 @@ html, body {
   background-image: linear-gradient(rgba(11,20,26,0.95), rgba(11,20,26,0.95)), url("/asets/png/chat.png") !important;
 }
 
-.chat-header { flex-shrink: 0; position: relative; z-index: 1000; }
-.chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
+.chat-header { flex-shrink: 0; z-index: 1000; }
+.chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.chat-input-wrapper { flex-shrink: 0; z-index: 2000; background: var(--bg-input-bar); padding-bottom: env(safe-area-inset-bottom, 0px); }
 
-.chat-input-wrapper { 
-  flex-shrink: 0; position: relative; z-index: 2000; 
-  background-color: var(--bg-input-bar) !important; 
-  padding-bottom: env(safe-area-inset-bottom, 0px); 
-}
-
+/* --- BUBBLE DESIGN --- */
 .chat-message {
   display: flex; align-items: flex-start; gap: 8px; 
   width: fit-content; max-width: 85%; padding: 8px 10px; 
   border-radius: 15px; position: relative;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.15); margin-bottom: 2px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-.chat-message.self { align-self: flex-end; flex-direction: row-reverse; background: var(--bg-bubble-self) !important; border-bottom-right-radius: 4px; }
-.chat-message.other { align-self: flex-start; flex-direction: row; background: var(--bg-bubble-other) !important; border-bottom-left-radius: 4px; }
+.chat-message.self { align-self: flex-end; flex-direction: row-reverse; background: var(--bg-bubble-self); border-bottom-right-radius: 4px; }
+.chat-message.other { align-self: flex-start; flex-direction: row; background: var(--bg-bubble-other); border-bottom-left-radius: 4px; }
 
-.chat-message .avatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; object-fit: cover; }
-.chat-message .username { font-weight: 700; font-size: 12px; margin-bottom: 4px; display: block; }
+.chat-message .avatar { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; object-fit: cover; }
+.chat-message .username { font-weight: 700; font-size: 12px; margin-bottom: 2px; display: block; color: #3a7bd5; }
 .chat-message.self .username { color: #00a884; }
 .chat-message .text { color: var(--text-msg); line-height: 1.4; word-break: break-word; font-size: 14px; }
-
 .message-info { display: flex; justify-content: flex-end; font-size: 10px; color: var(--text-muted); margin-top: 4px; }
 
-/* Skeleton */
-.chat-loading-screen { display: flex; flex-direction: column; gap: 20px; padding: 20px 15px; }
-.skeleton-msg { display: flex; align-items: flex-start; gap: 8px; opacity: 0.6; }
-.skeleton-bubble { background: var(--bg-bubble-other); border-radius: 12px; padding: 15px; min-width: 140px; }
-.shimmer { position: relative; overflow: hidden; background: var(--border-color); }
-.shimmer::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmerMove 1.5s infinite; }
-@keyframes shimmerMove { 100% { transform: translateX(100%); } }
+/* --- SYSTEM MESSAGES --- */
+.system-message-container { display: flex; justify-content: center; width: 100%; margin: 10px 0; }
+.system-bubble { background: rgba(0,0,0,0.06); color: var(--text-muted); font-size: 11px; padding: 4px 12px; border-radius: 20px; }
+
+/* --- ASSETS --- */
+.msg-sticker { width: 120px; border-radius: 12px; }
+.vn-player { display: flex; align-items: center; gap: 10px; min-width: 150px; }
+.vn-play-btn { background: #3a7bd5; color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+
+/* --- SKELETON --- */
+.shimmer { background: linear-gradient(90deg, #eff1f3 4%, #e2e2e2 25%, #eff1f3 36%); background-size: 1000px 100%; animation: shimmer 2s infinite linear; }
+@keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
 
 @media (max-width: 480px) {
   .chat-message { max-width: 90%; }

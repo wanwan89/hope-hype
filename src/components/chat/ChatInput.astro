@@ -10,12 +10,10 @@
   <div id="sticker-list" class="sticker-list-grid custom-scrollbar"></div>
 </div>
 
-<div id="reply-preview-box" class="reply-preview-adaptive">
-  </div>
+<div id="reply-preview-box" class="reply-preview-adaptive"></div>
 
 <div class="chat-input-container-main">
   <div class="input-group-wrapper-adaptive">
-    
     <button id="sticker-btn" class="icon-btn-chat" title="Buka Stiker">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
@@ -55,184 +53,119 @@
 </div>
 
 <style>
-  /* --- LAYOUT UTAMA INPUT --- */
+  /* --- LAYOUT UTAMA --- */
   .chat-input-container-main {
-    display: flex; 
-    align-items: flex-end; 
-    gap: 12px; 
-    padding: 10px 15px;
-    background: var(--bg-input-bar) !important;
-    width: 100%; 
-    box-sizing: border-box;
+    display: flex; align-items: flex-end; gap: 12px; padding: 10px 15px;
+    background: var(--bg-input-bar) !important; position: relative; z-index: 100;
     border-top: 1px solid var(--border-color);
-    position: relative;
-    z-index: 100; 
   }
 
-  /* --- WRAPPER KOTAK KETIK --- */
   .input-group-wrapper-adaptive {
-    flex: 1; display: flex; align-items: center;
-    background: var(--bg-input-field) !important;
-    border-radius: 24px; padding: 4px 16px; position: relative;
-    min-height: 48px; box-sizing: border-box;
-    border: 1px solid var(--border-color);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    flex: 1; display: flex; align-items: center; background: var(--bg-input-field) !important;
+    border-radius: 24px; padding: 4px 16px; position: relative; min-height: 48px;
+    border: 1px solid var(--border-color); transition: 0.3s ease;
   }
   
-  /* Efek Glow saat ngetik */
   .input-group-wrapper-adaptive:focus-within {
-    border-color: #3a7bd5;
-    box-shadow: 0 0 0 2px rgba(58, 123, 213, 0.15);
+    border-color: #3a7bd5; box-shadow: 0 0 0 2px rgba(58, 123, 213, 0.15);
   }
 
   #chat-input {
-    flex: 1; border: none; outline: none;
-    background: transparent !important; resize: none;
-    max-height: 120px; padding: 12px 0;
-    font-family: 'Poppins', sans-serif; font-size: 14px;
-    color: var(--text-main) !important; line-height: 1.4;
+    flex: 1; border: none; outline: none; background: transparent !important; resize: none;
+    max-height: 120px; padding: 12px 0; font-family: 'Poppins', sans-serif;
+    font-size: 14px; color: var(--text-main) !important; line-height: 1.4;
   }
-  
-  #chat-input::placeholder { color: var(--text-muted); opacity: 0.7; }
 
-  /* --- TOMBOL STIKER & ICON --- */
-  .icon-btn-chat { 
-    background: none; border: none; cursor: pointer; 
-    padding: 0; margin-right: 12px; color: var(--text-muted); 
-    display: flex; align-items: center; justify-content: center;
-    transition: color 0.2s, transform 0.2s;
-  }
+  /* --- TOMBOL --- */
+  .icon-btn-chat { background: none; border: none; cursor: pointer; color: var(--text-muted); margin-right: 8px; transition: 0.2s; }
   .icon-btn-chat:hover { color: #3a7bd5; }
-  .icon-btn-chat:active { transform: scale(0.9); }
 
-  /* --- TOMBOL KIRIM / MIC --- */
   .btn-action-send {
-    width: 48px; height: 48px; flex-shrink: 0;
-    border-radius: 50%; background: #3a7bd5; border: none; 
+    width: 48px; height: 48px; border-radius: 50%; background: #3a7bd5; border: none;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 12px rgba(58, 123, 213, 0.3); 
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s;
+    box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
-  .btn-action-send:hover { filter: brightness(1.1); }
   .btn-action-send:active { transform: scale(0.9); }
-  .btn-action-send.is-recording { background: #ff4757 !important; transform: scale(1.15); box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4); }
+  .btn-action-send.is-recording { background: #ff4757 !important; transform: scale(1.15); }
 
   .icon-stack { position: relative; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
-  .svg-send, .svg-mic { position: absolute; transition: opacity 0.2s; }
+  .svg-send, .svg-mic { position: absolute; transition: 0.2s opacity; }
 
-  /* --- MENU STIKER --- */
+  /* --- STIKER MENU --- */
   .sticker-menu-adaptive {
-    display: none; flex-direction: column; padding: 12px 15px;
-    background: var(--bg-input-bar) !important; /* Pakai warna bar agar nyatu */
-    border-top: 1px solid var(--border-color); height: 260px;
-    position: relative; z-index: 101;
-    box-shadow: 0 -4px 10px rgba(0,0,0,0.03);
+    display: none; flex-direction: column; padding: 12px; height: 260px;
+    background: var(--bg-input-bar) !important; border-top: 1px solid var(--border-color);
   }
-
-  .sticker-header { display: flex; gap: 10px; margin-bottom: 15px; }
-
+  .sticker-header { display: flex; gap: 8px; margin-bottom: 12px; }
   .sticker-search-input {
-    flex: 1; padding: 10px 16px; border-radius: 20px;
-    border: 1px solid var(--border-color); outline: none;
-    background: var(--bg-input-field); color: var(--text-main); font-size: 13px;
-    transition: all 0.3s;
+    flex: 1; padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color);
+    background: var(--bg-input-field); color: var(--text-main); outline: none; font-size: 13px;
   }
-  .sticker-search-input:focus { border-color: #3a7bd5; box-shadow: 0 0 0 2px rgba(58, 123, 213, 0.15); }
+  .btn-search-stiker { background: #3a7bd5; color: white; border: none; border-radius: 20px; padding: 0 15px; font-weight: 600; cursor: pointer; }
+  .sticker-list-grid { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; overflow-y: auto; }
 
-  .btn-search-stiker {
-    background: #3a7bd5; color: white; border: none;
-    border-radius: 20px; padding: 0 16px; cursor: pointer; 
-    font-weight: 600; font-size: 13px; transition: 0.2s;
-  }
-  .btn-search-stiker:active { transform: scale(0.95); }
-
-  /* Custom Scrollbar Stiker */
-  .sticker-list-grid { flex: 1; overflow-y: auto; padding-right: 5px; }
-  .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
-
-  /* --- KOTAK PREVIEW REPLY --- */
-  .reply-preview-adaptive {
-    display: none; width: 100%; position: relative;
-    background: var(--bg-input-bar) !important;
-    border-left: 4px solid #3a7bd5; padding: 10px 15px;
-    box-sizing: border-box; align-items: center;
-    justify-content: space-between; gap: 12px; z-index: 10;
-    border-top: 1px solid var(--border-color);
-    animation: slideUpReply 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
-  @keyframes slideUpReply {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  :global(.reply-content-wrapper) {
-    flex: 1; min-width: 0; overflow: hidden;
-    display: flex; flex-direction: column;
-    border-left: 2px solid var(--border-color);
-    padding-left: 10px;
-  }
-
-  :global(.reply-title) { font-size: 13px; color: #3a7bd5 !important; font-weight: 700; margin-bottom: 3px; }
-  :global(.reply-text-preview) { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  :global(.close-reply-btn) { font-size: 24px; color: var(--text-muted); cursor: pointer; padding: 0 5px; line-height: 1; transition: 0.2s; }
-  :global(.close-reply-btn:hover) { color: #ff4757; }
-
-  /* --- OVERLAY MEREKAM VN --- */
+  /* --- VN OVERLAY --- */
   .vn-overlay-adaptive {
-    position: absolute; inset: 0;
-    background: var(--bg-input-field) !important;
-    border-radius: 24px; display: none; align-items: center;
-    padding: 0 16px; z-index: 10;
+    position: absolute; inset: 0; background: var(--bg-input-field) !important;
+    border-radius: 24px; display: none; align-items: center; padding: 0 16px; z-index: 10;
   }
+  .record-dot { width: 10px; height: 10px; background: #ff4757; border-radius: 50%; animation: vnPulse 1s infinite alternate; }
+  .timer-text { font-weight: 700; font-size: 14px; margin-left: 8px; color: var(--text-main); }
+  .cancel-hint { color: var(--text-muted); font-size: 12px; margin-left: auto; font-style: italic; }
 
-  .vn-content { display: flex; align-items: center; width: 100%; gap: 12px; }
-  
-  .record-dot { 
-    width: 10px; height: 10px; background: #ff4757; 
-    border-radius: 50%; box-shadow: 0 0 5px rgba(255, 71, 87, 0.5);
-    animation: vnPulse 1s infinite alternate; 
-  }
-  
-  .timer-text { font-weight: 700; font-size: 14px; color: var(--text-main); letter-spacing: 0.5px; }
-  .cancel-hint { color: var(--text-muted); font-size: 12px; margin-left: auto; font-style: italic; opacity: 0.8; animation: slideLeftHint 2s infinite; }
+  @keyframes vnPulse { from { transform: scale(1); opacity: 1; } to { transform: scale(1.3); opacity: 0.6; } }
 
-  /* Animasi VN */
-  @keyframes vnPulse {
-    0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4); }
-    100% { transform: scale(1.3); opacity: 0.7; box-shadow: 0 0 0 6px rgba(255, 71, 87, 0); }
+  /* --- REPLY PREVIEW --- */
+  .reply-preview-adaptive {
+    display: none; background: var(--bg-input-bar) !important; border-left: 4px solid #3a7bd5;
+    padding: 10px 15px; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color);
   }
-  
-  @keyframes slideLeftHint {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(-5px); }
-  }
+  :global(.reply-content-wrapper) { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding-left: 8px; }
+  :global(.reply-title) { font-size: 12px; color: #3a7bd5; font-weight: 700; }
+  :global(.reply-text-preview) { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
-<script is:inline>
-  // ==========================================
-  // 1. DASHBOARD ELEMEN
-  // ==========================================
-  const chatInput = document.getElementById("chat-input");
-  const btnSend = document.getElementById("action-btn");
-  const stickerMenu = document.getElementById("sticker-menu");
-  const stickerSearchInput = document.getElementById("sticker-search-input");
-  const stickerSearchBtn = document.getElementById("sticker-search-btn");
 
-  // ==========================================
-  // 2. LOGIKA KIRIM PESAN (TEXT)
-  // ==========================================
+<script is:inline>
+  const chatInput = document.getElementById("chat-input");
+  const btnAction = document.getElementById("action-btn");
+  const svgSend = document.querySelector(".svg-send");
+  const svgMic = document.querySelector(".svg-mic");
+  const vnOverlay = document.getElementById("vn-overlay");
+  const vnTimer = document.getElementById("vn-timer");
+
+  let mediaRecorder;
+  let audioChunks = [];
+  let isRecording = false;
+  let timerInterval;
+  let seconds = 0;
+  let holdTimer;
+
+  // --- 1. AUTO RESIZE TEXTAREA ---
+  chatInput.addEventListener("input", function() {
+    this.style.height = "auto";
+    this.style.height = (this.scrollHeight) + "px";
+    
+    // Toggle icon Mic vs Send
+    if (this.value.trim() !== "") {
+      svgSend.style.display = "block";
+      svgMic.style.display = "none";
+    } else {
+      svgSend.style.display = "none";
+      svgMic.style.display = "block";
+    }
+  });
+
+  // --- 2. KIRIM PESAN TEXT ---
   window.Message = async function() {
-    const text = chatInput?.value.trim();
+    const text = chatInput.value.trim();
     if (!text || !window.currentUser) return;
 
-    // Reset input secepat mungkin biar terasa responsif
     chatInput.value = "";
-    chatInput.style.height = "auto"; 
-    if (window.sendSound) window.sendSound.play().catch(() => {});
-    
-    // Sembunyikan reply box kalau ada
-    window.cancelReply();
+    chatInput.style.height = "auto";
+    svgSend.style.display = "none";
+    svgMic.style.display = "block";
+
+    if (window.sendSound) window.sendSound.play().catch(()=>{});
 
     try {
       const payload = { 
@@ -242,116 +175,124 @@
         room_id: window.currentRoomId, 
         status: "sent" 
       };
+      if (window.currentChatMode === 'group') payload.group_id = window.activeGroupId;
       
-      if (window.currentChatMode === 'group' && window.activeGroupId) {
-        payload.group_id = window.activeGroupId;
-      }
-
       await window.supabase.from("messages").insert([payload]);
-    } catch (err) { 
-      window.showToast("Gagal mengirim pesan", "error"); 
-    }
+      window.cancelReply();
+    } catch (err) { window.showToast("Gagal mengirim"); }
   };
 
-  // Event Listeners Input
-  if (btnSend) btnSend.onclick = () => {
-    if (chatInput.value.trim() !== "") window.Message();
-  };
-
-  if (chatInput) {
-    chatInput.addEventListener("keydown", (e) => { 
-      if (e.key === "Enter" && !e.shiftKey) { 
-        e.preventDefault(); 
-        window.Message(); 
-      } 
-    });
-    
-    // Auto Resize Textarea biar keren kayak WhatsApp
-    chatInput.addEventListener("input", function() {
-      this.style.height = "auto";
-      this.style.height = (this.scrollHeight) + "px";
-    });
-  }
-
-  // ==========================================
-  // 3. LOGIKA STIKER (GIPHY)
-  // ==========================================
-  const GIPHY_KEY = "vPUlBU5Qfz2ZygoEtKXVUqmIEAEcIB08";
-
-  window.fetchStickers = async function(query = "") {
-    const stickerList = document.getElementById("sticker-list");
-    if (!stickerList) return;
-    
-    stickerList.innerHTML = "<p style='font-size:12px; color:#999; text-align:center; padding:20px;'>Mencari...</p>";
-    
-    const endpoint = query 
-      ? `https://api.giphy.com/v1/stickers/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(query)}&limit=30&rating=g`
-      : `https://api.giphy.com/v1/stickers/trending?api_key=${GIPHY_KEY}&limit=20&rating=g`;
-
+  // --- 3. VOICE NOTE LOGIC (HOLD TO RECORD) ---
+  async function startVN() {
     try {
-      const res = await fetch(endpoint);
-      const data = await res.json();
-      stickerList.innerHTML = "";
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
       
-      data.data.forEach((sticker) => {
-        const img = document.createElement("img");
-        img.src = sticker.images.fixed_width_small.webp;
-        img.className = "sticker-item";
-        img.style.cssText = "width:100%; aspect-ratio:1/1; cursor:pointer; border-radius:8px; background:rgba(0,0,0,0.05); transition:transform 0.2s;";
-        img.onclick = () => window.sendSticker(sticker.images.fixed_width.url);
-        
-        // Efek Hover
-        img.onmouseenter = () => img.style.transform = "scale(1.1)";
-        img.onmouseleave = () => img.style.transform = "scale(1)";
-        
-        stickerList.appendChild(img);
-      });
-    } catch (err) { 
-      stickerList.innerHTML = "<p style='font-size:12px; color:red; text-align:center;'>Gagal memuat stiker.</p>"; 
-    }
-  };
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = async () => {
+        if (audioChunks.length > 0 && seconds > 0) {
+          const blob = new Blob(audioChunks, { type: "audio/mpeg" });
+          const fd = new FormData();
+          fd.append("file", blob);
+          fd.append("upload_preset", "hopehype_preset");
+          const res = await fetch("https://api.cloudinary.com/v1_1/dhhmkb8kl/upload", { method: "POST", body: fd });
+          const d = await res.json();
+          await window.supabase.from("messages").insert([{ 
+            message: "🎤 Voice Note", 
+            audio_url: d.secure_url, 
+            user_id: window.currentUser.id, 
+            room_id: window.currentRoomId 
+          }]);
+        }
+        stream.getTracks().forEach(t => t.stop());
+      };
 
-  window.sendSticker = async function(url) {
+      isRecording = true;
+      seconds = 0;
+      vnTimer.innerText = "00:00";
+      mediaRecorder.start();
+      
+      btnAction.classList.add("is-recording");
+      vnOverlay.style.display = "flex";
+      chatInput.style.opacity = "0";
+
+      timerInterval = setInterval(() => {
+        seconds++;
+        let m = Math.floor(seconds / 60).toString().padStart(2, "0");
+        let s = (seconds % 60).toString().padStart(2, "0");
+        vnTimer.innerText = `${m}:${s}`;
+      }, 1000);
+
+      if (navigator.vibrate) navigator.vibrate(50);
+    } catch (err) { window.showToast("Mic tidak diizinkan"); }
+  }
+
+  function stopVN(canceled = false) {
+    if (!isRecording) return;
+    isRecording = false;
+    clearInterval(timerInterval);
+    if (mediaRecorder) mediaRecorder.stop();
+    
+    btnAction.classList.remove("is-recording");
+    vnOverlay.style.display = "none";
+    chatInput.style.opacity = "1";
+    if (canceled) window.showToast("Batal merekam");
+  }
+
+  // Event handler buat tombol dinamis
+  btnAction.addEventListener("mousedown", (e) => {
+    if (chatInput.value.trim() === "") {
+      holdTimer = setTimeout(startVN, 300);
+    } else {
+      window.Message();
+    }
+  });
+
+  window.addEventListener("mouseup", () => {
+    clearTimeout(holdTimer);
+    if (isRecording) stopVN();
+  });
+
+  // Mobile Touch Support
+  btnAction.addEventListener("touchstart", (e) => {
+    if (chatInput.value.trim() === "") {
+      holdTimer = setTimeout(startVN, 300);
+    } else {
+      window.Message();
+    }
+  }, {passive: true});
+
+  window.addEventListener("touchend", () => {
+    clearTimeout(holdTimer);
+    if (isRecording) stopVN();
+  });
+
+  // --- 4. GIPHY STICKER INTEGRATION ---
+  const GIPHY_API_KEY = "vPUlBU5Qfz2ZygoEtKXVUqmIEAEcIB08";
+  window.fetchStickers = async function(query = "") {
+    const list = document.getElementById("sticker-list");
+    list.innerHTML = "<p style='grid-column:1/-1;text-align:center;font-size:12px;color:#999;'>Mencari...</p>";
+    
+    const url = query 
+      ? `https://api.giphy.com/v1/stickers/search?api_key=${GIPHY_API_KEY}&q=${query}&limit=20`
+      : `https://api.giphy.com/v1/stickers/trending?api_key=${GIPHY_API_KEY}&limit=20`;
+
     try {
-      if (window.sendSound) window.sendSound.play().catch(() => {});
-      await window.supabase.from("messages").insert([{ 
-        message: "", 
-        user_id: window.currentUser.id, 
-        username: window.myUsername, 
-        sticker_url: url, 
-        room_id: window.currentRoomId, 
-        status: "sent" 
-      }]);
-      if (stickerMenu) stickerMenu.style.display = "none";
-    } catch (err) { 
-      window.showToast("Gagal kirim stiker", "error"); 
-    }
+      const res = await fetch(url);
+      const { data } = await res.json();
+      list.innerHTML = "";
+      data.forEach(s => {
+        const img = document.createElement("img");
+        img.src = s.images.fixed_width_small.url;
+        img.style.cursor = "pointer";
+        img.onclick = () => window.sendSticker(s.images.fixed_width.url);
+        list.appendChild(img);
+      });
+    } catch (e) { list.innerHTML = "Gagal memuat stiker."; }
   };
 
-  const stickerBtn = document.getElementById("sticker-btn");
-  if (stickerBtn) {
-    stickerBtn.onclick = () => { 
-      const isHidden = stickerMenu.style.display === "none" || stickerMenu.style.display === "";
-      stickerMenu.style.display = isHidden ? "flex" : "none";
-      if (isHidden) window.fetchStickers();
-    };
-  }
-
-  if (stickerSearchBtn) {
-    stickerSearchBtn.onclick = () => window.fetchStickers(stickerSearchInput.value);
-  }
-  
-  if (stickerSearchInput) {
-    stickerSearchInput.onkeydown = (e) => { if (e.key === "Enter") window.fetchStickers(e.target.value); };
-  }
-
-  // ==========================================
-  // 4. LOGIKA VOICE NOTE (RECORDER)
-  // ==========================================
-  // (Jika lu punya logic VN yang kompleks, lu bisa taruh di sini nantinya)
-  window.cancelReply = function() {
-    const replyBox = document.getElementById("reply-preview-box");
-    if (replyBox) replyBox.style.display = "none";
-    if (chatInput) chatInput.dataset.replyTo = "";
+  document.getElementById("sticker-search-btn").onclick = () => {
+    window.fetchStickers(document.getElementById("sticker-search-input").value);
   };
 </script>

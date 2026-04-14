@@ -4,7 +4,7 @@
 
 <div class="chat-header">
   <div class="header-left">
-    <div class="hamburger-btn" id="menu-btn">
+    <div class="hamburger-btn" id="menu-btn" title="Buka Menu">
       <div class="hamburger-line"></div>
       <div class="hamburger-line"></div>
       <div class="hamburger-line"></div>
@@ -12,92 +12,52 @@
 
     <div class="header-info">
       <h3 id="chat-title">HopeTalk Globe</h3>
-      <div id="status-container">
-        <span id="status-header">Online</span>
-        <span id="typing-header"></span>
+      <div id="status-container" class="status-wrapper">
+        <span id="status-header" class="status-text">Online</span>
+        <span id="typing-header" class="typing-text"></span>
       </div>
     </div>
 
-    <button id="btn-open-invite" class="btn-invite" style="display:none;">
+    <button id="btn-open-invite" class="btn-invite-pill" style="display:none;">
       UNDANG
     </button>
   </div>
 
   <div class="header-right">
-    <div id="btn-start-call" class="call-btn" style="display: none;">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <button id="btn-start-call" class="icon-call-btn" style="display: none;" title="Mulai Telepon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.19-2.19a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
       </svg>
-    </div>
-    <img src="/asets/png/music.png" class="logo-besar-header" alt="Logo" />
+    </button>
+    
+    <img src="/asets/png/music.png" class="header-brand-logo" alt="HopeTalk Logo" />
   </div>
 </div>
 
 <style>
+  /* --- CONTAINER UTAMA --- */
   .chat-header {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 15px;
+    padding: 0 16px;
     background: var(--bg-header) !important;
     color: white;
-    height: 60px; /* Gue turunin dikit biar gak terlalu makan tempat */
-    min-height: 60px; /* Kunci tinggi biar gak kependem */
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    height: 60px;
+    min-height: 60px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
     z-index: 1000;
-    transition: background 0.3s ease;
-    flex-shrink: 0; /* 🔥 Kunci header biar gak kegencet area pesan */
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    min-width: 0; /* Wajib buat text-overflow bekerja */
-  }
-
-  .header-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-width: 0; /* Wajib biar gak melar */
-  }
-
-  .header-info h3 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  #status-container {
-    font-size: 10px;
-    margin-top: 1px;
-    white-space: nowrap;
-  }
-
-  .btn-invite {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 9px;
-    font-weight: 800;
-    cursor: pointer;
     flex-shrink: 0;
   }
 
-  .header-right {
+  /* --- SISI KIRI --- */
+  .header-left {
     display: flex;
     align-items: center;
-    gap: 15px;
-    flex-shrink: 0; /* 🔥 Jangan biarkan logo/tombol call kegencet */
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
   }
 
   /* Hamburger */
@@ -109,42 +69,99 @@
     justify-content: space-between;
     cursor: pointer;
     flex-shrink: 0;
+    transition: opacity 0.2s;
   }
+  .hamburger-btn:active { opacity: 0.6; }
 
   .hamburger-line {
     width: 100%;
-    height: 2px;
+    height: 2.2px;
     background-color: white;
-    border-radius: 2px;
+    border-radius: 4px;
   }
 
-  /* Logo */
-  .logo-besar-header {
-    height: 40px; /* Ukuran lebih pas */
-    width: auto;
-    object-fit: contain;
-    filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.2));
+  /* Info Teks */
+  .header-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
   }
 
-  .call-btn {
-    cursor: pointer;
+  .header-info h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status-wrapper {
+    font-size: 11px;
+    opacity: 0.85;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .typing-text { color: #fff; font-weight: 500; font-style: italic; }
+
+  /* Tombol Undang */
+  .btn-invite-pill {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 800;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: 0.2s;
+  }
+  .btn-invite-pill:hover { background: rgba(255, 255, 255, 0.25); }
+
+  /* --- SISI KANAN --- */
+  .header-right {
     display: flex;
     align-items: center;
-    opacity: 0.9;
+    gap: 12px;
+    flex-shrink: 0;
   }
 
-  .call-btn:active { transform: scale(0.9); }
+  .icon-call-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .icon-call-btn:active { transform: scale(0.85); }
 
-  /* Dark Mode Adjustments */
-  :global(.dark) #typing-header {
-    color: #00a884; 
+  .header-brand-logo {
+    height: 38px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.1));
+  }
+
+  /* --- DARK MODE ADJUSTMENT --- */
+  :global(.dark) .typing-text {
+    color: #4ade80; /* Hijau cerah biar kontras di dark mode */
   }
 </style>
+
 <script is:inline>
-  // Logika khusus Header untuk memantau status Typing secara Realtime
-  // Fungsi ini akan dipanggil otomatis oleh window.supabase di chat.astro
-  
+  /**
+   * window.updateTypingStatus
+   * Dipanggil saat ada event 'typing' dari presence channel.
+   */
   window.updateTypingStatus = function(username) {
     const typingEl = document.getElementById("typing-header");
     const statusEl = document.getElementById("status-header");
@@ -162,7 +179,10 @@
     }
   };
 
-  // Fungsi buat ganti judul header (dipanggil pas buka PV atau Grup)
+  /**
+   * window.setChatHeaderTitle
+   * Dipanggil saat berpindah ruang chat (Global/PV/Grup).
+   */
   window.setChatHeaderTitle = function(title, subtitle = "Online") {
     const titleEl = document.getElementById("chat-title");
     const statusEl = document.getElementById("status-header");
@@ -171,4 +191,3 @@
     if (statusEl) statusEl.textContent = subtitle;
   };
 </script>
-

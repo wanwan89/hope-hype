@@ -3,13 +3,15 @@
 ---
 
 <div id="call-overlay" class="custom-modal-overlay dark-backdrop" style="display: none;">
-  <div class="call-content pop-in">
-    <img id="call-avatar" src="/asets/png/profile.webp" class="call-avatar pulse-anim" />
-    <h2 id="call-name" class="modal-title" style="color: white !important; font-size: 24px; margin-top: 15px;">Mell</h2>
-    <p id="call-status" style="color: rgba(255,255,255,0.7); font-size: 14px; letter-spacing: 2px;">MEMANGGIL...</p>
+  <div class="call-container pop-in">
+    <div class="call-avatar-wrapper">
+      <img id="call-avatar" src="/asets/png/profile.webp" class="call-avatar pulse-anim" />
+    </div>
+    <h2 id="call-name" class="call-title">Mell</h2>
+    <p id="call-status" class="call-subtitle">MEMANGGIL...</p>
     
-    <div class="modal-actions" style="margin-top: 40px; justify-content: center;">
-      <button id="btn-end-call-active" class="btn-call end" onclick="window.endCall()">
+    <div class="call-actions">
+      <button class="btn-call end shadow-glow" onclick="window.endCall()">
          <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
       </button>
     </div>
@@ -17,16 +19,18 @@
 </div>
 
 <div id="incoming-call-overlay" class="custom-modal-overlay dark-backdrop" style="display: none;">
-  <div class="call-content pop-in">
-    <img id="incoming-avatar" src="/asets/png/profile.webp" class="call-avatar ring-anim" />
-    <h2 id="incoming-name" class="modal-title" style="color: white !important; font-size: 24px; margin-top: 15px;">Seseorang</h2>
-    <p style="color: rgba(255,255,255,0.7); font-size: 14px;">Panggilan Suara masuk...</p>
+  <div class="call-container pop-in">
+    <div class="call-avatar-wrapper">
+      <img id="incoming-avatar" src="/asets/png/profile.webp" class="call-avatar ring-anim" />
+    </div>
+    <h2 id="incoming-name" class="call-title">Seseorang</h2>
+    <p class="call-subtitle">Panggilan Suara masuk...</p>
     
-    <div class="modal-actions" style="margin-top: 40px; justify-content: center; gap: 30px;">
-      <button id="btn-reject-call" class="btn-call end" onclick="window.rejectCall()">
+    <div class="call-actions-group">
+      <button class="btn-call end" onclick="window.rejectCall()" title="Tolak">
          <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
       </button>
-      <button id="btn-accept-call" class="btn-call accept" onclick="window.answerCall()">
+      <button class="btn-call accept pulse-slow" onclick="window.answerCall()" title="Terima">
          <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
       </button>
     </div>
@@ -36,15 +40,15 @@
 <div id="bio-modal" class="custom-modal-overlay" style="display: none;">
   <div class="custom-modal-box pop-in">
     <h2 class="modal-title">Lengkapi Profilmu</h2>
-    <p class="modal-subtitle">Data ini membantu kami mencari teman yang cocok.</p>
+    <p class="modal-subtitle">Bantu kami mencari teman yang cocok untukmu.</p>
 
-    <div class="modal-row">
-      <div style="flex: 1;">
-        <label class="modal-label">Umur</label>
+    <div class="modal-grid">
+      <div class="form-group">
+        <label>Umur</label>
         <input type="number" id="in-umur" placeholder="20" class="modal-input" />
       </div>
-      <div style="flex: 1;">
-        <label class="modal-label">Gender</label>
+      <div class="form-group">
+        <label>Gender</label>
         <select id="in-gender" class="modal-input">
           <option value="Pria">Pria</option>
           <option value="Wanita">Wanita</option>
@@ -52,39 +56,47 @@
       </div>
     </div>
 
-    <label class="modal-label">Zodiak</label>
-    <select id="in-zodiak" class="modal-input mb-15">
-      <option value="Aries">Aries</option>
-      <option value="Taurus">Taurus</option>
-      <option value="Gemini">Gemini</option>
-    </select>
+    <div class="form-group mt-15">
+      <label>Zodiak</label>
+      <select id="in-zodiak" class="modal-input">
+        <option value="Aries">Aries</option><option value="Taurus">Taurus</option>
+        <option value="Gemini">Gemini</option><option value="Cancer">Cancer</option>
+        <option value="Leo">Leo</option><option value="Virgo">Virgo</option>
+        <option value="Libra">Libra</option><option value="Scorpio">Scorpio</option>
+        <option value="Sagitarius">Sagitarius</option><option value="Capricorn">Capricorn</option>
+        <option value="Aquarius">Aquarius</option><option value="Pisces">Pisces</option>
+      </select>
+    </div>
 
-    <label class="modal-label">Hobi</label>
-    <input type="text" id="in-hobi" placeholder="Apa kegemaranmu?" class="modal-input mb-15" />
+    <div class="form-group mt-15">
+      <label>Hobi</label>
+      <input type="text" id="in-hobi" placeholder="Apa kegemaranmu?" class="modal-input" />
+    </div>
 
-    <label class="modal-label">Pekerjaan</label>
-    <input type="text" id="in-kerja" placeholder="Contoh: Mahasiswa" class="modal-input mb-20" />
+    <div class="form-group mt-15 mb-20">
+      <label>Pekerjaan</label>
+      <input type="text" id="in-kerja" placeholder="Contoh: Mahasiswa" class="modal-input" />
+    </div>
 
-    <div class="modal-actions">
-      <button class="btn-confirm" id="btn-save-bio" style="flex: 2;">Simpan</button>
-      <button type="button" class="btn-cancel" onclick="window.closeBioModal()" style="flex: 1;">Batal</button>
+    <div class="modal-footer">
+      <button class="btn-confirm" id="btn-save-bio">Simpan Profil</button>
+      <button class="btn-cancel" onclick="window.closeBioModal()">Batal</button>
     </div>
   </div>
 </div>
 
 <div id="doi-card-modal" class="custom-modal-overlay dark-backdrop" style="display:none;">
   <div class="doi-card pop-in">
-    <div class="doi-image-container">
-      <img id="doi-photo" src="" class="doi-photo" />
-      <div class="doi-info-overlay">
-        <div class="doi-name-wrapper">
-          <h2 id="doi-name-age" class="doi-title">Nama, 20</h2>
-        </div>
-        <p id="doi-zodiac" class="doi-zodiac-text"></p>
+    <div class="doi-img-container">
+      <img id="doi-photo" src="" class="doi-photo-img" />
+      <div class="doi-gradient"></div>
+      <div class="doi-basic-info">
+        <h2 id="doi-name-age">Nama, 20</h2>
+        <p id="doi-zodiac" class="doi-tag"></p>
       </div>
     </div>
-    <div class="doi-details">
-      <div class="modal-actions">
+    <div class="doi-content-body">
+      <div class="modal-footer">
         <button onclick="window.tutupDoiCard()" class="btn-cancel" style="flex:1;">Skip</button>
         <button id="btn-gas-chat" class="btn-confirm shadow-glow" style="flex:2;">Chat Sekarang</button>
       </div>
@@ -93,239 +105,234 @@
 </div>
 
 <div id="delete-overlay" class="custom-modal-overlay" style="display:none;">
-  <div class="custom-modal-box pop-in center-text">
-    <p class="modal-title mb-20" style="font-size: 16px;">Hapus pesan ini?</p>
-    <div class="modal-actions">
-      <button id="confirm-delete" class="btn-confirm">Hapus</button>
+  <div class="custom-modal-box pop-in text-center">
+    <div class="warning-icon">⚠️</div>
+    <h3 class="modal-title">Hapus Pesan?</h3>
+    <p class="modal-subtitle">Pesan ini akan hilang dari riwayat chatmu.</p>
+    <div class="modal-footer mt-20">
+      <button id="confirm-delete" class="btn-confirm btn-danger">Ya, Hapus</button>
       <button class="btn-cancel" onclick="document.getElementById('delete-overlay').style.display='none'">Batal</button>
     </div>
   </div>
 </div>
 
 <style>
-  /* --- LAYOUT UTAMA MODAL --- */
+  /* --- BASE MODAL STYLE --- */
   .custom-modal-overlay {
     position: fixed; inset: 0; 
-    background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(5px);
-    z-index: 9999999 !important; /* Z-Index Super Maksimal Biar Gak Ketindih Header */
-    align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
+    z-index: 9999999; display: flex; align-items: center; justify-content: center;
+    padding: 20px;
   }
-  .dark-backdrop { background: rgba(0, 0, 0, 0.85); }
+  .dark-backdrop { background: rgba(0, 0, 0, 0.9); }
 
-  /* --- WADAH TELPON (CALL UI) --- */
-  .call-content { display: flex; flex-direction: column; align-items: center; text-align: center; }
-  .call-avatar { width: 130px; height: 130px; border-radius: 50%; object-fit: cover; border: 4px solid #3a7bd5; margin-bottom: 20px; }
-  .btn-call { width: 70px; height: 70px; border-radius: 50%; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: transform 0.2s; }
+  .custom-modal-box {
+    background: var(--bg-sidebar); border-radius: 28px;
+    width: 100%; max-width: 400px; padding: 30px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  }
+
+  /* --- CALL UI STYLES --- */
+  .call-container { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .call-avatar-wrapper { position: relative; margin-bottom: 25px; }
+  .call-avatar { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 5px solid #3a7bd5; }
+  .call-title { color: white; font-size: 28px; font-weight: 800; margin: 0; }
+  .call-subtitle { color: rgba(255,255,255,0.7); font-size: 14px; letter-spacing: 2px; margin-top: 8px; }
+  
+  .call-actions { margin-top: 50px; }
+  .call-actions-group { display: flex; gap: 40px; margin-top: 50px; }
+  
+  .btn-call { 
+    width: 75px; height: 75px; border-radius: 50%; border: none; 
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
   .btn-call:active { transform: scale(0.9); }
   .btn-call.end { background: #ff4757; }
   .btn-call.accept { background: #2ecc71; }
+
+  /* --- FORM STYLES --- */
+  .modal-title { color: var(--text-main); font-weight: 800; font-size: 22px; margin-bottom: 8px; }
+  .modal-subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 25px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; margin-left: 5px; }
   
-  .pulse-anim { animation: pulseCall 1.5s infinite; }
-  .ring-anim { animation: ringCall 0.5s ease-in-out infinite alternate; }
-  .anim-calling-text { animation: blinkText 1.5s infinite; }
-
-  @keyframes pulseCall { 0% { box-shadow: 0 0 0 0 rgba(58, 123, 213, 0.7); } 70% { box-shadow: 0 0 0 25px rgba(58, 123, 213, 0); } 100% { box-shadow: 0 0 0 0 rgba(58, 123, 213, 0); } }
-  @keyframes ringCall { 0% { transform: rotate(-15deg); } 100% { transform: rotate(15deg); } }
-  @keyframes blinkText { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-  /* --- WADAH KOTAK UMUM --- */
-  .custom-modal-box {
-    background: var(--bg-sidebar) !important;
-    color: var(--text-main); width: 90%; max-width: 350px; 
-    padding: 25px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-  }
-  
-  /* --- TYPOGRAPHY --- */
-  .modal-title { color: var(--text-main) !important; font-weight: 700; margin: 0 0 8px 0; font-size: 18px; text-align: center; }
-  .modal-subtitle { color: var(--text-muted) !important; font-size: 12px; margin-bottom: 20px; text-align: center; }
-  .modal-label { font-size: 11px; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 6px; }
-  .center-text { text-align: center; }
-  .mb-15 { margin-bottom: 15px; } .mb-20 { margin-bottom: 20px; }
-
-  /* --- INPUTS --- */
   .modal-input {
-    width: 100%; padding: 12px; border: 1px solid var(--border-color); 
-    border-radius: 12px; background: var(--bg-input-field); color: var(--text-main);
-    font-size: 13px; font-family: inherit; box-sizing: border-box; outline: none;
+    width: 100%; padding: 14px 18px; border-radius: 16px;
+    border: 2px solid var(--border-color); background: var(--bg-input-field);
+    color: var(--text-main); font-size: 14px; transition: all 0.3s;
   }
-  .modal-input:focus { border-color: #3a7bd5; box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.15); }
-  select.modal-input option { background: var(--bg-sidebar); color: var(--text-main); }
-  .modal-row { display: flex; gap: 12px; margin-bottom: 15px; text-align: left; }
+  .modal-input:focus { border-color: #3a7bd5; outline: none; }
 
-  /* --- BUTTONS --- */
-  .modal-actions { display: flex; gap: 10px; }
-  .btn-confirm { background: linear-gradient(135deg, #3a7bd5, #00d2ff) !important; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700; font-size: 13px; cursor: pointer; }
-  .btn-cancel { padding: 12px; border: none; border-radius: 12px; background: var(--bg-input-field); color: var(--text-muted); font-weight: 700; cursor: pointer; }
+  .modal-footer { display: flex; gap: 12px; }
+  .btn-confirm { 
+    flex: 2; background: linear-gradient(135deg, #3a7bd5, #00d2ff); 
+    color: white; border: none; border-radius: 16px; padding: 15px;
+    font-weight: 700; cursor: pointer; transition: 0.3s;
+  }
+  .btn-confirm.btn-danger { background: #ff4757; }
+  .btn-cancel { 
+    flex: 1; background: var(--bg-input-field); color: var(--text-muted);
+    border: none; border-radius: 16px; padding: 15px; font-weight: 700; cursor: pointer;
+  }
 
   /* --- DOI CARD --- */
-  .doi-card { background: var(--bg-sidebar); width: 100%; max-width: 320px; border-radius: 24px; overflow: hidden; position: relative; }
-  .doi-image-container { position: relative; height: 320px; background: #111; }
-  .doi-photo { width: 100%; height: 100%; object-fit: cover; }
-  .doi-info-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); padding: 30px 20px 20px; }
-  .doi-title { margin: 0; font-size: 24px; font-weight: 800; color: white !important; }
-  .doi-details { padding: 20px; background: var(--bg-sidebar); }
+  .doi-card { background: var(--bg-sidebar); width: 100%; max-width: 350px; border-radius: 32px; overflow: hidden; }
+  .doi-img-container { position: relative; height: 380px; }
+  .doi-photo-img { width: 100%; height: 100%; object-fit: cover; }
+  .doi-gradient { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, transparent 50%); }
+  .doi-basic-info { position: absolute; bottom: 25px; left: 25px; right: 25px; color: white; }
+  .doi-basic-info h2 { margin: 0; font-size: 26px; font-weight: 800; }
+  .doi-tag { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 4px 12px; border-radius: 10px; display: inline-block; font-size: 12px; margin-top: 8px; }
+  .doi-content-body { padding: 25px; }
 
   /* --- ANIMATIONS --- */
-  .pop-in { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-  @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  
+  .pulse-anim { animation: pulseCall 1.5s infinite; }
+  @keyframes pulseCall { 0% { box-shadow: 0 0 0 0 rgba(58, 123, 213, 0.7); } 70% { box-shadow: 0 0 0 30px rgba(58, 123, 213, 0); } 100% { box-shadow: 0 0 0 0 rgba(58, 123, 213, 0); } }
+  
+  .ring-anim { animation: ring 0.5s ease-in-out infinite alternate; }
+  @keyframes ring { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
 
-  /* --- 🔥 RADAR MODAL --- */
-  :global(.searching-overlay) {
-    position: fixed; inset: 0; background: rgba(10, 15, 25, 0.98); backdrop-filter: blur(10px); z-index: 9999999; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  }
-  :global(.radar-pencari-ghaib) { width: 250px; height: 250px; position: relative; }
-  :global(.radar-inner) { width: 100%; height: 100%; border-radius: 50%; border: 4px solid rgba(255, 78, 80, 0.2); position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(255, 78, 80, 0.2) inset; }
-  :global(.radar-scan) { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: conic-gradient(from 0deg, transparent, #ff4e50, transparent 90deg); animation: radarScanRotate 2s linear infinite; border-radius: 50%; filter: blur(5px); opacity: 0.8; }
-  :global(.radar-center-avatar) { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 65px; height: 65px; border-radius: 50%; border: 3px solid white; object-fit: cover; box-shadow: 0 0 30px rgba(255, 78, 80, 0.6); z-index: 10; }
-  :global(.search-title-romantic) { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 3px; background: linear-gradient(135deg, #ff4e50, #f9d423); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  @keyframes radarScanRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .mt-15 { margin-top: 15px; } .mt-20 { margin-top: 20px; } .mb-20 { margin-bottom: 20px; }
+  .text-center { text-align: center; }
+  .warning-icon { font-size: 50px; margin-bottom: 15px; }
+  .shadow-glow { box-shadow: 0 10px 25px rgba(58, 123, 213, 0.4); }
 </style>
+
 <script is:inline>
   // ==========================================
-  // 1. REFRESH SIDEBAR (LOAD SEMUA RIWAYAT)
+  // 1. LIVEKIT & CALL LOGIC
   // ==========================================
-  window.refreshSidebar = async function() {
-    const privateChatList = document.getElementById("private-chat-list");
-    if (!privateChatList || !window.currentUser) return;
+  window.callRoom = null;
+  window.callTalkTimer = null;
+  window.callSeconds = 0;
+
+  window.endCall = (isSilent = false) => {
+    if(window.ringtoneSound) { 
+      window.ringtoneSound.pause(); 
+      window.ringtoneSound.currentTime = 0; 
+    }
+    if (window.callRoom) { 
+      window.callRoom.disconnect(); 
+      window.callRoom = null; 
+    }
+    document.getElementById('call-overlay').style.display = 'none';
+    document.getElementById('incoming-call-overlay').style.display = 'none';
+    if(!isSilent) window.showToast("Panggilan berakhir");
+  };
+
+  window.startLiveKitCall = async () => {
+    const btn = document.getElementById("btn-start-call");
+    if(!btn) return;
+    const id = btn.dataset.targetId; 
+    const name = btn.dataset.targetName;
     
-    // Tampilkan Loading kecil
-    privateChatList.innerHTML = `<div style="text-align:center; padding:20px; font-size:12px; color:#999;">Memuat riwayat...</div>`;
+    document.getElementById("call-overlay").style.display = "flex";
+    document.getElementById("call-name").innerText = name;
+    document.getElementById("call-status").innerText = "MENGHUBUNGKAN...";
+
+    const prof = await window.getCachedProfile(id);
+    if(prof) document.getElementById("call-avatar").src = prof.avatar_url || '/asets/png/profile.webp';
 
     try {
-      // 1. Tombol Chat Global (Default)
-      let listHtml = `
-        <div class="sidebar-chat-item" onclick="window.bukaChatGlobal()">
-          <div style="width:40px; height:40px; border-radius:50%; background:#0088cc; display:flex; align-items:center; justify-content:center; margin-right:12px; color:white; font-size:18px;">🌍</div>
-          <div><strong style="color:#0088cc;">Chat Global</strong><br><span style="font-size:11px; color:#888;">Obrolan Umum</span></div>
-        </div>
-      `;
-
-      // 2. Ambil Riwayat Chat Pribadi (PV)
-      // Kita ambil pesan terakhir dari tiap room yang ada ID kita
-      const { data: messages, error } = await window.supabase
-        .from("messages")
-        .select("room_id, message, created_at, user_id")
-        .ilike("room_id", "pv_%")
-        .ilike("room_id", `%${window.currentUser.id}%`)
-        .order("created_at", { ascending: false });
-
-      if (messages && messages.length > 0) {
-        const lastMessagesMap = new Map();
-        messages.forEach((msg) => {
-          const partnerId = msg.room_id.replace("pv_", "").split("_").find(id => id !== window.currentUser.id);
-          if (partnerId && !lastMessagesMap.has(partnerId)) lastMessagesMap.set(partnerId, msg);
-        });
-
-        listHtml += `<div class="history-label">RIWAYAT CHAT</div>`;
-
-        // Looping untuk render tiap partner chat
-        for (let [partnerId, chat] of lastMessagesMap) {
-          const partner = await window.getCachedProfile(partnerId);
-          if(!partner) continue;
-
-          listHtml += `
-            <div class="sidebar-chat-item" onclick="window.bukaChatPribadi('${partnerId}', '${partner.username}', '${partner.short_id}')">
-              <img src="${partner.avatar_url || '/asets/png/profile.webp'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; margin-right:12px;">
-              <div style="flex:1; overflow:hidden;">
-                <div style="display:flex; justify-content:space-between;">
-                  <strong style="font-size:13px;">${partner.username}</strong>
-                  <span style="font-size:10px; color:#999;">${window.formatTime(chat.created_at)}</span>
-                </div>
-                <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11px; color:#666;">
-                  ${chat.message}
-                </div>
-              </div>
-            </div>
-          `;
+      // Sinyal ke Supabase
+      await window.supabase.from('messages').insert([{ 
+        room_id: window.currentRoomId, 
+        message: `📞 Memanggil ${name}...`, 
+        user_id: window.currentUser.id, 
+        is_system: true 
+      }]);
+      
+      window.ringtoneSound.play().catch(() => {});
+      
+      // LOGIKA KONEKSI LIVEKIT
+      const response = await fetch(`${window.SUPABASE_URL}/functions/v1/get-livekit-token`, {
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` },
+          body: JSON.stringify({ username: window.myUsername, identity: window.currentUser.id, roomName: window.currentRoomId })
+      });
+      const data = await response.json();
+      
+      window.callRoom = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
+      
+      window.callRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+        if (track.kind === "audio") {
+          const el = track.attach();
+          document.body.appendChild(el);
+          el.play();
         }
-      } else {
-        listHtml += `<div style="text-align:center; padding:30px; font-size:11px; color:#ccc;">Belum ada riwayat chat</div>`;
-      }
+      });
 
-      privateChatList.innerHTML = listHtml;
-    } catch (err) {
-      console.error("Gagal refresh sidebar:", err);
+      window.callRoom.on(LivekitClient.RoomEvent.ParticipantConnected, () => {
+        document.getElementById("call-status").innerText = "DALAM PANGGILAN";
+        window.ringtoneSound.pause();
+      });
+
+      window.callRoom.on(LivekitClient.RoomEvent.Disconnected, () => window.endCall());
+
+      await window.callRoom.connect("wss://voicegrup-zxmeibkn.livekit.cloud", data.token);
+      await window.callRoom.localParticipant.setMicrophoneEnabled(true);
+
+    } catch (err) { 
+      console.error(err);
+      window.endCall(true); 
+      window.showToast("Gagal memulai panggilan");
     }
   };
 
-  // ==========================================
-  // 2. NAVIGASI CHAT
-  // ==========================================
-  window.bukaChatGlobal = async function() {
-    window.currentChatMode = null; window.activeGroupId = null; window.currentRoomId = "room-1";
-    if (window.setChatHeaderTitle) window.setChatHeaderTitle("HopeTalk Globe", "Chat Umum");
-    document.getElementById("chat-messages").innerHTML = "";
-    document.getElementById("btn-start-call").style.display = "none";
-    window.isFirstMessageLoad = true;
-    await window.loadMessages();
-    document.getElementById("sidebar").classList.remove("open");
-    document.getElementById("sidebar-overlay").style.display = "none";
+  window.showIncomingCall = async function(msg) {
+    const prof = await window.getCachedProfile(msg.user_id);
+    document.getElementById("incoming-call-overlay").style.display = "flex";
+    document.getElementById("incoming-name").innerText = prof ? prof.username : "Seseorang";
+    if(prof) document.getElementById("incoming-avatar").src = prof.avatar_url || '/asets/png/profile.webp';
+    window.ringtoneSound.play().catch(() => {});
   };
 
-  window.bukaChatPribadi = async function(partnerId, partnerName, partnerShortId = "") {
-    window.currentChatMode = 'private'; window.activeGroupId = null;
-    
-    const btnCall = document.getElementById('btn-start-call'); 
-    if (btnCall) { 
-      btnCall.style.display = 'flex'; 
-      btnCall.dataset.targetId = partnerId; 
-      btnCall.dataset.targetName = partnerName; 
+  window.answerCall = async () => {
+    window.ringtoneSound.pause();
+    document.getElementById('incoming-call-overlay').style.display = 'none';
+    document.getElementById('call-overlay').style.display = 'flex';
+    document.getElementById('call-status').innerText = "CONNECTING...";
+    // Panggil fungsi connect yang sama dengan startCall
+    if (window.callSignalData) {
+       // Logic connect room menggunakan room_id dari signal
     }
+  };
 
-    const ids = [window.currentUser.id, partnerId].sort();
-    window.currentRoomId = `pv_${ids[0]}_${ids[1]}`; 
-    
-    if (window.setChatHeaderTitle) window.setChatHeaderTitle(partnerName, `#${partnerShortId}`);
-    document.getElementById("chat-messages").innerHTML = "";
-    window.isFirstMessageLoad = true;
-    await window.loadMessages();
-    document.getElementById("sidebar").classList.remove("open");
-    document.getElementById("sidebar-overlay").style.display = "none";
+  window.rejectCall = async () => {
+    window.ringtoneSound.pause();
+    document.getElementById('incoming-call-overlay').style.display = 'none';
+    await window.supabase.from('messages').insert([{ 
+      room_id: window.currentRoomId, 
+      message: `🚫 Panggilan Ditolak`, 
+      user_id: window.currentUser.id, 
+      is_system: true 
+    }]);
   };
 
   // ==========================================
-  // 3. PENCARIAN ID & RADAR
+  // 2. OTHER MODALS LOGIC
   // ==========================================
-  document.getElementById("btn-search-id").onclick = async () => {
-    const input = document.getElementById("input-search-id");
-    const cleanId = input.value.trim().toUpperCase().replace("#", "");
-    if (!cleanId) return window.showToast("Masukkan ID!");
-
-    window.showToast("Mencari user...");
-    const { data: friend } = await window.supabase.from("profiles").select("id, username, short_id").eq("short_id", cleanId).single();
-    
-    if (!friend) return window.showToast("ID tidak ditemukan!", "error");
-    if (friend.id === window.currentUser.id) return window.showToast("Ini ID kamu sendiri!");
-    
-    await window.bukaChatPribadi(friend.id, friend.username, friend.short_id);
-    input.value = "";
+  window.closeBioModal = () => document.getElementById("bio-modal").style.display = "none";
+  window.openEditProfile = async () => {
+    document.getElementById("bio-modal").style.display = "flex";
+    // Fetch data user existing here...
   };
 
-  const btnCariDoiActual = document.getElementById("btn-sidebar-search");
-  if (btnCariDoiActual) {
-    btnCariDoiActual.onclick = async () => {
-      const myProfile = await window.getCachedProfile(window.currentUser.id); 
-      if (!myProfile?.gender) { 
-        window.showToast("Setel GENDER kamu dulu di Biodata!"); 
-        return window.openEditProfile(); 
-      }
-      
-      window.showToast("Mencari doi...", "info");
-      document.getElementById("sidebar").classList.remove("open");
-      document.getElementById("sidebar-overlay").style.display = "none";
-      
-      // Logika radar acak
-      setTimeout(async () => {
-        const lawanJenis = myProfile.gender === "Pria" ? "Wanita" : "Pria";
-        const { data: users } = await window.supabase.from("profiles").select("*").neq("id", window.currentUser.id).eq("gender", lawanJenis).limit(10);
-        
-        if (users && users.length > 0) {
-          const randomDoi = users[Math.floor(Math.random() * users.length)];
-          if (typeof window.tampilkanDoiCard === "function") window.tampilkanDoiCard(randomDoi);
-        } else {
-          window.showToast("Doi tidak ditemukan di area ini :(");
-        }
-      }, 3000); 
+  window.tutupDoiCard = () => document.getElementById("doi-card-modal").style.display = "none";
+  window.tampilkanDoiCard = (doi) => {
+    const modal = document.getElementById("doi-card-modal");
+    if (!doi || !modal) return;
+    document.getElementById("doi-photo").src = doi.avatar_url || "/asets/png/profile.webp";
+    document.getElementById("doi-name-age").innerText = `${doi.username}, ${doi.umur || '?'}`;
+    document.getElementById("doi-zodiac").innerText = doi.zodiac || "Rahasia";
+    document.getElementById("btn-gas-chat").onclick = () => { 
+      window.bukaChatPribadi(doi.id, doi.username, doi.short_id); 
+      window.tutupDoiCard(); 
     };
-  }
+    modal.style.display = "flex";
+  };
 </script>
