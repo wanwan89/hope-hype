@@ -416,7 +416,7 @@ function renderMessage(msg) {
   msgEl.className = `chat-message ${msg.user_id === currentUser.id ? "self" : "other"}`;
 
   const currentUsername = msg.profiles?.username || msg.username || "User";
-  const avatarUrl = msg.profiles?.avatar_url || msg.avatar || "/asets/png/profile.png";
+  const avatarUrl = msg.profiles?.avatar_url || msg.avatar || "/asets/png/profile.webp";
   const currentRole = msg.profiles?.role || msg.role || "user";
   const statusIcon = msg.user_id === currentUser.id ? getStatusIcon(msg.status || "sent") : "";
 
@@ -458,7 +458,7 @@ function renderMessage(msg) {
   const isMe = msg.user_id === currentUser.id;
 
   msgEl.innerHTML = `
-    <img class="avatar" src="${avatarUrl}" onerror="this.src='/asets/png/profile.png'">
+    <img class="avatar" src="${avatarUrl}" onerror="this.src='/asets/png/profile.webp'">
     <div class="content" onclick="window.openReactionMenu('${msg.id}', event)" ${isMe ? `oncontextmenu="window.showDeleteMenu('${msg.id}'); return false;"` : ""} style="position: relative; min-width: 80px; transition: transform 0.2s ease; margin-bottom: ${uniqueIcons.length > 0 ? '15px' : '5px'};">
       <div class="username">${escapeHtml(currentUsername)}${getBadge(currentRole)}</div>
       ${replyHtml}
@@ -591,7 +591,7 @@ async function Message() {
     message: text,
     user_id: currentUser.id,
     username: myUsername,
-    avatar: sideAvatar?.src || "/asets/png/profile.png",
+    avatar: sideAvatar?.src || "/asets/png/profile.webp",
     role: myRole || "user",
     created_at: new Date().toISOString(),
     room_id: currentRoomId, 
@@ -650,7 +650,7 @@ if (inputEl) {
 
 async function sendAudioMessage(url) {
   const tempId = "temp-" + Date.now();
-  renderMessage({ id: tempId, message: "🎤 Voice Note", audio_url: url, user_id: currentUser.id, username: myUsername, avatar: sideAvatar?.src || "/asets/png/profile.png", role: myRole || "user", created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
+  renderMessage({ id: tempId, message: "🎤 Voice Note", audio_url: url, user_id: currentUser.id, username: myUsername, avatar: sideAvatar?.src || "/asets/png/profile.webp", role: myRole || "user", created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
   scrollToBottom();
 
   try {
@@ -713,7 +713,7 @@ function initRealtimeMessages() {
         const senderProfile = await getCachedProfile(newMsg.user_id);
         newMsg.profiles = {
           username: senderProfile?.username || "User",
-          avatar_url: senderProfile?.avatar_url || "/asets/png/profile.png",
+          avatar_url: senderProfile?.avatar_url || "/asets/png/profile.webp",
           role: senderProfile?.role || "user"
         };
 
@@ -1007,9 +1007,9 @@ async function sendSticker(url) {
   const tempId = "temp-" + Date.now();
   try {
     const profile = await getCachedProfile(currentUser.id);
-    renderMessage({ id: tempId, message: "", user_id: currentUser.id, username: profile?.username || "User", avatar: profile?.avatar_url || "/asets/png/profile.png", role: profile?.role || "user", sticker_url: url, created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
+    renderMessage({ id: tempId, message: "", user_id: currentUser.id, username: profile?.username || "User", avatar: profile?.avatar_url || "/asets/png/profile.webp", role: profile?.role || "user", sticker_url: url, created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
     scrollToBottom(); sendSound.play().catch(() => {});
-    const { data, error } = await supabase.from("messages").insert([{ message: "", user_id: currentUser.id, username: profile?.username || "User", avatar: profile?.avatar_url || "/asets/png/profile.png", role: profile?.role || "user", sticker_url: url, room_id: currentRoomId, status: "sent" }]).select().single();
+    const { data, error } = await supabase.from("messages").insert([{ message: "", user_id: currentUser.id, username: profile?.username || "User", avatar: profile?.avatar_url || "/asets/png/profile.webp", role: profile?.role || "user", sticker_url: url, room_id: currentRoomId, status: "sent" }]).select().single();
     
     if (error) throw error;
     const tempEl = document.getElementById(`msg-${tempId}`);
@@ -1281,7 +1281,7 @@ document.getElementById('btn-create-group').onclick = async () => {
     btn.disabled = true;
 
     try {
-        let finalPhotoUrl = "/asets/png/profile.png";
+        let finalPhotoUrl = "/asets/png/profile.webp";
 
         if (selectedGroupFile) {
             const fd = new FormData();
@@ -1311,7 +1311,7 @@ document.getElementById('btn-create-group').onclick = async () => {
         
         document.getElementById('group-modal').style.display = 'none';
         document.getElementById('in-group-name').value = '';
-        document.getElementById('group-photo-preview').src = '/asets/png/profile.png';
+        document.getElementById('group-photo-preview').src = '/asets/png/profile.webp';
         selectedGroupFile = null;
 
         await refreshSidebar();
@@ -1506,7 +1506,7 @@ window.openGroupSettings = async () => {
         if(editNameInput && group) editNameInput.value = group.name || '';
 
         const editPhotoPreview = document.getElementById('edit-group-photo-preview');
-        if (editPhotoPreview && group) editPhotoPreview.src = group.photo_url || '/asets/png/profile.png';
+        if (editPhotoPreview && group) editPhotoPreview.src = group.photo_url || '/asets/png/profile.webp';
         
         selectedEditGroupFile = null;
 
@@ -1522,7 +1522,7 @@ window.openGroupSettings = async () => {
             if (members && members.length > 0) {
                 members.forEach(m => {
                     const profileName = m.profiles?.username || "User";
-                    const profileAvatar = m.profiles?.avatar_url || '/asets/png/profile.png';
+                    const profileAvatar = m.profiles?.avatar_url || '/asets/png/profile.webp';
                     const isMe = m.user_id === currentUser.id;
                     
                     const div = document.createElement('div');
@@ -1718,7 +1718,7 @@ window.startLiveKitCall = async () => {
 
     const profile = await getCachedProfile(partnerId);
     if (profile && avatarEl) {
-        avatarEl.src = profile.avatar_url || '/asets/png/profile.png';
+        avatarEl.src = profile.avatar_url || '/asets/png/profile.webp';
     }
 
     try {
@@ -1801,7 +1801,7 @@ window.showIncomingCall = async function(msgData) {
     if (msgData.user_id) {
         const profile = await getCachedProfile(msgData.user_id);
         if (profile) {
-            if (avatarEl) avatarEl.src = profile.avatar_url || '/asets/png/profile.png';
+            if (avatarEl) avatarEl.src = profile.avatar_url || '/asets/png/profile.webp';
             if (nameEl) nameEl.innerText = profile.username || "Teman"; 
         }
     }
@@ -1825,7 +1825,7 @@ window.answerCall = async () => {
     if (callAvatar && callSignalData?.user_id) {
         const profile = await getCachedProfile(callSignalData.user_id);
         if (profile) {
-            callAvatar.src = profile.avatar_url || '/asets/png/profile.png';
+            callAvatar.src = profile.avatar_url || '/asets/png/profile.webp';
         }
     }
 
