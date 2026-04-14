@@ -498,13 +498,14 @@ function renderMessage(msg) {
         if (msg.sticker_url) previewText = "Stiker";
         if (msg.audio_url) previewText = "Voice Note";
         replyBox.style.display = "flex";
-        replyBox.innerHTML = `
-          <div class="reply-content-wrapper">
-            <div class="reply-title">${escapeHtml(currentUsername)}</div>
-            <div class="reply-text-preview">${escapeHtml(previewText || "")}</div>
-          </div>
-          <div class="close-reply-btn" onclick="window.cancelReply()">&times;</div>
-        `;
+replyBox.innerHTML = `
+  <div class="reply-content-wrapper">
+    <div class="reply-title">${escapeHtml(currentUsername)}</div>
+    <div class="reply-text-preview">${escapeHtml(previewText || "")}</div>
+  </div>
+  <div class="close-reply-btn" onclick="window.cancelReply()">&times;</div>
+`;
+
       }
       if (inputEl) inputEl.focus();
       if (navigator.vibrate) navigator.vibrate(30);
@@ -1155,20 +1156,34 @@ if (btnCariDoiActual) {
     
     closeSidebar();
 
-    const loadingOverlay = document.createElement("div"); 
-    loadingOverlay.className = "doi-search-overlay"; 
-    loadingOverlay.id = "active-search-overlay";
-    loadingOverlay.innerHTML = `
-      <div class="radar-container">
-        <div class="radar-wave"></div>
-        <div class="radar-wave"></div>
-        <div class="radar-wave"></div>
+    // --- FULL FIX LOGIKA RADAR BARU ---
+const loadingOverlay = document.createElement("div"); 
+loadingOverlay.className = "searching-overlay"; // Kita ganti class-nya agar sesuai CSS baru
+loadingOverlay.id = "active-search-overlay";
+
+loadingOverlay.innerHTML = `
+  <div class="radar-pencari-ghaib">
+    <div class="radar-inner">
+      <div class="radar-scan"></div>
+      <div class="radar-waves">
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
       </div>
-      <div style="text-align: center;">
-        <h3 class="search-title-glow">MENCARI DOI...</h3>
-        <p class="search-subtitle-glow">Memindai area sekitarmu</p>
+      <div class="radar-dots">
+        <div class="dot d1"></div>
+        <div class="dot d2"></div>
       </div>
-    `; 
+      <img id="my-search-avatar" src="${sideAvatar?.src || '/asets/png/profile.webp'}" class="radar-center-avatar" />
+    </div>
+  </div>
+  <div style="text-align: center; margin-top: 25px; z-index: 10001;">
+    <h3 class="search-title-romantic">MEMINDAI DOI...</h3>
+    <p class="search-subtitle-romantic">Area: Seluruh Jagad Raya</p>
+  </div>
+`;
+
     document.body.appendChild(loadingOverlay);
     
     const lawanJenis = myProfile.gender === "Pria" ? "Wanita" : "Pria";

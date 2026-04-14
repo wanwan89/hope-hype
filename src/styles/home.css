@@ -1,4 +1,27 @@
 /* ========================================= */
+/* 0. DARK MODE VARIABLES (SINKRON CHAT)     */
+/* ========================================= */
+:root {
+  /* Mode Terang (Default) */
+  --bg-page: #0b84e3;
+  --bg-container: #fdf9f1;
+  --text-main: #1e223d;
+  --text-stroke: white;
+  --shadow-color: rgba(0,0,0,0.1);
+  --grid-circle: #1f2335;
+}
+
+:root.dark {
+  /* Mode Gelap (Otomatis) */
+  --bg-page: #1f2335;
+  --bg-container: #2b3050;
+  --text-main: #ffffff;
+  --text-stroke: #1f2335;
+  --shadow-color: rgba(0,0,0,0.3);
+  --grid-circle: #0b84e3; /* Kebalikan warna buat animasi grid */
+}
+
+/* ========================================= */
 /* 1. RESET & GLOBAL SETUP                   */
 /* ========================================= */
 * {
@@ -10,112 +33,117 @@
   outline: none;
 }
 
-/* FIX: Mencegah gambar & video (webm) melebihi batas layar */
 img, video {
   max-width: 100%;
   height: auto;
   display: block;
 }
 
-/* ========================================= */
-/* FIX GLOBAL SCROLL & REFRESH               */
-/* ========================================= */
 html, body { 
   margin: 0; 
   padding: 0; 
   width: 100%;
   height: 100%;
-
   overflow-x: hidden;
-  overflow-y: auto; /* ✅ wajib buat refresh */
-
-  background: #0b84e3;
+  overflow-y: auto;
+  background: var(--bg-page);
   touch-action: auto;
-
-  overscroll-behavior-y: auto; /* ✅ biar refresh tetap aktif */
+  overscroll-behavior-y: auto;
+  transition: background-color 0.4s ease;
 }
 
-/* ========================================= */
-/* FIX POSISI (ANTI GOYANG + TETAP TENGAH)   */
-/* ========================================= */
 body { 
   display: flex;
   justify-content: center;
   align-items: center;
-
-  min-height: 100vh; /* ganti dari 100dvh */
-  padding: 12px; /* biar ada jarak dikit dari pinggir HP */
-
-  transition: background-color 0.4s ease, color 0.4s ease; 
+  min-height: 100vh;
+  padding: 12px;
+  color: var(--text-main);
 }
-body.dark { background: #1f2335; }
 
 a { text-decoration: none; color: inherit; }
-button, .btn, .tab, .menu-item-tiktok { user-select: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
-.theme-transition, .theme-transition * { transition: all 0.4s ease !important; }
-.animated-text { font-size: 36px; font-weight: 700; position: relative; color: #1e223d; letter-spacing: 2px; text-transform: uppercase; -webkit-text-stroke: 2px white; text-shadow: 3px 3px 0 #000, 6px 6px 0 #00000020; transition: transform 0.3s ease; }
-.animated-text:hover { transform: translate(-3px, -3px); text-shadow: 6px 6px 0 #000, 10px 10px 0 #00000020; }
-body.dark .animated-text { color: #ffffff; text-shadow: 3px 3px 0 #000, 6px 6px 0 #00000040; }
+button, .btn, .tab, .menu-item-tiktok { user-select: none; }
+
+.animated-text { 
+  font-size: 36px; 
+  font-weight: 700; 
+  position: relative; 
+  color: var(--text-main); 
+  letter-spacing: 2px; 
+  text-transform: uppercase; 
+  -webkit-text-stroke: 2px var(--text-stroke); 
+  text-shadow: 3px 3px 0 #000, 6px 6px 0 rgba(0,0,0,0.1); 
+  transition: transform 0.3s ease, color 0.4s ease; 
+}
+
+.animated-text:hover { transform: translate(-3px, -3px); text-shadow: 6px 6px 0 #000; }
 
 /* ========================================= */
-/* 2. BACKGROUND & GRID                      */
+/* 2. BACKGROUND & GRID (DYNAMIC)            */
 /* ========================================= */
 .grid-bg { 
   position: fixed; 
   inset: 0; 
-  background-color: #0b84e3; 
+  background-color: var(--bg-page); 
   z-index: -1; 
   overflow: hidden; 
   pointer-events: none !important; 
+  transition: background-color 0.4s ease;
 }
-.grid-bg::before { content: ""; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background-color: #1f2335; border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1), height 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
-body.dark .grid-bg::before { width: 300vmax; height: 300vmax; }
+
+.grid-bg::before { 
+  content: ""; 
+  position: absolute; 
+  top: 50%; 
+  left: 50%; 
+  width: 0; 
+  height: 0; 
+  background-color: var(--grid-circle); 
+  border-radius: 50%; 
+  transform: translate(-50%, -50%); 
+  transition: width 0.7s cubic-bezier(0.25, 1, 0.5, 1), height 0.7s cubic-bezier(0.25, 1, 0.5, 1); 
+}
+
+/* Trigger Class Dark di HTML */
+:root.dark .grid-bg::before { width: 300vmax; height: 300vmax; }
 
 /* ========================================= */
-/* CONTAINER FIX FINAL                       */
+/* 3. CONTAINER FIX FINAL                    */
 /* ========================================= */
 .container { 
   position: relative; 
   width: 380px; 
   max-width: 92%;
-  
-  margin: auto; /* ✅ center */
-
-  background: #fdf9f1; 
+  margin: auto;
+  background: var(--bg-container); 
   border-radius: 28px; 
   padding: 24px; 
-  box-shadow: 10px 10px 0px rgba(0,0,0,0.1); 
+  box-shadow: 10px 10px 0px var(--shadow-color); 
   z-index: 2; 
   animation: fadeUp 0.8s ease forwards; 
   opacity: 0; 
-  
   display: flex;
   flex-direction: column;
   gap: 18px;
-
   max-height: 85vh;
-
   overflow-y: auto;
   overflow-x: hidden;
-
   touch-action: pan-y;
-
-  overscroll-behavior: contain; /* ✅ kunci scroll di dalam */
-  -webkit-overflow-scrolling: touch; /* ✅ smooth di iOS */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
 }
 
-/* hide scrollbar */
-.container::-webkit-scrollbar { 
-  width: 0; 
-  display: none; 
+.container::-webkit-scrollbar { width: 0; display: none; }
+
+@keyframes fadeUp { 
+  from { opacity: 0; transform: translateY(40px); } 
+  to { opacity: 1; transform: translateY(0); } 
 }
-body.dark .container { background: #2b3050; color: white; box-shadow: 10px 10px 0px rgba(0,0,0,0.2); }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ========================================= */
-/* 4. FIX BANNER & MEDIA (AGAR TIDAK GEPENG) */
+/* 4. BANNER & MEDIA                         */
 /* ========================================= */
-/* Paksa banner creator tetep di rasio yang bener */
 .ad-banner-container {
   width: 100%;
   aspect-ratio: 16 / 5; 
@@ -123,47 +151,64 @@ body.dark .container { background: #2b3050; color: white; box-shadow: 10px 10px 
   border-radius: 18px;
   flex-shrink: 0;
 }
+
 .ad-banner-container img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.particle { position: fixed; pointer-events: none; border-radius: 50%; z-index: 10001; }
-.btn-loading { position: relative; color: transparent !important; pointer-events: none; }
-.btn-loading::after { content: ""; position: absolute; width: 16px; height: 16px; top: 50%; left: 50%; margin: -8px 0 0 -8px; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; }
+/* Dimmer buat banner di mode dark biar gak silau */
+:root.dark .ad-banner-container img {
+  filter: brightness(0.8);
+}
+
+/* ========================================= */
+/* 5. WIDGETS & ANIMATIONS                   */
+/* ========================================= */
+.btn-loading::after { 
+  content: ""; position: absolute; width: 16px; height: 16px; 
+  top: 50%; left: 50%; margin: -8px 0 0 -8px; 
+  border: 2px solid rgba(255, 255, 255, 0.3); 
+  border-radius: 50%; border-top-color: #fff; 
+  animation: spin 0.8s linear infinite; 
+}
+
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes button-push { 0% { transform: scale(1); } 50% { transform: scale(0.9); } 100% { transform: scale(1); } }
-.ripple { position: absolute; width: 20px; height: 20px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; transform: translate(-50%, -50%) scale(1); pointer-events: none !important; z-index: 10; animation: rippleAnim 0.6s ease-out; filter: blur(2px); opacity: 0.7; }
-@keyframes rippleAnim { to { transform: translate(-50%, -50%) scale(12); opacity: 0; } }
-@keyframes rotating { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.rotating { animation: rotating 1.5s linear infinite; display: inline-block; }
-#story-label { position: fixed; bottom: 20px; right: 75px; background-color: #fffa; color: #000; padding: 10px 15px; border-radius: 12px; font-weight: 600; font-family: "Poppins", sans-serif; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); z-index: 10000; cursor: pointer; white-space: nowrap; animation: blink 10s linear infinite; }
-@keyframes blink { 0%, 49.99% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+.dev-banner { 
+  position: fixed; top: 0; left: 0; width: 100%; 
+  overflow: hidden; background: linear-gradient(90deg, #ff9f43, #feca57); 
+  z-index: 100000; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); 
+}
 
 /* ========================================= */
-/* 5. WIDGETS KECIL LAINNYA                  */
-/* ========================================= */
-.dev-banner { position: fixed; top: 0; left: 0; width: 100%; overflow: hidden; background: linear-gradient(90deg, #ff9f43, #feca57); z-index: 100000; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); background-size: 300% 300%; animation: gradientMove 8s ease infinite; }
-.dev-banner-track { display: inline-block; white-space: nowrap; padding: 10px 0; font-family: "Poppins", sans-serif; font-size: 14px; font-weight: 600; color: #1a1a1a; animation: banner-move 20s linear infinite; }
-.dev-banner:hover .dev-banner-track { animation-play-state: paused; }
-@keyframes banner-move { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
-@keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-.chat-box { display: none; position: fixed; bottom: 20px; right: 20px; width: 280px; height: 350px; background: #111; border-radius: 20px; z-index: 999999; overflow: hidden; }
-.chat-box.active { display: block; }
-@media (max-width: 480px) { .chat-box { width: 90%; height: 60%; right: 5%; bottom: 10px; } }
-.chat-body { height: calc(100% - 100px); overflow-y: auto; }
-.chat-header { position: relative; z-index: 2; }
-
-/* ========================================= */
-/* 6. CSS UNTUK CONTACT US & SOSIAL MEDIA    */
+/* 6. CONTACT US & SOSIAL MEDIA              */
 /* ========================================= */
 .contact-wrapper { position: fixed; bottom: 20px; left: 20px; z-index: 999; display: flex; align-items: center; gap: 12px; }
-.contact-text { background-color: #ffffff; color: #007BFF; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; user-select: none; -webkit-user-select: none; }
-body.dark .contact-text { background-color: #2b3050; color: #ffffff; } 
-.contact-text:active { transform: scale(0.95); }
-.social-icons-container { display: flex; flex-direction: row; gap: 10px; opacity: 0; transform: translateX(-20px); pointer-events: none; transition: all 0.4s ease-out; }
+
+.contact-text { 
+  background-color: var(--bg-container); 
+  color: #007BFF; 
+  padding: 6px 14px; 
+  border-radius: 20px; 
+  font-size: 13px; 
+  font-weight: 700; 
+  cursor: pointer; 
+  box-shadow: 2px 4px 6px var(--shadow-color); 
+  transition: all 0.3s ease; 
+}
+
+:root.dark .contact-text { color: #ffffff; background-color: #3f445e; }
+
+.social-icons-container { 
+  display: flex; flex-direction: row; gap: 10px; opacity: 0; 
+  transform: translateX(-20px); pointer-events: none; 
+  transition: all 0.4s ease-out; 
+}
+
 #contact-toggle:checked ~ .social-icons-container { opacity: 1; transform: translateX(0); pointer-events: auto; }
 #contact-toggle:checked ~ .contact-text { background-color: #007BFF; color: #ffffff; }
-.social-icon { width: 24px; height: 24px; object-fit: contain; filter: drop-shadow(1px 2px 4px rgba(0, 0, 0, 0.3)); transition: transform 0.2s ease-in-out; display: inline-block; margin: 0 5px; }
-.social-icon:hover { transform: scale(1.2); }
+
+/* Utility transisi tema */
+.theme-transition, .theme-transition * { transition: all 0.4s ease !important; }

@@ -93,6 +93,9 @@ function getUserBadge(role) {
 // =======================
 // CARDS & THEME
 // =======================
+// =======================
+// CARDS & THEME (SINKRON KE CHAT)
+// =======================
 const karyaCard = document.querySelector(".job-card.karya-card");
 const musicCard = document.querySelector(".job-card.music-card");
 const toggleBtn = document.querySelector(".toggle-dark");
@@ -108,30 +111,45 @@ function CardImages(isDark) {
   }
 }
 
+// 🔥 Tambahkan fungsi simpan tema agar dibaca Chat 🔥
 function applyTheme(isDark) {
-  document.body.classList.toggle("dark", isDark);
+  if (isDark) {
+    document.documentElement.classList.add("dark"); // Pasang di HTML tag
+    document.body.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+    document.body.classList.remove("dark");
+  }
+  
   CardImages(isDark);
   if (toggleBtn) toggleBtn.checked = isDark;
+  
+  // Simpan ke LocalStorage agar chat.astro bisa baca
+  localStorage.setItem("theme", isDark ? "dark" : "light");
 }
 
 if (toggleBtn) {
   const savedTheme = localStorage.getItem("theme");
+  // Cek jam atau settingan sistem kalau belum ada pilihan
   const isAutoDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const isDark = savedTheme ? savedTheme === "dark" : isAutoDark;
+  
   applyTheme(isDark);
 
   toggleBtn.addEventListener("change", () => {
     document.body.classList.add("theme-transition");
     const newDark = toggleBtn.checked;
     applyTheme(newDark);
-    localStorage.setItem("theme", newDark ? "dark" : "light");
+    
+    // 🔥 Efek getar dikit pas ganti mode biar asik
+    if (navigator.vibrate) navigator.vibrate(20);
+
     setTimeout(() => { document.body.classList.remove("theme-transition"); }, 400);
   });
 } else {
   const savedTheme = localStorage.getItem("theme");
   applyTheme(savedTheme ? savedTheme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
 }
-
 
 // =======================
 // PRELOAD IMAGES
