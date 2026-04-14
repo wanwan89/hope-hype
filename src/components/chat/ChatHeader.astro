@@ -141,3 +141,34 @@
     color: #00a884; 
   }
 </style>
+<script is:inline>
+  // Logika khusus Header untuk memantau status Typing secara Realtime
+  // Fungsi ini akan dipanggil otomatis oleh window.supabase di chat.astro
+  
+  window.updateTypingStatus = function(username) {
+    const typingEl = document.getElementById("typing-header");
+    const statusEl = document.getElementById("status-header");
+    
+    if (!typingEl || !statusEl) return;
+
+    if (username) {
+      statusEl.style.display = "none";
+      typingEl.style.display = "inline-block";
+      typingEl.textContent = `${username} sedang mengetik...`;
+    } else {
+      statusEl.style.display = "inline-block";
+      typingEl.style.display = "none";
+      typingEl.textContent = "";
+    }
+  };
+
+  // Fungsi buat ganti judul header (dipanggil pas buka PV atau Grup)
+  window.setChatHeaderTitle = function(title, subtitle = "Online") {
+    const titleEl = document.getElementById("chat-title");
+    const statusEl = document.getElementById("status-header");
+    
+    if (titleEl) titleEl.innerHTML = title;
+    if (statusEl) statusEl.textContent = subtitle;
+  };
+</script>
+

@@ -180,3 +180,152 @@
   :global(.search-title-romantic) { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 3px; background: linear-gradient(135deg, #ff4e50, #f9d423); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   @keyframes radarScanRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>
+<script is:inline>
+  // ==========================================
+  // 1. REFRESH SIDEBAR (LOAD SEMUA RIWAYAT)
+  // ==========================================
+  window.refreshSidebar = async function() {
+    const privateChatList = document.getElementById("private-chat-list");
+    if (!privateChatList || !window.currentUser) return;
+    
+    // Tampilkan Loading kecil
+    privateChatList.innerHTML = `<div style="text-align:center; padding:20px; font-size:12px; color:#999;">Memuat riwayat...</div>`;
+
+    try {
+      // 1. Tombol Chat Global (Default)
+      let listHtml = `
+        <div class="sidebar-chat-item" onclick="window.bukaChatGlobal()">
+          <div style="width:40px; height:40px; border-radius:50%; background:#0088cc; display:flex; align-items:center; justify-content:center; margin-right:12px; color:white; font-size:18px;">🌍</div>
+          <div><strong style="color:#0088cc;">Chat Global</strong><br><span style="font-size:11px; color:#888;">Obrolan Umum</span></div>
+        </div>
+      `;
+
+      // 2. Ambil Riwayat Chat Pribadi (PV)
+      // Kita ambil pesan terakhir dari tiap room yang ada ID kita
+      const { data: messages, error } = await window.supabase
+        .from("messages")
+        .select("room_id, message, created_at, user_id")
+        .ilike("room_id", "pv_%")
+        .ilike("room_id", `%${window.currentUser.id}%`)
+        .order("created_at", { ascending: false });
+
+      if (messages && messages.length > 0) {
+        const lastMessagesMap = new Map();
+        messages.forEach((msg) => {
+          const partnerId = msg.room_id.replace("pv_", "").split("_").find(id => id !== window.currentUser.id);
+          if (partnerId && !lastMessagesMap.has(partnerId)) lastMessagesMap.set(partnerId, msg);
+        });
+
+        listHtml += `<div class="history-label">RIWAYAT CHAT</div>`;
+
+        // Looping untuk render tiap partner chat
+        for (let [partnerId, chat] of lastMessagesMap) {
+          const partner = await window.getCachedProfile(partnerId);
+          if(!partner) continue;
+
+          listHtml += `
+            <div class="sidebar-chat-item" onclick="window.bukaChatPribadi('${partnerId}', '${partner.username}', '${partner.short_id}')">
+              <img src="${partner.avatar_url || '/asets/png/profile.webp'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; margin-right:12px;">
+              <div style="flex:1; overflow:hidden;">
+                <div style="display:flex; justify-content:space-between;">
+                  <strong style="font-size:13px;">${partner.username}</strong>
+                  <span style="font-size:10px; color:#999;">${window.formatTime(chat.created_at)}</span>
+                </div>
+                <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11px; color:#666;">
+                  ${chat.message}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      } else {
+        listHtml += `<div style="text-align:center; padding:30px; font-size:11px; color:#ccc;">Belum ada riwayat chat</div>`;
+      }
+
+      privateChatList.innerHTML = listHtml;
+    } catch (err) {
+      console.error("Gagal refresh sidebar:", err);
+    }
+  };
+
+  // ==========================================
+  // 2. NAVIGASI CHAT
+  // ==========================================
+  window.bukaChatGlobal = async function() {
+    window.currentChatMode = null; window.activeGroupId = null; window.currentRoomId = "room-1";
+    if (window.setChatHeaderTitle) window.setChatHeaderTitle("HopeTalk Globe", "Chat Umum");
+    document.getElementById("chat-messages").innerHTML = "";
+    document.getElementById("btn-start-call").style.display = "none";
+    window.isFirstMessageLoad = true;
+    await window.loadMessages();
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebar-overlay").style.display = "none";
+  };
+
+  window.bukaChatPribadi = async function(partnerId, partnerName, partnerShortId = "") {
+    window.currentChatMode = 'private'; window.activeGroupId = null;
+    
+    const btnCall = document.getElementById('btn-start-call'); 
+    if (btnCall) { 
+      btnCall.style.display = 'flex'; 
+      btnCall.dataset.targetId = partnerId; 
+      btnCall.dataset.targetName = partnerName; 
+    }
+
+    const ids = [window.currentUser.id, partnerId].sort();
+    window.currentRoomId = `pv_${ids[0]}_${ids[1]}`; 
+    
+    if (window.setChatHeaderTitle) window.setChatHeaderTitle(partnerName, `#${partnerShortId}`);
+    document.getElementById("chat-messages").innerHTML = "";
+    window.isFirstMessageLoad = true;
+    await window.loadMessages();
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebar-overlay").style.display = "none";
+  };
+
+  // ==========================================
+  // 3. PENCARIAN ID & RADAR
+  // ==========================================
+  document.getElementById("btn-search-id").onclick = async () => {
+    const input = document.getElementById("input-search-id");
+    const cleanId = input.value.trim().toUpperCase().replace("#", "");
+    if (!cleanId) return window.showToast("Masukkan ID!");
+
+    window.showToast("Mencari user...");
+    const { data: friend } = await window.supabase.from("profiles").select("id, username, short_id").eq("short_id", cleanId).single();
+    
+    if (!friend) return window.showToast("ID tidak ditemukan!", "error");
+    if (friend.id === window.currentUser.id) return window.showToast("Ini ID kamu sendiri!");
+    
+    await window.bukaChatPribadi(friend.id, friend.username, friend.short_id);
+    input.value = "";
+  };
+
+  const btnCariDoiActual = document.getElementById("btn-sidebar-search");
+  if (btnCariDoiActual) {
+    btnCariDoiActual.onclick = async () => {
+      const myProfile = await window.getCachedProfile(window.currentUser.id); 
+      if (!myProfile?.gender) { 
+        window.showToast("Setel GENDER kamu dulu di Biodata!"); 
+        return window.openEditProfile(); 
+      }
+      
+      window.showToast("Mencari doi...", "info");
+      document.getElementById("sidebar").classList.remove("open");
+      document.getElementById("sidebar-overlay").style.display = "none";
+      
+      // Logika radar acak
+      setTimeout(async () => {
+        const lawanJenis = myProfile.gender === "Pria" ? "Wanita" : "Pria";
+        const { data: users } = await window.supabase.from("profiles").select("*").neq("id", window.currentUser.id).eq("gender", lawanJenis).limit(10);
+        
+        if (users && users.length > 0) {
+          const randomDoi = users[Math.floor(Math.random() * users.length)];
+          if (typeof window.tampilkanDoiCard === "function") window.tampilkanDoiCard(randomDoi);
+        } else {
+          window.showToast("Doi tidak ditemukan di area ini :(");
+        }
+      }, 3000); 
+    };
+  }
+</script>

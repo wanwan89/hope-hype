@@ -209,3 +209,149 @@
     50% { transform: translateX(-5px); }
   }
 </style>
+<script is:inline>
+  // ==========================================
+  // 1. DASHBOARD ELEMEN
+  // ==========================================
+  const chatInput = document.getElementById("chat-input");
+  const btnSend = document.getElementById("action-btn");
+  const stickerMenu = document.getElementById("sticker-menu");
+  const stickerSearchInput = document.getElementById("sticker-search-input");
+  const stickerSearchBtn = document.getElementById("sticker-search-btn");
+
+  // ==========================================
+  // 2. LOGIKA KIRIM PESAN (TEXT)
+  // ==========================================
+  window.Message = async function() {
+    const text = chatInput?.value.trim();
+    if (!text || !window.currentUser) return;
+
+    // Reset input secepat mungkin biar terasa responsif
+    chatInput.value = "";
+    chatInput.style.height = "auto"; 
+    if (window.sendSound) window.sendSound.play().catch(() => {});
+    
+    // Sembunyikan reply box kalau ada
+    window.cancelReply();
+
+    try {
+      const payload = { 
+        message: text, 
+        user_id: window.currentUser.id, 
+        username: window.myUsername, 
+        room_id: window.currentRoomId, 
+        status: "sent" 
+      };
+      
+      if (window.currentChatMode === 'group' && window.activeGroupId) {
+        payload.group_id = window.activeGroupId;
+      }
+
+      await window.supabase.from("messages").insert([payload]);
+    } catch (err) { 
+      window.showToast("Gagal mengirim pesan", "error"); 
+    }
+  };
+
+  // Event Listeners Input
+  if (btnSend) btnSend.onclick = () => {
+    if (chatInput.value.trim() !== "") window.Message();
+  };
+
+  if (chatInput) {
+    chatInput.addEventListener("keydown", (e) => { 
+      if (e.key === "Enter" && !e.shiftKey) { 
+        e.preventDefault(); 
+        window.Message(); 
+      } 
+    });
+    
+    // Auto Resize Textarea biar keren kayak WhatsApp
+    chatInput.addEventListener("input", function() {
+      this.style.height = "auto";
+      this.style.height = (this.scrollHeight) + "px";
+    });
+  }
+
+  // ==========================================
+  // 3. LOGIKA STIKER (GIPHY)
+  // ==========================================
+  const GIPHY_KEY = "vPUlBU5Qfz2ZygoEtKXVUqmIEAEcIB08";
+
+  window.fetchStickers = async function(query = "") {
+    const stickerList = document.getElementById("sticker-list");
+    if (!stickerList) return;
+    
+    stickerList.innerHTML = "<p style='font-size:12px; color:#999; text-align:center; padding:20px;'>Mencari...</p>";
+    
+    const endpoint = query 
+      ? `https://api.giphy.com/v1/stickers/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(query)}&limit=30&rating=g`
+      : `https://api.giphy.com/v1/stickers/trending?api_key=${GIPHY_KEY}&limit=20&rating=g`;
+
+    try {
+      const res = await fetch(endpoint);
+      const data = await res.json();
+      stickerList.innerHTML = "";
+      
+      data.data.forEach((sticker) => {
+        const img = document.createElement("img");
+        img.src = sticker.images.fixed_width_small.webp;
+        img.className = "sticker-item";
+        img.style.cssText = "width:100%; aspect-ratio:1/1; cursor:pointer; border-radius:8px; background:rgba(0,0,0,0.05); transition:transform 0.2s;";
+        img.onclick = () => window.sendSticker(sticker.images.fixed_width.url);
+        
+        // Efek Hover
+        img.onmouseenter = () => img.style.transform = "scale(1.1)";
+        img.onmouseleave = () => img.style.transform = "scale(1)";
+        
+        stickerList.appendChild(img);
+      });
+    } catch (err) { 
+      stickerList.innerHTML = "<p style='font-size:12px; color:red; text-align:center;'>Gagal memuat stiker.</p>"; 
+    }
+  };
+
+  window.sendSticker = async function(url) {
+    try {
+      if (window.sendSound) window.sendSound.play().catch(() => {});
+      await window.supabase.from("messages").insert([{ 
+        message: "", 
+        user_id: window.currentUser.id, 
+        username: window.myUsername, 
+        sticker_url: url, 
+        room_id: window.currentRoomId, 
+        status: "sent" 
+      }]);
+      if (stickerMenu) stickerMenu.style.display = "none";
+    } catch (err) { 
+      window.showToast("Gagal kirim stiker", "error"); 
+    }
+  };
+
+  const stickerBtn = document.getElementById("sticker-btn");
+  if (stickerBtn) {
+    stickerBtn.onclick = () => { 
+      const isHidden = stickerMenu.style.display === "none" || stickerMenu.style.display === "";
+      stickerMenu.style.display = isHidden ? "flex" : "none";
+      if (isHidden) window.fetchStickers();
+    };
+  }
+
+  if (stickerSearchBtn) {
+    stickerSearchBtn.onclick = () => window.fetchStickers(stickerSearchInput.value);
+  }
+  
+  if (stickerSearchInput) {
+    stickerSearchInput.onkeydown = (e) => { if (e.key === "Enter") window.fetchStickers(e.target.value); };
+  }
+
+  // ==========================================
+  // 4. LOGIKA VOICE NOTE (RECORDER)
+  // ==========================================
+  // (Jika lu punya logic VN yang kompleks, lu bisa taruh di sini nantinya)
+  window.cancelReply = function() {
+    const replyBox = document.getElementById("reply-preview-box");
+    if (replyBox) replyBox.style.display = "none";
+    if (chatInput) chatInput.dataset.replyTo = "";
+  };
+</script>

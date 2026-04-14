@@ -28,7 +28,7 @@ import ChatModals from '../components/chat/ChatModals.astro';
 
   <audio id="send-sound" src="/asets/sound/send.mp3" preload="auto"></audio>
   <audio id="receive-sound" src="/asets/sound/receive.mp3" preload="auto"></audio>
-  <audio id="ringtone" src="/asets/sound/ringtone.mp3" preload="auto" loop></audio>
+  <audio id="ringtone" src="/asets/sound/call.wav" preload="auto" loop></audio>
 
   <div id="toast-container" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none;"></div>
 
@@ -44,11 +44,140 @@ import ChatModals from '../components/chat/ChatModals.astro';
   <ChatModals />
 
   <script is:inline src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
-  <script src="../scripts/chatLogic.js"></script>
+  
+  <script is:inline>
+  // =======================
+  // 1. CORE & GLOBAL STATE
+  // =======================
+  window.SUPABASE_URL = "https://hqetnqnvmdxdgfnnluew.supabase.co";
+  window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZXRucW52bWR4ZGdmbm5sdWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MzUyODIsImV4cCI6MjA4NzMxMTI4Mn0.Cr9lDBZMqfeONi1dfyFzHpBtawBzZTQLBEWKmPJVAOA";
+  // Gunakan Client Supabase dari App (Pastikan sudah terpasang global)
+  window.supabase = window.supabaseClient || window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+
+  window.currentRoomId = "room-1";
+  window.currentUser = null;
+  window.myUsername = "Guest";
+  window.myRole = "user";
+  window.profileCache = new Map();
+  window.isFirstMessageLoad = true;
+  window.currentChatMode = null;
+  window.activeGroupId = null;
+  window.totalOnlineUsers = 0;
+  window.waveSurfers = {};
+
+  window.sendSound = document.getElementById('send-sound');
+  window.receiveSound = document.getElementById('receive-sound');
+  window.ringtoneSound = document.getElementById('ringtone');
+
+  // =======================
+  // 2. GLOBAL HELPERS
+  // =======================
+  window.showToast = function(message) {
+    let container = document.getElementById("toast-container");
+    if (!container) return;
+    const toast = document.createElement("div");
+    toast.className = `toast-msg`; toast.innerHTML = message;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 3000);
+  };
+
+  window.escapeHtml = function(str = "") { return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
+  window.formatTime = function(dateString) { const d = new Date(dateString); return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`; };
+  window.scrollToBottom = function() { const msgEl = document.getElementById("chat-messages"); if (msgEl) msgEl.scrollTo({ top: msgEl.scrollHeight, behavior: "smooth" }); };
+
+  window.showChatLoading = function() {
+    const msgEl = document.getElementById("chat-messages");
+    if (!msgEl) return;
+    msgEl.innerHTML = `
+      <div class="chat-loading-screen">
+        <div class="skeleton-msg left"><div class="skeleton-avatar shimmer"></div><div class="skeleton-bubble"><div class="shimmer skeleton-line w1"></div><div class="shimmer skeleton-line w2"></div></div></div>
+        <div class="skeleton-msg right"><div class="skeleton-bubble me"><div class="shimmer skeleton-line w4"></div></div></div>
+        <div class="skeleton-msg left"><div class="skeleton-bubble typing-bubble"><span></span><span></span><span></span></div></div>
+        <div class="loading-chat-hint">Menyambungkan percakapan...</div>
+      </div>`;
+  };
+
+  window.getCachedProfile = async function(userId) {
+    if (window.profileCache.has(userId)) return window.profileCache.get(userId);
+    const { data } = await window.supabase.from('profiles').select('username, avatar_url, role, short_id, gender').eq('id', userId).single();
+    if (data) window.profileCache.set(userId, data);
+    return data;
+  };
+
+  // =======================
+  // 3. RENDER & LOGIC
+  // =======================
+  window.renderMessage = function(msg) {
+    const messagesEl = document.getElementById("chat-messages");
+    if (!messagesEl || document.getElementById(`msg-${msg.id}`)) return;
+
+    if (msg.is_system) {
+      messagesEl.insertAdjacentHTML('beforeend', `<div id="msg-${msg.id}" style="display:flex; justify-content:center; margin:12px 0; width:100%;"><div style="background:rgba(0,0,0,0.06); color:#555; font-size:11px; padding:5px 14px; border-radius:20px;">${window.escapeHtml(msg.message)}</div></div>`);
+      return; 
+    }
+
+    const isMe = msg.user_id === window.currentUser.id;
+    const currentUsername = msg.profiles?.username || msg.username || "User";
+    const avatarUrl = msg.profiles?.avatar_url || msg.avatar || "/asets/png/profile.webp";
+    let contentHtml = msg.sticker_url ? `<img src="${msg.sticker_url}" style="width:100px;border-radius:12px;">` : (msg.audio_url ? `🎤 Voice Note` : window.escapeHtml(msg.message || ""));
+
+    const msgHtml = `
+      <div id="msg-${msg.id}" class="chat-message ${isMe ? 'self' : 'other'}">
+        <img class="avatar" src="${avatarUrl}">
+        <div class="content">
+          <span class="username">${window.escapeHtml(currentUsername)}</span>
+          <div class="text">${contentHtml}</div>
+          <div class="message-info"><span class="timestamp">${window.formatTime(msg.created_at)}</span></div>
+        </div>
+      </div>`;
+    messagesEl.insertAdjacentHTML('beforeend', msgHtml);
+  };
+
+  window.loadMessages = async function() {
+    const messagesEl = document.getElementById("chat-messages");
+    if (!messagesEl || !window.currentUser) return;
+    if (window.isFirstMessageLoad) window.showChatLoading();
+    
+    const { data } = await window.supabase.from("messages").select(`*, profiles:profiles!messages_user_id_fkey(username, avatar_url, role)`).eq("room_id", window.currentRoomId).order("created_at", { ascending: false }).limit(30); 
+    
+    messagesEl.innerHTML = "";
+    window.isFirstMessageLoad = false;
+    if (data) data.reverse().forEach(msg => window.renderMessage(msg));
+    window.scrollToBottom();
+  };
+
+  window.initRealtimeMessages = function() {
+    window.supabase.channel(`messages-${window.currentRoomId}`).on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, async (payload) => {
+        const newMsg = payload.new;
+        if (newMsg.room_id === window.currentRoomId) {
+          const senderProfile = await window.getCachedProfile(newMsg.user_id);
+          newMsg.profiles = { username: senderProfile?.username, avatar_url: senderProfile?.avatar_url, role: senderProfile?.role };
+          window.renderMessage(newMsg);
+          if (newMsg.user_id !== window.currentUser.id && !newMsg.is_system) window.receiveSound.play().catch(()=>{});
+          window.scrollToBottom();
+        }
+    }).subscribe();
+  };
+
+  async function initApp() {
+    const { data: { session } } = await window.supabase.auth.getSession();
+    if (!session) return window.location.href = "/login";
+    window.currentUser = { id: session.user.id };
+    
+    const prof = await window.getCachedProfile(session.user.id);
+    if(prof) { window.myUsername = prof.username; window.myRole = prof.role; }
+    
+    window.initRealtimeMessages();
+    await window.loadMessages();
+    if (typeof window.refreshSidebar === "function") window.refreshSidebar();
+  }
+  
+  document.addEventListener("DOMContentLoaded", initApp);
+  </script>
 </Layout>
 
 <style is:global>
-/* --- 🎨 THEME VARIABLES --- */
+/* --- Tetap gunakan style global lu yang tadi --- */
 :root {
   --bg-chat-solid: #e5ddd5;
   --bg-sidebar: #ffffff;
@@ -77,10 +206,9 @@ import ChatModals from '../components/chat/ChatModals.astro';
   --border-color: #313d45;
 }
 
-/* --- 🛠️ LAYOUT DASAR ANTI-NGILANG DI ANDROID --- */
 html, body {
   margin: 0; padding: 0; 
-  height: 100vh; height: 100dvh; /* Pake dvh biar pas ukuran layar HP, JANGAN pake fill-available */
+  height: 100vh; height: 100dvh; 
   font-family: "Poppins", sans-serif;
   background-color: var(--bg-chat-solid) !important;
   color: var(--text-main);
@@ -89,8 +217,7 @@ html, body {
 
 .telegram-chat {
   display: flex; flex-direction: column; 
-  height: 100%; /* Turunan langsung dari html/body, pasti aman */
-  width: 100%; overflow: hidden; 
+  height: 100%; width: 100%; overflow: hidden; 
   background-color: var(--bg-chat-solid) !important;
   background-image: url("/asets/png/chat.png");
   background-blend-mode: overlay; background-size: 400px;
@@ -99,172 +226,43 @@ html, body {
 
 :root.dark .telegram-chat {
   background-image: linear-gradient(rgba(11,20,26,0.95), rgba(11,20,26,0.95)), url("/asets/png/chat.png") !important;
-  background-blend-mode: normal;
 }
 
 .chat-header { flex-shrink: 0; position: relative; z-index: 1000; }
 .chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
 
-/* ========================================================= */
-/* 🔥 BUG FIX 1: INPUT TEMBUS STIKER 🔥                      */
-/* ========================================================= */
 .chat-input-wrapper { 
-  flex-shrink: 0; 
-  position: relative; 
-  z-index: 2000; 
+  flex-shrink: 0; position: relative; z-index: 2000; 
   background-color: var(--bg-input-bar) !important; 
-  /* Kunci area bawah layar HP (Poni/Nav Bar) dengan warna solid */
   padding-bottom: env(safe-area-inset-bottom, 0px); 
 }
 
-.chat-input-container-main, #sticker-menu {
-  background-color: var(--bg-input-bar) !important;
-}
-
-/* ========================================================= */
-/* 🔥 BUG FIX 2: SIDEBAR MASIH PUTIH DI DARK MODE 🔥         */
-/* ========================================================= */
-:root.dark .sidebar,
-:root.dark #sidebar,
-:root.dark .sidebar-section,
-:root.dark .sidebar-footer,
-:root.dark #private-chat-list,
-:root.dark .sidebar div[style*="background: #fff"],
-:root.dark .sidebar div[style*="background: white"],
-:root.dark .sidebar div[style*="background:#fff"],
-:root.dark .sidebar div[style*="background:white"] {
-  background: var(--bg-sidebar) !important;
-  background-color: var(--bg-sidebar) !important;
-  color: var(--text-main) !important;
-  border-color: var(--border-color) !important;
-}
-
-/* ========================================================= */
-/* 🔥 BUG FIX 3: MODAL NELPON (CALL UI) GAK MUNCUL 🔥        */
-/* ========================================================= */
-#call-overlay, 
-#incoming-call-overlay,
-.modal-overlay,
-.delete-overlay,
-.custom-modal-overlay {
-  z-index: 9999999 !important;
-}
-
-/* ========================================================= */
-/* 🔥 BUG FIX 4: BUBBLE CHAT RAPI (TEKS & NAMA GAK NUMPUK) 🔥*/
-/* ========================================================= */
 .chat-message {
-  display: flex;
-  align-items: flex-start; 
-  gap: 8px; 
-  width: fit-content;
-  max-width: 85%; 
-  padding: 8px 10px; 
-  border-radius: 15px;
-  position: relative;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-  margin-bottom: 2px;
+  display: flex; align-items: flex-start; gap: 8px; 
+  width: fit-content; max-width: 85%; padding: 8px 10px; 
+  border-radius: 15px; position: relative;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15); margin-bottom: 2px;
 }
 
-.chat-message.self { 
-  align-self: flex-end; 
-  flex-direction: row-reverse; 
-  background: var(--bg-bubble-self) !important;
-  border-bottom-right-radius: 4px;
-}
+.chat-message.self { align-self: flex-end; flex-direction: row-reverse; background: var(--bg-bubble-self) !important; border-bottom-right-radius: 4px; }
+.chat-message.other { align-self: flex-start; flex-direction: row; background: var(--bg-bubble-other) !important; border-bottom-left-radius: 4px; }
 
-.chat-message.other { 
-  align-self: flex-start; 
-  flex-direction: row; 
-  background: var(--bg-bubble-other) !important;
-  border-bottom-left-radius: 4px;
-}
-
-.chat-message .avatar {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  flex-shrink: 0; 
-  object-fit: cover;
-  margin: 0 !important;
-  margin-top: 2px !important; 
-  display: block !important;
-}
-
-/* Paksa Teks dan Nama berbaris ke bawah (Column) biar gak numpuk */
-.chat-message > div:not(.avatar), .chat-message .content {
-  display: flex;
-  flex-direction: column;
-  min-width: 0; 
-  background: transparent !important; 
-  box-shadow: none !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-}
-
-.chat-message .username { 
-  font-weight: 700; 
-  font-size: 12px; 
-  margin-bottom: 4px; 
-  display: block;
-}
-/* Warna Nama ngikutin pengirimnya */
-.chat-message.self .username { color: #00a884; align-self: flex-end; }
-.chat-message.other .username { color: var(--bg-header); align-self: flex-start; }
-:root.dark .chat-message.other .username { color: #00a884; }
-
+.chat-message .avatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; object-fit: cover; }
+.chat-message .username { font-weight: 700; font-size: 12px; margin-bottom: 4px; display: block; }
+.chat-message.self .username { color: #00a884; }
 .chat-message .text { color: var(--text-msg); line-height: 1.4; word-break: break-word; font-size: 14px; }
 
-/* Jam & Tanda Centang */
-.message-info {
-  display: flex; justify-content: flex-end; align-items: center;
-  gap: 4px; margin-top: 4px; font-size: 10px; color: var(--text-muted);
-  align-self: flex-end; /* Paksa jam selalu di pojok kanan bawah */
-}
-.status-icon.read { color: #53bdeb; }
+.message-info { display: flex; justify-content: flex-end; font-size: 10px; color: var(--text-muted); margin-top: 4px; }
 
-/* Fix Gambar & Stiker di Dalam Chat */
-.chat-message .text img {
-  width: 100% !important; max-width: 220px !important; height: auto !important;
-  border-radius: 8px; margin: 5px 0; display: block;
-}
-.chat-message .text img[src*="sticker"] { max-width: 120px !important; }
-
-/* --- 💀 ADAPTIVE SKELETON LOADING --- */
-.chat-loading-screen { display: flex; flex-direction: column; gap: 20px; padding: 20px 15px; animation: fadeInChatLoading 0.25s ease; }
-.skeleton-msg { display: flex; align-items: flex-start; gap: 8px; max-width: 80%; padding: 10px; border-radius: 15px; }
-.skeleton-msg.left { align-self: flex-start; background: var(--bg-bubble-other); border-bottom-left-radius: 4px; }
-.skeleton-msg.right { align-self: flex-end; flex-direction: row-reverse; background: var(--bg-bubble-self); border-bottom-right-radius: 4px;}
-.skeleton-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--border-color); flex-shrink: 0; opacity: 0.6; }
-.skeleton-bubble { display: flex; flex-direction: column; gap: 8px; flex: 1; }
-.shimmer { position: relative; overflow: hidden; background-color: rgba(0,0,0,0.05) !important; }
-:root.dark .shimmer { background-color: rgba(255,255,255,0.05) !important; }
-.shimmer::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmerMove 1.5s infinite; transform: translateX(-100%); }
-.skeleton-line { height: 10px; border-radius: 5px; }
-.w1 { width: 140px; } .w2 { width: 100px; } .w3 { width: 80px; } 
-
-/* Typing Bubble */
-.typing-bubble { display: flex; gap: 4px; padding: 12px 15px; align-items: center; width: fit-content; }
-.typing-bubble span { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; opacity: 0.4; animation: typingBounce 1.4s infinite; }
-.typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
-.typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
-.loading-chat-hint { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px; font-style: italic; }
-
-/* Sidebar UI Fix */
-.sidebar { background: var(--bg-sidebar) !important; border-right: 1px solid var(--border-color); height: 100%; position: fixed; z-index: 2000; }
-.chat-messages::-webkit-scrollbar { width: 5px; }
-.chat-messages::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.3); border-radius: 10px; }
-
-/* Toast Style */
-.toast-msg { background: var(--bg-sidebar); color: var(--text-main); padding: 12px 16px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-left: 4px solid #3a7bd5; font-size: 13px; font-weight: 600; pointer-events: auto; animation: slideDown 0.3s ease; }
-
-/* Animations */
+/* Skeleton */
+.chat-loading-screen { display: flex; flex-direction: column; gap: 20px; padding: 20px 15px; }
+.skeleton-msg { display: flex; align-items: flex-start; gap: 8px; opacity: 0.6; }
+.skeleton-bubble { background: var(--bg-bubble-other); border-radius: 12px; padding: 15px; min-width: 140px; }
+.shimmer { position: relative; overflow: hidden; background: var(--border-color); }
+.shimmer::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmerMove 1.5s infinite; }
 @keyframes shimmerMove { 100% { transform: translateX(100%); } }
-@keyframes typingBounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-5px); } }
-@keyframes fadeInChatLoading { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 480px) {
   .chat-message { max-width: 90%; }
-  .chat-message .text img { max-width: 200px !important; }
 }
 </style>

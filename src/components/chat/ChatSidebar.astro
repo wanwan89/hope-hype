@@ -255,3 +255,54 @@
   /* Hilangkan outline saat input difokuskan browser HP */
   input:focus, button:focus { outline: none; }
 </style>
+<script is:inline>
+  window.refreshSidebar = async function() {
+    const privateChatList = document.getElementById("private-chat-list");
+    if (!privateChatList || !window.currentUser) return;
+    
+    privateChatList.innerHTML = `
+      <div class="sidebar-chat-item" onclick="window.bukaChatGlobal()">
+        <div style="width:40px; height:40px; border-radius:50%; background:#0088cc; display:flex; align-items:center; justify-content:center; margin-right:12px; color:white; font-size:18px;">🌍</div>
+        <div><strong style="color:#0088cc;">Chat Global</strong><br><span style="font-size:11px; color:#888;">Obrolan Umum</span></div>
+      </div>
+    `;
+
+    // Load Grup & History bisa lu kembangin disini pakai supabase select
+  };
+
+  window.bukaChatGlobal = async function() {
+    window.currentChatMode = null; window.activeGroupId = null; window.currentRoomId = "room-1";
+    document.querySelector(".chat-header h3").textContent = "HopeTalk Globe";
+    document.getElementById("chat-messages").innerHTML = "";
+    await window.loadMessages();
+    document.querySelector(".sidebar").classList.remove("open");
+  };
+
+  window.bukaChatPribadi = async function(partnerId, partnerName, partnerShortId = "") {
+    window.currentChatMode = 'private'; window.activeGroupId = null;
+    
+    const btnCall = document.getElementById('btn-start-call'); 
+    if (btnCall) { btnCall.style.display = 'flex'; btnCall.dataset.targetId = partnerId; btnCall.dataset.targetName = partnerName; }
+
+    const ids = [window.currentUser.id, partnerId].sort();
+    window.currentRoomId = `pv_${ids[0]}_${ids[1]}`; 
+    
+    document.querySelector(".chat-header h3").innerHTML = `${window.escapeHtml(partnerName)}`;
+    document.getElementById("chat-messages").innerHTML = "";
+    await window.loadMessages();
+    document.querySelector(".sidebar").classList.remove("open");
+  };
+
+  const btnCariDoiActual = document.getElementById("btn-sidebar-search");
+  if (btnCariDoiActual) {
+    btnCariDoiActual.onclick = async () => {
+      window.showToast("Mencari doi...", "info");
+      document.querySelector(".sidebar").classList.remove("open");
+      
+      setTimeout(async () => {
+        const { data: users } = await window.supabase.from("profiles").select("*").neq("id", window.currentUser.id).limit(1);
+        if (users && users.length > 0 && typeof window.tampilkanDoiCard === "function") window.tampilkanDoiCard(users[0]);
+      }, 3000); 
+    };
+  }
+</script>
