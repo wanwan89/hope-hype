@@ -1,26 +1,20 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
-// =======================
-// SUPABASE INIT
-// =======================
+// ===== Supabase config =====
 const SUPABASE_URL = "https://hqetnqnvmdxdgfnnluew.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZXRucW52bWR4ZGdmbm5sdWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MzUyODIsImV4cCI6MjA4NzMxMTI4Mn0.Cr9lDBZMqfeONi1dfyFzHpBtawBzZTQLBEWKmPJVAOA";
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-window.supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const supabase = window.supabaseClient;
+// ===== Audio Config =====
+const sendSound = new Audio("asets/sound/send.mp3");
+const receiveSound = new Audio("asets/sound/receive.mp3");
 
-// =======================
-// AUDIO CONFIG
-// =======================
-const sendSound = new Audio("/asets/sound/send.mp3");
-const receiveSound = new Audio("/asets/sound/receive.mp3");
-const ringtoneSound = new Audio("/asets/sound/call.wav"); // Sesuai file lu
-if(ringtoneSound) ringtoneSound.loop = true;
+// 🔥 TAMBAHKAN DUA BARIS INI UNTUK RINGTONE 🔥
+const ringtoneSound = new Audio("asets/sound/call.wav");
+ringtoneSound.loop = true; // Biar nadanya bunyi berulang-ulang
 
-// =======================
-// GLOBAL STATE
-// =======================
+// ===== Global State =====
 let currentRoomId = "room-1";
 let currentReplyId = null;
 let currentUser = null;
@@ -36,20 +30,21 @@ let isFirstMessageLoad = true;
 let totalOnlineUsers = 0; 
 let isSidebarLoading = false; 
 let selectedGroupFile = null;
-let callRoom = null; 
+let callRoom; // Ini buat nyimpen instance room LiveKit pas telponan
 
-// =======================
-// DOM ELEMENTS
-// =======================
+// ===== DOM =====
 const messagesEl = document.getElementById("chat-messages");
-const chatInput = document.getElementById("chat-input");
-const btnSend = document.getElementById("action-btn");
+const inputEl = document.getElementById("chat-input");
+const Btn = document.getElementById("send-btn");
 const membersEl = document.getElementById("chat-members");
+const typingEl = document.getElementById("typing-indicator");
 
-const sidebar = document.getElementById("sidebar");
+const sidebar = document.querySelector(".sidebar");
+const overlay = document.querySelector(".sidebar-overlay");
+const hamburger = document.querySelector(".hamburger-btn");
+
+const menuBtn = document.getElementById("menu-btn");
 const sidebarOverlay = document.getElementById("sidebar-overlay");
-const hamburger = document.getElementById("menu-btn");
-
 const inputSearchId = document.getElementById("input-search-id");
 const btnSearchId = document.getElementById("btn-search-id");
 const sideUsername = document.getElementById("side-username");
@@ -62,9 +57,7 @@ const stickerList = document.getElementById("sticker-list");
 const searchInput = document.getElementById("sticker-search-input");
 const searchBtn = document.getElementById("sticker-search-btn");
 
-// =======================
-// CACHE SYSTEM
-// =======================
+// MEMORI INTERNAL BIAR GAK TANYA DATABASE TERUS
 const profileCache = new Map();
 
 async function getCachedProfile(userId) {
@@ -76,13 +69,15 @@ async function getCachedProfile(userId) {
   const cached = localStorage.getItem(localKey);
   const cacheTime = localStorage.getItem(cacheTimeKey);
   
+  // Kalau ada cache DAN umurnya belum lewat 1 jam (3600000 ms)
   if (cached && cacheTime && (Date.now() - parseInt(cacheTime) < 3600000)) {
     const data = JSON.parse(cached);
     profileCache.set(userId, data); 
     return data;
   }
 
-  const { data } = await supabase
+  console.log("Minta data BARU ke DB untuk user:", userId);
+  const { data, error } = await supabase
     .from('profiles')
     .select('username, avatar_url, role, short_id, gender')
     .eq('id', userId)
@@ -90,21 +85,20 @@ async function getCachedProfile(userId) {
 
   if (data) {
     localStorage.setItem(localKey, JSON.stringify(data));
-    localStorage.setItem(cacheTimeKey, Date.now().toString());
+    localStorage.setItem(cacheTimeKey, Date.now().toString()); // Simpan waktu jam berapa data diambil
     profileCache.set(userId, data);
   }
   return data;
 }
 
+// ===== [FIX EGRESS] DEBOUNCE UNTUK SIDEBAR =====
 let chatHistoryDebounce;
 function triggerLoadChatHistory() {
   clearTimeout(chatHistoryDebounce);
   chatHistoryDebounce = setTimeout(() => refreshSidebar(), 1500); 
 }
 
-// =======================
-// HELPERS & UI
-// =======================
+// ===== Helpers =====
 function scrollToBottom() {
   if (messagesEl) {
     messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: "smooth" });
@@ -113,11 +107,20 @@ function scrollToBottom() {
 
 function closeSidebar() {
   if (sidebar) sidebar.classList.remove("open");
+  if (overlay) overlay.style.display = "none";
   if (sidebarOverlay) sidebarOverlay.style.display = "none";
 }
 
+function openSidebar() {
+  if (sidebar) sidebar.classList.add("open");
+  if (overlay) overlay.style.display = "block";
+}
+
 function escapeHtml(str = "") {
-  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function formatTime(dateString) {
@@ -125,35 +128,75 @@ function formatTime(dateString) {
   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
 }
 
-function getPartnerIdFromRoom(roomId) {
-  if (!roomId.startsWith("pv_")) return null;
-  return roomId.replace("pv_", "").split("_").find((id) => id !== currentUser?.id) || null;
-}
-
-function showToast(message, type = "info") {
-  let container = document.getElementById("toast-container");
-  if (!container) return alert(message);
-
-  const toast = document.createElement("div");
-  toast.className = `toast-msg`;
-  toast.innerHTML = message;
-
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
-
+// ==========================================
+// [FIX NOTIF BYPASS] FUNGSI PEMICU PUSH NOTIF
+// ==========================================
 function triggerPushNotif(teksPesan) {
   const partnerId = getPartnerIdFromRoom(currentRoomId);
   if (!partnerId) return; 
 
   fetch("https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/send-chat-notif", {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-    body: JSON.stringify({ record: { sender_id: currentUser.id, receiver_id: partnerId, content: teksPesan } })
-  }).catch(err => console.error("Gagal kirim sinyal notif:", err));
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}` 
+    },
+    body: JSON.stringify({
+      record: {
+        sender_id: currentUser.id,
+        receiver_id: partnerId,
+        content: teksPesan
+      }
+    })
+  })
+  .then(res => res.text()) 
+  .then(text => console.log("JAWABAN ASLI SERVER FIREBASE:", text))
+  .catch(err => console.error("Gagal kirim sinyal notif:", err));
+}
+
+function showToast(message, type = "warning") {
+  let container = document.getElementById("toast");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toast";
+    document.body.appendChild(container);
+  }
+
+  // Tentukan ikon berdasarkan tipe
+  let icon = "!";
+  let title = "Pemberitahuan";
+  
+  if (type === "success") { icon = "✓"; title = "Berhasil"; }
+  else if (type === "error") { icon = "✕"; title = "Gagal"; }
+  else if (type === "info") { icon = "i"; title = "Info"; }
+
+  const toast = document.createElement("div");
+  toast.className = "toast-card";
+  toast.innerHTML = `
+    <div class="toast-icon-wrap ${type}">
+      <span class="toast-icon">${icon}</span>
+    </div>
+    <div class="toast-content">
+      <span class="toast-title">${title}</span>
+      <span class="toast-subtitle">${message}</span>
+    </div>
+    <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+  `;
+
+  container.appendChild(toast);
+  
+  // Kasih jeda sedikit biar animasi transisinya jalan
+  requestAnimationFrame(() => { 
+    requestAnimationFrame(() => {
+      toast.classList.add("show"); 
+    });
+  });
+
+  // Hapus otomatis setelah 3 detik
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300); // Tunggu animasi selesai baru dihapus dari DOM
+  }, 3000);
 }
 
 function showChatLoading() {
@@ -170,10 +213,10 @@ function showChatLoading() {
 
 function getStatusIcon(status) {
   switch (status) {
-    case "sending": return `<span class="status-icon" style="font-size:10px; opacity:0.6;">...</span>`;
-    case "sent": return `<span class="status-icon" style="opacity:0.6;">✓</span>`;
-    case "delivered": return `<span class="status-icon" style="opacity:0.6;">✓✓</span>`;
-    case "read": return `<span class="status-icon read" style="color:#53bdeb;">✓✓</span>`;
+    case "sending": return `<span class="status-icon sending"><span class="sending-dot">.</span><span class="sending-dot">.</span><span class="sending-dot">.</span></span>`;
+    case "sent": return `<span class="status-icon sent" title="Terkirim"><svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M3 8.5L6.2 11.5L13 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+    case "delivered": return `<span class="status-icon delivered" title="Terkirim"><svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M1.8 8.5L5 11.5L11.8 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.8 8.5L9 11.5L15 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+    case "read": return `<span class="status-icon read" title="Dibaca"><svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M1.8 8.5L5 11.5L11.8 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.8 8.5L9 11.5L15 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
     default: return "";
   }
 }
@@ -181,42 +224,74 @@ function getStatusIcon(status) {
 function getBadge(role) {
   if (!role) return "";
   role = role.toLowerCase().trim();
-  if (role === "admin") return `<span class="badge" style="background:#ff4757; color:white; font-size:8px; padding:2px 4px; border-radius:3px; margin-left:4px; font-weight:bold;">🛡 Admin</span>`;
+  if (role === "admin") return `<span class="badge" style="background:#ff4757; font-size:7px; padding:0 4px; border-radius:3px; margin-left:2px; font-weight:600;">🛡 Admin</span>`;
   if (role === "verified") return `<span class="verified-icon" style="margin-left:4px; display:inline-flex; align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1DA1F2"/><path d="M7 12.5l3 3 7-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
   const crownBadges = { crown1: "/asets/png/crown1.png", crown2: "/asets/png/crown2.png", crown3: "/asets/png/crown3.png" };
-  if (crownBadges[role]) return `<img src="${crownBadges[role]}" style="width:14px;height:14px;margin-left:4px;vertical-align:middle;object-fit:contain;display:inline-block;" onerror="this.style.display='none';">`;
+  if (crownBadges[role]) return `<img src="${crownBadges[role]}" alt="${role}" style="width:16px;height:16px;margin-left:4px;vertical-align:middle;object-fit:contain;display:inline-block;" onerror="this.style.display='none';">`;
   return "";
 }
 
-// =======================
-// AUTHENTICATION
-// =======================
+function getPartnerIdFromRoom(roomId) {
+  if (!roomId.startsWith("pv_")) return null;
+  return roomId.replace("pv_", "").split("_").find((id) => id !== currentUser?.id) || null;
+}
+
+// ===== Global window funcs =====
+window.cancelReply = function () {
+  currentReplyId = null;
+  const preview = document.getElementById("reply-preview-box");
+  if (inputEl) { inputEl.dataset.replyTo = ""; inputEl.placeholder = "Tulis pesan..."; }
+  if (preview) { preview.style.display = "none"; preview.innerHTML = ""; }
+};
+
+window.closeBioModal = () => {
+  const modal = document.getElementById("bio-modal");
+  if (modal) modal.style.display = "none";
+};
+
+window.copyMyID = (id) => {
+  navigator.clipboard.writeText(id).then(() => {
+      showToast("ID berhasil disalin: #" + id);
+      const idEl = document.getElementById("my-unique-id");
+      if (idEl) { idEl.style.color = "#00d2ff"; setTimeout(() => (idEl.style.color = ""), 500); }
+      if (navigator.vibrate) navigator.vibrate(50);
+    }).catch(() => showToast("Gagal menyalin ID"));
+};
+
+window.scrollToMessage = function (id) {
+  const el = document.getElementById(`msg-${id}`);
+  if (!el) { showToast("Pesan asli sudah terlalu lama atau telah dihapus."); return; }
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  el.style.background = "#fff3b0";
+  setTimeout(() => { el.style.background = el.classList.contains("self") ? "rgba(220,248,198,0.9)" : "rgba(255,255,255,0.9)"; }, 1000);
+};
+
+window.tutupDoiCard = function () {
+  const modal = document.getElementById("doi-card-modal");
+  if (modal) modal.style.display = "none";
+};
+
+// ===== Auth =====
 async function requireLogin() {
   const { data: { session }, error } = await supabase.auth.getSession();
   if (error || !session || !session.user) {
+    showToast("Kamu harus login dulu!");
     window.location.href = "/login";
     return false;
   }
   currentUser = { id: session.user.id };
+
+  const myProfile = await getCachedProfile(session.user.id);
+  myUsername = myProfile?.username || session.user.email || "Guest";
+  myRole = myProfile?.role || "user";
   return true;
 }
 
-async function loadProfile() {
-  const profile = await getCachedProfile(currentUser.id);
-  if (!profile) return;
-  myUsername = profile.username || "User";
-  myRole = profile.role || "user";
-  
-  if (sideUsername) sideUsername.textContent = myUsername;
-  if (sideAvatar) sideAvatar.src = profile.avatar_url || "/asets/png/profile.webp";
-  if (myUniqueId) myUniqueId.textContent = "#" + (profile.short_id || "----");
-}
-
-// =======================
-// PRESENCE & STATUS
-// =======================
+// ===== [FULL FIX EGRESS] Presence / Typing =====
 async function initPresence() {
   if (!currentUser) return;
+
+  // 🔥 RESET STATUS TYPING SAAT PINDAH ROOM 🔥
   clearTimeout(typingTimeout);
   isCurrentlyTyping = false;
   const typingHeader = document.getElementById("typing-header");
@@ -229,16 +304,25 @@ async function initPresence() {
 
   presenceChannel.on("presence", { event: "sync" }, () => {
     const state = presenceChannel.presenceState();
-    if (!typingHeader || !statusHeader) return;
+    const currentTypingHeader = document.getElementById("typing-header");
+    const currentStatusHeader = document.getElementById("status-header");
+
+    if (!currentTypingHeader || !currentStatusHeader) return;
     const typingUsers = [];
+
     for (const userId in state) {
-      if (userId !== currentUser.id && state[userId].some((p) => p.isTyping)) typingUsers.push(state[userId][0].username);
+      if (userId !== currentUser.id && state[userId].some((p) => p.isTyping)) {
+        typingUsers.push(state[userId][0].username);
+      }
     }
+
     if (typingUsers.length > 0) {
-      statusHeader.style.display = "none"; typingHeader.style.display = "inline-block";
-      typingHeader.textContent = `${typingUsers[0]} sedang mengetik...`;
+      currentStatusHeader.style.display = "none";
+      currentTypingHeader.style.display = "inline-block"; // Perbaikan UI
+      currentTypingHeader.textContent = `${typingUsers[0]} sedang mengetik...`;
     } else {
-      statusHeader.style.display = "inline-block"; typingHeader.style.display = "none";
+      currentStatusHeader.style.display = "inline-block"; // Perbaikan UI
+      currentTypingHeader.style.display = "none";
     }
   });
 
@@ -246,17 +330,20 @@ async function initPresence() {
     if (status === "SUBSCRIBED") await presenceChannel.track({ isTyping: false, username: myUsername });
   });
 
-  if (chatInput) {
-    chatInput.removeEventListener("input", handleTypingInput);
-    chatInput.addEventListener("input", handleTypingInput);
+  if (inputEl) {
+    inputEl.removeEventListener("input", handleTypingInput);
+    inputEl.addEventListener("input", handleTypingInput);
   }
 
   if (!globalPresenceChannel) {
     globalPresenceChannel = supabase.channel(`global-online-users`, { config: { presence: { key: currentUser.id } } });
+    
     globalPresenceChannel.on("presence", { event: "sync" }, () => {
-      totalOnlineUsers = Object.keys(globalPresenceChannel.presenceState()).length;
+      const state = globalPresenceChannel.presenceState();
+      totalOnlineUsers = Object.keys(state).length;
       updateHeaderStatus();
     });
+
     globalPresenceChannel.subscribe(async (status) => {
       if (status === "SUBSCRIBED") await globalPresenceChannel.track({ online: true, last_seen: new Date().toISOString() });
     });
@@ -265,7 +352,10 @@ async function initPresence() {
 
 async function handleTypingInput() {
   if (!presenceChannel) return;
-  if (!isCurrentlyTyping) { isCurrentlyTyping = true; await presenceChannel.track({ isTyping: true, username: myUsername }); }
+  if (!isCurrentlyTyping) {
+    isCurrentlyTyping = true;
+    await presenceChannel.track({ isTyping: true, username: myUsername });
+  }
   clearTimeout(typingTimeout);
   typingTimeout = setTimeout(async () => {
     isCurrentlyTyping = false;
@@ -276,130 +366,148 @@ async function handleTypingInput() {
 function updateHeaderStatus() {
   const headerStatusEl = document.getElementById("status-header");
   if (!headerStatusEl || !currentUser) return;
+
   if (membersEl) membersEl.innerHTML = `<span class="online-dot"></span> ${totalOnlineUsers} user online`;
 
   if (currentRoomId === "room-1") {
-    if (totalOnlineUsers <= 1) headerStatusEl.innerHTML = `<span style="opacity:0.8;">Hanya kamu yang online</span>`; 
-    else headerStatusEl.innerHTML = `${totalOnlineUsers} users online`; 
+    if (totalOnlineUsers <= 1) { 
+      headerStatusEl.innerHTML = `<span style="opacity:0.8;">Hanya kamu yang online</span>`; 
+    } else { 
+      headerStatusEl.innerHTML = `<span class="online-dot" style="background:#fff; width:7px; height:7px; display:inline-block; border-radius:50%; margin-right:4px;"></span> ${totalOnlineUsers} users online`; 
+    }
     return;
   }
+
   const partnerId = getPartnerIdFromRoom(currentRoomId);
   if (!partnerId) return;
-  const isOnline = !!(globalPresenceChannel ? globalPresenceChannel.presenceState() : {})[partnerId];
-  headerStatusEl.innerHTML = isOnline ? `Sedang online` : `<span style="opacity:0.8;">Offline</span>`; 
+
+  const state = globalPresenceChannel ? globalPresenceChannel.presenceState() : {};
+  const isOnline = !!state[partnerId];
+
+  if (isOnline) { 
+    headerStatusEl.innerHTML = `<span class="online-dot" style="background:#2ecc71; width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:4px;"></span> Sedang online`; 
+  } else { 
+    headerStatusEl.innerHTML = `<span style="opacity:0.8;">Offline</span>`; 
+  }
 }
 
-// =======================
-// RENDER MESSAGES
-// =======================
+// ===== FULL RENDER MESSAGE DENGAN SYSTEM MESSAGE =====
 function renderMessage(msg) {
   if (!messagesEl) return;
   if (document.getElementById(`msg-${msg.id}`)) return;
 
+  // PESAN SISTEM
   if (msg.is_system) {
     const sysEl = document.createElement("div");
     sysEl.id = `msg-${msg.id}`;
-    sysEl.style = "display: flex; justify-content: center; margin: 12px 0; width: 100%;";
-    sysEl.innerHTML = `<div style="background: rgba(0,0,0,0.06); color: #888; font-size: 11px; padding: 5px 14px; border-radius: 20px;">${escapeHtml(msg.message)}</div>`;
+    sysEl.className = "system-message-container";
+    sysEl.style = "display: flex; justify-content: center; margin: 12px 0; width: 100%; animation: fadeIn 0.3s ease;";
+    sysEl.innerHTML = `
+      <div style="background: rgba(0, 0, 0, 0.06); color: #555; font-size: 11px; padding: 5px 14px; border-radius: 20px; font-weight: 500; border: 1px solid rgba(0,0,0,0.03);">
+        ${escapeHtml(msg.message)}
+      </div>
+    `;
     messagesEl.appendChild(sysEl);
     return; 
   }
 
-  const isMe = msg.user_id === currentUser.id;
+  const msgEl = document.createElement("div");
+  msgEl.id = `msg-${msg.id}`;
+  msgEl.className = `chat-message ${msg.user_id === currentUser.id ? "self" : "other"}`;
+
   const currentUsername = msg.profiles?.username || msg.username || "User";
   const avatarUrl = msg.profiles?.avatar_url || msg.avatar || "/asets/png/profile.webp";
   const currentRole = msg.profiles?.role || msg.role || "user";
-  
+  const statusIcon = msg.user_id === currentUser.id ? getStatusIcon(msg.status || "sent") : "";
+
+  let replyTextContent = msg.reply_to_msg?.message || "";
+  if (!replyTextContent && msg.reply_to_msg?.sticker_url) replyTextContent = "🖼 Stiker";
+  if (!replyTextContent && msg.reply_to_msg?.audio_url) replyTextContent = "🎤 Voice Note";
+
+  const isMe = msg.user_id === currentUser.id;
+  const replyBorderColor = isMe ? '#25D366' : '#3a7bd5'; 
+  const replyBgColor = isMe ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.03)';
+
+  // DESAIN REPLY DI DALAM BUBBLE
+  const replyHtml = msg.reply_to_msg
+    ? `<div class="reply-preview-in-chat" onclick="window.scrollToMessage('${msg.reply_to_msg.id}')" style="cursor:pointer; background:${replyBgColor}; border-left:4px solid ${replyBorderColor}; padding:6px 10px; border-radius:6px; margin-bottom:8px;">
+        <div style="font-size:12px; color:${replyBorderColor}; font-weight:bold; margin-bottom:2px;">${escapeHtml(msg.reply_to_msg.username)}</div>
+        <div style="font-size:13px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(replyTextContent)}</div>
+      </div>`
+    : "";
+
   let contentHtml = "";
   if (msg.sticker_url) {
-    contentHtml = `<img src="${msg.sticker_url}">`;
+    contentHtml = `<img src="${msg.sticker_url}" style="width:100px;height:100px;border-radius:12px;object-fit:cover;">`;
   } else if (msg.audio_url) {
+    // 🔥 WADAH GELOMBANG SUARA ASLI 🔥
     contentHtml = `
-      <div class="vn-custom-player" style="min-width: 200px; display: flex; align-items: center; padding: 5px 0;">
+      <div class="vn-custom-player" style="min-width: 220px; display: flex; align-items: center; padding: 5px 0;">
         <button class="vn-play-btn" onclick="toggleVN('${msg.id}')" style="background: #00d2ff; border: none; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M8 5v14l11-7z"/></svg>
         </button>
-        <div id="waveform-${msg.id}" style="flex-grow: 1; height: 30px; margin: 0 10px;"></div>
-        <div class="vn-time" id="vn-time-${msg.id}" style="font-size: 10px; color: #666;">--:--</div>
+        <div id="waveform-${msg.id}" style="flex-grow: 1; height: 30px; margin: 0 12px;"></div>
+        <div class="vn-time" id="vn-time-${msg.id}" style="font-size: 10px; color: #666; min-width: 35px;">--:--</div>
       </div>`;
   } else {
     contentHtml = escapeHtml(msg.message || "");
   }
 
-  const statusIcon = isMe ? getStatusIcon(msg.status || "sent") : "";
-  const time = formatTime(msg.created_at);
-
-  const msgEl = document.createElement("div");
-  msgEl.id = `msg-${msg.id}`;
-  msgEl.className = `chat-message ${isMe ? "self" : "other"}`;
-
-  let replyHtml = "";
-  if (msg.reply_to_msg) {
-    let replyTextContent = msg.reply_to_msg.message || "";
-    if (!replyTextContent && msg.reply_to_msg.sticker_url) replyTextContent = "🖼 Stiker";
-    if (!replyTextContent && msg.reply_to_msg.audio_url) replyTextContent = "🎤 Voice Note";
-    const replyBorderColor = isMe ? '#25D366' : '#3a7bd5'; 
-    const replyBgColor = isMe ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.03)';
-    replyHtml = `
-      <div class="reply-preview-in-chat" onclick="window.scrollToMessage('${msg.reply_to_msg.id}')" style="cursor:pointer; background:${replyBgColor}; border-left:4px solid ${replyBorderColor}; padding:6px 10px; border-radius:6px; margin-bottom:8px;">
-        <div style="font-size:12px; color:${replyBorderColor}; font-weight:bold; margin-bottom:2px;">${escapeHtml(msg.reply_to_msg.username)}</div>
-        <div style="font-size:13px; color:#555; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(replyTextContent)}</div>
-      </div>`;
-  }
-
   const reactions = msg.reactions || {};
   const reactionIcons = Object.values(reactions); 
   const uniqueIcons = [...new Set(reactionIcons)].slice(0, 3);
+  
   const reactionsHtml = uniqueIcons.length > 0 ? `
-    <div class="message-reactions" onclick="event.stopPropagation(); window.openReactionMenu('${msg.id}', event)" style="background:var(--bg-input-field); padding:2px 6px; border-radius:12px; position:absolute; bottom:-10px; ${isMe ? 'right:20px;' : 'left:20px;'} font-size:12px; border:1px solid var(--border-color); cursor:pointer; z-index:10;">
-      ${uniqueIcons.join("")} ${reactionIcons.length > 1 ? `<span style="font-size:9px; color:#999; margin-left:2px;">${reactionIcons.length}</span>` : ""}
+    <div class="message-reactions" onclick="event.stopPropagation(); window.openReactionMenu('${msg.id}', event)">
+      ${uniqueIcons.join("")} 
+      ${reactionIcons.length > 1 ? `<span style="font-size:9px; color:#999; margin-left:2px;">${reactionIcons.length}</span>` : ""}
     </div>` : "";
 
-  // STRUKTUR HTML INI WAJIB SINKRON SAMA CSS BUBBLE YANG BARU
   msgEl.innerHTML = `
     <img class="avatar" src="${avatarUrl}" onerror="this.src='/asets/png/profile.webp'">
-    <div class="content" onclick="window.openReactionMenu('${msg.id}', event)" ${isMe ? `oncontextmenu="window.showDeleteMenu('${msg.id}'); return false;"` : ""}>
-      <span class="username">${escapeHtml(currentUsername)}${getBadge(currentRole)}</span>
+    <div class="content" onclick="window.openReactionMenu('${msg.id}', event)" ${isMe ? `oncontextmenu="window.showDeleteMenu('${msg.id}'); return false;"` : ""} style="position: relative; min-width: 80px; transition: transform 0.2s ease; margin-bottom: ${uniqueIcons.length > 0 ? '15px' : '5px'};">
+      <div class="username">${escapeHtml(currentUsername)}${getBadge(currentRole)}</div>
       ${replyHtml}
-      <div class="text" style="${msg.message === "Pesan ini telah dihapus" ? "font-style:italic;color:#aaa;" : ""}">${contentHtml}</div>
+      <div class="text" style="${msg.message === "Pesan ini telah dihapus" ? "font-style:italic;color:#aaa;" : ""} padding-bottom: 12px;">${contentHtml}</div>
       ${reactionsHtml}
-      <div class="message-info">
-        <span class="timestamp">${time}</span>
+      <div class="message-info" style="position: absolute; bottom: 4px; right: 8px; display:flex; align-items:center; gap:2px;">
+        <span class="timestamp" style="font-size:9px; opacity:0.5;">${formatTime(msg.created_at)}</span>
         ${statusIcon}
       </div>
-    </div>
-  `;
+    </div>`;
 
-  // SWIPE TO REPLY
+  // --- LOGIKA SWIPE TO REPLY (SAMA SEPERTI SEBELUMNYA) ---
   let startX = 0; let currentX = 0; let swiping = false;
   msgEl.addEventListener("touchstart", (e) => { startX = e.touches[0].clientX; currentX = startX; swiping = true; msgEl.style.transition = "none"; }, { passive: true });
   msgEl.addEventListener("touchmove", (e) => {
     if (!swiping) return;
     currentX = e.touches[0].clientX; let diff = currentX - startX;
-    if (isMe) { if (diff < 0) { if (diff < -70) diff = -70; msgEl.style.transform = `translateX(${diff}px)`; } } 
+    if (msgEl.classList.contains("self")) { if (diff < 0) { if (diff < -70) diff = -70; msgEl.style.transform = `translateX(${diff}px)`; } } 
     else { if (diff > 0) { if (diff > 70) diff = 70; msgEl.style.transform = `translateX(${diff}px)`; } }
   }, { passive: true });
   msgEl.addEventListener("touchend", () => {
     let diff = currentX - startX;
     msgEl.style.transition = "transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)"; msgEl.style.transform = "translateX(0)";
-    if ((isMe && diff < -50) || (!isMe && diff > 50)) {
+    const isSelf = msgEl.classList.contains("self");
+    if ((isSelf && diff < -50) || (!isSelf && diff > 50)) {
       currentReplyId = msg.id;
-      if (chatInput) chatInput.dataset.replyTo = msg.id;
+      if (inputEl) inputEl.dataset.replyTo = msg.id;
       const replyBox = document.getElementById("reply-preview-box");
       if (replyBox) {
         let previewText = msg.message;
         if (msg.sticker_url) previewText = "Stiker";
         if (msg.audio_url) previewText = "Voice Note";
         replyBox.style.display = "flex";
-        replyBox.innerHTML = `
-          <div class="reply-content-wrapper">
-            <div class="reply-title">${escapeHtml(currentUsername)}</div>
-            <div class="reply-text-preview">${escapeHtml(previewText || "")}</div>
-          </div>
-          <div class="close-reply-btn" onclick="window.cancelReply()">&times;</div>
-        `;
+replyBox.innerHTML = `
+  <div class="reply-content-wrapper">
+    <div class="reply-title">${escapeHtml(currentUsername)}</div>
+    <div class="reply-text-preview">${escapeHtml(previewText || "")}</div>
+  </div>
+  <div class="close-reply-btn" onclick="window.cancelReply()">&times;</div>
+`;
+
       }
-      if (chatInput) chatInput.focus();
+      if (inputEl) inputEl.focus();
       if (navigator.vibrate) navigator.vibrate(30);
     }
     swiping = false; currentX = 0;
@@ -407,24 +515,28 @@ function renderMessage(msg) {
 
   messagesEl.appendChild(msgEl);
 
-  // INIT WAVESURFER JIKA AUDIO
+  // 🔥 RENDER GELOMBANG SUARA DENGAN WAVESURFER 🔥
   if (msg.audio_url && !window.waveSurfers[msg.id]) {
     setTimeout(() => {
       const ws = WaveSurfer.create({
         container: `#waveform-${msg.id}`,
         waveColor: isMe ? '#94db9c' : '#A0B2C6',
         progressColor: isMe ? '#128C7E' : '#3a7bd5',
-        barWidth: 2, barGap: 3, barRadius: 2, height: 25,
+        barWidth: 2,
+        barGap: 3,
+        barRadius: 2,
+        height: 25,
         url: msg.audio_url,
       });
+
       window.waveSurfers[msg.id] = ws;
       const timeEl = document.getElementById(`vn-time-${msg.id}`);
-      const btnPlay = document.querySelector(`#msg-${msg.id} .vn-play-btn`);
+      const btnEl = document.querySelector(`#msg-${msg.id} .vn-play-btn`);
 
       ws.on('ready', () => { if(timeEl) timeEl.innerText = formatVNTime(ws.getDuration()); });
       ws.on('audioprocess', () => { if(timeEl) timeEl.innerText = formatVNTime(ws.getCurrentTime()); });
       ws.on('finish', () => {
-        if(btnPlay) btnPlay.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M8 5v14l11-7z"/></svg>`;
+        if(btnEl) btnEl.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M8 5v14l11-7z"/></svg>`;
         if(timeEl) timeEl.innerText = formatVNTime(ws.getDuration());
       });
     }, 100);
@@ -442,24 +554,28 @@ function updateMessageStatusUI(messageId, status) {
   timeEl.insertAdjacentHTML("afterend", getStatusIcon(status));
 }
 
-// =======================
-// CHAT LOGIC (DB)
-// =======================
+// ===== Load Messages =====
 async function loadMessages() {
   if (!messagesEl || !currentUser) return;
   if (isFirstMessageLoad) showChatLoading();
 
+  const start = Date.now();
   const waktu24JamLalu = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
   const { data, error } = await supabase
     .from("messages")
     .select(`*, reply_to_msg:reply_to(id, username, message), profiles:profiles!messages_user_id_fkey(username, avatar_url, role)`)
     .eq("room_id", currentRoomId)
-    .gte("created_at", waktu24JamLalu)
+    .gte("created_at", waktu24JamLalu) 
     .order("created_at", { ascending: false }) 
-    .limit(30); 
+    .limit(20); 
+
+  const elapsed = Date.now() - start;
+  const minDelay = 700;
+  if (isFirstMessageLoad && elapsed < minDelay) await new Promise((resolve) => setTimeout(resolve, minDelay - elapsed));
 
   if (error) {
-    messagesEl.innerHTML = `<div style="text-align:center; margin-top:20px; color:#ff4d4f;">⚠️ Gagal memuat pesan</div>`;
+    messagesEl.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:40px 20px; margin-top:20px; color:#ff4d4f;"><div style="font-size:26px;">⚠️</div><div style="font-size:14px; font-weight:600;">Gagal memuat pesan</div></div>`;
     return;
   }
 
@@ -467,21 +583,28 @@ async function loadMessages() {
   isFirstMessageLoad = false;
 
   if (!data || data.length === 0) {
-    messagesEl.innerHTML = `<div style="text-align:center; margin-top:20px; color:#8696a0;">💬 Belum ada pesan</div>`;
+    messagesEl.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:40px 20px; margin-top:20px; color:#8696a0;"><div style="font-size:28px;">💬</div><div style="font-size:14px; font-weight:600;">Belum ada pesan</div></div>`;
     await markRoomAsRead();
     return;
   }
 
-  data.reverse().forEach((msg) => renderMessage(msg));
+  const sortedData = data.reverse();
+  sortedData.forEach((msg) => renderMessage(msg));
+
   setTimeout(scrollToBottom, 100);
   await markRoomAsRead();
 }
 
 async function markRoomAsRead() {
   if (!currentUser) return;
-  await supabase.from("messages").update({ status: "read" }).eq("room_id", currentRoomId).neq("user_id", currentUser.id).in("status", ["sent", "delivered"]);
+  await supabase.from("messages")
+    .update({ status: "read" })
+    .eq("room_id", currentRoomId)
+    .neq("user_id", currentUser.id)
+    .in("status", ["sent", "delivered"]);
 }
 
+// FULL FIX: MULTI-CHANNEL MESSAGE FUNCTION
 async function Message() {
   const text = chatInput?.value.trim();
   if (!text || !currentUser) return;
@@ -493,70 +616,144 @@ async function Message() {
   if (replyTo) {
     const repliedEl = document.getElementById(`msg-${replyTo}`);
     if (repliedEl) {
-      replyData = { id: replyTo, username: repliedEl.querySelector(".username")?.innerText || "User", message: repliedEl.querySelector(".text")?.innerText || "" };
+      replyData = {
+        id: replyTo,
+        username: repliedEl.querySelector(".username")?.innerText || "User",
+        message: repliedEl.querySelector(".text")?.innerText || "",
+      };
     }
   }
 
   const optimisticMsg = {
-    id: tempId, message: text, user_id: currentUser.id, username: myUsername, avatar: sideAvatar?.src, role: myRole, created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending", reply_to_msg: replyData
+    id: tempId,
+    message: text,
+    user_id: currentUser.id,
+    username: myUsername,
+    avatar: sideAvatar?.src || "/asets/png/profile.webp",
+    role: myRole || "user",
+    created_at: new Date().toISOString(),
+    room_id: currentRoomId, 
+    status: "sending", 
+    reply_to_msg: replyData,
   };
 
   renderMessage(optimisticMsg);
   scrollToBottom();
-  chatInput.value = ""; window.cancelReply();
+
+  chatInput.value = ""; 
+  chatInput.style.height = "auto";
+  window.cancelReply();
   if (sendSound) sendSound.play().catch(() => {});
 
   try {
-    const payload = { message: text, user_id: currentUser.id, username: myUsername, room_id: currentRoomId, reply_to: replyTo, status: "sent" };
-    if (window.currentChatMode === 'group' && window.activeGroupId) payload.group_id = window.activeGroupId;
+    const payload = { 
+      message: text, 
+      user_id: currentUser.id, 
+      username: myUsername, 
+      room_id: currentRoomId,
+      reply_to: replyTo, 
+      status: "sent" 
+    };
+
+    if (window.currentChatMode === 'group' && window.activeGroupId) {
+      payload.group_id = window.activeGroupId;
+    }
 
     const { data, error } = await supabase.from("messages").insert([payload]).select().single();
+
     if (error) throw error;
 
     const tempEl = document.getElementById(`msg-${tempId}`);
-    if (tempEl && data) { tempEl.id = `msg-${data.id}`; updateMessageStatusUI(data.id, "sent"); triggerPushNotif(text); }
+    if (tempEl && data) { 
+        tempEl.id = `msg-${data.id}`; 
+        updateMessageStatusUI(data.id, "sent"); 
+        if (typeof triggerPushNotif === "function") triggerPushNotif(text); 
+    }
+
   } catch (err) {
-    showToast("Gagal mengirim pesan", "error");
+    console.error("Gagal kirim:", err);
+    showToast("Gagal mengirim pesan");
+    const failEl = document.getElementById(`msg-${tempId}`);
+    if (failEl) failEl.querySelector(".message-info")?.insertAdjacentHTML("beforeend", `<span style="font-size:10px; color:#ff4d4f; margin-left:4px;">failed</span>`);
   }
 }
 
-if (btnSend) btnSend.onclick = Message;
-if (chatInput) chatInput.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); Message(); } });
+if (Btn) Btn.onclick = Message;
+
+if (inputEl) {
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); Message(); }
+  });
+}
 
 async function sendAudioMessage(url) {
   const tempId = "temp-" + Date.now();
-  renderMessage({ id: tempId, message: "🎤 Voice Note", audio_url: url, user_id: currentUser.id, username: myUsername, avatar: sideAvatar?.src, role: myRole, created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
+  renderMessage({ id: tempId, message: "🎤 Voice Note", audio_url: url, user_id: currentUser.id, username: myUsername, avatar: sideAvatar?.src || "/asets/png/profile.webp", role: myRole || "user", created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
   scrollToBottom();
+
   try {
     const { data, error } = await supabase.from("messages").insert([{ message: "🎤 Voice Note", audio_url: url, user_id: currentUser.id, username: myUsername, room_id: currentRoomId, status: "sent" }]).select().single();
     if (error) throw error;
     const tempEl = document.getElementById(`msg-${tempId}`);
-    if (tempEl && data) { tempEl.id = `msg-${data.id}`; updateMessageStatusUI(data.id, "sent"); triggerPushNotif("🎤 Voice Note"); }
-  } catch (err) { showToast("Gagal mengirim VN ke chat", "error"); }
+    if (tempEl && data) { 
+        tempEl.id = `msg-${data.id}`; 
+        updateMessageStatusUI(data.id, "sent"); 
+        triggerPushNotif("🎤 Voice Note");
+    }
+  } catch (err) { showToast("Gagal mengirim VN ke chat"); }
 }
 
-// =======================
-// REALTIME MESSAGES
-// =======================
+// ===== Realtime Messages =====
 function initRealtimeMessages() {
   if (!currentUser) return;
-  if (messageChannel) { supabase.removeChannel(messageChannel); messageChannel = null; }
+  if (messageChannel) {
+    supabase.removeChannel(messageChannel);
+    messageChannel = null;
+  }
 
   messageChannel = supabase
     .channel(`messages-global-monitor`)
     .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, async (payload) => {
       const newMsg = payload.new;
-      if (newMsg.room_id.startsWith("pv_") || newMsg.room_id.startsWith("group_")) triggerLoadChatHistory();
 
-      if (newMsg.is_system) {
-        if (newMsg.message.includes("📞 Memanggil") && newMsg.user_id !== currentUser.id) { if (typeof window.showIncomingCall === "function") window.showIncomingCall(newMsg); }
-        if (newMsg.message.includes("🚫 Panggilan Ditolak") && newMsg.user_id !== currentUser.id) { if (typeof window.endCall === "function") window.endCall(); showToast("Panggilan ditolak."); }
+      // 1. REFRESH SIDEBAR JIKA ADA PESAN MASUK
+      if (newMsg.room_id.startsWith("pv_") || newMsg.room_id.startsWith("group_")) {
+        triggerLoadChatHistory();
       }
 
+      // ==========================================
+      // 🔥 [LOGIKA BARU] DETEKSI SINYAL TELPON 🔥
+      // ==========================================
+      if (newMsg.is_system) {
+        // A. Deteksi Panggilan Masuk (Untuk Penerima)
+        if (newMsg.message.includes("📞 Memanggil")) {
+          if (newMsg.user_id !== currentUser.id) {
+            if (typeof window.showIncomingCall === "function") {
+              window.showIncomingCall(newMsg);
+            }
+          }
+        }
+
+        // B. Deteksi Panggilan Ditolak (Untuk Penelepon)
+        if (newMsg.message.includes("🚫 Panggilan Ditolak")) {
+          if (newMsg.user_id !== currentUser.id) {
+            if (typeof window.endCall === "function") window.endCall();
+            showToast("Panggilan ditolak oleh lawan bicara.");
+          }
+        }
+      }
+      // ==========================================
+
+      // 2. LOGIKA RENDER PESAN KE UI CHAT
       if (newMsg.room_id === currentRoomId) {
         if (document.getElementById(`msg-${newMsg.id}`)) return;
+
         const senderProfile = await getCachedProfile(newMsg.user_id);
-        newMsg.profiles = { username: senderProfile?.username || "User", avatar_url: senderProfile?.avatar_url || "/asets/png/profile.webp", role: senderProfile?.role || "user" };
+        newMsg.profiles = {
+          username: senderProfile?.username || "User",
+          avatar_url: senderProfile?.avatar_url || "/asets/png/profile.webp",
+          role: senderProfile?.role || "user"
+        };
 
         if (newMsg.user_id === currentUser.id && !newMsg.is_system) {
           const tempEl = document.querySelector(`[id^="msg-temp-"]`);
@@ -565,194 +762,460 @@ function initRealtimeMessages() {
         } else {
           renderMessage(newMsg);
           if (!newMsg.is_system) receiveSound.play().catch(() => {});
-          if (newMsg.status !== "read" && !document.hidden && !newMsg.is_system) await supabase.from("messages").update({ status: "read" }).eq("id", newMsg.id);
+
+          if (newMsg.status !== "read" && !document.hidden && !newMsg.is_system) {
+            await supabase.from("messages").update({ status: "read" }).eq("id", newMsg.id);
+          }
         }
         scrollToBottom();
       }
     })
     .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (payload) => {
-      const updated = payload.new; const old = payload.old;
-      if (updated.status !== old?.status && updated.user_id === currentUser.id) updateMessageStatusUI(updated.id, updated.status || "sent");
+      const updated = payload.new;
+      const old = payload.old;
+
+      // Logika Update Status (Read/Delivered)
+      if (updated.status !== old?.status) {
+        if (updated.user_id === currentUser.id) {
+          updateMessageStatusUI(updated.id, updated.status || "sent");
+        }
+      }
+
       if (updated.room_id !== currentRoomId) return;
+
+      // Logika Hapus Pesan
       if (updated.message === "Pesan ini telah dihapus") {
         const msgEl = document.getElementById(`msg-${updated.id}`);
-        if (msgEl) { const textEl = msgEl.querySelector(".text"); if (textEl) { textEl.innerHTML = "<i>Pesan ini telah dihapus</i>"; textEl.style.color = "#aaa"; textEl.querySelectorAll("img, .vn-custom-player").forEach(m => m.remove()); } }
+        if (msgEl) {
+          const textEl = msgEl.querySelector(".text");
+          if (textEl) {
+            textEl.innerHTML = "<i>Pesan ini telah dihapus</i>";
+            textEl.style.color = "#aaa";
+            textEl.querySelectorAll("img, .vn-custom-player").forEach(m => m.remove());
+          }
+        }
+        return;
+      }
+
+      // Logika Reactions
+      if (updated.reactions) {
+        const msgEl = document.getElementById(`msg-${updated.id}`);
+        if (msgEl) {
+          const contentEl = msgEl.querySelector(".content");
+          const reactions = updated.reactions || {};
+          const reactionIcons = Object.values(reactions);
+          const uniqueIcons = [...new Set(reactionIcons)].slice(0, 3);
+          const reactionsHtml = uniqueIcons.length > 0 ? `${uniqueIcons.join("")} ${reactionIcons.length > 1 ? `<span style="font-size:9px; color:#999; margin-left:2px;">${reactionIcons.length}</span>` : ""}` : "";
+
+          let badgeEl = contentEl.querySelector(".message-reactions");
+          if (reactionsHtml) {
+            if (!badgeEl) {
+              badgeEl = document.createElement("div");
+              badgeEl.className = "message-reactions";
+              contentEl.insertBefore(badgeEl, contentEl.querySelector(".message-info"));
+            }
+            badgeEl.innerHTML = reactionsHtml;
+            contentEl.style.marginBottom = "15px";
+          } else if (badgeEl) {
+            badgeEl.remove();
+            contentEl.style.marginBottom = "5px";
+          }
+        }
       }
     }).subscribe();
 }
 
-// =======================
-// SIDEBAR, GROUPS & PV
-// =======================
+if (hamburger) {
+  hamburger.addEventListener("click", () => {
+    if (!sidebar) return; sidebar.classList.toggle("open");
+    if (overlay) overlay.style.display = sidebar.classList.contains("open") ? "block" : "none";
+  });
+}
+if (overlay) overlay.addEventListener("click", closeSidebar);
+
+// ===== Profile Sidebar =====
+async function loadProfile() {
+  const profile = await getCachedProfile(currentUser.id);
+  if (!profile) return;
+  myUsername = profile.username || myUsername;
+  myRole = profile.role || myRole;
+  if (sideUsername) sideUsername.textContent = profile.username;
+  if (myUniqueId) {
+    myUniqueId.textContent = "#" + (profile.short_id || "N/A");
+    myUniqueId.style.cursor = "pointer";
+    myUniqueId.onclick = () => window.copyMyID(profile.short_id);
+  }
+  if (sideAvatar) sideAvatar.src = profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username)}`;
+}
+
+// ===== Render Global Chat Item =====
 function renderGlobalChatItem(container) {
   const globalBtn = document.createElement("div");
-  globalBtn.className = 'sidebar-chat-item';
-  globalBtn.innerHTML = `<div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg, #0088cc, #00d2ff); display:flex; align-items:center; justify-content:center; margin-right:12px;"><span style="color:white; font-size:18px;">🌍</span></div><div><strong style="color:#0088cc;">Chat Global</strong><br><span style="font-size:11px; color:#888;">Obrolan Umum</span></div>`;
-  globalBtn.onclick = async () => {
-    window.currentChatMode = null; window.activeGroupId = null; currentRoomId = "room-1"; 
-    const btnCall = document.getElementById('btn-start-call'); if (btnCall) btnCall.style.display = 'none';
-    document.querySelector(".chat-header h3").textContent = "HopeTalk Globe";
-    messagesEl.innerHTML = ""; initPresence(); await loadMessages(); closeSidebar();
-  };
+  globalBtn.innerHTML = `
+    <div style="display:flex; align-items:center; padding:12px; border-bottom:2px solid #f0f0f0; cursor:pointer; background:#f9fbff;">
+      <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg, #0088cc, #00d2ff); display:flex; align-items:center; justify-content:center; margin-right:12px;">
+        <span style="color:white; font-size:18px;">🌍</span>
+      </div>
+      <div>
+        <strong style="font-size:14px; color:#0088cc;">Chat Global</strong><br>
+        <span style="font-size:11px; color:#888;">Obrolan Umum</span>
+      </div>
+    </div>`;
+globalBtn.onclick = async () => {
+    window.currentChatMode = null;
+    window.activeGroupId = null;
+    currentRoomId = "room-1"; 
+    
+    if (btnOpenInvite) btnOpenInvite.style.display = 'none';
+    
+    // Sembunyikan tombol telpon
+    const btnCall = document.getElementById('btn-start-call');
+    if (btnCall) btnCall.style.display = 'none';
+    
+    const headerTitle = document.querySelector(".chat-header h3");
+    if (headerTitle) headerTitle.textContent = "HopeTalk Globe";
+    
+    messagesEl.innerHTML = ""; 
+    initPresence(); 
+    await loadMessages(); 
+    closeSidebar();
+};
+
   container.appendChild(globalBtn);
 }
 
-async function loadGroupList() {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data: memberships, error } = await supabase.from('group_members').select(`group_id, groups(id, name, photo_url)`).eq('user_id', user.id);
-    if (error || !memberships) return;
-
-    if(memberships.length > 0) {
-      const label = document.createElement("div");
-      label.innerHTML = `<div class="history-label">GRUP SAYA</div>`;
-      privateChatList.appendChild(label);
-    }
-
-    memberships.forEach(item => {
-        const group = item.groups; if (!group) return;
-        const groupEl = document.createElement('div'); groupEl.className = 'sidebar-chat-item';
-        const avatarHtml = group.photo_url ? `<img src="${group.photo_url}" style="width:45px;height:45px;border-radius:50%;object-fit:cover;margin-right:12px;">` : `<div style="width:45px;height:45px;border-radius:50%;background:#3a7bd5;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:12px;">${group.name.substring(0, 2).toUpperCase()}</div>`;
-        groupEl.innerHTML = `${avatarHtml}<div style="flex:1;"><div><strong>${group.name}</strong></div><span>Grup Chat</span></div>`;
-        groupEl.onclick = () => mulaiChatGrup(group.id, group.name);
-        privateChatList.appendChild(groupEl);
-    });
-}
-
-function mulaiChatGrup(groupId, groupName) {
-    window.currentChatMode = 'group'; window.activeGroupId = groupId; currentRoomId = `group_${groupId}`; 
-    const btnCall = document.getElementById('btn-start-call'); if (btnCall) btnCall.style.display = 'none';
-    const headerTitle = document.querySelector('.chat-header h3');
-    if (headerTitle) headerTitle.innerHTML = `${escapeHtml(groupName)}`;
-    messagesEl.innerHTML = ''; closeSidebar(); isFirstMessageLoad = true; loadMessages(); initPresence(); 
-}
-
 async function loadChatHistory() {
-  if (!privateChatList || !currentUser) return;
+  const privateList = document.getElementById("private-chat-list");
+  if (!privateList || !currentUser || isSidebarLoading) return;
+  isSidebarLoading = true; 
+
   try {
     const waktu24JamLalu = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { data: messages } = await supabase.from("messages").select("room_id, message, created_at, sticker_url, user_id, status, is_system").ilike("room_id", "pv_%").ilike("room_id", `%${currentUser.id}%`).gte("created_at", waktu24JamLalu).order("created_at", { ascending: false });
+    const { data: messages, error } = await supabase
+      .from("messages")
+      .select("room_id, message, created_at, sticker_url, user_id, status, is_system")
+      .ilike("room_id", "pv_%").ilike("room_id", `%${currentUser.id}%`)
+      .gte("created_at", waktu24JamLalu).order("created_at", { ascending: false });
 
-    const lastMessagesMap = new Map(); const unreadCountMap = new Map();
-    if(messages) {
-      messages.forEach((msg) => {
-        const parts = msg.room_id.replace("pv_", "").split("_"); const partnerId = parts.find((id) => id !== currentUser.id);
-        if (!partnerId) return;
-        if (!lastMessagesMap.has(partnerId)) lastMessagesMap.set(partnerId, msg);
-        if (msg.user_id !== currentUser.id && msg.status !== "read" && !msg.is_system) unreadCountMap.set(partnerId, (unreadCountMap.get(partnerId) || 0) + 1);
+    if (error) { isSidebarLoading = false; return; }
+
+    const lastMessagesMap = new Map();
+    const unreadCountMap = new Map();
+
+    messages.forEach((msg) => {
+      const parts = msg.room_id.replace("pv_", "").split("_");
+      const partnerId = parts.find((id) => id !== currentUser.id);
+      if (!partnerId) return;
+      if (!lastMessagesMap.has(partnerId)) lastMessagesMap.set(partnerId, msg);
+      if (msg.user_id !== currentUser.id && msg.status !== "read" && !msg.is_system) unreadCountMap.set(partnerId, (unreadCountMap.get(partnerId) || 0) + 1);
+    });
+
+    const label = document.createElement("div"); 
+    label.innerHTML = `<div style="padding:10px 15px; font-size:11px; color:#999; font-weight:bold; background:#f8f9fa; border-top:1px solid #eee; margin-top:10px;">RIWAYAT CHAT PRIBADI</div>`; 
+    privateList.appendChild(label);
+
+    if (lastMessagesMap.size === 0) {
+      privateList.innerHTML += `<div style="text-align:center; opacity:0.5; padding:20px; font-size:12px;">Belum ada riwayat chat</div>`;
+      isSidebarLoading = false; return;
+    }
+
+    const partnerIds = Array.from(lastMessagesMap.keys());
+    const missingIds = [];
+    const profileMap = new Map();
+
+    partnerIds.forEach(id => {
+      const cached = sessionStorage.getItem(`hh_profile_${id}`);
+      if(cached) profileMap.set(id, JSON.parse(cached));
+      else missingIds.push(id);
+    });
+
+    if (missingIds.length > 0) {
+      const { data: profiles } = await supabase.from("profiles").select("id, username, avatar_url, short_id, role").in("id", missingIds);
+      profiles?.forEach(p => {
+        sessionStorage.setItem(`hh_profile_${p.id}`, JSON.stringify(p));
+        profileMap.set(p.id, p);
       });
     }
 
-    const label = document.createElement("div"); 
-    label.innerHTML = `<div class="history-label">RIWAYAT CHAT PRIBADI</div>`; 
-    privateChatList.appendChild(label);
-
-    if (lastMessagesMap.size === 0) {
-      privateChatList.innerHTML += `<div class="empty-chat-state">Belum ada riwayat chat</div>`; return;
-    }
-
-    lastMessagesMap.forEach(async (chat, partnerId) => {
-      const partner = await getCachedProfile(partnerId);
+    lastMessagesMap.forEach((chat, partnerId) => {
+      const partner = profileMap.get(partnerId);
       if (!partner) return;
       const name = partner.username || "User";
-      const avatar = partner.avatar_url || "/asets/png/profile.webp";
+      const avatar = partner.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`;
       const unreadCount = unreadCountMap.get(partnerId) || 0;
-      let lastMsg = chat.sticker_url ? "🖼 Stiker" : (chat.message || "Chat");
+      const myLastMsgIcon = chat.user_id === currentUser.id && !chat.is_system ? getStatusIcon(chat.status || "sent") : "";
       
-      const chatEl = document.createElement("div"); chatEl.className = `sidebar-chat-item`;
-      chatEl.innerHTML = `<img src="${avatar}" style="width:45px;height:45px;border-radius:50%;object-fit:cover;margin-right:12px;">
-        <div style="flex:1; overflow:hidden;">
-          <div style="display:flex; justify-content:space-between;"><strong>${name}</strong><span style="font-size:10px;">${formatTime(chat.created_at)}</span></div>
-          <div style="display:flex; align-items:center; gap:4px; font-size:12px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${lastMsg}</div>
+      let lastMsg = chat.sticker_url ? "🖼 Stiker" : (chat.message || "Klik untuk chat");
+      if (chat.is_system) lastMsg = chat.message;
+      if (chat.message === "Pesan ini telah dihapus") lastMsg = "🚫 Pesan dihapus";
+
+      const chatEl = document.createElement("div");
+      chatEl.className = `sidebar-chat-item ${unreadCount > 0 ? "unread" : ""}`;
+      chatEl.innerHTML = `
+        <div style="display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid rgba(0,0,0,0.03); cursor: pointer;">
+          <div style="position: relative;">
+            <img src="${avatar}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+            ${unreadCount > 0 ? `<div class="unread-badge" style="position: absolute; top: -2px; right: -2px; background: #ff4757; color: white; font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white;">${unreadCount}</div>` : ""}
+          </div>
+          <div style="flex: 1; margin-left: 12px; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between;">
+              <strong style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${name}</strong>
+              <span style="font-size: 10px; color: #999;">${formatTime(chat.created_at)}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px; font-size: 12px; color: #666;">
+               ${myLastMsgIcon} <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${lastMsg}</span>
+            </div>
+          </div>
         </div>`;
       chatEl.onclick = () => bukaChatPribadi(partnerId, name, partner.short_id || "");
-      privateChatList.appendChild(chatEl);
+      privateList.appendChild(chatEl);
     });
-  } catch (err) { console.error(err); } 
-}
-
-async function refreshSidebar() {
-  if (!privateChatList) return;
-  privateChatList.innerHTML = "";
-  renderGlobalChatItem(privateChatList);
-  await loadGroupList();
-  await loadChatHistory();
-}
-
-async function bukaChatPribadi(partnerId, partnerName, partnerShortId = "") {
-  window.currentChatMode = 'private'; window.activeGroupId = null;
-  const btnCall = document.getElementById('btn-start-call'); 
-  if (btnCall) { btnCall.style.display = 'flex'; btnCall.dataset.targetId = partnerId; btnCall.dataset.targetName = partnerName; btnCall.onclick = () => window.startLiveKitCall(); }
-
-  const ids = [currentUser.id, partnerId].sort();
-  currentRoomId = `pv_${ids[0]}_${ids[1]}`; 
-  
-  isFirstMessageLoad = true; initPresence(); 
-  document.querySelector(".chat-header h3").innerHTML = `${escapeHtml(partnerName)} <span style="font-size:10px; opacity:0.5;">#${escapeHtml(partnerShortId)}</span>`;
-  
-  updateHeaderStatus(); await loadMessages(); closeSidebar(); scrollToBottom();
+  } catch (err) { console.error("Gagal muat sidebar:", err); } 
+  finally { isSidebarLoading = false; }
 }
 
 if (btnSearchId) {
   btnSearchId.addEventListener("click", async () => {
-    const searchValue = inputSearchId?.value.trim().toUpperCase(); const cleanId = (searchValue || "").replace("#", "");
-    if (!cleanId) return showToast("Masukkan ID (contoh: 0E870)");
+    const searchValue = inputSearchId?.value.trim().toUpperCase();
+    const cleanId = (searchValue || "").replace("#", "");
+    if (!cleanId) { showToast("Masukkan ID (contoh: 0E870)"); return; }
     const { data: friend, error } = await supabase.from("profiles").select("id, username, short_id").eq("short_id", cleanId).single();
-    if (error || !friend) return showToast("ID tidak ditemukan!");
-    if (friend.id === currentUser.id) return showToast("Ini ID kamu sendiri.");
+    if (error || !friend) { showToast("ID tidak ditemukan!"); return; }
+    if (friend.id === currentUser.id) { showToast("Ini ID kamu sendiri."); return; }
     await bukaChatPribadi(friend.id, friend.username, friend.short_id || "");
+    showToast(`Chat dengan ${friend.username} dibuka`);
   });
 }
 
-if (hamburger) hamburger.addEventListener("click", () => { sidebar.classList.toggle("open"); sidebarOverlay.style.display = sidebar.classList.contains("open") ? "block" : "none"; });
-if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
+async function bukaChatPribadi(partnerId, partnerName, partnerShortId = "") {
+  window.currentChatMode = 'private';
+  window.activeGroupId = null;
 
-// =======================
-// GIPHY STICKERS
-// =======================
+  const btnInvite = document.getElementById('btn-open-invite');
+  if (btnInvite) btnInvite.style.display = 'none';
+
+  const btnCall = document.getElementById('btn-start-call'); 
+  if (btnCall) {
+    btnCall.style.setProperty('display', 'flex', 'important'); 
+    btnCall.dataset.targetId = partnerId;
+    btnCall.dataset.targetName = partnerName;
+    btnCall.onclick = () => window.startLiveKitCall();
+  }
+
+  const ids = [currentUser.id, partnerId].sort();
+  currentRoomId = `pv_${ids[0]}_${ids[1]}`; 
+  
+  isFirstMessageLoad = true; 
+  initPresence(); 
+
+  const headerTitle = document.querySelector(".chat-header h3");
+  if (headerTitle) {
+    headerTitle.innerHTML = `${escapeHtml(partnerName)} <span style="font-size:10px; opacity:0.5;">#${escapeHtml(partnerShortId)}</span>`;
+  }
+  
+  const statusHeader = document.getElementById('status-header');
+  if (statusHeader) statusHeader.innerText = "Menghubungkan...";
+
+  updateHeaderStatus(); 
+  await loadMessages(); 
+  closeSidebar(); 
+  scrollToBottom();
+
+  localStorage.setItem(`last_read_${currentRoomId}`, new Date().toISOString());
+  if (typeof triggerLoadChatHistory === "function") triggerLoadChatHistory();
+}
+
 const apiKey = "vPUlBU5Qfz2ZygoEtKXVUqmIEAEcIB08";
 async function fetchStickers(query = "") {
   if (!stickerList) return;
-  stickerList.innerHTML = "<p style='font-size:12px; color:#999; text-align:center;'>Mencari...</p>";
-  const endpoint = query ? `https://api.giphy.com/v1/stickers/search?api_key=${apiKey}&q=${encodeURIComponent(query)}&limit=30` : `https://api.giphy.com/v1/stickers/trending?api_key=${apiKey}&limit=20`;
+  stickerList.innerHTML = "<p style='font-size:12px; color:#999; text-align:center; width:100%;'>Mencari...</p>";
+  const endpoint = query ? `https://api.giphy.com/v1/stickers/search?api_key=${apiKey}&q=${encodeURIComponent(query)}&limit=30&rating=g` : `https://api.giphy.com/v1/stickers/trending?api_key=${apiKey}&limit=20&rating=g`;
   try {
     const res = await fetch(endpoint); const data = await res.json(); stickerList.innerHTML = "";
     data.data.forEach((sticker) => {
       const img = document.createElement("img"); img.src = sticker.images.fixed_width_small.webp;
       img.style.cssText = "width:75px; height:75px; margin:4px; cursor:pointer; border-radius:8px; background:#eee;";
-      img.onclick = () => sendSticker(sticker.images.fixed_width.url);
+      img.loading = "lazy"; img.onclick = () => sendSticker(sticker.images.fixed_width.url);
       stickerList.appendChild(img);
     });
-  } catch (err) { stickerList.innerHTML = "<p style='color:red;'>Gagal memuat stiker.</p>"; }
+  } catch (err) { stickerList.innerHTML = "<p style='font-size:12px; color:red;'>Gagal memuat stiker.</p>"; }
 }
 
 async function sendSticker(url) {
   const tempId = "temp-" + Date.now();
-  renderMessage({ id: tempId, message: "", user_id: currentUser.id, username: myUsername, avatar: sideAvatar?.src, role: myRole, sticker_url: url, created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
-  scrollToBottom(); if(sendSound) sendSound.play().catch(() => {});
   try {
-    const { data, error } = await supabase.from("messages").insert([{ message: "", user_id: currentUser.id, username: myUsername, sticker_url: url, room_id: currentRoomId, status: "sent" }]).select().single();
+    const profile = await getCachedProfile(currentUser.id);
+    renderMessage({ id: tempId, message: "", user_id: currentUser.id, username: profile?.username || "User", avatar: profile?.avatar_url || "/asets/png/profile.webp", role: profile?.role || "user", sticker_url: url, created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
+    scrollToBottom(); sendSound.play().catch(() => {});
+    const { data, error } = await supabase.from("messages").insert([{ message: "", user_id: currentUser.id, username: profile?.username || "User", avatar: profile?.avatar_url || "/asets/png/profile.webp", role: profile?.role || "user", sticker_url: url, room_id: currentRoomId, status: "sent" }]).select().single();
+    
     if (error) throw error;
     const tempEl = document.getElementById(`msg-${tempId}`);
-    if (tempEl && data) { tempEl.id = `msg-${data.id}`; updateMessageStatusUI(data.id, "sent"); }
+    if (tempEl && data) { 
+        tempEl.id = `msg-${data.id}`; 
+        updateMessageStatusUI(data.id, "sent"); 
+        triggerPushNotif("🖼 Mengirim Stiker");
+    }
     if (stickerMenu) stickerMenu.style.display = "none";
-  } catch (err) { showToast("Gagal kirim stiker", "error"); }
+  } catch (err) { showToast("Gagal kirim stiker"); }
 }
 
 if (searchBtn) searchBtn.onclick = () => fetchStickers(searchInput?.value || "");
 if (searchInput) searchInput.onkeydown = (e) => { if (e.key === "Enter") fetchStickers(searchInput.value); };
 const stickerBtn = document.getElementById("sticker-btn");
-if (stickerBtn) { stickerBtn.onclick = () => { if (stickerMenu) stickerMenu.style.display = stickerMenu.style.display === "none" || stickerMenu.style.display === "" ? "flex" : "none"; }; }
+if (stickerBtn) { stickerBtn.onclick = () => { if (!stickerMenu) return; stickerMenu.style.display = stickerMenu.style.display === "none" || stickerMenu.style.display === "" ? "flex" : "none"; }; }
 
-// =======================
-// VOICE NOTE RECORDING
-// =======================
-const vnOverlay = document.getElementById("vn-overlay"); const vnTimer = document.getElementById("vn-timer");
-let timerInterval; let isRecording = false; let startX = 0; let seconds = 0;
-let mediaRecorder; let audioChunks = []; let isCanceledGlobal = false;
+window.showDeleteMenu = function(id) {
+  selectedMessageId = id; const overlayDelete = document.getElementById("delete-overlay");
+  if (overlayDelete) { overlayDelete.style.display = "flex"; if (navigator.vibrate) navigator.vibrate(50); }
+};
+
+const confirmDeleteBtn = document.getElementById("confirm-delete");
+if (confirmDeleteBtn) {
+  confirmDeleteBtn.onclick = async () => {
+    if (!selectedMessageId) return;
+    confirmDeleteBtn.innerText = "Menghapus..."; confirmDeleteBtn.disabled = true;
+    try {
+      const { error } = await supabase.from("messages").update({ message: "Pesan ini telah dihapus", sticker_url: null, audio_url: null }).eq("id", selectedMessageId);
+      if (error) throw error;
+      document.getElementById("delete-overlay").style.display = "none"; showToast("Pesan dihapus");
+      const msgEl = document.getElementById(`msg-${selectedMessageId}`);
+      if (msgEl) { const textEl = msgEl.querySelector(".text"); if (textEl) { textEl.innerHTML = "<i>Pesan ini telah dihapus</i>"; textEl.style.color = "#aaa"; } }
+    } catch (err) { showToast("Gagal menghapus pesan"); } 
+    finally { confirmDeleteBtn.innerText = "Hapus"; confirmDeleteBtn.disabled = false; selectedMessageId = null; }
+  };
+}
+
+window.openEditProfile = async () => {
+  const modal = document.getElementById("bio-modal"); if (!modal) return; modal.style.display = "flex";
+  const { data: profile } = await supabase.from("profiles").select("umur, gender, zodiak, hobi, pekerjaan").eq("id", currentUser.id).single();
+  
+  if (profile) {
+    if (document.getElementById("in-umur")) document.getElementById("in-umur").value = profile.umur || "";
+    if (document.getElementById("in-gender")) document.getElementById("in-gender").value = profile.gender || "Pria";
+    if (document.getElementById("in-zodiak")) document.getElementById("in-zodiak").value = profile.zodiak || "Aries";
+    if (document.getElementById("in-hobi")) document.getElementById("in-hobi").value = profile.hobi || "";
+    if (document.getElementById("in-kerja")) document.getElementById("in-kerja").value = profile.pekerjaan || ""; 
+  }
+};
+
+const saveBtnElement = document.getElementById("btn-save-bio");
+if (saveBtnElement) {
+  saveBtnElement.onclick = async () => {
+    saveBtnElement.innerText = "Menyimpan..."; 
+    saveBtnElement.disabled = true;
+    
+    try {
+      const { data, error } = await supabase.from("profiles").update({
+          umur: Number(document.getElementById("in-umur")?.value) || null, 
+          gender: document.getElementById("in-gender")?.value, 
+          zodiak: document.getElementById("in-zodiak")?.value, 
+          hobi: document.getElementById("in-hobi")?.value
+        }).eq("id", currentUser.id).select(); 
+        
+      if (error) throw error;
+      if (!data || data.length === 0) {
+          showToast("Gagal! Database menolak data. Cek izin (RLS) di Supabase.");
+          saveBtnElement.innerText = "Simpan & Cari"; saveBtnElement.disabled = false; return; 
+      }
+      
+      const cacheKey = `hh_profile_${currentUser.id}`;
+      const existingCache = JSON.parse(localStorage.getItem(cacheKey) || "{}");
+      const updatedCache = { ...existingCache, ...data[0] };
+      localStorage.setItem(cacheKey, JSON.stringify(updatedCache));
+      
+      showToast("Biodata berhasil disimpan permanen!"); 
+      window.closeBioModal();
+      
+    } catch (err) { showToast("Gagal simpan: " + err.message); } 
+    finally { saveBtnElement.innerText = "Simpan & Cari"; saveBtnElement.disabled = false; }
+  };
+}
+
+function tampilkanDoiCard(doi) {
+  const modal = document.getElementById("doi-card-modal"); if (!doi || !modal) return;
+  const photoEl = document.getElementById("doi-photo"); const nameAgeEl = document.getElementById("doi-name-age"); const zodiacEl = document.getElementById("doi-zodiac"); const jobEl = document.getElementById("doi-job"); const hobbyEl = document.getElementById("doi-hobby"); const gasBtn = document.getElementById("btn-gas-chat");
+  if (photoEl) photoEl.src = doi.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(doi.username)}`;
+  if (nameAgeEl) nameAgeEl.innerText = `${doi.username}, ${doi.age || "?"}`;
+  if (zodiacEl) zodiacEl.innerText = doi.zodiac || "Rahasia";
+  if (jobEl) jobEl.innerText = doi.occupation || "Professional";
+  if (hobbyEl) hobbyEl.innerText = doi.hobby || "-";
+  if (gasBtn) { gasBtn.onclick = async () => { await bukaChatPribadi(doi.id, doi.username, doi.short_id || ""); window.tutupDoiCard(); }; }
+  modal.style.display = "flex";
+}
+
+const btnCariDoiActual = document.getElementById("btn-sidebar-search");
+if (btnCariDoiActual) {
+  btnCariDoiActual.onclick = async () => {
+    const myProfile = await getCachedProfile(currentUser.id); 
+    if (!myProfile?.gender) { 
+      showToast("Setel GENDER kamu dulu di Edit Biodata!"); 
+      window.openEditProfile(); 
+      return; 
+    }
+    
+    closeSidebar();
+
+    // --- FULL FIX LOGIKA RADAR BARU ---
+const loadingOverlay = document.createElement("div"); 
+loadingOverlay.className = "searching-overlay"; // Kita ganti class-nya agar sesuai CSS baru
+loadingOverlay.id = "active-search-overlay";
+
+loadingOverlay.innerHTML = `
+  <div class="radar-pencari-ghaib">
+    <div class="radar-inner">
+      <div class="radar-scan"></div>
+      <div class="radar-waves">
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+      </div>
+      <div class="radar-dots">
+        <div class="dot d1"></div>
+        <div class="dot d2"></div>
+      </div>
+      <img id="my-search-avatar" src="${sideAvatar?.src || '/asets/png/profile.webp'}" class="radar-center-avatar" />
+    </div>
+  </div>
+  <div style="text-align: center; margin-top: 25px; z-index: 10001;">
+    <h3 class="search-title-romantic">MEMINDAI DOI...</h3>
+    <p class="search-subtitle-romantic">Area: Seluruh Jagad Raya</p>
+  </div>
+`;
+
+    document.body.appendChild(loadingOverlay);
+    
+    const lawanJenis = myProfile.gender === "Pria" ? "Wanita" : "Pria";
+    const waktuTungguAcak = Math.floor(Math.random() * 3000) + 4000; 
+    
+    setTimeout(async () => {
+      const { data: users } = await supabase.from("profiles").select("*").neq("id", currentUser.id).eq("gender", lawanJenis);
+      
+      const overlayToRemove = document.getElementById("active-search-overlay");
+      if (overlayToRemove) overlayToRemove.remove();
+
+      if (!users || users.length === 0) { 
+        showToast(`Waduh, belum ada ${lawanJenis} yang tersedia.`); 
+        return; 
+      }
+      
+      tampilkanDoiCard(users[Math.floor(Math.random() * users.length)]);
+      
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+    }, waktuTungguAcak); 
+  };
+}
+
+document.addEventListener("visibilitychange", async () => { if (!document.hidden) await markRoomAsRead(); });
+
+const actionBtn = document.getElementById("action-btn"); const chatInput = document.getElementById("chat-input"); const vnOverlay = document.getElementById("vn-overlay"); const vnTimer = document.getElementById("vn-timer");
+let holdTimer, timerInterval; let isRecording = false; let startX = 0; let seconds = 0;
 
 function startTimer() { seconds = 0; vnTimer.innerText = "00:00"; timerInterval = setInterval(() => { seconds++; let m = Math.floor(seconds / 60).toString().padStart(2, "0"); let s = (seconds % 60).toString().padStart(2, "0"); vnTimer.innerText = `${m}:${s}`; }, 1000); }
 function stopTimer() { clearInterval(timerInterval); }
 
+let mediaRecorder; let audioChunks = []; let isCanceledGlobal = false;
 async function startVN(e) {
   isRecording = true; audioChunks = []; startX = e.type.includes("touch") ? e.touches[0].clientX : e.clientX;
   try {
@@ -762,24 +1225,49 @@ async function startVN(e) {
       stream.getTracks().forEach((track) => track.stop());
       if (!isCanceledGlobal && audioChunks.length > 0) { uploadToCloudinary(new Blob(audioChunks, { type: "audio/mpeg" })); }
     };
-    mediaRecorder.start(); btnSend.classList.add("is-recording"); chatInput.style.visibility = "hidden"; vnOverlay.style.display = "flex";
+    mediaRecorder.start(); actionBtn.classList.add("is-recording"); chatInput.style.visibility = "hidden"; vnOverlay.style.display = "flex";
     if (navigator.vibrate) navigator.vibrate(60); startTimer();
-  } catch (err) { showToast("Gagal akses mic."); isRecording = false; }
+  } catch (err) { showToast("Gagal akses mic. Pastikan izin diberikan!"); isRecording = false; }
 }
 
 function stopVN(isCanceled = false) {
   if (!isRecording) return;
   isRecording = false; isCanceledGlobal = isCanceled; stopTimer();
   if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
-  btnSend.classList.remove("is-recording"); chatInput.style.visibility = "visible"; vnOverlay.style.display = "none";
-  if (isCanceled) showToast("VN Dibatalkan");
+  actionBtn.classList.remove("is-recording"); chatInput.style.visibility = "visible"; vnOverlay.style.display = "none";
+  if (isCanceled) { showToast("VN Dibatalkan"); if (navigator.vibrate) navigator.vibrate([30, 30]); } 
+  else { if (seconds < 1) { isCanceledGlobal = true; showToast("Tahan lebih lama untuk merekam"); } }
 }
 
-let holdTimer;
-btnSend.addEventListener("mousedown", (e) => { if (chatInput.value.trim() === "") holdTimer = setTimeout(() => startVN(e), 300); });
-window.addEventListener("mousemove", (e) => { if (isRecording && startX - e.clientX > 100) stopVN(true); });
+let reactionTargetId = null;
+window.openReactionMenu = function(msgId, event) {
+  if (event) { event.preventDefault(); event.stopPropagation(); }
+  reactionTargetId = msgId; const menu = document.getElementById("reaction-menu"); const msgEl = document.getElementById(`msg-${msgId}`);
+  if (!menu || !msgEl) return;
+  const rect = msgEl.getBoundingClientRect();
+  menu.style.display = "flex"; menu.style.position = "fixed"; menu.style.zIndex = "100000"; 
+  menu.style.left = `${rect.left + (rect.width / 2)}px`; menu.style.top = `${rect.top - 60}px`; menu.style.transform = "translateX(-50%)";
+  if (navigator.vibrate) navigator.vibrate(40);
+  const closeMenu = (e) => { if (!menu.contains(e.target)) { menu.style.display = "none"; document.removeEventListener('mousedown', closeMenu); document.removeEventListener('touchstart', closeMenu); } };
+  document.addEventListener('mousedown', closeMenu); document.addEventListener('touchstart', closeMenu);
+};
+
+window.sendReaction = async function(emoji) {
+  if (!reactionTargetId) return;
+  try {
+    const { data: msg } = await supabase.from("messages").select("reactions").eq("id", reactionTargetId).single();
+    let newReactions = msg.reactions || {};
+    if (newReactions[currentUser.id] === emoji) delete newReactions[currentUser.id]; else newReactions[currentUser.id] = emoji;
+    await supabase.from("messages").update({ reactions: newReactions }).eq("id", reactionTargetId);
+    document.getElementById("reaction-menu").style.display = "none";
+  } catch (err) { showToast("Gagal memberikan emoji"); }
+};
+
+actionBtn.onclick = () => { if (chatInput && chatInput.value.trim() !== "") Message(); };
+actionBtn.addEventListener("mousedown", (e) => { if (chatInput.value.trim() === "") holdTimer = setTimeout(() => startVN(e), 300); });
+window.addEventListener("mousemove", (e) => { if (isRecording) { if (startX - e.clientX > 100) stopVN(true); } });
 window.addEventListener("mouseup", () => { clearTimeout(holdTimer); if (isRecording) stopVN(false); });
-btnSend.addEventListener("touchstart", (e) => { if (chatInput.value.trim() === "") holdTimer = setTimeout(() => startVN(e), 300); }, { passive: true });
+actionBtn.addEventListener("touchstart", (e) => { if (chatInput.value.trim() === "") holdTimer = setTimeout(() => startVN(e), 300); }, { passive: true });
 actionBtn.addEventListener("touchmove", (e) => { if (isRecording) { if (startX - e.touches[0].clientX > 80) stopVN(true); } }, { passive: true });
 actionBtn.addEventListener("touchend", () => { clearTimeout(holdTimer); if (isRecording) stopVN(false); });
 
@@ -788,118 +1276,661 @@ async function uploadToCloudinary(blob) {
   try {
     const res = await fetch(`https://api.cloudinary.com/v1_1/dhhmkb8kl/upload`, { method: "POST", body: formData });
     const data = await res.json();
-    if (data.secure_url) sendAudioMessage(data.secure_url); 
+    if (data.secure_url) sendAudioMessage(data.secure_url); else showToast("Gagal upload: " + (data.error?.message || "Unknown error"));
   } catch (err) { showToast("Koneksi bermasalah saat mengirim VN"); }
 }
 
-// =======================
-// RADAR CARI DOI
-// =======================
-window.tutupDoiCard = function () { const modal = document.getElementById("doi-card-modal"); if (modal) modal.style.display = "none"; };
-function tampilkanDoiCard(doi) {
-  const modal = document.getElementById("doi-card-modal"); if (!doi || !modal) return;
-  document.getElementById("doi-photo").src = doi.avatar_url || "/asets/png/profile.webp";
-  document.getElementById("doi-name-age").innerText = `${doi.username}, ${doi.age || "?"}`;
-  document.getElementById("doi-zodiac").innerText = doi.zodiac || "Rahasia";
-  document.getElementById("doi-job").innerText = doi.pekerjaan || "Misterius";
-  document.getElementById("doi-hobby").innerText = doi.hobi || "-";
-  document.getElementById("btn-gas-chat").onclick = async () => { await bukaChatPribadi(doi.id, doi.username, doi.short_id || ""); window.tutupDoiCard(); };
-  modal.style.display = "flex";
+// ==========================================
+// 🔥 FUNGSI VOICE NOTE (WAVESURFER) 🔥
+// ==========================================
+window.waveSurfers = {};
+window.currentPlayingVN = null;
+
+function formatVNTime(seconds) {
+  if (isNaN(seconds)) return "0:00";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-const btnCariDoiActual = document.getElementById("btn-sidebar-search");
-if (btnCariDoiActual) {
-  btnCariDoiActual.onclick = async () => {
-    const myProfile = await getCachedProfile(currentUser.id); 
-    if (!myProfile?.gender) return window.openEditProfile(); 
-    closeSidebar();
-    const loadingOverlay = document.createElement("div"); 
-    loadingOverlay.className = "searching-overlay"; loadingOverlay.id = "active-search-overlay";
-    loadingOverlay.innerHTML = `<div class="radar-pencari-ghaib"><div class="radar-inner"><div class="radar-scan"></div><img src="${sideAvatar?.src || '/asets/png/profile.webp'}" class="radar-center-avatar" /></div></div><div style="text-align: center; margin-top: 25px; z-index: 10001;"><h3 class="search-title-romantic">MEMINDAI DOI...</h3></div>`;
-    document.body.appendChild(loadingOverlay);
-    const lawanJenis = myProfile.gender === "Pria" ? "Wanita" : "Pria";
-    setTimeout(async () => {
-      const { data: users } = await supabase.from("profiles").select("*").neq("id", currentUser.id).eq("gender", lawanJenis);
-      document.getElementById("active-search-overlay")?.remove();
-      if (!users || users.length === 0) return showToast(`Waduh, belum ada ${lawanJenis} yang tersedia.`); 
-      tampilkanDoiCard(users[Math.floor(Math.random() * users.length)]);
-    }, 3000); 
+window.toggleVN = function (msgId) {
+  const ws = window.waveSurfers[msgId];
+  if (!ws) return;
+
+  const btn = document.querySelector(`#msg-${msgId} .vn-play-btn`);
+  const playIcon = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M8 5v14l11-7z"/></svg>`;
+  const pauseIcon = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
+
+  // Matikan audio lain kalau ada yang lagi nyala
+  if (window.currentPlayingVN && window.currentPlayingVN !== ws) {
+    window.currentPlayingVN.pause();
+    const oldId = Object.keys(window.waveSurfers).find(key => window.waveSurfers[key] === window.currentPlayingVN);
+    if (oldId) {
+      const oldBtn = document.querySelector(`#msg-${oldId} .vn-play-btn`);
+      if (oldBtn) oldBtn.innerHTML = playIcon;
+    }
+  }
+
+  // Play / Pause logic
+  if (ws.isPlaying()) {
+    ws.pause();
+    if (btn) btn.innerHTML = playIcon;
+  } else {
+    ws.play();
+    window.currentPlayingVN = ws;
+    if (btn) btn.innerHTML = pauseIcon;
+  }
+};
+
+// --- BAGIAN INI TETAP ADA (JANGAN DIHAPUS) ---
+const urlParams = new URLSearchParams(window.location.search);
+const fromId = urlParams.get('from');
+
+if (fromId) {
+    setTimeout(() => {
+        if (typeof bukaChatPribadi === "function") {
+            bukaChatPribadi(fromId, "Memuat chat..."); 
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }, 2000);
+}
+
+const groupPhotoInput = document.getElementById('group-photo-input');
+if (groupPhotoInput) {
+    groupPhotoInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            selectedGroupFile = file; 
+            document.getElementById('group-photo-preview').src = URL.createObjectURL(file);
+        }
+    };
+}
+
+// =======================
+// GROUP CHAT SYSTEM
+// =======================
+
+document.getElementById('btn-open-group-modal').onclick = () => {
+    document.getElementById('group-modal').style.display = 'flex';
+};
+
+document.getElementById('btn-create-group').onclick = async () => {
+    const btn = document.getElementById('btn-create-group');
+    const groupName = document.getElementById('in-group-name').value.trim();
+    
+    if (!groupName) return showToast("Beri nama grup dulu bro!");
+
+    btn.innerText = "Mengunggah...";
+    btn.disabled = true;
+
+    try {
+        let finalPhotoUrl = "/asets/png/profile.webp";
+
+        if (selectedGroupFile) {
+            const fd = new FormData();
+            fd.append("file", selectedGroupFile);
+            fd.append("upload_preset", "post_hope");
+
+            const res = await fetch("https://api.cloudinary.com/v1_1/dhhmkb8kl/image/upload", { 
+                method: "POST", body: fd 
+            });
+            const cData = await res.json();
+            
+            if (cData.secure_url) finalPhotoUrl = cData.secure_url;
+        }
+
+        const { data: { user } } = await supabase.auth.getUser();
+
+        const { data: group, error: groupErr } = await supabase
+            .from('groups')
+            .insert([{ name: groupName, created_by: user.id, photo_url: finalPhotoUrl }])
+            .select().single();
+
+        if (groupErr) throw groupErr;
+
+        await supabase.from('group_members').insert([{ group_id: group.id, user_id: user.id }]);
+
+        showToast(`Berhasil! Grup ${groupName} sudah dibuat`);
+        
+        document.getElementById('group-modal').style.display = 'none';
+        document.getElementById('in-group-name').value = '';
+        document.getElementById('group-photo-preview').src = '/asets/png/profile.webp';
+        selectedGroupFile = null;
+
+        await refreshSidebar();
+
+    } catch (err) { showToast("Gagal bikin grup"); } 
+    finally { btn.innerText = "Buat Sekarang"; btn.disabled = false; }
+};
+
+async function loadGroupList() {
+    const { data: { user } } = await supabase.auth.getUser();
+    const listContainer = document.getElementById('private-chat-list');
+    
+    const { data: memberships, error } = await supabase
+        .from('group_members')
+        .select(`group_id, groups(id, name, photo_url)`)
+        .eq('user_id', user.id);
+
+    if (error || !memberships) return;
+
+    const label = document.createElement("div");
+    label.innerHTML = `<div style="padding:10px 15px; font-size:11px; color:#999; font-weight:bold; background:#f8f9fa; border-top:1px solid #eee; margin-top:5px;">GRUP SAYA</div>`;
+    listContainer.appendChild(label);
+
+    memberships.forEach(item => {
+        const group = item.groups;
+        if (!group) return;
+
+        const groupEl = document.createElement('div');
+        groupEl.className = 'sidebar-chat-item';
+        groupEl.style = "padding: 12px 15px; border-bottom: 1px solid rgba(0,0,0,0.03); cursor: pointer; display: flex; align-items: center; gap: 12px;";
+        
+        const avatarHtml = group.photo_url 
+            ? `<img src="${group.photo_url}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;">`
+            : `<div style="width: 45px; height: 45px; border-radius: 50%; background: #3a7bd5; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${group.name.substring(0, 2).toUpperCase()}</div>`;
+
+        groupEl.innerHTML = `
+            ${avatarHtml}
+            <div style="flex: 1;">
+              <div style="font-weight: 600; font-size: 14px; color: #333;">${group.name}</div>
+              <div style="font-size: 11px; color: #aaa;">Grup Chat aktif</div>
+            </div>
+        `;
+        
+        groupEl.onclick = () => mulaiChatGrup(group.id, group.name);
+        listContainer.appendChild(groupEl);
+    });
+}
+
+const btnOpenInvite = document.getElementById('btn-open-invite');
+
+function mulaiChatGrup(groupId, groupName) {
+    window.currentChatMode = 'group';
+    window.activeGroupId = groupId;
+    currentRoomId = `group_${groupId}`; 
+
+    const btnCall = document.getElementById('btn-start-call');
+    if (btnCall) {
+        btnCall.style.display = 'none';
+    }
+
+    const btnInvite = document.getElementById('btn-open-invite');
+    if (btnInvite) btnInvite.style.display = 'flex'; 
+
+    const headerTitle = document.querySelector('.chat-header h3');
+    if (headerTitle) {
+      const customIcon = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" 
+             style="vertical-align: middle; cursor: pointer; margin-left: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);" 
+             onclick="window.openGroupSettings()" 
+             onmouseover="this.style.transform='rotate(90deg) scale(1.1)'" 
+             onmouseout="this.style.transform='rotate(0deg) scale(1)'"
+             ontouchstart="this.style.transform='rotate(90deg) scale(1.1)'"
+             ontouchend="this.style.transform='rotate(0deg) scale(1)'"
+             title="Pengaturan Grup">
+          <rect x="2" y="2" width="20" height="20" rx="7" fill="rgba(255, 255, 255, 0.2)" stroke="rgba(255, 255, 255, 0.6)" stroke-width="1.5"/>
+          <circle cx="12" cy="12" r="2.5" fill="#ffffff"/>
+          <path d="M12 6V8M12 16V18M6 12H8M16 12H18M8 8L9.5 9.5M14.5 14.5L16 16M8 16L9.5 14.5M14.5 9.5L16 8" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      `;
+      headerTitle.innerHTML = `${escapeHtml(groupName)} ${customIcon}`;
+    }
+    
+    const statusHeader = document.getElementById('status-header');
+    if (statusHeader) statusHeader.innerText = "Grup Chat Terbuka";
+
+    document.getElementById('chat-messages').innerHTML = ''; 
+    if (window.innerWidth <= 768) closeSidebar();
+
+    isFirstMessageLoad = true; 
+    loadMessages(); 
+    initPresence(); 
+}
+
+async function refreshSidebar() {
+  const privateList = document.getElementById("private-chat-list");
+  if (!privateList) return;
+  privateList.innerHTML = "";
+  renderGlobalChatItem(privateList);
+  await loadGroupList();
+  await loadChatHistory();
+}
+
+if (btnOpenInvite) {
+  btnOpenInvite.onclick = (e) => {
+    e.preventDefault(); e.stopPropagation(); 
+    const modal = document.getElementById('invite-modal');
+    if (modal) { modal.style.display = 'flex'; if (navigator.vibrate) navigator.vibrate(40); }
   };
 }
 
+const btnInviteNow = document.getElementById('btn-invite-now');
+if (btnInviteNow) {
+  btnInviteNow.onclick = async () => {
+    let input = document.getElementById('in-invite-search').value.trim();
+    input = input.replace('@', '').replace('#', ''); 
+
+    if (!input) return showToast("Isi ID atau Username dulu!");
+    if (!window.activeGroupId) return showToast("Grup belum terpilih!");
+
+    btnInviteNow.innerText = "Mencari...";
+    btnInviteNow.disabled = true;
+
+    try {
+      const { data: targetUser, error: findError } = await supabase
+        .from('profiles').select('id, username')
+        .or(`short_id.eq.${input.toUpperCase()},username.ilike.${input}`).maybeSingle();
+
+      if (findError || !targetUser) throw new Error("User tidak ditemukan!");
+
+      const { data: isMember } = await supabase
+        .from('group_members').select('id')
+        .eq('group_id', window.activeGroupId).eq('user_id', targetUser.id).maybeSingle();
+
+      if (isMember) throw new Error("Dia sudah ada di grup ini!");
+
+      const { error: insertError } = await supabase
+        .from('group_members').insert([{ group_id: window.activeGroupId, user_id: targetUser.id }]);
+      if (insertError) throw insertError;
+
+      const systemMsg = `${myUsername} mengundang ${targetUser.username}`;
+      await supabase.from('messages').insert([{
+          room_id: `group_${window.activeGroupId}`,
+          message: systemMsg,
+          user_id: currentUser.id,
+          is_system: true
+      }]);
+
+      showToast(`Berhasil! ${targetUser.username} bergabung!`);
+      document.getElementById('invite-modal').style.display = 'none';
+      document.getElementById('in-invite-search').value = '';
+
+    } catch (err) { showToast(err.message); } 
+    finally { btnInviteNow.innerText = "Tambah Member"; btnInviteNow.disabled = false; }
+  };
+}
+
+
 // ==========================================
-// 🔥 CALL / TELEPHONE LOGIC 🔥
+// [NEW FITUR] LOGIKA PENGATURAN GRUP FULL
+// ==========================================
+let selectedEditGroupFile = null;
+
+const editGroupPhotoInput = document.getElementById('edit-group-photo-input');
+if (editGroupPhotoInput) {
+    editGroupPhotoInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            selectedEditGroupFile = file; 
+            document.getElementById('edit-group-photo-preview').src = URL.createObjectURL(file); 
+        }
+    };
+}
+
+window.openGroupSettings = async () => {
+    if (!window.activeGroupId || window.currentChatMode !== 'group') return;
+    
+    const modal = document.getElementById('group-settings-modal');
+    if(modal) modal.style.display = 'flex';
+
+    const container = document.getElementById('member-list-container');
+    if(container) container.innerHTML = "<div style='font-size:12px; color:#666; text-align:center;'>Memuat anggota...</div>";
+
+    try {
+        const { data: group, error: groupErr } = await supabase
+            .from('groups').select('*').eq('id', window.activeGroupId).single();
+            
+        if (groupErr) throw groupErr;
+        
+        const isAdmin = group && group.created_by === currentUser.id;
+        
+        const editNameInput = document.getElementById('edit-group-name');
+        if(editNameInput && group) editNameInput.value = group.name || '';
+
+        const editPhotoPreview = document.getElementById('edit-group-photo-preview');
+        if (editPhotoPreview && group) editPhotoPreview.src = group.photo_url || '/asets/png/profile.webp';
+        
+        selectedEditGroupFile = null;
+
+        const { data: members, error: membersErr } = await supabase
+            .from('group_members')
+            .select(`user_id, profiles(username, avatar_url)`)
+            .eq('group_id', window.activeGroupId);
+
+        if (membersErr) throw membersErr;
+
+        if(container) {
+            container.innerHTML = "";
+            if (members && members.length > 0) {
+                members.forEach(m => {
+                    const profileName = m.profiles?.username || "User";
+                    const profileAvatar = m.profiles?.avatar_url || '/asets/png/profile.webp';
+                    const isMe = m.user_id === currentUser.id;
+                    
+                    const div = document.createElement('div');
+                    div.style = "display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #eee;";
+                    div.innerHTML = `
+                        <img src="${profileAvatar}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+                        <span style="font-size:13px; font-weight:500;">${profileName} ${isMe ? '(Anda)' : ''}</span>
+                        ${isAdmin && !isMe ? `<button onclick="window.kickMember('${m.user_id}', '${profileName}')" style="margin-left:auto; background:#ff4757; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">Tendang</button>` : ''}
+                    `;
+                    container.appendChild(div);
+                });
+            } else {
+                container.innerHTML = "<div style='font-size:12px; color:#666; text-align:center;'>Belum ada anggota.</div>";
+            }
+        }
+    } catch (err) {
+        if(container) container.innerHTML = "<div style='font-size:12px; color:#ff4757; text-align:center;'>Gagal memuat data.</div>";
+    }
+};
+
+window.updateGroupInfo = async () => {
+    const newName = document.getElementById('edit-group-name')?.value.trim();
+    const btn = document.getElementById('btn-save-group-info');
+    
+    if (!newName && !selectedEditGroupFile) {
+        return showToast("Tidak ada yang diubah");
+    }
+
+    if(btn) { btn.innerText = "Mengunggah..."; btn.disabled = true; }
+
+    try {
+        let finalPhotoUrl = null;
+
+        if (selectedEditGroupFile) {
+            const fd = new FormData();
+            fd.append("file", selectedEditGroupFile);
+            fd.append("upload_preset", "post_hope"); 
+
+            const res = await fetch("https://api.cloudinary.com/v1_1/dhhmkb8kl/image/upload", { 
+                method: "POST", body: fd 
+            });
+            const cData = await res.json();
+            
+            if (cData.secure_url) {
+                finalPhotoUrl = cData.secure_url;
+            } else {
+                throw new Error("Gagal mengunggah foto ke server");
+            }
+        }
+
+        const updateData = {};
+        if (newName) updateData.name = newName;
+        if (finalPhotoUrl) updateData.photo_url = finalPhotoUrl;
+
+        const { error } = await supabase.from('groups').update(updateData).eq('id', window.activeGroupId);
+        if(error) throw error;
+        
+        showToast("Info grup berhasil diperbarui!");
+        
+        if (newName) {
+            const headerTitle = document.querySelector('.chat-header h3');
+            if(headerTitle) {
+                const customIcon = `
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="vertical-align: middle; cursor: pointer; margin-left: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); transition: transform 0.3s;" onclick="window.openGroupSettings()" onmouseover="this.style.transform='rotate(90deg) scale(1.1)'" onmouseout="this.style.transform='rotate(0deg) scale(1)'">
+                    <rect x="2" y="2" width="20" height="20" rx="7" fill="rgba(255, 255, 255, 0.2)" stroke="rgba(255, 255, 255, 0.6)" stroke-width="1.5"/>
+                    <circle cx="12" cy="12" r="2.5" fill="#ffffff"/>
+                    <path d="M12 6V8M12 16V18M6 12H8M16 12H18M8 8L9.5 9.5M14.5 14.5L16 16M8 16L9.5 14.5M14.5 9.5L16 8" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                `;
+                headerTitle.innerHTML = `${escapeHtml(newName)} ${customIcon}`;
+            }
+        }
+        
+        selectedEditGroupFile = null;
+        refreshSidebar();
+        document.getElementById('group-settings-modal').style.display = 'none';
+
+    } catch(err) { 
+        showToast("Gagal: " + err.message); 
+    } finally { 
+        if(btn) { btn.innerText = "Simpan Perubahan"; btn.disabled = false; } 
+    }
+};
+
+window.leaveGroup = async () => {
+    if(!confirm("Yakin mau keluar dari grup ini?")) return;
+    try {
+        const { error } = await supabase.from('group_members').delete()
+            .eq('group_id', window.activeGroupId).eq('user_id', currentUser.id);
+        if (error) throw error;
+        
+        await supabase.from('messages').insert([{
+            room_id: `group_${window.activeGroupId}`,
+            message: `${myUsername} telah meninggalkan grup`,
+            user_id: currentUser.id,
+            is_system: true
+        }]);
+
+        showToast("Kamu telah keluar dari grup");
+        
+        const modal = document.getElementById('group-settings-modal');
+        if(modal) modal.style.display = 'none';
+        
+        window.currentChatMode = null;
+        window.activeGroupId = null;
+        currentRoomId = "room-1";
+        const headerTitle = document.querySelector(".chat-header h3");
+        if (headerTitle) headerTitle.textContent = "HopeTalk Globe";
+        const btnInvite = document.getElementById('btn-open-invite');
+        if (btnInvite) btnInvite.style.display = 'none';
+        
+        initPresence();
+        await refreshSidebar();
+        await loadMessages();
+    } catch(err) { showToast("Gagal keluar dari grup"); }
+};
+
+window.kickMember = async (targetId, targetName) => {
+    if(!confirm(`Keluarkan ${targetName} dari grup?`)) return;
+    try {
+        const { error } = await supabase.from('group_members').delete()
+            .eq('group_id', window.activeGroupId).eq('user_id', targetId);
+        if (error) throw error;
+        
+        showToast(`${targetName} dikeluarkan`);
+        window.openGroupSettings(); 
+        
+        await supabase.from('messages').insert([{
+            room_id: `group_${window.activeGroupId}`,
+            message: `${targetName} telah dikeluarkan oleh admin`,
+            user_id: currentUser.id,
+            is_system: true
+        }]);
+    } catch(err) { showToast("Gagal mengeluarkan member"); }
+};
+
+// ==========================================
+// 🔥 VARIABEL AUDIO & TIMER TELPON 🔥
 // ==========================================
 let callRingingTimeout = null; 
 let callTalkTimer = null;      
 let callSeconds = 0;           
 
-window.endCall = (isSilent = false) => {
-    if(ringtoneSound) { ringtoneSound.pause(); ringtoneSound.currentTime = 0; }
-    clearTimeout(callRingingTimeout);
+function stopRingtone() {
+    ringtoneSound.pause();
+    ringtoneSound.currentTime = 0;
+}
+
+function startCallTimer() {
+    const statusEl = document.getElementById('call-status');
+    callSeconds = 0;
     if (callTalkTimer) clearInterval(callTalkTimer);
-
-    if (callRoom) { callRoom.disconnect(); callRoom = null; }
     
-    document.getElementById('call-overlay').style.display = 'none';
-    document.getElementById('incoming-call-overlay').style.display = 'none';
-};
+    callTalkTimer = setInterval(() => {
+        callSeconds++;
+        const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+        const s = String(callSeconds % 60).padStart(2, '0');
+        if (statusEl) statusEl.innerText = `${m}:${s}`;
+    }, 1000);
+}
 
+function stopCallTimer() {
+    if (callTalkTimer) {
+        clearInterval(callTalkTimer);
+        callTalkTimer = null;
+    }
+}
+
+// ==========================================
+// 🔥 FUNGSI TELPON UTAMA 🔥
+// ==========================================
 window.startLiveKitCall = async () => {
     const btn = document.getElementById('btn-start-call');
     const partnerId = btn.dataset.targetId;
     const partnerName = btn.dataset.targetName;
     if (!partnerId) return;
 
-    document.getElementById('call-overlay').style.display = 'flex';
-    document.getElementById('call-name').innerText = partnerName;
-    document.getElementById('call-status').innerText = "MEMANGGIL...";
+    const overlay = document.getElementById('call-overlay');
+    const statusEl = document.getElementById('call-status');
+    const nameEl = document.getElementById('call-name');
+    const avatarEl = document.getElementById('call-avatar');
+
+    if (overlay) overlay.style.display = 'flex';
+    if (nameEl) nameEl.innerText = partnerName;
+    
+    if (statusEl) {
+        statusEl.innerText = "MEMANGGIL...";
+        statusEl.classList.add('anim-calling-text');
+    }
+    if (avatarEl) {
+        avatarEl.classList.add('anim-calling-avatar');
+    }
 
     const profile = await getCachedProfile(partnerId);
-    if (profile) document.getElementById('call-avatar').src = profile.avatar_url || '/asets/png/profile.webp';
+    if (profile && avatarEl) {
+        avatarEl.src = profile.avatar_url || '/asets/png/profile.webp';
+    }
 
     try {
-        await supabase.from('messages').insert([{ room_id: currentRoomId, message: `📞 Memanggil ${partnerName}...`, user_id: currentUser.id, is_system: true }]);
+        await supabase.from('messages').insert([{
+            room_id: currentRoomId,
+            message: `📞 Memanggil ${partnerName}...`,
+            user_id: currentUser.id,
+            is_system: true
+        }]);
+
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
         callRingingTimeout = setTimeout(async () => {
             window.endCall();
-            await supabase.from('messages').insert([{ room_id: currentRoomId, message: `☎️ Panggilan tak terjawab`, user_id: currentUser.id, is_system: true }]);
+            await supabase.from('messages').insert([{
+                room_id: currentRoomId,
+                message: `☎️ Panggilan tak terjawab`,
+                user_id: currentUser.id,
+                is_system: true
+            }]);
         }, 30000);
+
         await connectToCall(currentRoomId);
-    } catch (err) { window.endCall(true); }
+
+    } catch (err) {
+        console.error("Panggilan Gagal:", err);
+        showToast("Gagal menyambung panggilan.");
+        window.endCall(true); 
+    }
+};
+
+window.endCall = (isSilent = false) => {
+    stopRingtone(); 
+    clearTimeout(callRingingTimeout);
+    stopCallTimer();
+
+    const avatarEl = document.getElementById('call-avatar');
+    const statusEl = document.getElementById('call-status');
+    if (avatarEl) avatarEl.classList.remove('anim-calling-avatar');
+    if (statusEl) {
+        statusEl.classList.remove('anim-calling-text');
+        statusEl.style.color = ""; 
+    }
+
+    const callOverlay = document.getElementById('call-overlay');
+    const incomingOverlay = document.getElementById('incoming-call-overlay');
+    let isOverlayOpen = (callOverlay && callOverlay.style.display !== 'none') || 
+                        (incomingOverlay && incomingOverlay.style.display !== 'none');
+
+    if (callRoom) {
+        callRoom.disconnect();
+        callRoom = null;
+    }
+    
+    if (callOverlay) callOverlay.style.display = 'none';
+    if (incomingOverlay) incomingOverlay.style.display = 'none';
+    
+    if (isOverlayOpen && !isSilent) {
+        if (callSeconds > 0) {
+            const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+            const s = String(callSeconds % 60).padStart(2, '0');
+            showToast(`Panggilan berakhir (${m}:${s})`);
+        } else {
+            showToast("Panggilan berakhir");
+        }
+    }
 };
 
 let callSignalData = null;
+
 window.showIncomingCall = async function(msgData) {
     callSignalData = msgData; 
-    document.getElementById('incoming-call-overlay').style.display = 'flex';
+    const overlay = document.getElementById('incoming-call-overlay');
+    const nameEl = document.getElementById('incoming-name');
+    const avatarEl = document.getElementById('incoming-avatar'); 
+    
+    if (overlay) overlay.style.display = 'flex';
+    if (nameEl) nameEl.innerText = "Memuat..."; 
+
     if (msgData.user_id) {
         const profile = await getCachedProfile(msgData.user_id);
         if (profile) {
-            document.getElementById('incoming-avatar').src = profile.avatar_url || '/asets/png/profile.webp';
-            document.getElementById('incoming-name').innerText = profile.username || "Teman"; 
+            if (avatarEl) avatarEl.src = profile.avatar_url || '/asets/png/profile.webp';
+            if (nameEl) nameEl.innerText = profile.username || "Teman"; 
         }
     }
-    if(ringtoneSound) ringtoneSound.play().catch(e => console.log("Autoplay block"));
+
+    ringtoneSound.play().catch(e => console.log("Browser blokir autoplay:", e));
 };
 
 window.answerCall = async () => {
-    if(ringtoneSound) { ringtoneSound.pause(); ringtoneSound.currentTime = 0; }
-    document.getElementById('incoming-call-overlay').style.display = 'none';
-    document.getElementById('call-overlay').style.display = 'flex';
-    document.getElementById('call-status').innerText = "CONNECTING...";
+    stopRingtone(); 
+
+    const incomingOverlay = document.getElementById('incoming-call-overlay');
+    if (incomingOverlay) incomingOverlay.style.display = 'none';
+
+    const callOverlay = document.getElementById('call-overlay');
+    if (callOverlay) callOverlay.style.display = 'flex';
+
+    const callStatus = document.getElementById('call-status');
+    if (callStatus) callStatus.innerText = "CONNECTING...";
+
+    const callAvatar = document.getElementById('call-avatar');
+    if (callAvatar && callSignalData?.user_id) {
+        const profile = await getCachedProfile(callSignalData.user_id);
+        if (profile) {
+            callAvatar.src = profile.avatar_url || '/asets/png/profile.webp';
+        }
+    }
 
     if (callSignalData) {
         await connectToCall(callSignalData.room_id);
-        document.getElementById('call-status').innerText = "ON CALL";
-        callTalkTimer = setInterval(() => { callSeconds++; document.getElementById('call-status').innerText = `${Math.floor(callSeconds / 60).toString().padStart(2, '0')}:${(callSeconds % 60).toString().padStart(2, '0')}`; }, 1000);
+        if (callStatus) callStatus.innerText = "ON CALL";
     }
 };
 
 window.rejectCall = async () => {
-    if(ringtoneSound) { ringtoneSound.pause(); ringtoneSound.currentTime = 0; }
-    document.getElementById('incoming-call-overlay').style.display = 'none';
+    stopRingtone(); 
+
+    const incomingOverlay = document.getElementById('incoming-call-overlay');
+    if (incomingOverlay) incomingOverlay.style.display = 'none';
+    
     if (callSignalData) {
-        await supabase.from('messages').insert([{ room_id: callSignalData.room_id, message: `🚫 Panggilan Ditolak`, user_id: currentUser.id, is_system: true }]);
+        await supabase.from('messages').insert([{
+            room_id: callSignalData.room_id,
+            message: `🚫 Panggilan Ditolak`,
+            user_id: currentUser.id,
+            is_system: true
+        }]);
         callSignalData = null;
     }
 };
@@ -907,25 +1938,75 @@ window.rejectCall = async () => {
 async function connectToCall(roomName) {
     try {
         const response = await fetch(`${SUPABASE_URL}/functions/v1/get-livekit-token`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json', 
+                'apikey': SUPABASE_ANON_KEY, 
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}` 
+            },
             body: JSON.stringify({ username: myUsername, identity: currentUser.id, roomName: roomName })
         });
-        const data = await response.json();
-        callRoom = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
-        callRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => { if (track.kind === "audio") { const element = track.attach(); document.body.appendChild(element); element.play().catch(() => {}); } });
-        callRoom.on(LivekitClient.RoomEvent.ParticipantDisconnected, () => { window.endCall(); });
-        callRoom.on(LivekitClient.RoomEvent.Disconnected, () => { window.endCall(); });
-        callRoom.on(LivekitClient.RoomEvent.ParticipantConnected, () => { clearTimeout(callRingingTimeout); });
         
+        const data = await response.json();
+
+        callRoom = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
+
+        callRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+            if (track.kind === "audio") {
+                const element = track.attach();
+                document.body.appendChild(element);
+                element.play().catch(() => {});
+            }
+        });
+
+        callRoom.on(LivekitClient.RoomEvent.ParticipantDisconnected, (participant) => {
+            showToast("Panggilan diakhiri oleh lawan bicara.");
+            window.endCall();
+        });
+
+        callRoom.on(LivekitClient.RoomEvent.Disconnected, () => {
+            window.endCall();
+        });
+
+        callRoom.on(LivekitClient.RoomEvent.ParticipantConnected, (participant) => {
+            clearTimeout(callRingingTimeout); 
+            
+            const avatarEl = document.getElementById('call-avatar');
+            const statusEl = document.getElementById('call-status');
+            if (avatarEl) avatarEl.classList.remove('anim-calling-avatar');
+            if (statusEl) {
+                statusEl.classList.remove('anim-calling-text');
+                statusEl.style.color = "#2ecc71"; 
+            }
+
+            startCallTimer(); 
+        });
+
         const LIVEKIT_URL = "wss://voicegrup-zxmeibkn.livekit.cloud"; 
         await callRoom.connect(LIVEKIT_URL, data.token);
         await callRoom.localParticipant.setMicrophoneEnabled(true);
-    } catch (e) { window.endCall(); }
+
+        if (callRoom.remoteParticipants.size > 0) {
+            clearTimeout(callRingingTimeout);
+            
+            const avatarEl = document.getElementById('call-avatar');
+            const statusEl = document.getElementById('call-status');
+            if (avatarEl) avatarEl.classList.remove('anim-calling-avatar');
+            if (statusEl) {
+                statusEl.classList.remove('anim-calling-text');
+                statusEl.style.color = "#2ecc71"; 
+            }
+
+            startCallTimer();
+        }
+
+    } catch (e) {
+        console.error("Gagal koneksi LiveKit:", e.message);
+        showToast("Gagal terhubung ke server panggilan.");
+        window.endCall();
+    }
 }
 
-// =======================
-// INIT APP
-// =======================
 async function init() {
   try {
     const ok = await requireLogin(); 
