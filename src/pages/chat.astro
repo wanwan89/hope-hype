@@ -23,89 +23,127 @@ import '../styles/chat.css';
     <ChatModals />
   </div>
 
-  <script is:inline type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js";
+<script is:inline type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
-    // ===== Supabase config =====
-    const SUPABASE_URL = "https://hqetnqnvmdxdgfnnluew.supabase.co";
-    const SUPABASE_ANON_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZXRucW52bWR4ZGdmbm5sdWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MzUyODIsImV4cCI6MjA4NzMxMTI4Mn0.Cr9lDBZMqfeONi1dfyFzHpBtawBzZTQLBEWKmPJVAOA";
-    window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // ===== Supabase config =====
+  const SUPABASE_URL = "https://hqetnqnvmdxdgfnnluew.supabase.co";
+  const SUPABASE_ANON_KEY = "ISI_KEY_LO";
 
-    // ===== Audio Config =====
-    window.sendSound = new Audio("/asets/sound/send.mp3");
-    window.receiveSound = new Audio("/asets/sound/receive.mp3");
-    window.ringtoneSound = new Audio("/asets/sound/call.wav");
-    window.ringtoneSound.loop = true;
+  window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ===== Global State =====
-    window.currentRoomId = "room-1";
-    window.currentReplyId = null;
-    window.currentUser = null;
-    window.myUsername = "Guest";
-    window.myRole = "user";
-    window.presenceChannel = null;
-    window.globalPresenceChannel = null; 
-    window.messageChannel = null;
-    window.typingTimeout = null;
-    window.isCurrentlyTyping = false;
-    window.selectedMessageId = null;
-    window.isFirstMessageLoad = true; 
-    window.totalOnlineUsers = 0; 
-    window.isSidebarLoading = false; 
-    window.selectedGroupFile = null;
-    window.callRoom = null;
+  // ===== Global State =====
+  window.currentUser = null;
+  window.myUsername = "Guest";
+  window.myRole = "user";
 
-    const profileCache = new Map();
+  const profileCache = new Map();
 
-    window.getCachedProfile = async function(userId) {
+  // ===== Get Profile (FIXED) =====
+  window.getCachedProfile = async function(userId) {
+    try {
+      if (!userId) return null;
+
       if (profileCache.has(userId)) return profileCache.get(userId);
-      const localKey = `hh_profile_${userId}`;
-      const cacheTimeKey = `hh_profile_time_${userId}`;
-      const cached = localStorage.getItem(localKey);
-      const cacheTime = localStorage.getItem(cacheTimeKey);
-      if (cached && cacheTime && (Date.now() - parseInt(cacheTime) < 3600000)) {
-        const data = JSON.parse(cached);
-        profileCache.set(userId, data); 
-        return data;
+
+      const { data, error } = await window.supabase
+        .from("profiles")
+        .select("username, avatar_url, role, short_id, gender")
+        .eq("id", userId)
+        .single();
+
+      if (error) {
+        console.error("PROFILE ERROR:", error);
+        return null;
       }
-      const { data, error } = await supabase.from('profiles').select('username, avatar_url, role, short_id, gender').eq('id', userId).single();
+
       if (data) {
-        localStorage.setItem(localKey, JSON.stringify(data));
-        localStorage.setItem(cacheTimeKey, Date.now().toString());
         profileCache.set(userId, data);
       }
-      return data;
-    }
 
-    window.requireLogin = async function() {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      return data;
+    } catch (err) {
+      console.error("GET PROFILE CRASH:", err);
+      return null;
+    }
+  };
+
+  // ===== LOGIN CHECK (FIXED) =====
+  window.requireLogin = async function() {
+    try {
+      const { data: { session }, error } = await window.supabase.auth.getSession();
+
       if (error || !session || !session.user) {
+        console.warn("Belum login, redirect...");
         window.location.href = "/login";
         return false;
       }
+
       window.currentUser = { id: session.user.id };
-      const myProfile = await getCachedProfile(session.user.id);
-      window.myUsername = myProfile?.username || "Guest";
-      window.myRole = myProfile?.role || "user";
       return true;
-    }
 
-    async function init() {
-      try {
-        const ok = await requireLogin(); 
-        if (!ok) return;
-        await loadProfile(); 
-        await initPresence(); 
-        await refreshSidebar(); 
-        initRealtimeMessages(); 
-        await loadMessages(); 
-        updateHeaderStatus(); 
-        fetchStickers(); 
-        scrollToBottom();
-      } catch (err) { console.error("Gagal memulai aplikasi:", err); }
+    } catch (err) {
+      console.error("LOGIN ERROR:", err);
+      return false;
     }
+  };
 
-    init();
-  </script>
+  // ===== LOAD PROFILE (NEW FIX) =====
+  window.loadProfile = async function() {
+    try {
+      const userId = window.currentUser?.id;
+      if (!userId) return;
+
+      const profile = await window.getCachedProfile(userId);
+
+      if (!profile) {
+        console.warn("Profile kosong");
+        return;
+      }
+
+      window.myUsername = profile.username || "Guest";
+      window.myRole = profile.role || "user";
+
+      // ===== UPDATE UI =====
+      const usernameEl = document.querySelector(".username");
+      const idEl = document.querySelector(".user-id");
+
+      if (usernameEl) usernameEl.textContent = window.myUsername;
+      if (idEl) idEl.textContent = `#${profile.short_id || "0000"}`;
+
+      console.log("PROFILE LOADED:", profile);
+
+    } catch (err) {
+      console.error("LOAD PROFILE ERROR:", err);
+    }
+  };
+
+  // ===== INIT APP (FIXED FLOW) =====
+  async function init() {
+    try {
+      console.log("INIT START");
+
+      const ok = await window.requireLogin();
+      if (!ok) return;
+
+      await window.loadProfile();
+
+      // ===== OPTIONAL (biar gak error kalau belum ada) =====
+      if (typeof initPresence === "function") await initPresence();
+      if (typeof refreshSidebar === "function") await refreshSidebar();
+      if (typeof initRealtimeMessages === "function") initRealtimeMessages();
+      if (typeof loadMessages === "function") await loadMessages();
+      if (typeof updateHeaderStatus === "function") updateHeaderStatus();
+      if (typeof fetchStickers === "function") fetchStickers();
+      if (typeof scrollToBottom === "function") scrollToBottom();
+
+      console.log("INIT DONE");
+
+    } catch (err) {
+      console.error("INIT ERROR:", err);
+    }
+  }
+
+  init();
+</script>
 </Layout>
