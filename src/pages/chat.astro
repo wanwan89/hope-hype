@@ -88,36 +88,38 @@ import '../styles/chat.css';
     }
   };
 
-  // ===== LOAD PROFILE (NEW FIX) =====
-  window.loadProfile = async function() {
-    try {
-      const userId = window.currentUser?.id;
-      if (!userId) return;
+window.loadProfile = async function() {
+  try {
+    const userId = window.currentUser?.id;
+    if (!userId) return;
 
-      const profile = await window.getCachedProfile(userId);
+    const profile = await window.getCachedProfile(userId);
 
-      if (!profile) {
-        console.warn("Profile kosong");
-        return;
-      }
+    if (!profile) {
+      console.warn("Profile kosong");
+      return;
+    }
 
-      window.myUsername = profile.username || "Guest";
-      window.myRole = profile.role || "user";
+    window.myUsername = profile.username || "Guest";
+    window.myRole = profile.role || "user";
 
-      // ===== UPDATE UI =====
-      const usernameEl = document.querySelector(".username");
-      const idEl = document.querySelector(".user-id");
+    // ⏳ biar nunggu Astro render
+    setTimeout(() => {
+      const usernameEl = document.getElementById("my-username");
+      const idEl = document.getElementById("my-id");
 
       if (usernameEl) usernameEl.textContent = window.myUsername;
       if (idEl) idEl.textContent = `#${profile.short_id || "0000"}`;
 
-      console.log("PROFILE LOADED:", profile);
+      console.log("UI UPDATED");
+    }, 200);
 
-    } catch (err) {
-      console.error("LOAD PROFILE ERROR:", err);
-    }
-  };
+    console.log("PROFILE LOADED:", profile);
 
+  } catch (err) {
+    console.error("LOAD PROFILE ERROR:", err);
+  }
+};
   // ===== INIT APP (FIXED FLOW) =====
   async function init() {
     try {
