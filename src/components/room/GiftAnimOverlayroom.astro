@@ -1,0 +1,12 @@
+---
+---
+<div id="gift-anim-overlay">
+  <img id="gift-anim-img" src="" alt="Gift Animation" />
+</div>
+
+<style is:global>
+#gift-anim-overlay { position: fixed !important; inset: 0; display: none; justify-content: center; align-items: center; z-index: 1000000 !important; pointer-events: none; }
+#gift-anim-img { width: 300px; max-width: 80%; transform: scale(0.5); opacity: 0; transition: all 0.4s ease; }
+#gift-anim-overlay.show { display: flex; background: rgba(0,0,0,0.5); }
+#gift-anim-overlay.show #gift-anim-img { transform: scale(1); opacity: 1; }
+</style>

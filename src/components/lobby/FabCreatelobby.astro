@@ -1,0 +1,25 @@
+---
+---
+<button class="fab-create" onclick="createRoom()">
+  <span class="material-icons">add</span>
+</button>
+
+<style is:global>
+.fab-create {
+    position: fixed;
+    bottom: 30px;
+    right: max(24px, calc(50% - 216px));
+    width: 60px;
+    height: 60px;
+    border-radius: 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 99;
+}
+</style>

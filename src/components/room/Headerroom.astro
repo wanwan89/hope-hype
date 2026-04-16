@@ -1,0 +1,34 @@
+---
+---
+<header class="main-header">
+  <div class="header-left">
+    <h1 class="room-title">KLASIKAN NYANYI</h1>
+    <div style="font-size: 11px; color: #94a3b8; margin-top: 4px; display: flex; align-items: center; gap: 6px; font-weight: 600;">
+      <span class="material-icons" style="font-size: 14px; color: #00e676;">people</span>
+      <span id="online-count">1</span> orang di room
+    </div>
+  </div>
+  <div class="header-right" style="display: flex; align-items: center;">
+    <div id="top-gifters-container" style="display: flex; align-items: center; margin-right: 15px; cursor: pointer;" onclick="openTopGiftersModal()"></div>
+    <button class="menu-btn" onclick="toggleSidebar()">
+      <span class="material-icons" style="font-size: 28px; color: white;">menu</span>
+    </button>
+  </div>
+</header>
+
+<style is:global>
+.main-header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--panel-bg); 
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    z-index: 100;
+}
+
+.header-left { display: flex; flex-direction: column; }
+.room-title { font-size: 17px; font-weight: 700; color: var(--text-main); }
+.menu-btn { background: transparent; border: none; cursor: pointer; color: var(--text-main); }
+.menu-btn .material-icons { color: var(--text-main) !important; }
+</style>

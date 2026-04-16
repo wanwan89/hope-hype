@@ -1,0 +1,50 @@
+---
+---
+<div id="setting-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>⚙️ Room Settings</h3>
+      <span class="close-modal" onclick="closeRoomSetting()">×</span>
+    </div>
+    <div class="modal-body">
+      <label>Nama Room Baru</label>
+      <input type="text" id="edit-room-name" placeholder="Contoh: Klasikan Galau..." />
+      <label>Pesan Sistem (Broadcast ke Chat)</label>
+      <textarea id="system-message" placeholder="Tulis pesan pengumuman..."></textarea>
+      <button class="btn-save-setting" onclick="saveRoomSetting()">SIMPAN PERUBAHAN</button>
+    </div>
+  </div>
+</div>
+
+<div id="confirm-modal" class="modal-overlay" style="z-index: 10005;">
+  <div class="modal-box" style="text-align: center; max-width: 300px; padding: 25px 20px;">
+    <h3 style="margin-top: 0; color: #fff; font-size: 18px;">Turun Panggung?</h3>
+    <p style="color: #94a3b8; font-size: 14px; margin-bottom: 25px;">Yakin mau turun dari panggung sekarang? Mic kamu akan otomatis dimatikan.</p>
+    <div style="display: flex; gap: 15px; justify-content: center;">
+      <button onclick="closeConfirmModal()" style="flex: 1; padding: 12px; border-radius: 14px; border: none; background: #333; color: white; font-weight: bold; cursor: pointer;">BATAL</button>
+      <button onclick="prosesTurunMic()" style="flex: 1; padding: 12px; border-radius: 14px; border: none; background: #ff4d4d; color: white; font-weight: bold; cursor: pointer;">YAKIN</button>
+    </div>
+  </div>
+</div>
+
+<div id="top-gifters-modal" class="modal-overlay" style="display: none; z-index: 10006;">
+  <div class="modal-box" style="max-width: 320px; padding: 20px; background: #1e293b;">
+    <div class="modal-header" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; color: #FFD700; font-size: 18px; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);">THE SULTAN</h3>
+      <span class="close-modal" onclick="closeTopGiftersModal()" style="cursor:pointer; font-size: 24px; color: #94a3b8;">&times;</span>
+    </div>
+    <div id="top-gifters-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 350px; overflow-y: auto; padding-right: 5px;">
+    </div>
+  </div>
+</div>
+
+<style is:global>
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; display: none; align-items: center; justify-content: center; }
+.modal-box { background: var(--panel-bg); width: 85%; max-width: 350px; border-radius: 20px; padding: 20px; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-header h3 { font-size: 16px; margin: 0; }
+.close-modal { font-size: 24px; cursor: pointer; color: var(--text-muted); }
+.modal-body label { display: block; margin-bottom: 6px; font-size: 12px; color: var(--text-muted); }
+.modal-body input, .modal-body textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid transparent; color: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; }
+.btn-save-setting { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 700; }
+</style>

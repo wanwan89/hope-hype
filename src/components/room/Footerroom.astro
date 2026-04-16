@@ -1,0 +1,50 @@
+---
+---
+<footer class="footer-controls">
+  <button class="btn-gift-main" onclick="toggleGiftDrawer()">
+    <span class="material-icons">redeem</span>
+  </button>
+  <div class="input-wrapper">
+    <input type="text" id="chat-input" placeholder="Ketik komentar..." autocomplete="off" onkeydown="if(event.key === 'Enter') kirimKomentar()" />
+    <button class="btn-send" onclick="kirimKomentar()">
+      <span class="material-icons" style="font-size: 18px; margin-left: 3px;">send</span>
+    </button>
+  </div>
+</footer>
+
+<style is:global>
+.footer-controls {
+    position: fixed; 
+    bottom: 0; left: 0; right: 0;
+    padding: 10px 15px;
+    background: var(--panel-bg); 
+    border-top: 1px solid rgba(255,255,255,0.05); 
+    display: flex; gap: 10px; align-items: center; z-index: 900; 
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+}
+
+.btn-gift-main {
+    width: 44px; height: 44px; border-radius: 50%; background: var(--accent); 
+    border: none; display: flex; align-items: center; justify-content: center;
+    color: #ffffff; cursor: pointer; flex-shrink: 0; 
+}
+
+.input-wrapper {
+    flex: 1; display: flex; align-items: center;
+    background: rgba(0,0,0,0.3); border-radius: 24px; padding: 4px 6px 4px 16px; height: 44px; 
+}
+
+#chat-input { flex: 1; background: transparent; border: none; color: var(--text-main); font-size: 13px; }
+#chat-input::placeholder { color: var(--text-muted); }
+
+.btn-send {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--primary); 
+    border: none; display: flex; align-items: center; justify-content: center;
+    color: white; cursor: pointer;
+}
+
+/* Biar input chat selalu di atas keyboard */
+.footer-controls {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+</style>

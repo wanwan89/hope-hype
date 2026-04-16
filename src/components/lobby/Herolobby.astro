@@ -1,0 +1,42 @@
+---
+---
+<section class="hero-section">
+  <div class="hero-card">
+    <div class="hero-text">
+      <h2>Panggung Utama</h2>
+      <p>Jadilah bintang hari ini dan kumpulkan koin hope</p>
+      <button class="btn-primary-neon" onclick="handleStartSinging()">ROOM KAMU</button>
+    </div>
+    <div class="hero-overlay-glow"></div>
+  </div>
+</section>
+
+<style is:global>
+.hero-section {
+    padding: 12px 24px;
+}
+
+.hero-card {
+    background: var(--primary);
+    border-radius: 28px;
+    padding: 32px 24px;
+    color: white;
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.15);
+}
+
+.hero-text h2 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+.hero-text p { font-size: 13px; color: rgba(255, 255, 255, 0.8); margin-bottom: 24px; line-height: 1.5; max-width: 90%; }
+
+.btn-primary-neon {
+    background: white;
+    color: var(--primary);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+.btn-primary-neon:active { transform: scale(0.95); }
+</style>

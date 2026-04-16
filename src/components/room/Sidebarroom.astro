@@ -1,0 +1,58 @@
+---
+---
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<div id="sidebar" class="sidebar">
+  <div class="sidebar-header">
+    <button class="close-sidebar-btn" onclick="toggleSidebar()">
+      <span class="material-icons">chevron_right</span>
+    </button>
+    <img src="/asets/png/profile.png" id="sidebar-avatar" class="sidebar-profile-img" />
+    <span id="sidebar-username">Username</span>
+  </div>
+
+  <div class="sidebar-menu">
+    <a href="/data">
+      <span class="material-icons">person</span> 
+      <span>Profil</span>
+    </a>
+    
+<a href="#" id="menu-mic" onclick="toggleMicSidebar(event)">
+
+      <span class="material-icons" id="mic-icon">mic</span> 
+      <span id="mic-text">Matikan Mic</span>
+    </a>
+    
+    <a href="#" id="menu-setting" style="display: none;" onclick="openRoomSetting()">
+      <span class="material-icons">settings</span> 
+      <span>Room Settings</span>
+    </a>
+    
+    <a href="#" onclick="keluarRoom()" class="logout-item">
+      <span class="material-icons">logout</span> 
+      <span>Keluar</span>
+    </a>
+  </div>
+</div> 
+
+<style is:global>
+.sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; display: none; }
+.sidebar-overlay.active { display: block; }
+
+.sidebar {
+    position: fixed; top: 0; right: -280px; width: 280px; height: 100%;
+    background: var(--bg-base); z-index: 2000;
+    transition: right 0.3s ease; padding: 24px 20px;
+    display: flex; flex-direction: column; 
+}
+.sidebar.active { right: 0; }
+
+.sidebar-header { display: flex; flex-direction: column; align-items: center; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; }
+.close-sidebar-btn { position: absolute; left: 0; top: 0; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 24px; }
+.sidebar-profile-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; }
+#sidebar-username { font-weight: 700; font-size: 15px; }
+
+.sidebar-menu { margin-top: 20px; }
+.sidebar-menu a { display: flex; align-items: center; gap: 12px; color: var(--text-main); text-decoration: none; padding: 12px 14px; border-radius: 12px; margin-bottom: 5px; font-size: 13px; font-weight: 600; }
+.sidebar-menu a.logout-item { color: var(--danger); margin-top: 20px; }
+</style>

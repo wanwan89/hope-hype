@@ -1,0 +1,103 @@
+---
+---
+<main class="room-section">
+  <div class="section-header">
+    <h3>Panggung Aktif</h3>
+    <div class="tabs">
+      <span class="active" onclick="filterKategori('Populer', this)">Populer</span>
+      <span onclick="filterKategori('Musik', this)">Musik</span>
+      <span onclick="filterKategori('Chat', this)">Chat</span>
+    </div>
+  </div>
+
+  <div id="room-list" class="room-list-container">
+    </div>
+</main>
+
+<style is:global>
+.room-section { padding: 10px 24px 0; }
+.section-header { margin-bottom: 20px; }
+.section-header h3 { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+
+.tabs {
+    background: #e2e8f0;
+    padding: 4px;
+    border-radius: 16px;
+    display: flex;
+    width: 100%;
+}
+
+.tabs span {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tabs span.active {
+    background: white;
+    color: var(--text-dark);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.room-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.room-card {
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.room-card:active { background: var(--primary-light); }
+
+.room-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.room-thumb .material-icons { font-size: 28px; color: var(--primary); }
+
+.room-info { flex: 1; min-width: 0; }
+.room-info h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.room-info p { font-size: 12px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.online-pill { background: #fff1f2; color: #e11d48; padding: 6px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+
+.skeleton-card { background: var(--bg-card); border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+.skeleton-info { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.skeleton {
+    background: #e2e8f0;
+    background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+}
+.skeleton-thumb { width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0; }
+.skeleton-text { height: 12px; border-radius: 6px; }
+.skeleton-title { width: 70%; height: 16px; }
+.skeleton-desc { width: 90%; }
+.skeleton-pill { width: 60px; height: 24px; border-radius: 12px; flex-shrink: 0; }
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+</style>

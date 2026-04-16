@@ -1,0 +1,57 @@
+---
+---
+<div id="modal-create" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <h3>BUAT PANGGUNG BARU</h3>
+    <p>Tentukan nama panggung dan ajak temanmu bernyanyi!</p>
+    
+    <div class="input-group">
+      <label>Nama Room</label>
+      <input type="text" id="new-room-name" placeholder="Nama room kamu" />
+    </div>
+
+    <div class="input-group">
+      <label>Deskripsi</label>
+      <textarea id="new-room-desc" placeholder="Bahas tentang apa.."></textarea>
+    </div>
+
+    <div class="input-group">
+      <label>Kategori</label>
+      <select id="new-room-category" class="custom-select">
+        <option value="Musik">Musik dan Nyanyi</option>
+        <option value="Chat">Chat dan Nongkrong</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">BATAL</button>
+      <button class="btn-confirm" onclick="confirmCreateRoom()">BUAT SEKARANG</button>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    display: none; 
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content { background: white; width: 85%; max-width: 380px; padding: 24px; border-radius: 24px; }
+.modal-content h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+.modal-content p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+.input-group { margin-bottom: 16px; }
+.input-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
+.input-group input, .input-group textarea, .custom-select { width: 100%; padding: 14px; border-radius: 14px; border: none; background: var(--bg-app); font-family: inherit; font-size: 14px; }
+.modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+.modal-actions button { flex: 1; padding: 14px; border-radius: 14px; font-weight: 700; border: none; cursor: pointer; }
+
+.btn-cancel { background: var(--bg-app); color: var(--text-muted); }
+.btn-confirm { background: var(--primary); color: white; }
+</style>

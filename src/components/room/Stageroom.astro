@@ -1,0 +1,111 @@
+---
+---
+<section id="stage-grid" class="stage-container"></section>
+
+<style is:global>
+.stage-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px 10px; 
+    padding: 24px 15px;
+    background: var(--panel-bg);
+    border-radius: 0 0 32px 32px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2); 
+    z-index: 90;
+}
+
+.speaker-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%; 
+    min-width: 0; /* Penting agar grid tidak jebol kesamping */
+}
+
+.speaker-item.empty .avatar { background: var(--empty-slot); border: none; box-shadow: none; }
+.speaker-item.empty .avatar .material-icons { color: #475569; font-size: 28px; }
+
+.avatar {
+    width: 64px; 
+    height: 64px;
+    border-radius: 50%; 
+    background: var(--empty-slot);
+    position: relative;
+    border: 2px solid transparent; 
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+
+.avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+
+/* 🔥 EFEK SONAR SAAT NGOMONG 🔥 */
+.avatar.speaking {
+    border-color: var(--success) !important; 
+    /* Animasi gelombang suara memancar */
+    animation: sonar-wave 1.5s infinite ease-out;
+}
+
+@keyframes sonar-wave {
+    0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.6), 0 0 0 0 rgba(0, 255, 136, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(0, 255, 136, 0.2), 0 0 0 16px rgba(0, 255, 136, 0.1); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0), 0 0 0 0 rgba(0, 255, 136, 0); }
+}
+
+.gift-trigger {
+    position: absolute; bottom: -4px; right: -4px;
+    background: var(--empty-slot); color: var(--accent);
+    border: 2px solid var(--panel-bg); border-radius: 50%;
+    width: 26px; height: 26px; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; z-index: 10;
+}
+
+/* 🔥 PERBAIKAN 1 & 2: NAMA DAN BADGE SATU BARIS RAPI 🔥 */
+.name-label {
+    margin-top: 10px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px; /* Jarak antar elemen */
+    font-size: 13px; /* Ukuran font normal */
+    font-weight: 700;
+    color: var(--text-main);
+    
+    /* Paksa 1 baris */
+    flex-wrap: nowrap; 
+    overflow: hidden; 
+}
+
+/* Teks nama dipotong (ellipsis) jika kepanjangan */
+.name-label span, 
+.name-label .user-name-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    /* Jangan biarkan nama memakan semua ruang, beri sisa untuk badge */
+    flex-shrink: 1; 
+}
+
+/* Styling Badge Normal */
+.name-label b, 
+.badge {
+    font-size: 10px !important; 
+    padding: 2px 5px !important;
+    border-radius: 4px;
+    height: auto;
+    
+    /* Mencegah badge terpotong; ia akan tetap utuh meski nama memendek */
+    flex-shrink: 0; 
+    white-space: nowrap;
+}
+
+/* Styling icon (seperti mahkota) di dalam label */
+.name-label img {
+    height: 14px !important; 
+    width: auto;
+    flex-shrink: 0;
+}
+
+.speaker-item.empty .name-label { color: var(--text-muted); font-size: 12px; }
+</style>
