@@ -15,6 +15,22 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
 ---
 
 <Layout title="HopeTalk Globe">
+  <script is:inline>
+    const theme = (() => {
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+        return localStorage.getItem('theme');
+      }
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
+      return 'light';
+    })();
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
   <script is:inline src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
   <audio id="send-sound" src="/asets/sound/send.mp3" preload="auto"></audio>
@@ -46,6 +62,9 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
   <ReactionMenu />
   <CallOverlays />
 
+  <button id="global-theme-toggle" class="theme-toggle-floating" aria-label="Toggle Theme" title="Ganti Tema (Dark/Light)">
+    🌓
+  </button>
   <script>
  
 
@@ -113,6 +132,21 @@ const searchBtn = document.getElementById("sticker-search-btn");
 
 // MEMORI INTERNAL BIAR GAK TANYA DATABASE TERUS
 const profileCache = new Map();
+
+// [TAMBAHAN: LOGIKA TOGGLE THEME]
+// Event listener untuk tombol mode gelap/terang
+const themeToggleBtn = document.getElementById('global-theme-toggle');
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener('click', () => {
+    const htmlEl = document.documentElement;
+    htmlEl.classList.toggle('dark');
+    const isDark = htmlEl.classList.contains('dark');
+    
+    // Simpan ke localStorage agar pilihan tersimpan secara global
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  });
+}
+// [END TAMBAHAN: LOGIKA TOGGLE THEME]
 
 async function getCachedProfile(userId) {
   if (profileCache.has(userId)) return profileCache.get(userId);
@@ -442,7 +476,7 @@ function renderMessage(msg) {
     sysEl.className = "system-message-container";
     sysEl.style = "display: flex; justify-content: center; margin: 12px 0; width: 100%; animation: fadeIn 0.3s ease;";
     sysEl.innerHTML = `
-      <div style="background: rgba(0, 0, 0, 0.06); color: #555; font-size: 11px; padding: 5px 14px; border-radius: 20px; font-weight: 500; border: 1px solid rgba(0,0,0,0.03);">
+      <div style="background: rgba(0, 0, 0, 0.06); color: var(--text-color, #555); font-size: 11px; padding: 5px 14px; border-radius: 20px; font-weight: 500; border: 1px solid rgba(0,0,0,0.03);">
         ${escapeHtml(msg.message)}
       </div>
     `;
@@ -466,7 +500,7 @@ function renderMessage(msg) {
   const replyHtml = msg.reply_to_msg
     ? `<div class="reply-preview-in-chat" onclick="window.scrollToMessage('${msg.reply_to_msg.id}')" style="cursor:pointer; background:rgba(0,0,0,0.08); border-left:3px solid #0088cc; padding:5px 8px; border-radius:4px; margin-bottom:5px;">
         <div style="font-size:10px; color:#0088cc; font-weight:bold;">${escapeHtml(msg.reply_to_msg.username)}</div>
-        <div style="font-size:11px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(replyTextContent)}</div>
+        <div style="font-size:11px; color: var(--text-color, #666); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(replyTextContent)}</div>
       </div>`
     : "";
 
@@ -855,7 +889,7 @@ async function loadProfile() {
 function renderGlobalChatItem(container) {
   const globalBtn = document.createElement("div");
   globalBtn.innerHTML = `
-    <div style="display:flex; align-items:center; padding:12px; border-bottom:2px solid #f0f0f0; cursor:pointer; background:#f9fbff;">
+    <div style="display:flex; align-items:center; padding:12px; border-bottom:2px solid #f0f0f0; cursor:pointer; background: var(--chat-item-bg, #f9fbff);">
       <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg, #0088cc, #00d2ff); display:flex; align-items:center; justify-content:center; margin-right:12px;">
         <span style="color:white; font-size:18px;">🌍</span>
       </div>
@@ -914,7 +948,7 @@ async function loadChatHistory() {
     });
 
     const label = document.createElement("div"); 
-    label.innerHTML = `<div style="padding:10px 15px; font-size:11px; color:#999; font-weight:bold; background:#f8f9fa; border-top:1px solid #eee; margin-top:10px;">RIWAYAT CHAT PRIBADI</div>`; 
+    label.innerHTML = `<div style="padding:10px 15px; font-size:11px; color:#999; font-weight:bold; background: var(--label-bg, #f8f9fa); border-top:1px solid rgba(0,0,0,0.1); margin-top:10px;">RIWAYAT CHAT PRIBADI</div>`; 
     privateList.appendChild(label);
 
     if (lastMessagesMap.size === 0) {
@@ -962,10 +996,10 @@ async function loadChatHistory() {
           </div>
           <div style="flex: 1; margin-left: 12px; overflow: hidden;">
             <div style="display: flex; justify-content: space-between;">
-              <strong style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${name}</strong>
+              <strong style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-color, inherit);">${name}</strong>
               <span style="font-size: 10px; color: #999;">${formatTime(chat.created_at)}</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 4px; font-size: 12px; color: #666;">
+            <div style="display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-muted, #666);">
                ${myLastMsgIcon} <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${lastMsg}</span>
             </div>
           </div>
@@ -1381,7 +1415,7 @@ async function loadGroupList() {
     if (error || !memberships) return;
 
     const label = document.createElement("div");
-    label.innerHTML = `<div style="padding:10px 15px; font-size:11px; color:#999; font-weight:bold; background:#f8f9fa; border-top:1px solid #eee; margin-top:5px;">GRUP SAYA</div>`;
+    label.innerHTML = `<div style="padding:10px 15px; font-size:11px; color:#999; font-weight:bold; background: var(--label-bg, #f8f9fa); border-top:1px solid rgba(0,0,0,0.1); margin-top:5px;">GRUP SAYA</div>`;
     listContainer.appendChild(label);
 
     memberships.forEach(item => {
@@ -1393,14 +1427,14 @@ async function loadGroupList() {
         groupEl.style = "padding: 12px 15px; border-bottom: 1px solid rgba(0,0,0,0.03); cursor: pointer; display: flex; align-items: center; gap: 12px;";
         
         const avatarHtml = group.photo_url 
-            ? `<img src="${group.photo_url}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;">`
+            ? `<img src="${group.photo_url}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(0,0,0,0.1);">`
             : `<div style="width: 45px; height: 45px; border-radius: 50%; background: #3a7bd5; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${group.name.substring(0, 2).toUpperCase()}</div>`;
 
         groupEl.innerHTML = `
             ${avatarHtml}
             <div style="flex: 1;">
-              <div style="font-weight: 600; font-size: 14px; color: #333;">${group.name}</div>
-              <div style="font-size: 11px; color: #aaa;">Grup Chat aktif</div>
+              <div style="font-weight: 600; font-size: 14px; color: var(--text-color, #333);">${group.name}</div>
+              <div style="font-size: 11px; color: var(--text-muted, #aaa);">Grup Chat aktif</div>
             </div>
         `;
         
@@ -1549,7 +1583,7 @@ window.openGroupSettings = async () => {
     if(modal) modal.style.display = 'flex';
 
     const container = document.getElementById('member-list-container');
-    if(container) container.innerHTML = "<div style='font-size:12px; color:#666; text-align:center;'>Memuat anggota...</div>";
+    if(container) container.innerHTML = "<div style='font-size:12px; color:var(--text-muted, #666); text-align:center;'>Memuat anggota...</div>";
 
     try {
         const { data: group, error: groupErr } = await supabase
@@ -1586,7 +1620,7 @@ window.openGroupSettings = async () => {
                     const isMe = m.user_id === currentUser.id;
                     
                     const div = document.createElement('div');
-                    div.style = "display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #eee;";
+                    div.style = "display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.1); color: var(--text-color, #333);";
                     div.innerHTML = `
                         <img src="${profileAvatar}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
                         <span style="font-size:13px; font-weight:500;">${profileName} ${isMe ? '(Anda)' : ''}</span>
@@ -1595,7 +1629,7 @@ window.openGroupSettings = async () => {
                     container.appendChild(div);
                 });
             } else {
-                container.innerHTML = "<div style='font-size:12px; color:#666; text-align:center;'>Belum ada anggota.</div>";
+                container.innerHTML = "<div style='font-size:12px; color:var(--text-muted, #666); text-align:center;'>Belum ada anggota.</div>";
             }
         }
     } catch (err) {
@@ -2050,6 +2084,80 @@ init();
   </script>
 
   <style is:global>
+/* [TAMBAHAN: CSS VARIABLES GLOBAL THEME] */
+/* LIGHT MODE (Default) */
+:root {
+  --bg-main: #e5ddd5;
+  --bg-panel: rgba(255, 255, 255, 0.9);
+  --bg-sidebar: white;
+  --text-color: #333;
+  --text-muted: #666;
+  --chat-bg-image: url("../asets/png/chat.png");
+  --chat-item-bg: #f9fbff;
+  --label-bg: #f8f9fa;
+  --border-color: rgba(0,0,0,0.1);
+}
+
+/* DARK MODE */
+html.dark {
+  --bg-main: #0f172a;
+  --bg-panel: rgba(30, 41, 59, 0.9);
+  --bg-sidebar: #1e293b;
+  --text-color: #f8fafc;
+  --text-muted: #94a3b8;
+  --chat-bg-image: none; /* Kamu bisa hapus/ganti ini bila ingin tetap ada background gambar di dark mode */
+  --chat-item-bg: #0f172a;
+  --label-bg: #1e293b;
+  --border-color: rgba(255,255,255,0.1);
+}
+
+/* Penerapan transisi halus untuk pergantian mode di seluruh aplikasi */
+body {
+  background-color: var(--bg-main);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Menyesuaikan sidebar agar mengikuti tema */
+.sidebar {
+  background: var(--bg-sidebar);
+}
+
+/* Menyesuaikan telegram-chat agar gambarnya hilang/berubah di dark mode jika diperlukan */
+.telegram-chat {
+  background-image: var(--chat-bg-image);
+  background-color: var(--bg-main);
+}
+
+/* Styling untuk tombol toggle floating yang ditambahkan di atas */
+.theme-toggle-floating {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 99999;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: none;
+  background: #3a7bd5;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s, background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.theme-toggle-floating:active {
+  transform: scale(0.9);
+}
+html.dark .theme-toggle-floating {
+  background: #1e293b;
+  border: 1px solid #333;
+}
+/* [END TAMBAHAN: CSS VARIABLES GLOBAL THEME] */
+
 /* --- Base Styles --- */
 html,
 body {
@@ -2057,7 +2165,7 @@ body {
   padding: 0;
   height: 100%;
   font-family: "Poppins", sans-serif;
-  background: #e5ddd5;
+  background: var(--bg-main); /* Telah diupdate mengikuti variable CSS */
   display: flex;
   flex-direction: column;
 }
@@ -2068,7 +2176,8 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-image: url("../asets/png/chat.png");
+  background-image: var(--chat-bg-image); /* Telah diupdate mengikuti variable CSS */
+  background-color: var(--bg-main);
   background-size: cover;
   background-position: center;
   position: relative;
@@ -2091,10 +2200,10 @@ body {
 
 .chat-members {
   padding: 6px 16px;
-  background: rgba(240, 240, 240, 0.9);
+  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
   font-size: 14px;
-  color: #555;
-  border-bottom: 1px solid #ccc;
+  color: var(--text-color); /* Telah diupdate mengikuti variable CSS */
+  border-bottom: 1px solid var(--border-color); /* Telah diupdate mengikuti variable CSS */
   display: flex;
   align-items: center;
   gap: 5px;
@@ -2153,7 +2262,8 @@ body {
 }
 
 .chat-message.other {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
+  color: var(--text-color); /* Telah diupdate mengikuti variable CSS */
   align-self: flex-start;
   border-bottom-left-radius: 2px;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
@@ -2188,7 +2298,7 @@ body {
 .chat-message .username {
   font-weight: 600;
   font-size: 12px;
-  color: #555;
+  color: var(--text-color); /* Telah diupdate mengikuti variable CSS */
   margin-bottom: 2px;
 }
 
@@ -2199,7 +2309,7 @@ body {
 
 .chat-message .timestamp {
   font-size: 10px;
-  color: #555;
+  color: var(--text-muted); /* Telah diupdate mengikuti variable CSS */
   align-self: flex-end;
   margin-top: 2px;
 }
@@ -2222,16 +2332,18 @@ body {
 /* --- Input Area --- */
 .chat-input {
   display: flex;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--border-color); /* Telah diupdate mengikuti variable CSS */
   padding: 10px;
-  background: rgba(240, 240, 240, 0.9);
+  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
 }
 
 .chat-input input {
   flex: 1;
   padding: 10px 12px;
   border-radius: 20px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color); /* Telah diupdate mengikuti variable CSS */
+  background: var(--bg-main); /* Tambahan agar input box terintegrasi dark mode */
+  color: var(--text-color); /* Tambahan agar warna text input sesuai dark mode */
   outline: none;
 }
 
@@ -2326,9 +2438,10 @@ body {
   left: -280px;
   width: 280px;
   height: 100%;
-  background: white;
+  background: var(--bg-sidebar); /* Telah diupdate mengikuti variable CSS */
+  color: var(--text-color); /* Tambahan pewarnaan text */
   z-index: 10001;
-  transition: transform 0.3s ease-out, left 0.3s ease-out;
+  transition: transform 0.3s ease-out, left 0.3s ease-out, background-color 0.3s ease, color 0.3s ease;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -2356,8 +2469,8 @@ body {
   display: none;
   flex-wrap: wrap;
   padding: 8px;
-  background: #f9f9f9;
-  border-top: 1px solid #ccc;
+  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
+  border-top: 1px solid var(--border-color); /* Telah diupdate mengikuti variable CSS */
   height: 250px;
   overflow-y: auto;
   justify-content: center;
@@ -2365,14 +2478,14 @@ body {
 
 .reaction-menu {
   position: absolute;
-  background: white;
+  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
   padding: 8px 12px;
   border-radius: 30px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
   display: none;
   gap: 12px;
   z-index: 10006;
-  border: 1px solid #eee;
+  border: 1px solid var(--border-color); /* Telah diupdate mengikuti variable CSS */
   transform: translateX(-50%);
   animation: reactionPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -2392,12 +2505,12 @@ body {
   gap: 2px;
   position: absolute;
   bottom: -8px;
-  background: white;
+  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
   padding: 1px 4px;
   border-radius: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 5;
-  border: 1px solid #eee;
+  border: 1px solid var(--border-color); /* Telah diupdate mengikuti variable CSS */
 }
 
 .reaction-badge {
@@ -2409,14 +2522,14 @@ body {
 .reply-container {
   display: none;
   padding: 8px 12px;
-  background: #f0f0f0;
+  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
   border-left: 4px solid #3a7bd5 !important;
   position: relative;
 }
 
 .reply-container .reply-text {
   font-size: 12px;
-  color: #555;
+  color: var(--text-color); /* Telah diupdate mengikuti variable CSS */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2451,7 +2564,7 @@ body {
   display: none;
   position: relative;
   width: 100%;
-  background: #f0f0f0;
+  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
   border-left: 4px solid #3a7bd5 !important;
   padding: 8px 12px;
   box-sizing: border-box;
@@ -2481,7 +2594,7 @@ body {
 
 .reply-text-preview {
   font-size: 12px;
-  color: #666;
+  color: var(--text-muted); /* Telah diupdate mengikuti variable CSS */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2506,7 +2619,7 @@ body {
 }
 .private-mode.telegram-chat {
   background-image: none;
-  background-color: #f0f2f5;
+  background-color: var(--bg-main); /* Telah diupdate mengikuti variable CSS */
 }
 
 /* --- UI Elements --- */
@@ -2813,7 +2926,7 @@ body {
 .skeleton-msg.right { align-self: flex-end; justify-content: flex-end; margin-left: auto; }
 
 .skeleton-avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, 0.35); flex-shrink: 0; }
-.skeleton-bubble { background: rgba(255, 255, 255, 0.55); border-radius: 16px 16px 16px 6px; padding: 10px 12px; min-width: 110px; max-width: 220px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); backdrop-filter: blur(3px); }
+.skeleton-bubble { background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */ border-radius: 16px 16px 16px 6px; padding: 10px 12px; min-width: 110px; max-width: 220px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); backdrop-filter: blur(3px); }
 .skeleton-bubble.me { background: rgba(220, 248, 198, 0.85); border-radius: 16px 16px 6px 16px; }
 
 .skeleton-line { height: 8px; border-radius: 999px; margin-bottom: 8px; background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.35)); background-size: 200% 100%; animation: shimmerMove 1.2s linear infinite; }
@@ -2826,7 +2939,7 @@ body {
 .typing-bubble span:nth-child(2) { animation-delay: 0.15s; }
 .typing-bubble span:nth-child(3) { animation-delay: 0.3s; }
 
-.loading-chat-hint { text-align: center; font-size: 12px; color: #667781; margin-top: 8px; font-weight: 500; letter-spacing: 0.2px; opacity: 0.9; }
+.loading-chat-hint { text-align: center; font-size: 12px; color: var(--text-muted, #667781); margin-top: 8px; font-weight: 500; letter-spacing: 0.2px; opacity: 0.9; }
 
 .shimmer { background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.35)); background-size: 200% 100%; animation: shimmerMove 1.2s linear infinite; }
 
@@ -2844,8 +2957,8 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.sidebar-chat-item:hover { background-color: #f5f9ff !important; cursor: pointer; }
-.sidebar-chat-item.unread { background-color: #f0faff; }
+.sidebar-chat-item:hover { background-color: var(--border-color) !important; cursor: pointer; }
+.sidebar-chat-item.unread { background-color: var(--border-color); }
 
 #private-chat-list .unread-badge { animation: bounce 0.5s ease-in-out; }
 
@@ -2875,7 +2988,7 @@ body {
 #action-btn.is-recording .svg-send { opacity: 0; transform: scale(0) rotate(45deg); }
 #action-btn.is-recording .svg-mic { opacity: 1; transform: scale(1) rotate(0); }
 
-#vn-overlay { position: absolute; inset: 0; background: #fff; display: none; align-items: center; padding: 0 15px; border-radius: 24px; z-index: 10; }
+#vn-overlay { position: absolute; inset: 0; background: var(--bg-panel); display: none; align-items: center; padding: 0 15px; border-radius: 24px; z-index: 10; color: var(--text-color); }
 
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 @keyframes slide-text { 0% { transform: translateX(0); } 50% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
@@ -2888,7 +3001,7 @@ body {
 .vn-waveform .bar { width: 3px; height: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 2px; display: inline-block; }
 .vn-waveform .bar:nth-child(odd) { height: 18px; }
 .vn-waveform .bar:nth-child(3n) { height: 8px; }
-.vn-time { font-size: 10px; font-weight: 600; color: #666; white-space: nowrap; margin-left: 5px; }
+.vn-time { font-size: 10px; font-weight: 600; color: var(--text-muted); white-space: nowrap; margin-left: 5px; }
 
 .playing .bar { animation: waveAnim 0.6s infinite alternate; background: #00d2ff; }
 
@@ -2897,7 +3010,7 @@ body {
 * { -webkit-tap-highlight-color: transparent; outline: none; }
 .menu-item-tiktok, .btn, .tab, button { -webkit-tap-highlight-color: rgba(0, 0, 0, 0); user-select: none; }
 
-.reaction-menu { position: absolute; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 8px 12px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: none; gap: 12px; z-index: 10006; border: 1px solid rgba(255,255,255,0.3); animation: reactionPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; }
+.reaction-menu { position: absolute; background: var(--bg-panel); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 8px 12px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: none; gap: 12px; z-index: 10006; border: 1px solid var(--border-color); animation: reactionPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; }
 .reaction-emoji { font-size: 24px; cursor: pointer; transition: transform 0.2s; user-select: none; }
 .reaction-emoji:hover { transform: scale(1.4) translateY(-5px); }
 
