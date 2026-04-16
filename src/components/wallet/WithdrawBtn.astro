@@ -1,0 +1,35 @@
+---
+---
+<div class="withdraw-btn">
+  <button class="btn-blue" onclick="location.href='/penarikan'">Request Withdrawal</button>
+</div>
+
+<style is:global>
+  /* Action Button */
+  .withdraw-btn {
+    margin-top: auto;
+    padding-top: 40px;
+    width: 100%;
+  }
+
+  .btn-blue {
+    width: 100%;
+    background: var(--accent-blue);
+    color: #ffffff;
+    border: none;
+    padding: 20px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
+    transition: all 0.2s ease;
+  }
+
+  .btn-blue:active {
+    transform: scale(0.96);
+    background: #0056b3;
+  }
+</style>

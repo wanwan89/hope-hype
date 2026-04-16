@@ -1,0 +1,55 @@
+---
+---
+<div class="photo-grid" id="post-container"></div>
+
+<style is:global>
+  .photo-grid { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 1px; 
+      padding: 1px;
+      background: #fff; 
+  }
+  .grid-item { 
+      aspect-ratio: 1 / 1; 
+      background: #f1f1f1; 
+      overflow: hidden; 
+  }
+  .grid-item img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+  }
+
+  .skeleton-loader {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: linear-gradient(90deg, #f0f2f5 25%, #e7f3ff 50%, #f0f2f5 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite linear;
+      border-radius: 4px;
+  }
+  @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+  }
+  .loading-wrapper {
+      grid-column: span 3;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      width: 100%;
+  }
+  .no-posts { 
+      grid-column: span 3; 
+      display: flex;
+      flex-direction: column;
+      align-items: center; 
+      justify-content: center;
+      padding: 100px 20px; 
+      color: #8e8e8e; 
+      text-align: center;
+  }
+  .no-posts svg { width: 64px; height: 64px; margin-bottom: 16px; color: #dbdbdb; }
+  .no-posts p { margin: 0; font-size: 15px; font-weight: 500; }
+</style>

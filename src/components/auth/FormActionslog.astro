@@ -1,0 +1,26 @@
+---
+---
+<div class="terms-area" id="termsArea" style="display:none;">
+  <input type="checkbox" id="checkTerms" />
+  <label for="checkTerms">saya setuju <a href="/temp" target="_blank">Syarat dan ketentuan</a> HopeHype.</label>
+</div>
+
+<button type="submit" class="button-submit" id="submitBtn">Masuk Sekarang</button>
+
+<p class="p-footer" id="footerText">Belum ada akun? <span class="span" id="switchMode">Daftar</span></p>
+
+<style is:global>
+  .terms-area { display: flex; align-items: flex-start; gap: 8px; margin: 5px 0; }
+  .terms-area input { margin-top: 3px; accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; }
+  .terms-area label { font-size: 11.5px; color: #6b7280; line-height: 1.4; }
+  .terms-area a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+  .button-submit {
+    margin-top: 10px; background: var(--dark); border: none; color: white; font-size: 14px;
+    font-weight: 700; border-radius: 16px; height: 52px; width: 100%; cursor: pointer; transition: 0.2s;
+  }
+  .button-submit:hover { background: #000; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+
+  .p-footer { text-align: center; color: var(--gray); font-size: 12px; margin-top: 15px; }
+  .span { color: var(--primary); font-weight: 700; cursor: pointer; text-decoration: none; }
+</style>

@@ -1,0 +1,50 @@
+---
+---
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(this, 'foto')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20H5V4H10V20ZM12 20H19V11H12V20ZM12 9H19V4H12V9Z"/></svg>
+  </div>
+  <div class="tab" onclick="switchTab(this, 'musik')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 18V5l12-2v13"></path>
+      <circle cx="6" cy="18" r="3"></circle>
+      <circle cx="18" cy="16" r="3"></circle>
+    </svg>
+  </div>
+  <div class="tab" onclick="switchTab(this, 'like')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+  </div>
+</div>
+
+<style is:global>
+  .tabs { 
+      display: flex; 
+      border-top: 1px solid var(--border-color); 
+      border-bottom: 1px solid var(--border-color);
+      background: #fff; 
+      position: sticky;
+      top: 50px; 
+      z-index: 90;
+  }
+  .tab { 
+      flex: 1; 
+      display: flex; 
+      justify-content: center; 
+      padding: 15px; 
+      cursor: pointer; 
+      transition: 0.2s;
+      color: var(--text-secondary); 
+      position: relative;
+  }
+  .tab.active { color: var(--primary-blue); }
+  .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--primary-blue);
+  }
+  .tab svg { width: 22px; height: 22px; }
+</style>

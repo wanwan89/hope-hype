@@ -1,0 +1,40 @@
+---
+---
+<div class="balance-section">
+  <span class="label-small">Estimated IDR Balance</span>
+  <h1 class="main-balance" id="idrDisplay">Rp 0</h1>
+  <div class="accent-line"></div>
+</div>
+
+<style is:global>
+  /* Balance Display */
+  .balance-section {
+    margin-bottom: 60px;
+  }
+
+  .label-small {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .main-balance {
+    font-size: 54px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    margin: 0;
+    color: var(--text-main);
+  }
+
+  .accent-line {
+    width: 45px;
+    height: 5px;
+    background: var(--accent-blue);
+    margin-top: 15px;
+    border-radius: 2px;
+  }
+</style>

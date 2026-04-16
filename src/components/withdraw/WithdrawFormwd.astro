@@ -1,0 +1,183 @@
+---
+---
+<div class="wd-form-group">
+  <label>Jumlah Koin</label>
+  <input type="number" id="wdAmount" placeholder="Min. 200" min="200" oninput="updateEstimation()" />
+  <div id="idrEstimation">Estimasi: Rp 0</div>
+</div>
+
+<div class="wd-form-group">
+  <label>Metode Pembayaran</label>
+  <select id="wdMethod">
+    <option value="DANA">DANA</option>
+    <option value="GOPAY">GOPAY</option>
+    <option value="OVO">OVO</option>
+    <option value="BANK_BCA">BANK BCA</option>
+    <option value="BANK_MANDIRI">BANK MANDIRI</option>
+  </select>
+</div>
+
+<div class="wd-form-group">
+  <label>Nama Pemilik Rekening</label>
+  <input type="text" id="wdAccountName" placeholder="Nama sesuai ewallet/bank" />
+</div>
+
+<div class="wd-form-group">
+  <label>Nomor Rekening / HP</label>
+  <input type="text" id="wdAccount" placeholder="08xxxx / 12345678" />
+</div>
+
+<button class="submit-btn" id="btnSubmit">Confirm Request</button>
+
+<script>
+  const supabaseUrl = 'https://hqetnqnvmdxdgfnnluew.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZXRucW52bWR4ZGdmbm5sdWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MzUyODIsImV4cCI6MjA4NzMxMTI4Mn0.Cr9lDBZMqfeONi1dfyFzHpBtawBzZTQLBEWKmPJVAOA';
+  
+  // Inisialisasi Supabase
+  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  // Fungsi Update Estimasi Rupiah
+  window.updateEstimation = function() {
+      const amountInput = document.getElementById('wdAmount');
+      const estDisplay = document.getElementById('idrEstimation');
+      const kurs = 70; 
+      const val = parseInt(amountInput.value);
+
+      if (val && val >= 200) {
+          const rupiah = val * kurs;
+          estDisplay.innerText = "Estimasi: Rp " + rupiah.toLocaleString('id-ID');
+          estDisplay.style.color = "var(--accent-blue)";
+      } else {
+          estDisplay.innerText = "Estimasi: Rp 0";
+          estDisplay.style.color = "var(--text-muted)";
+      }
+  };
+
+  // FUNGSI UTAMA WITHDRAW
+  async function handleWithdraw() {
+      const amountInput = document.getElementById('wdAmount');
+      const methodInput = document.getElementById('wdMethod');
+      const accountNameInput = document.getElementById('wdAccountName');
+      const accountInput = document.getElementById('wdAccount');
+      const btn = document.getElementById('btnSubmit');
+
+      const amount = parseInt(amountInput.value);
+      const method = methodInput.value;
+      const accountName = accountNameInput.value;
+      const account = accountInput.value;
+
+      const showMsg = typeof toast === "function" ? toast : (title, msg) => alert(title + ": " + msg);
+
+      // 1. Validasi Input
+      if (!amount || amount < 200) {
+          showMsg("Gagal", "Minimal penarikan 200 koin!", "warning");
+          return;
+      }
+      if (!accountName || !account) {
+          showMsg("Data Kosong", "Mohon lengkapi data rekening.", "warning");
+          return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Processing...";
+
+      try {
+          const { data: { user } } = await supabaseClient.auth.getUser();
+          if (!user) throw new Error("Silahkan login terlebih dahulu.");
+
+          // 2. Cek Saldo & Potong Koin
+          const { data: profile, error: pError } = await supabaseClient
+              .from('profiles')
+              .select('coins')
+              .eq('id', user.id)
+              .single();
+
+          if (pError) throw new Error("Gagal mengambil data saldo.");
+          if (profile.coins < amount) throw new Error("Saldo koin tidak cukup!");
+
+          const { error: uError } = await supabaseClient
+              .from('profiles')
+              .update({ coins: profile.coins - amount })
+              .eq('id', user.id);
+
+          if (uError) throw new Error("Gagal memproses koin.");
+
+          // 3. Simpan Request ke Database
+          const { error: iError } = await supabaseClient
+              .from('withdraw_requests')
+              .insert({
+                  user_id: user.id,
+                  amount: amount,
+                  method: method,
+                  account_name: accountName,
+                  account_number: account,
+                  status: 'pending'
+              });
+
+          if (iError) {
+              await supabaseClient.from('profiles').update({ coins: profile.coins }).eq('id', user.id);
+              throw iError;
+          }
+
+          // 🔥 4. INI YANG KURANG: TRIGGER KE API TELEGRAM
+          // Kita panggil API Route yang udah lu buat di /api/withdraw
+          try {
+              await fetch('/api/withdraw', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                      amount: amount,
+                      method: method,
+                      accountName: accountName,
+                      account: account,
+                      userId: user.id
+                  })
+              });
+              console.log("Notif Telegram dikirim ke API.");
+          } catch (teleErr) {
+              // Kita pake try-catch sendiri biar kalau Tele error, 
+              // proses WD di web tetep keliatan sukses buat user.
+              console.error("Telegram API Error:", teleErr);
+          }
+
+          // 5. Kirim Notif Lonceng di Aplikasi
+          const estimasiRpValue = (amount * 70).toLocaleString('id-ID');
+          await supabaseClient.from('notifications').insert([{
+              user_id: user.id,
+              type: 'withdraw',
+              message: `Penarikan <b>${amount}</b> koin (Rp ${estimasiRpValue}) sedang diproses admin.`,
+              is_read: false,
+              created_at: new Date().toISOString()
+          }]);
+
+          // SELESAI
+          showMsg("Berhasil", "Permintaan tarik koin terkirim!", "success");
+
+          setTimeout(() => {
+              window.location.replace('/saldo?t=' + new Date().getTime());
+          }, 2500);
+
+      } catch (err) {
+          console.error(err);
+          showMsg("Error", err.message, "error");
+      } finally {
+          btn.disabled = false;
+          btn.textContent = "Confirm Request";
+      }
+  }
+
+  // Event Listener Tombol
+  document.getElementById('btnSubmit').addEventListener('click', handleWithdraw);
+</script>
+
+<style is:global>
+  .wd-form-group { margin-bottom: 22px; }
+  .wd-form-group label { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; font-weight: 700; }
+  .wd-form-group input, .wd-form-group select { width: 100%; padding: 12px 0; border: none; border-bottom: 2px solid var(--border); font-size: 18px; font-weight: 600; background: transparent; color: var(--text-main); border-radius: 0; transition: 0.3s; }
+  .wd-form-group input:focus { border-bottom-color: var(--accent-blue); }
+  #idrEstimation { font-size: 13px; color: var(--accent-blue); font-weight: 700; margin-top: 8px; letter-spacing: 0.5px; }
+  .submit-btn { width: 100%; background: var(--accent-blue); color: #fff; border: none; padding: 22px; border-radius: 14px; font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2); transition: all 0.2s; margin-top: auto; margin-bottom: 20px; }
+  .submit-btn:active { transform: scale(0.96); }
+  .submit-btn:disabled { background: #e0e0e0; cursor: not-allowed; color: #999; box-shadow: none; }
+  .wd-form-group input::placeholder { color: #ccc; font-size: 15px; }
+</style>

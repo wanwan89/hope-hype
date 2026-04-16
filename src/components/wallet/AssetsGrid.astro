@@ -1,0 +1,43 @@
+---
+---
+<div class="assets-grid">
+  <div class="asset-box">
+    <span class="label-small">Coins</span>
+    <span class="asset-val" id="coinDisplay">0</span>
+  </div>
+  <div class="asset-box">
+    <span class="label-small">Coupons</span>
+    <span class="asset-val">0</span>
+  </div>
+</div>
+
+<style is:global>
+  /* Assets Grid */
+  .assets-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .asset-box {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    padding: 24px;
+    border-radius: 12px;
+    transition: all 0.2s;
+  }
+
+  .asset-box:active {
+    border-color: var(--accent-blue);
+    background: #f9f9f9;
+  }
+
+  .asset-val {
+    font-size: 26px;
+    font-weight: 800;
+    display: block;
+    margin-top: 6px;
+    color: var(--text-main);
+  }
+</style>

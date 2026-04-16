@@ -1,0 +1,91 @@
+---
+---
+<div class="profile-container">
+  <div class="avatar-box"><img id="view-avatar" src="https://via.placeholder.com/150" /></div>
+  <div class="user-meta">
+    <div class="u-name-wrapper">
+      <span class="u-name" id="view-display-name">Memuat...</span>
+      <div id="badge-container"></div>
+    </div>
+    <span class="u-handle" id="view-username">@handle</span>
+  </div>
+  <div class="stats">
+    <div class="stat-item"><span class="stat-val" id="stat-following">0</span><span class="stat-lbl">Following</span></div>
+    <div class="stat-item"><span class="stat-val" id="stat-followers">0</span><span class="stat-lbl">Followers</span></div>
+    <div class="stat-item"><span class="stat-val" id="stat-likes">0</span><span class="stat-lbl">Likes</span></div>
+  </div>
+  <div class="bio-text" id="view-bio">Memuat bio...</div>
+  <div class="btn-group" id="action-buttons"></div>
+</div>
+
+<style is:global>
+  .profile-container { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      padding: 30px 20px; 
+      background: var(--bg-main);
+  }
+
+  .avatar-box { 
+      width: 100px; 
+      height: 100px; 
+      border-radius: 50%; 
+      overflow: hidden; 
+      background: #fff; 
+      border: 2px solid var(--primary-blue); 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+      margin-bottom: 15px; 
+      padding: 3px; 
+  }
+  .avatar-box img { 
+      width: 100%; 
+      height: 100%; 
+      border-radius: 50%; 
+      object-fit: cover; 
+  }
+
+  .u-name-wrapper { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .u-name { font-size: 20px; font-weight: 700; color: #050505; }
+  .u-handle { font-size: 14px; color: var(--text-secondary); display: block; text-align: center; margin-top: 2px; margin-bottom: 20px;}
+
+  .stats { 
+      display: flex; 
+      width: 100%; 
+      max-width: 350px;
+      justify-content: space-around; 
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      padding: 15px 0;
+      margin-bottom: 25px;
+  }
+  .stat-item { text-align: center; flex: 1; }
+  .stat-val { font-weight: 800; font-size: 18px; color: var(--text-dark); display: block; }
+  .stat-lbl { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+
+  .bio-text { 
+      width: 90%; 
+      max-width: 400px;
+      text-align: center; 
+      font-size: 14px; 
+      line-height: 1.5; 
+      margin-bottom: 25px; 
+      color: #4b4b4b; 
+  }
+
+  .btn-group { display: flex; width: 100%; max-width: 400px; gap: 10px; justify-content: center; }
+  .btn { 
+      flex: 1;
+      padding: 10px 0; 
+      border: none; 
+      border-radius: 8px; 
+      background: var(--light-blue-bg); 
+      color: var(--primary-blue); 
+      font-weight: 600; 
+      font-size: 14px; 
+      cursor: pointer; 
+      transition: 0.2s;
+  }
+  .btn:active { opacity: 0.8; }
+  .btn-follow { background: var(--primary-blue); color: #fff; }
+</style>

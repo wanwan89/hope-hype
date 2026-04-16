@@ -1,0 +1,32 @@
+---
+---
+<div class="menu-row" onclick="window.location.href='/history'">
+  <div>
+    <span class="menu-title">Transactions</span>
+    <span class="menu-sub" id="lastTrx">Cek riwayat koin & transaksi</span>
+  </div>
+  <div class="arrow-blue">›</div>
+</div>
+
+<style is:global>
+  /* Menu Items */
+  .menu-row {
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .menu-row:active { background: #fafafa; }
+
+  .menu-title { font-weight: 700; font-size: 16px; }
+  .menu-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: block; }
+
+  .arrow-blue {
+    color: var(--accent-blue);
+    font-weight: 800;
+    font-size: 20px;
+  }
+</style>
