@@ -62,9 +62,6 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
   <ReactionMenu />
   <CallOverlays />
 
-  <button id="global-theme-toggle" class="theme-toggle-floating" aria-label="Toggle Theme" title="Ganti Tema (Dark/Light)">
-    🌓
-  </button>
   <script>
  
 
@@ -132,21 +129,6 @@ const searchBtn = document.getElementById("sticker-search-btn");
 
 // MEMORI INTERNAL BIAR GAK TANYA DATABASE TERUS
 const profileCache = new Map();
-
-// [TAMBAHAN: LOGIKA TOGGLE THEME]
-// Event listener untuk tombol mode gelap/terang
-const themeToggleBtn = document.getElementById('global-theme-toggle');
-if (themeToggleBtn) {
-  themeToggleBtn.addEventListener('click', () => {
-    const htmlEl = document.documentElement;
-    htmlEl.classList.toggle('dark');
-    const isDark = htmlEl.classList.contains('dark');
-    
-    // Simpan ke localStorage agar pilihan tersimpan secara global
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  });
-}
-// [END TAMBAHAN: LOGIKA TOGGLE THEME]
 
 async function getCachedProfile(userId) {
   if (profileCache.has(userId)) return profileCache.get(userId);
@@ -2105,7 +2087,7 @@ html.dark {
   --bg-sidebar: #1e293b;
   --text-color: #f8fafc;
   --text-muted: #94a3b8;
-  --chat-bg-image: none; /* Kamu bisa hapus/ganti ini bila ingin tetap ada background gambar di dark mode */
+  --chat-bg-image: none; /* Background gambar dihapus agar chat lebih terbaca */
   --chat-item-bg: #0f172a;
   --label-bg: #1e293b;
   --border-color: rgba(255,255,255,0.1);
@@ -2127,34 +2109,6 @@ body {
 .telegram-chat {
   background-image: var(--chat-bg-image);
   background-color: var(--bg-main);
-}
-
-/* Styling untuk tombol toggle floating yang ditambahkan di atas */
-.theme-toggle-floating {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  z-index: 99999;
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  border: none;
-  background: #3a7bd5;
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  transition: transform 0.2s, background-color 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.theme-toggle-floating:active {
-  transform: scale(0.9);
-}
-html.dark .theme-toggle-floating {
-  background: #1e293b;
-  border: 1px solid #333;
 }
 /* [END TAMBAHAN: CSS VARIABLES GLOBAL THEME] */
 
