@@ -61,7 +61,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const sendSound = new Audio("asets/sound/send.mp3");
 const receiveSound = new Audio("asets/sound/receive.mp3");
 
-// 🔥 TAMBAHKAN DUA BARIS INI UNTUK RINGTONE 🔥
+//  TAMBAHKAN DUA BARIS INI UNTUK RINGTONE 
 const ringtoneSound = new Audio("asets/sound/call.wav");
 ringtoneSound.loop = true; // Biar nadanya bunyi berulang-ulang
 
@@ -145,7 +145,7 @@ async function getCachedProfile(userId) {
   return data;
 }
 
-// ===== [FIX EGRESS] DEBOUNCE UNTUK SIDEBAR =====
+// ===== DEBOUNCE UNTUK SIDEBAR =====
 let chatHistoryDebounce;
 function triggerLoadChatHistory() {
   clearTimeout(chatHistoryDebounce);
@@ -330,7 +330,7 @@ async function requireLogin() {
 async function initPresence() {
   if (!currentUser) return;
 
-  // 🔥 RESET STATUS TYPING SAAT PINDAH ROOM 🔥
+  // RESET STATUS TYPING SAAT PINDAH ROOM 
   clearTimeout(typingTimeout);
   isCurrentlyTyping = false;
   const typingHeader = document.getElementById("typing-header");
@@ -584,7 +584,7 @@ async function loadMessages() {
   isFirstMessageLoad = false;
 
   if (!data || data.length === 0) {
-    messagesEl.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:40px 20px; margin-top:20px; color:#8696a0;"><div style="font-size:28px;">💬</div><div style="font-size:14px; font-weight:600;">Belum ada pesan</div></div>`;
+    messagesEl.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:40px 20px; margin-top:20px; color:#8696a0;"><div style="font-size:28px;">Belum ada pesan</div><div style="font-size:14px; font-weight:600;">Belum ada pesan</div></div>`;
     await markRoomAsRead();
     return;
   }
@@ -723,7 +723,7 @@ function initRealtimeMessages() {
       }
 
       // ==========================================
-      // 🔥 [LOGIKA BARU] DETEKSI SINYAL TELPON 🔥
+      //  [LOGIKA BARU] DETEKSI SINYAL TELPON 
       // ==========================================
       if (newMsg.is_system) {
         // A. Deteksi Panggilan Masuk (Untuk Penerima)
@@ -997,7 +997,7 @@ async function bukaChatPribadi(partnerId, partnerName, partnerShortId = "") {
   const btnInvite = document.getElementById('btn-open-invite');
   if (btnInvite) btnInvite.style.display = 'none';
 
-  // ✅ PASTIKAN ID NYA btn-start-call SESUAI HTML
+  // PASTIKAN ID NYA btn-start-call SESUAI HTML
   const btnCall = document.getElementById('btn-start-call'); 
   if (btnCall) {
     btnCall.style.setProperty('display', 'flex', 'important'); // Paksa muncul

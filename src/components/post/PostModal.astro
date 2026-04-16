@@ -1,0 +1,50 @@
+---
+---
+<div id="postModal" class="post-modal">
+  <div class="post-modal-content">
+    <button class="post-close-btn" id="closePostModalBtn">×</button>
+
+    <h2 class="post-modal-title">Upload Post</h2>
+    <p class="post-modal-subtitle">Karya kamu akan dikirim untuk direview dulu ya</p>
+
+    <form id="postForm" class="post-form">
+      <div class="post-upload-area" id="postUploadArea">
+        <input type="file" id="postImageInput" accept="image/*" hidden />
+        
+        <div class="post-upload-placeholder" id="postUploadPlaceholder">
+          <span class="post-upload-text">Pilih foto karya</span>
+          <small>JPG, PNG, WEBP • Max 5MB</small>
+        </div>
+
+        <img id="postPreviewImage" class="post-preview-image" style="display:none;" alt="Preview karya" />
+      </div>
+
+      <textarea
+        id="postCaption"
+        class="post-textarea"
+        placeholder="Tulis caption...."
+        maxlength="300"
+      ></textarea>
+
+      <div class="category-dropdown" id="categoryDropdown">
+        <div class="select-trigger">
+          <span id="selectedCategoryText">Pilih kategori</span>
+          <i class="arrow-icon">▼</i>
+        </div>
+        
+        <div class="options-container">
+          <div class="option-item" data-value="Karya">Karya</div>
+          <div class="option-item" data-value="Prestasi">Prestasi</div>
+          <div class="option-item" data-value="Photography">Photography</div>
+          <div class="option-item" data-value="Mountain">Mountain</div>
+        </div>
+        
+        <input type="hidden" id="postCategory" name="category" />
+      </div>
+
+      <button type="submit" id="submitPostBtn" class="post-submit-btn">
+        Kirim ke Review
+      </button>
+    </form>
+  </div>
+</div>
