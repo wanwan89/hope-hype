@@ -315,7 +315,7 @@ async function requireLogin() {
   const { data: { session }, error } = await supabase.auth.getSession();
   if (error || !session || !session.user) {
     showToast("Kamu harus login dulu!");
-    window.location.href = "login.html";
+    window.location.href = "/login";
     return false;
   }
   currentUser = { id: session.user.id };
