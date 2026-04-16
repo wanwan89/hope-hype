@@ -21,10 +21,10 @@ import ChatModals from '../components/modals/ChatModals.astro';
     <ChatInput />
   </div>
 
-  <ChatModals />
+<ChatModals />
 
-  <script>
-import { createClient } from "https://esm.sh/@supabase/supabase-js";
+  <script type="module" is:inline>
+    import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
 
 // ===== Supabase config =====
