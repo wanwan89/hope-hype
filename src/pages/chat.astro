@@ -15,16 +15,17 @@ import ChatModals from '../components/modals/ChatModals.astro';
   <audio id="ringtoneSound" src="asets/sound/call.wav" preload="auto" loop></audio>
 
 <div class="telegram-chat">
-    <ChatHeader />
-    <ChatSidebar />
-    <ChatMessages />
-    <ChatInput />
+<ChatHeader client:load />
+<ChatSidebar client:load />
+<ChatMessages client:load />
+<ChatInput client:load />
   </div>
 
-  <ChatModals />
+<ChatModals client:load />
 
-  <script>
-    import { createClient } from "https://esm.sh/@supabase/supabase-js";
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
 
 
 
