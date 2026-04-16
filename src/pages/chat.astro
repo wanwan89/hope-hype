@@ -14,17 +14,18 @@ import ChatModals from '../components/modals/ChatModals.astro';
   <audio id="receive-sound" src="/asets/sound/receive.mp3" preload="auto"></audio>
   <audio id="ringtoneSound" src="asets/sound/call.wav" preload="auto" loop></audio>
 
-  <div class="telegram-chat">
+<div class="telegram-chat">
     <ChatHeader />
     <ChatSidebar />
     <ChatMessages />
     <ChatInput />
   </div>
 
-<ChatModals />
+  <ChatModals />
 
-  <script type="module" is:inline>
+  <script>
     import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
 
 
 // ===== Supabase config =====
