@@ -1,5 +1,17 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Header from '../components/layout/Header.astro';
+import Sidebar from '../components/layout/Sidebar.astro';
+import BioModal from '../components/modals/BioModal.astro';
+import GroupModal from '../components/modals/GroupModal.astro';
+import GroupSettingsModal from '../components/modals/GroupSettingsModal.astro';
+import InviteModal from '../components/modals/InviteModal.astro';
+import StickerMenu from '../components/chat/StickerMenu.astro';
+import ChatInput from '../components/chat/ChatInput.astro';
+import DeleteModal from '../components/modals/DeleteModal.astro';
+import DoiCardModal from '../components/modals/DoiCardModal.astro';
+import ReactionMenu from '../components/chat/ReactionMenu.astro';
+import CallOverlays from '../components/modals/CallOverlays.astro';
 ---
 
 <Layout title="HopeTalk Globe">
@@ -9,356 +21,30 @@ import Layout from '../layouts/Layout.astro';
   <audio id="receive-sound" src="/asets/sound/receive.mp3" preload="auto"></audio>
 
   <div class="telegram-chat">
-    <div class="chat-header" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; background: #3a7bd5; color: white; height: 65px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); overflow: visible;">
-      <div style="display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden;">
-        <div class="hamburger-btn" id="menu-btn" style="cursor: pointer; flex-shrink: 0;">
-          <div class="hamburger-line"></div>
-          <div class="hamburger-line"></div>
-          <div class="hamburger-line"></div>
-        </div>
+    <Header />
 
-        <div style="display: flex; flex-direction: column; justify-content: center; overflow: hidden; max-width: 140px;">
-          <h3 style="margin: 0; font-size: 16px; font-weight: 600; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            HopeTalk Globe
-          </h3>
-          <div id="status-container" style="font-size: 10px; margin-top: 1px;">
-            <span id="status-header" style="opacity: 0.85; color: white;">Online</span>
-            <span id="typing-header" style="display: none; color: #a2c9ff; font-weight: 600; font-style: italic;"></span>
-          </div>
-        </div>
-
-        <button id="btn-open-invite" style="display:none; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: white; padding: 5px 10px; border-radius: 15px; font-size: 9px; font-weight: 800; cursor: pointer; align-items: center; gap: 4px; flex-shrink: 0; margin-left: 5px;">
-          UNDANG
-        </button>
-      </div>
-
-      <div style="flex-shrink: 0; margin-left: 10px; display: flex; align-items: center; gap: 15px;">
-        <div id="btn-start-call" style="cursor: pointer; display: none; color: white; align-items: center;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.19-2.19a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-          </svg>
-        </div>
-        <img src="/asets/png/music.png" class="logo-besar-header" alt="Logo" />
-      </div>
-    </div>
-
-    <div id="sidebar" class="sidebar">
-      <div style="padding: 30px 20px; background: #3a7bd5; color: white; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-        <img id="side-avatar" src="/asets/png/profile.webp" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); object-fit: cover; background: #eee;" />
-        <div style="text-align: center;">
-          <div id="side-username" style="font-weight: 600; font-size: 16px; margin-bottom: 2px;">Loading...</div>
-          <div onclick="navigator.clipboard.writeText(document.getElementById('my-unique-id').innerText); alert('ID Unik disalin!')" style="font-size: 10px; background: rgba(0,0,0,0.2); padding: 2px 10px; border-radius: 12px; cursor: pointer; display: inline-block; margin-bottom: 5px;">
-            ID UNIK: <span id="my-unique-id" style="font-weight: 700;">#-----</span>
-          </div>
-          <div onclick="window.openEditProfile()" style="font-size: 11px; color: #fff; cursor: pointer; margin-top: 5px; background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; display: flex; align-items: center; gap: 5px; justify-content: center; border: 1px solid rgba(255,255,255,0.3); font-weight: 600;">
-            Edit Biodata
-          </div>
-          <div style="font-size: 10px; opacity: 0.8; display: block; margin-top: 8px;">
-            <span class="online-dot" style="width:6px; height:6px; margin-right:3px;"></span> Online
-          </div>
-        </div>
-      </div>
-
-      <div style="padding: 15px; border-bottom: 1px solid #eee; background: #fff;">
-        <div style="display: flex; background: #f0f2f5; border-radius: 20px; padding: 8px 15px; align-items: center; border: 1px solid #ddd;">
-          <span style="color: #3a7bd5; font-weight: bold; margin-right: 5px;">@</span>
-          <input type="text" id="input-search-id" placeholder="Cari ID teman..." style="border: none; background: transparent; outline: none; font-size: 13px; width: 100%;" />
-        </div>
-        <button id="btn-search-id" style="width: 100%; margin-top: 8px; border: none; background: #3a7bd5; color: white; border-radius: 12px; padding: 8px; font-size: 11px; font-weight: 600; cursor: pointer;">
-          CARI & CHAT
-        </button>
-      </div>
-
-      <div style="padding: 10px 15px; border-bottom: 1px solid #eee;">
-        <button id="btn-open-group-modal" style="width: 100%; border: 2px dashed #3a7bd5; background: #f0f7ff; color: #3a7bd5; border-radius: 12px; padding: 10px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          BUAT GRUP BARU
-        </button>
-      </div>
-
-      <div style="flex: 1; overflow-y: auto; background: white;">
-        <div id="private-chat-list">
-          <p style="text-align:center; font-size:11px; color:#ccc; margin-top:30px;">Memuat chat...</p>
-        </div>
-      </div>
-
-      <div style="padding: 15px 20px; border-top: 1px solid #f0f0f0; background: #fff; text-align: center;">
-        <button class="cta" id="btn-sidebar-search" onclick="window.mulaiCariDoi()" style="width: 100%; background: linear-gradient(135deg, #3a7bd5, #00d2ff); color: white; border: none; border-radius: 25px; padding: 14px 20px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(58, 123, 213, 0.35); transition: transform 0.2s; letter-spacing: 0.5px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          CARI DOI SEKARANG
-        </button>
-      </div>
-    </div>
+    <Sidebar />
 
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-    <div id="bio-modal" class="delete-overlay" style="display: none; align-items: center; justify-content: center;">
-      <div class="delete-menu" style="width: 90%; max-width: 350px; text-align: left; padding: 25px;">
-        <h2 style="margin: 0 0 10px 0; font-size: 18px; color: #3a7bd5; text-align: center;">Lengkapi Profilmu</h2>
-        <p style="font-size: 11px; color: #666; margin-bottom: 20px; text-align: center;">Data ini membantu kami mencari teman yang paling cocok untukmu.</p>
-
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-          <div style="flex: 1;">
-            <label style="font-size: 11px; font-weight: 600;">Umur</label>
-            <input type="number" id="in-umur" placeholder="20" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" />
-          </div>
-          <div style="flex: 1;">
-            <label style="font-size: 11px; font-weight: 600;">Gender</label>
-            <select id="in-gender" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: white;">
-              <option value="Pria">Pria</option>
-              <option value="Wanita">Wanita</option>
-            </select>
-          </div>
-        </div>
-
-        <label style="font-size: 11px; font-weight: 600;">Zodiak</label>
-        <select id="in-zodiak" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: white; margin-bottom: 15px;">
-          <option value="Aries">Aries</option>
-          <option value="Taurus">Taurus</option>
-          <option value="Gemini">Gemini</option>
-          <option value="Cancer">Cancer</option>
-          <option value="Leo">Leo</option>
-          <option value="Virgo">Virgo</option>
-          <option value="Libra">Libra</option>
-          <option value="Scorpio">Scorpio</option>
-          <option value="Sagitarius">Sagitarius</option>
-          <option value="Capricorn">Capricorn</option>
-          <option value="Aquarius">Aquarius</option>
-          <option value="Pisces">Pisces</option>
-        </select>
-
-        <label style="font-size: 11px; font-weight: 600;">Hobi</label>
-        <input type="text" id="in-hobi" placeholder="Apa kegemaranmu?" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px;" />
-
-        <label style="font-size: 11px; font-weight: 600;">Pekerjaan / Kegiatan</label>
-        <input type="text" id="in-kerja" placeholder="Contoh: Mahasiswa" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px;" />
-
-        <div style="display: flex; gap: 10px;">
-          <button class="btn-confirm" id="btn-save-bio" style="flex: 2;">Simpan & Cari</button>
-          <button type="button" class="btn-cancel" onclick="window.closeBioModal()" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: #ccc; color: #333; font-weight: 600; cursor: pointer;">
-            Batal
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div id="group-modal" class="delete-overlay" style="display: none; align-items: center; justify-content: center;">
-      <div class="delete-menu" style="width: 90%; max-width: 350px; padding: 25px; text-align: center;">
-        <h2 style="margin: 0 0 10px 0; font-size: 18px; color: #3a7bd5;">Buat Grup Baru</h2>
-
-        <div style="margin-bottom: 20px; position: relative; display: inline-block;">
-          <label for="group-photo-input" style="cursor: pointer;">
-            <img id="group-photo-preview" src="/asets/png/profile.webp" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #3a7bd5; background: #eee;" />
-            <div style="position: absolute; bottom: 0; right: 0; background: #3a7bd5; color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-weight: bold; font-size: 14px;">
-              +
-            </div>
-          </label>
-          <input type="file" id="group-photo-input" accept="image/*" style="display: none;" />
-        </div>
-
-        <div style="text-align: left;">
-          <label style="font-size: 11px; font-weight: 600;">Nama Grup</label>
-          <input type="text" id="in-group-name" placeholder="Contoh: Gibah Squad" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; box-sizing: border-box;" />
-        </div>
-
-        <div style="display: flex; gap: 10px;">
-          <button class="btn-confirm" id="btn-create-group" style="flex: 2;">Buat Sekarang</button>
-          <button onclick="document.getElementById('group-modal').style.display='none'" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: #ccc; color: #333; font-weight: 600; cursor: pointer;">Batal</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="group-settings-modal" class="modal-overlay" style="display:none; z-index:99999;">
-      <div class="modal-content" style="background:#fff; width:90%; max-width:350px; border-radius:15px; padding:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-          <h3 style="margin:0; font-size:16px; color:#333;">Pengaturan Grup</h3>
-          <span onclick="document.getElementById('group-settings-modal').style.display='none'" style="cursor:pointer; font-size:20px; color:#999;">&times;</span>
-        </div>
-
-        <div style="text-align: center; margin-bottom: 20px;">
-          <label for="edit-group-photo-input" style="cursor: pointer; display: inline-block; position: relative;">
-            <img id="edit-group-photo-preview" src="/asets/png/profile.webp" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #3a7bd5; background: #eee;" />
-            <div style="position: absolute; bottom: 0; right: 0; background: #3a7bd5; color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-              +
-            </div>
-          </label>
-          <input type="file" id="edit-group-photo-input" accept="image/*" style="display: none;" />
-        </div>
-
-        <div style="margin-bottom:20px;">
-          <label style="font-size:11px; color:#888; font-weight:bold; display:block; margin-bottom:5px;">Nama Grup</label>
-          <input type="text" id="edit-group-name" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px; font-size:14px; box-sizing:border-box;" />
-          <button id="btn-save-group-info" onclick="window.updateGroupInfo()" style="width:100%; background:#0088cc; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">Simpan Perubahan</button>
-        </div>
-
-        <div>
-          <label style="font-size:11px; color:#888; font-weight:bold; display:block; margin-bottom:5px;">Daftar Anggota</label>
-          <div id="member-list-container" style="max-height:200px; overflow-y:auto; border:1px solid #eee; border-radius:8px; padding:5px 10px;"></div>
-        </div>
-
-        <button onclick="window.leaveGroup()" style="width:100%; background:#fff; color:#ff4757; border:1px solid #ff4757; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:20px;">Keluar dari Grup</button>
-      </div>
-    </div>
-
-    <div id="invite-modal" class="delete-overlay" style="display: none; align-items: center; justify-content: center;">
-      <div class="delete-menu" style="width: 90%; max-width: 350px; padding: 25px;">
-        <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #3a7bd5; text-align: center;">Undang ke Grup</h3>
-        <p style="font-size: 11px; color: #666; margin-bottom: 20px; text-align: center;">Masukkan ID Unik (tanpa #) atau Username temanmu.</p>
-
-        <input type="text" id="in-invite-search" placeholder="Contoh: 08179 atau MELL" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; box-sizing: border-box;" />
-
-        <div style="display: flex; gap: 10px;">
-          <button class="btn-confirm" id="btn-invite-now" style="flex: 2;">Tambah Member</button>
-          <button onclick="document.getElementById('invite-modal').style.display='none'" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: #ccc; color: #333; font-weight: 600; cursor: pointer;">Batal</button>
-        </div>
-      </div>
-    </div>
+    <BioModal />
+    <GroupModal />
+    <GroupSettingsModal />
+    <InviteModal />
 
     <div class="chat-messages" id="chat-messages"></div>
 
-    <div id="sticker-menu" style="display:none; flex-direction:column; padding:10px; background:#f9f9f9; border-top:1px solid #ccc; height: 300px;">
-      <div style="display:flex; gap:8px; margin-bottom:10px; padding: 5px;">
-        <input type="text" id="sticker-search-input" placeholder="Cari stiker lucu..." style="flex:1; padding:8px 12px; border-radius:20px; border:1px solid #ddd; outline:none; font-size:14px;" />
-        <button id="sticker-search-btn" style="background:#3a7bd5; color:white; border:none; border-radius:20px; padding:8px 15px; cursor:pointer; font-weight:600; font-size:12px;">Cari</button>
-      </div>
-      <div id="sticker-list" style="display:flex; flex-wrap:wrap; overflow-y:auto; flex:1; justify-content:center; gap:5px;"></div>
-    </div>
+    <StickerMenu />
 
     <div id="reply-preview-box" style="display:none; width:100%; position: relative;"></div>
 
-    <div class="chat-input-container" style="display: flex; align-items: flex-end; gap: 10px; padding: 10px 15px; background: #ffffff; width: 100%; box-sizing: border-box; border-top: 1px solid #eaeaea;">
-      <div class="input-group-wrapper" style="flex: 1; display: flex; align-items: center; background: #f4f5f7; border-radius: 30px; padding: 4px 16px; position: relative; min-height: 48px; box-sizing: border-box; border: 1px solid #e0e0e0;">
-        
-        <button id="sticker-btn" style="background: none; border: none; cursor: pointer; padding: 0; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; outline: none;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-            <line x1="9" y1="9" x2="9.01" y2="9"></line>
-            <line x1="15" y1="9" x2="15.01" y2="9"></line>
-          </svg>
-        </button>
-
-        <textarea id="chat-input" placeholder="Tulis pesan..." rows="1" style="flex: 1; border: none; outline: none; background: transparent !important; resize: none; max-height: 100px; padding: 12px 0; font-family: 'Poppins', sans-serif; font-size: 14px; color: #333; line-height: 1.4; -webkit-appearance: none; box-shadow: none;"></textarea>
-
-        <div id="vn-overlay" style="display: none; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: #f4f5f7; border-radius: 30px; align-items: center; padding: 0 16px; box-sizing: border-box; z-index: 10;">
-          <div style="display: flex; align-items: center; width: 100%; gap: 12px;">
-            <div style="width: 10px; height: 10px; background: #ff4757; border-radius: 50%; animation: pulse 1s infinite;"></div>
-            <span id="vn-timer" style="font-weight: 600; font-size: 14px; color: #333;">00:00</span>
-            <span style="color: #888; font-size: 12px; margin-left: auto; font-style: italic;">&laquo; Geser batal</span>
-          </div>
-        </div>
-      </div>
-
-      <button id="action-btn" style="width: 48px; height: 48px; border-radius: 50%; background: #3a7bd5; border: none; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3); outline: none;">
-        <div class="icon-stack" style="display: flex; align-items: center; justify-content: center;">
-          <span class="svg-send" style="position: absolute; display: flex;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </span>
-          <span class="svg-mic" style="position: absolute; display: none;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <rect x="9" y="2" width="6" height="11" rx="3" fill="white" />
-              <path d="M5 10V11C5 14.866 8.13401 18 12 18C15.866 18 19 14.866 19 11V10" stroke="white" stroke-width="2.5" stroke-linecap="round" />
-              <line x1="12" y1="18" x2="12" y2="22" stroke="white" stroke-width="2.5" stroke-linecap="round" />
-            </svg>
-          </span>
-        </div>
-      </button>
-    </div>
+    <ChatInput />
   </div>
 
-  <div id="delete-overlay" class="delete-overlay">
-    <div class="delete-menu">
-      <p>Hapus pesan ini?</p>
-      <div class="delete-menu-btns">
-        <button id="confirm-delete">Hapus</button>
-        <button class="btn-cancel" onclick="document.getElementById('delete-overlay').style.display='none'">Batal</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="doi-card-modal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; padding:20px;">
-    <div class="doi-card" style="background:#fff; width:100%; max-width:340px; border-radius:24px; overflow:hidden; position:relative;">
-      <div style="position:relative; height:320px; background:#222;">
-        <img id="doi-photo" src="" style="width:100%; height:100%; object-fit:cover;" />
-        <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(to top, rgba(0,0,0,0.9), transparent); padding:24px 20px; color:white;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <h2 id="doi-name-age" style="margin:0; font-size:24px; font-weight:700;">Nama, 20</h2>
-            <span id="doi-gender-icon" style="font-size:18px;"></span>
-          </div>
-          <p id="doi-zodiac" style="margin:4px 0 0 0; font-size:14px; opacity:0.8; letter-spacing:0.5px;"></p>
-        </div>
-      </div>
-
-      <div style="padding:20px; background:#fff;">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;">
-          <div>
-            <small style="color:#aaa; text-transform:uppercase; font-size:10px; font-weight:700;">Pekerjaan</small>
-            <div id="doi-job" style="font-size:14px; color:#333; font-weight:600;">-</div>
-          </div>
-          <div>
-            <small style="color:#aaa; text-transform:uppercase; font-size:10px; font-weight:700;">Hobi</small>
-            <div id="doi-hobby" style="font-size:14px; color:#333; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">-</div>
-          </div>
-        </div>
-
-        <div style="display:flex; gap:12px;">
-          <button onclick="window.tutupDoiCard()" class="btn-lewati" style="flex:1; padding:14px; border:none; border-radius:15px; background:#f5f5f5; color:#666; font-weight:700; cursor:pointer;">Skip</button>
-          <button id="btn-gas-chat" class="btn-action" style="flex:2; padding:14px; border:none; border-radius:15px; background:linear-gradient(45deg, #3a7bd5, #00d2ff); color:white; font-weight:700; cursor:pointer; box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3);">Chat Sekarang</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="reaction-menu" class="reaction-menu">
-    <span class="reaction-emoji" onclick="sendReaction('👍')">👍</span>
-    <span class="reaction-emoji" onclick="sendReaction('❤️')">❤️</span>
-    <span class="reaction-emoji" onclick="sendReaction('😂')">😂</span>
-    <span class="reaction-emoji" onclick="sendReaction('😮')">😮</span>
-    <span class="reaction-emoji" onclick="sendReaction('😢')">😢</span>
-    <span class="reaction-emoji" onclick="sendReaction('🙏')">🙏</span>
-  </div>
-
-  <div id="call-overlay" style="display:none; position:fixed; inset:0; background:rgba(18, 24, 34, 0.98); z-index:99999; flex-direction:column; align-items:center; justify-content:center; color:white; font-family: 'Poppins', sans-serif;">
-    <div class="call-animation" style="position:relative; margin-bottom:20px;">
-      <img id="call-avatar" src="/asets/png/profile.webp" style="width:120px; height:120px; border-radius:50%; border:3px solid #3a7bd5; object-fit: cover;" />
-      <div class="sonar-wave" style="position:absolute; inset:0; border-radius:50%; background:#3a7bd5; opacity:0.3; z-index:-1; animation: sonar 2s infinite;"></div>
-    </div>
-    <h2 id="call-name" style="margin:0; font-size:22px;">Username</h2>
-    <p id="call-status" style="margin:10px 0 30px 0; opacity:0.7; letter-spacing:1px;">MEMANGGIL...</p>
-
-    <div style="display:flex; gap:30px;">
-      <button id="btn-end-call" onclick="window.endCall()" style="background:#ff4757; color:white; border:none; width:65px; height:65px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-          <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" transform="rotate(135 12 12)" />
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <div id="incoming-call-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100000; flex-direction:column; align-items:center; justify-content:center; color:white; font-family: 'Poppins', sans-serif;">
-    <div class="call-animation" style="margin-bottom:20px;">
-      <img id="incoming-avatar" src="/asets/png/profile.webp" style="width:120px; height:120px; border-radius:50%; border:3px solid #2ecc71; object-fit: cover;" />
-    </div>
-    <h2 id="incoming-name" style="margin:0;">Teman kamu</h2>
-    <p style="opacity:0.7; margin:10px 0 40px 0;">MENGHUBUNGI...</p>
-    
-    <div style="display:flex; gap:50px;">
-      <div onclick="window.rejectCall()" style="cursor:pointer; text-align:center;">
-        <div style="background:#ff4757; width:65px; height:65px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:10px; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" transform="rotate(135 12 12)"/></svg>
-        </div>
-        <span style="font-size:12px;">TOLAK</span>
-      </div>
-
-      <div onclick="window.answerCall()" style="cursor:pointer; text-align:center;">
-        <div style="background:#2ecc71; width:65px; height:65px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:10px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4); animation: pulse 1.5s infinite;">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.24l-2.2 2.2c-2.83-1.44-5.14-3.76-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg>
-        </div>
-        <span style="font-size:12px;">ANGKAT</span>
-      </div>
-    </div>
-  </div>
+  <DeleteModal />
+  <DoiCardModal />
+  <ReactionMenu />
+  <CallOverlays />
 
   <script>
  
@@ -2363,9 +2049,7 @@ init();
 
   </script>
 
-</Layout>
-
-<style is:global>
+  <style is:global>
 /* --- Base Styles --- */
 html,
 body {
@@ -3378,3 +3062,4 @@ body {
 }
 
 </style>
+</Layout>

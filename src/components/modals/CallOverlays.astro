@@ -1,0 +1,42 @@
+---
+---
+<div id="call-overlay" style="display:none; position:fixed; inset:0; background:rgba(18, 24, 34, 0.98); z-index:99999; flex-direction:column; align-items:center; justify-content:center; color:white; font-family: 'Poppins', sans-serif;">
+  <div class="call-animation" style="position:relative; margin-bottom:20px;">
+    <img id="call-avatar" src="/asets/png/profile.webp" style="width:120px; height:120px; border-radius:50%; border:3px solid #3a7bd5; object-fit: cover;" />
+    <div class="sonar-wave" style="position:absolute; inset:0; border-radius:50%; background:#3a7bd5; opacity:0.3; z-index:-1; animation: sonar 2s infinite;"></div>
+  </div>
+  <h2 id="call-name" style="margin:0; font-size:22px;">Username</h2>
+  <p id="call-status" style="margin:10px 0 30px 0; opacity:0.7; letter-spacing:1px;">MEMANGGIL...</p>
+
+  <div style="display:flex; gap:30px;">
+    <button id="btn-end-call" onclick="window.endCall()" style="background:#ff4757; color:white; border:none; width:65px; height:65px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" transform="rotate(135 12 12)" />
+      </svg>
+    </button>
+  </div>
+</div>
+
+<div id="incoming-call-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100000; flex-direction:column; align-items:center; justify-content:center; color:white; font-family: 'Poppins', sans-serif;">
+  <div class="call-animation" style="margin-bottom:20px;">
+    <img id="incoming-avatar" src="/asets/png/profile.webp" style="width:120px; height:120px; border-radius:50%; border:3px solid #2ecc71; object-fit: cover;" />
+  </div>
+  <h2 id="incoming-name" style="margin:0;">Teman kamu</h2>
+  <p style="opacity:0.7; margin:10px 0 40px 0;">MENGHUBUNGI...</p>
+  
+  <div style="display:flex; gap:50px;">
+    <div onclick="window.rejectCall()" style="cursor:pointer; text-align:center;">
+      <div style="background:#ff4757; width:65px; height:65px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:10px; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" transform="rotate(135 12 12)"/></svg>
+      </div>
+      <span style="font-size:12px;">TOLAK</span>
+    </div>
+
+    <div onclick="window.answerCall()" style="cursor:pointer; text-align:center;">
+      <div style="background:#2ecc71; width:65px; height:65px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:10px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4); animation: pulse 1.5s infinite;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.24l-2.2 2.2c-2.83-1.44-5.14-3.76-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg>
+      </div>
+      <span style="font-size:12px;">ANGKAT</span>
+    </div>
+  </div>
+</div>
