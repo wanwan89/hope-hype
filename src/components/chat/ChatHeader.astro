@@ -1,0 +1,64 @@
+---
+// src/components/chat/ChatHeader.astro
+---
+<div class="chat-header" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; background: #3a7bd5; color: white; height: 65px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); overflow: visible;">
+  <div style="display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden;">
+    <div class="hamburger-btn" id="menu-btn" style="cursor: pointer; flex-shrink: 0;">
+      <div class="hamburger-line"></div>
+      <div class="hamburger-line"></div>
+      <div class="hamburger-line"></div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; justify-content: center; overflow: hidden; max-width: 140px;">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 600; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+        HopeTalk Globe
+      </h3>
+      <div id="status-container" style="font-size: 10px; margin-top: 1px;">
+        <span id="status-header" style="opacity: 0.85; color: white;">Online</span>
+        <span id="typing-header" style="display: none; color: #a2c9ff; font-weight: 600; font-style: italic;"></span>
+      </div>
+    </div>
+
+    <button id="btn-open-invite" style="display:none; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: white; padding: 5px 10px; border-radius: 15px; font-size: 9px; font-weight: 800; cursor: pointer; align-items: center; gap: 4px; flex-shrink: 0; margin-left: 5px;">
+      UNDANG
+    </button>
+  </div>
+
+  <div style="flex-shrink: 0; margin-left: 10px; display: flex; align-items: center; gap: 15px;">
+    <div id="btn-start-call" style="cursor: pointer; display: none; color: white; align-items: center;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.19-2.19a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+      </svg>
+    </div>
+    <img src="/asets/png/music.png" class="logo-besar-header" alt="Logo" />
+  </div>
+</div>
+
+<style is:global>
+.chat-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: #3a7bd5 !important; 
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  height: 45px;
+  z-index: 1000;
+}
+.header-logo { width: 80px; height: 80px; border-radius: 0; object-fit: contain; flex-shrink: 0; }
+.logo-besar-header {
+  position: relative !important; right: auto !important; top: auto !important; transform: none !important;
+  height: 50px !important; width: auto !important;
+  object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.2)); flex-shrink: 0; margin-left: 5px;
+}
+.hamburger-btn {
+  width: 24px; height: 18px; display: flex; flex-direction: column; justify-content: space-between;
+  cursor: pointer; margin-right: 15px; z-index: 10002; transition: all 0.3s ease-in-out;
+}
+.hamburger-line { width: 100%; height: 2px; background-color: white; border-radius: 2px; transition: all 0.3s ease-in-out; }
+.hamburger-btn.active .hamburger-line:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.hamburger-btn.active .hamburger-line:nth-child(2) { opacity: 0; transform: translateX(-10px); }
+.hamburger-btn.active .hamburger-line:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+</style>
