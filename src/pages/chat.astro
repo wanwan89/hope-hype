@@ -19,11 +19,13 @@ import ChatModals from '../components/modals/ChatModals.astro';
     <ChatSidebar />
     <ChatMessages />
     <ChatInput />
-    <ChatModals />
   </div>
 
-  <script is:inline>
+  <ChatModals />
+
+  <script>
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
 
 // ===== Supabase config =====
 const SUPABASE_URL = "https://hqetnqnvmdxdgfnnluew.supabase.co";
