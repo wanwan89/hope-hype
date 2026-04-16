@@ -1,4 +1,6 @@
+// Isi paling atas file src/scripts/chat.js
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
 
 // ===== Supabase config =====
 const SUPABASE_URL = "https://hqetnqnvmdxdgfnnluew.supabase.co";
