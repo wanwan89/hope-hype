@@ -2023,7 +2023,11 @@ async function init() {
   } catch (err) { console.error("Gagal memulai aplikasi:", err); }
 }
 
-init();
+window.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    init();
+  }, 100); // kasih napas buat Astro render komponen
+});
   </script>
 </Layout>
 
