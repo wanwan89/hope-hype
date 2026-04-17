@@ -2066,19 +2066,21 @@ init();
 
   <style is:global>
 :root {
-  --bg-main: #ffffff;              /* putih */
-  --bg-panel: #ffffff;             /* putih solid */
+  --bg-main: #ffffff;
+  --bg-panel: #ffffff;
   --bg-sidebar: #ffffff;
+
   --text-color: #333;
   --text-muted: #666;
 
-  --chat-bg-image: url("../asets/png/chat.png"); /* ✅ tetap ada */
+  --chat-bg-image: url("../asets/png/chat.png");
 
   --chat-item-bg: #ffffff;
-  --label-bg: #ffffff;
-  --border-color: #e5e7eb;         /* tipis aja */
-}
+  --label-bg: #f1f5f9; /* 🔥 kasih beda dikit biar ga flat */
+  --border-color: #e5e7eb;
 
+  --username-color: #2563eb; /* 🔥 biru biar keliatan di light mode */
+}
 html.dark {
   --bg-main: #0f172a;
   --bg-panel: rgba(30, 41, 59, 0.9);
