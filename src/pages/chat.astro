@@ -3493,5 +3493,78 @@ body {
     transform: translateY(0);
   }
 }
+/* =========================================
+   TOMBOL CARI DOI SUPER KEREN (PREMIUM VIBES)
+   ========================================= */
+#btn-sidebar-search {
+  background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%) !important; /* Gradasi Pink/Merah Menyala */
+  color: white !important;
+  font-weight: 800;
+  font-style: italic;
+  font-size: 14px;
+  letter-spacing: 1px;
+  border: none;
+  border-radius: 30px; /* Bentuk melengkung halus (pill) */
+  padding: 15px 20px;
+  width: calc(100% - 30px); /* Margin dinamis */
+  margin: 15px auto 25px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(255, 8, 68, 0.4) !important;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Efek Bouncing saat kursor di atasnya */
+#btn-sidebar-search:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(255, 8, 68, 0.6) !important;
+}
+
+/* Efek saat diklik */
+#btn-sidebar-search:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Animasi Cahaya Mengalir (Shine Effect) */
+#btn-sidebar-search::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shine-button 3s infinite;
+  z-index: -1;
+}
+
+@keyframes shine-button {
+  0% { left: -100%; }
+  20% { left: 200%; }
+  100% { left: 200%; }
+}
+
+/* Opsional: Bikin teks dan icon-nya ikut berdetak halus */
+#btn-sidebar-search span,
+#btn-sidebar-search i {
+  display: inline-block;
+  animation: heartbeat-icon 2s infinite;
+}
+
+@keyframes heartbeat-icon {
+  0% { transform: scale(1); }
+  10% { transform: scale(1.15); }
+  20% { transform: scale(1); }
+  30% { transform: scale(1.15); }
+  50% { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+
 </style>
 </Layout>
