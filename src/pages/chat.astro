@@ -2211,22 +2211,27 @@ init();
 
 }
 html.dark {
-  --bg-main: #0f172a;
-  --bg-panel: rgba(30, 41, 59, 0.9);
-  --bg-sidebar: #1e293b;
+  /* Latar belakang kita bikin sedikit lebih pekat agar lebih nyaman */
+  --bg-main: #0b1120; /* Lebih gelap dari #0f172a */
+  --bg-panel: rgba(15, 23, 42, 0.9);
+  --bg-sidebar: #0f172a; 
 
-  --text-color: #e2e8f0; /* 🔥 agak abu terang, bukan putih full */
-  --text-muted: #94a3b8;
+  /* Warna teks sedikit diredupkan agar tidak terlalu silau (glare) */
+  --text-color: #cbd5e1; /* Abu terang yang lebih soft */
+  --text-muted: #64748b;
 
   --chat-bg-image: url("../asets/png/chatdark.webp");
 
-  --chat-item-bg: #1e293b; /* 🔥 dibikin lebih terang dikit dari bg */
-  --label-bg: #334155; /* 🔥 username bg biar kontras */
-  --border-color: rgba(255,255,255,0.1);
+  /* Elemen chat kita buat lebih membaur dengan latar */
+  --chat-item-bg: #1e293b; 
+  --label-bg: #1e293b; /* Digelapkan sedikit dari #334155 agar tidak nabrak */
+  --border-color: rgba(255, 255, 255, 0.05); /* Transparansi border dikurangi */
 
-  --username-color: #38bdf8; /* 🔥 warna nama biar standout */
---chat-self-bg: #2563eb; /* 🔥 biru biar kontras */
+  /* Warna aksen (biru) dibuat lebih kalem/redup (muted) */
+  --username-color: #0284c7; /* Biru langit gelap, tidak neon */
+  --chat-self-bg: #1e40af; /* Biru tua yang elegan, jauh lebih redup dari #2563eb */
 }
+
 /* Penerapan transisi halus untuk pergantian mode di seluruh aplikasi */
 body {
   background-color: var(--bg-main);
