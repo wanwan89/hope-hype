@@ -1329,8 +1329,19 @@ async function startVN(e) {
     };
     mediaRecorder.start(); actionBtn.classList.add("is-recording"); chatInput.style.visibility = "hidden"; vnOverlay.style.display = "flex";
     if (navigator.vibrate) navigator.vibrate(60); startTimer();
-  } catch (err) { showToast("Gagal akses mic. Pastikan izin diberikan!"); isRecording = false; }
-}
+  } catch (err) {
+    console.error("Detail Error Mic:", err);
+    
+    // Ini biar notifnya ngasih tau kode error spesifiknya
+    let pesanError = "Gagal akses mic";
+    if (err.name === 'NotAllowedError') pesanError = "Izin Mic Ditolak Browser";
+    else if (err.name === 'NotReadableError') pesanError = "Mic sedang dipakai aplikasi lain";
+    else if (err.name === 'SecurityError') pesanError = "Wajib HTTPS untuk pakai Mic";
+    
+    showToast(pesanError + " (" + err.name + ")"); 
+    isRecording = false;
+  }
+
 
 function stopVN(isCanceled = false) {
   if (!isRecording) return;
