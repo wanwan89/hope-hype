@@ -14,14 +14,17 @@ const { title } = Astro.props;
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/asets/png/book.png" />
   <link rel="icon" type="image/png" href="/asets/png/book.png" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
   
-  <script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script is:inline src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-G2wOVrrTwcffYhkC"></script>
-  <script is:inline src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script is:inline src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
-  <script is:inline src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <script defer is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer is:inline src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-G2wOVrrTwcffYhkC"></script>
+  <script defer is:inline src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script defer is:inline src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+  <script defer is:inline src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
   <script is:inline>
     window.pwaPrompt = null;
