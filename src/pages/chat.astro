@@ -1748,24 +1748,7 @@ window.kickMember = async (targetId, targetName) => {
     } catch(err) { showToast("Gagal mengeluarkan member"); }
 };
 
-window.updateGroupInfo = async () => {
-    const newName = document.getElementById('edit-group-name')?.value.trim();
-    if(!newName) return;
-    const btn = document.getElementById('btn-save-group-info');
-    if(btn) { btn.innerText = "Menyimpan..."; btn.disabled = true; }
-    try {
-        const { error } = await supabase.from('groups').update({ name: newName }).eq('id', window.activeGroupId);
-        if(error) throw error;
-        showToast("Info grup diperbarui");
-        
-        // Langsung update nama di Header Chat
-        const headerTitle = document.querySelector('.chat-header h3');
-        if(headerTitle) headerTitle.innerHTML = `${newName} <span style="font-size:14px; cursor:pointer; margin-left:8px;" onclick="window.openGroupSettings()">⚙️</span>`;
-        
-        refreshSidebar();
-    } catch(err) { showToast("Gagal update grup"); } 
-    finally { if(btn) { btn.innerText = "Simpan Perubahan"; btn.disabled = false; } }
-};
+
 // ==========================================
 // 🔥 VARIABEL AUDIO & TIMER TELPON 🔥
 // ==========================================
