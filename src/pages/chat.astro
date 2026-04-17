@@ -1244,7 +1244,7 @@ if (btnCariDoiActual) {
     
     closeSidebar();
 
-    // 1. TAMPILKAN LAYAR ANIMASI RADAR (TANPA IKON)
+    // 1. TAMPILKAN LAYAR ANIMASI RADAR PREMIUM
     const loadingOverlay = document.createElement("div"); 
     loadingOverlay.className = "doi-search-overlay"; 
     loadingOverlay.id = "active-search-overlay";
@@ -1253,24 +1253,48 @@ if (btnCariDoiActual) {
         <div class="radar-wave"></div>
         <div class="radar-wave"></div>
         <div class="radar-wave"></div>
+        <div id="radar-icons-container"></div>
       </div>
-      <div style="text-align: center;">
-        <h3 class="search-title-glow">MENCARI DOI...</h3>
-        <p class="search-subtitle-glow">Memindai area sekitarmu</p>
+      <div style="text-align: center; z-index: 10;">
+        <h3 class="search-title-glow">Mencari kecocokan...</h3>
+        <p class="search-subtitle-glow">Memindai profil di sekitarmu</p>
       </div>
     `; 
     document.body.appendChild(loadingOverlay);
-    
+
+    // --- LOGIKA MUNCULIN SILUET USER GANTIAN ---
+    const container = document.getElementById('radar-icons-container');
+    const iconInterval = setInterval(() => {
+      const siluet = document.createElement('div');
+      siluet.className = 'floating-radar-user';
+      // Ikon siluet SVG simpel
+      siluet.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+      
+      // Hitung posisi acak di sekitar lingkaran radar
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 60 + Math.random() * 60; 
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      
+      siluet.style.left = `calc(50% + ${x}px)`;
+      siluet.style.top = `calc(50% + ${y}px)`;
+      
+      container.appendChild(siluet);
+      
+      // Hapus elemen setelah animasi pop-out selesai
+      setTimeout(() => siluet.remove(), 1500);
+    }, 450); // Muncul setiap 0.45 detik
+
     const lawanJenis = myProfile.gender === "Pria" ? "Wanita" : "Pria";
-    
-    // 🔥 TRIK BIAR MAKIN REALISTIS: Waktu tunggu diacak antara 4 sampai 7 detik
     const waktuTungguAcak = Math.floor(Math.random() * 3000) + 4000; 
     
-    // 2. PROSES PENCARIAN (Menunggu sesuai waktu acak)
+    // 2. PROSES PENCARIAN
     setTimeout(async () => {
+      // Hentikan kemunculan siluet profil
+      clearInterval(iconInterval);
+
       const { data: users } = await supabase.from("profiles").select("*").neq("id", currentUser.id).eq("gender", lawanJenis);
       
-      // Hapus layar animasi setelah selesai
       const overlayToRemove = document.getElementById("active-search-overlay");
       if (overlayToRemove) overlayToRemove.remove();
 
@@ -1279,12 +1303,9 @@ if (btnCariDoiActual) {
         return; 
       }
       
-      // Munculkan Kartu Doi
       tampilkanDoiCard(users[Math.floor(Math.random() * users.length)]);
-      
-      // HP bergetar tanda Doi berhasil ditemukan!
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
-    }, waktuTungguAcak); // <--- Sekarang pakai waktu yang diacak tadi
+    }, waktuTungguAcak);
   };
 }
 
@@ -3229,13 +3250,12 @@ body {
   letter-spacing: 2px;
 }
 /* =========================================
-   ANIMASI CARI DOI (MODERN GLASSMORPHISM)
+   ANIMASI RADAR PREMIUM (SILUET PROFIL)
    ========================================= */
 .doi-search-overlay {
   position: fixed;
   inset: 0;
-  /* Background gelap transparan dengan blur premium */
-  background: rgba(15, 23, 42, 0.8); 
+  background: rgba(15, 23, 42, 0.85); /* Biru gelap premium */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 100000;
@@ -3243,95 +3263,96 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: inherit;
   animation: overlayFadeIn 0.4s ease;
 }
 
 .radar-container {
   position: relative;
-  width: 200px; /* Ukuran radar lebih besar tapi elegan */
-  height: 200px;
+  width: 220px;
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 40px;
 }
 
-/* Lingkaran Radar Tipis & Halus */
+/* Wadah untuk siluet yang muncul dari JavaScript */
+#radar-icons-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .radar-wave {
   position: absolute;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  /* Pakai border putih tipis transparan */
   border: 1px solid rgba(255, 255, 255, 0.15); 
-  animation: subtleRipple 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation: subtleRipple 3s linear infinite;
 }
 
 .radar-wave:nth-child(2) { animation-delay: 1s; }
 .radar-wave:nth-child(3) { animation-delay: 2s; }
 
-/* Titik Tengah (Pusat Radar) */
+/* Titik Pusat Minimalis */
 .radar-container::before {
-  content: '❤️'; /* Gunakan emoji atau ikon kecil */
-  font-size: 24px;
-  filter: drop-shadow(0 0 10px rgba(255, 51, 102, 0.5));
-  animation: pulseHeart 1.5s ease-in-out infinite;
+  content: ''; 
+  width: 12px;
+  height: 12px;
+  background: #FF3366;
+  border-radius: 50%;
+  position: absolute;
+  z-index: 5;
+  box-shadow: 0 0 20px #FF3366;
+  animation: pulsePoint 1s infinite alternate;
+}
+
+/* --- GAYA SILUET USER (PENTING) --- */
+.floating-radar-user {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translate(-50%, -50%) scale(0);
+  animation: profilePopFade 1.5s ease-out forwards;
+}
+
+@keyframes profilePopFade {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  30% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+  100% { transform: translate(-50%, -100%) scale(1.1); opacity: 0; } /* Melayang naik & hilang */
 }
 
 .search-title-glow {
-  margin: 0;
+  color: white;
   font-size: 18px;
+  letter-spacing: 1px;
   font-weight: 600;
-  color: #ffffff;
-  letter-spacing: 2px;
+  margin: 0;
   text-transform: uppercase;
-  opacity: 0.9;
 }
 
 .search-subtitle-glow {
-  margin: 12px 0 0 0;
-  font-size: 13px;
   color: rgba(255, 255, 255, 0.5);
-  font-weight: 300;
-  letter-spacing: 0.5px;
+  font-size: 13px;
+  margin-top: 8px;
 }
 
-/* --- Animasi --- */
-
-@keyframes overlayFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes subtleRipple { 
+  0% { transform: scale(0.2); opacity: 0; }
+  50% { opacity: 0.5; }
+  100% { transform: scale(1.5); opacity: 0; }
 }
-
-/* Efek Riak Air yang Sangat Halus */
-@keyframes subtleRipple {
-  0% {
-    transform: scale(0.3);
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-    border-color: rgba(255, 51, 102, 0.3); /* Warna hati saat di tengah */
-  }
-  100% {
-    transform: scale(1.5);
-    opacity: 0;
-  }
-}
-
-/* Detak Jantung Halus di Tengah */
-@keyframes pulseHeart {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-}
-
-/* Hilangkan gaya lama yang nabrak */
-.search-title-glow, .search-subtitle-glow {
-  background: none !important;
-  -webkit-text-fill-color: initial !important;
-  animation: none !important;
-}
+@keyframes pulsePoint { from { transform: scale(0.8); } to { transform: scale(1.2); } }
 
 /* =========================
    TOAST COMPACT MOBILE FIX
