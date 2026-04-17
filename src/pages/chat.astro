@@ -2170,6 +2170,37 @@ async function connectToCall(roomName) {
     }
 }
 
+// ==========================================
+// 🔥 LOGIKA ANIMASI TOMBOL MIC <-> SEND 🔥
+// ==========================================
+const animChatInput = document.getElementById("chat-input");
+const animActionBtn = document.getElementById("action-btn");
+
+if (animChatInput && animActionBtn) {
+  // 1. Saat ngetik, ganti jadi tombol Send (Biru)
+  animChatInput.addEventListener('input', () => {
+    if (animChatInput.value.trim().length > 0) {
+      animActionBtn.classList.add('mode-typing');
+    } else {
+      animActionBtn.classList.remove('mode-typing');
+    }
+  });
+
+  // 2. Saat pesan dikirim (kolom kosong lagi), kembalikan ke Mic
+  const resetTombol = () => {
+    setTimeout(() => {
+      if (animChatInput.value.trim().length === 0) {
+        animActionBtn.classList.remove('mode-typing');
+      }
+    }, 100); // Jeda sedikit menunggu kolom teks dibersihkan oleh sistem
+  };
+
+  animActionBtn.addEventListener('click', resetTombol);
+  animChatInput.addEventListener('keydown', (e) => {
+    if (e.key === "Enter" && !e.shiftKey) resetTombol();
+  });
+}
+
 async function init() {
   try {
     const ok = await requireLogin(); 
@@ -3154,6 +3185,9 @@ body {
 @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
 
+/* =========================================
+   BAGIAN YANG DIPERBARUI (Animasi Tombol)
+   ========================================= */
 #action-btn {
   width: 48px;
   height: 48px;
@@ -3171,12 +3205,25 @@ body {
 
 .icon-stack { position: relative; width: 24px; height: 24px; }
 .svg-send, .svg-mic { position: absolute; inset: 0; transition: all 0.3s ease; }
-.svg-mic { opacity: 0; transform: scale(0.5) rotate(-45deg); }
 
-#action-btn.is-recording { background-color: #ff4757; transform: scale(1.1); }
+/* 1. STATE DEFAULT (Kolom Teks Kosong -> Tampil Mic Biru) */
+.svg-send { opacity: 0; transform: scale(0.5) rotate(45deg); }
+.svg-mic { opacity: 1; transform: scale(1) rotate(0); }
+
+/* 2. STATE MENGETIK (Ada Teks -> Tampil Send Biru) */
+#action-btn.mode-typing .svg-send { opacity: 1; transform: scale(1) rotate(0); }
+#action-btn.mode-typing .svg-mic { opacity: 0; transform: scale(0.5) rotate(-45deg); }
+
+/* 3. STATE MEREKAM (Mic Ditekan -> Tombol Merah & Membesar) */
+#action-btn.is-recording { background-color: #ff4757 !important; transform: scale(1.1); }
 #action-btn.is-recording .svg-send { opacity: 0; transform: scale(0) rotate(45deg); }
 #action-btn.is-recording .svg-mic { opacity: 1; transform: scale(1) rotate(0); }
 
+
+/* =========================================
+   BAGIAN BAWAH INI SAMA SEPERTI KODEMU 
+   (Pemutar VN, Overlay, dll)
+   ========================================= */
 #vn-overlay { position: absolute; inset: 0; background: var(--bg-panel); display: none; align-items: center; padding: 0 15px; border-radius: 24px; z-index: 10; color: var(--text-color); }
 
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
