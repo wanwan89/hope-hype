@@ -2080,6 +2080,8 @@ init();
   --border-color: #e5e7eb;
 
   --username-color: #2563eb; /* 🔥 biru biar keliatan di light mode */
+--chat-self-bg: #dcf8c6; /* ijo soft */
+
 }
 html.dark {
   --bg-main: #0f172a;
@@ -2096,6 +2098,7 @@ html.dark {
   --border-color: rgba(255,255,255,0.1);
 
   --username-color: #38bdf8; /* 🔥 warna nama biar standout */
+--chat-self-bg: #2563eb; /* 🔥 biru biar kontras */
 }
 /* Penerapan transisi halus untuk pergantian mode di seluruh aplikasi */
 body {
@@ -2213,12 +2216,11 @@ body {
 }
 
 .chat-message.self {
-  background: rgba(220, 248, 198, 0.9);
+  background: var(--chat-self-bg);
   align-self: flex-end;
   border-bottom-right-radius: 2px;
   flex-direction: row-reverse;
 }
-
 .chat-message.other {
   background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
   color: var(--text-color); /* Telah diupdate mengikuti variable CSS */
