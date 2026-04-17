@@ -173,6 +173,39 @@ function scrollToBottom() {
     messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: "smooth" });
   }
 }
+// Memunculkan bubble typing di layar chat
+async function renderTypingBubble(username, userId) {
+  if (!messagesEl) return;
+  if (document.getElementById("typing-indicator-bubble")) return; // Kalau udah ada, skip
+
+  // Ambil foto profil user yang lagi ngetik
+  const profile = await getCachedProfile(userId);
+  const avatarUrl = profile?.avatar_url || "asets/png/profile.webp";
+
+  const typingEl = document.createElement("div");
+  typingEl.id = "typing-indicator-bubble";
+  typingEl.className = "chat-message other new-msg";
+  typingEl.innerHTML = `
+    <img class="avatar" src="${avatarUrl}" onerror="this.src='asets/png/profile.webp'">
+    <div class="content" style="margin-bottom: 5px;">
+      <div class="username">${escapeHtml(username)}</div>
+      <div class="text">
+        <div class="typing-bubble" style="padding: 2px 8px; min-width: auto;">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  messagesEl.appendChild(typingEl);
+  scrollToBottom();
+}
+
+// Menghilangkan bubble typing
+function removeTypingBubble() {
+  const typingEl = document.getElementById("typing-indicator-bubble");
+  if (typingEl) typingEl.remove();
+}
 
 function closeSidebar() {
   if (sidebar) sidebar.classList.remove("open");
@@ -356,27 +389,32 @@ async function initPresence() {
   if (presenceChannel) { await supabase.removeChannel(presenceChannel); presenceChannel = null; }
   presenceChannel = supabase.channel(`presence-${currentRoomId}`, { config: { presence: { key: currentUser.id } } });
 
-  presenceChannel.on("presence", { event: "sync" }, () => {
+    presenceChannel.on("presence", { event: "sync" }, () => {
     const state = presenceChannel.presenceState();
     const currentTypingHeader = document.getElementById("typing-header");
     const currentStatusHeader = document.getElementById("status-header");
 
     if (!currentTypingHeader || !currentStatusHeader) return;
     const typingUsers = [];
+    let typingUserId = null; // Simpan ID yang lagi ngetik
 
     for (const userId in state) {
       if (userId !== currentUser.id && state[userId].some((p) => p.isTyping)) {
         typingUsers.push(state[userId][0].username);
+        typingUserId = userId; // Ambil ID-nya
       }
     }
 
     if (typingUsers.length > 0) {
-      currentStatusHeader.style.display = "none";
-      currentTypingHeader.style.display = "inline-block"; // Perbaikan UI
-      currentTypingHeader.textContent = `${typingUsers[0]} sedang mengetik...`;
+      // MUNCULKAN BUBBLE CHAT DI BAWAH
+      if (typeof renderTypingBubble === "function") {
+        renderTypingBubble(typingUsers[0], typingUserId);
+      }
     } else {
-      currentStatusHeader.style.display = "inline-block"; // Perbaikan UI
-      currentTypingHeader.style.display = "none";
+      // HILANGKAN BUBBLE CHAT
+      if (typeof removeTypingBubble === "function") {
+        removeTypingBubble();
+      }
     }
   });
 
@@ -556,8 +594,14 @@ function renderMessage(msg) {
     swiping = false; currentX = 0;
   });
 
-  messagesEl.appendChild(msgEl);
+    const typingIndicator = document.getElementById("typing-indicator-bubble");
+  if (typingIndicator) {
+    messagesEl.insertBefore(msgEl, typingIndicator);
+  } else {
+    messagesEl.appendChild(msgEl);
+  }
 }
+
 
 function updateMessageStatusUI(messageId, status) {
   const msgEl = document.getElementById(`msg-${messageId}`);
