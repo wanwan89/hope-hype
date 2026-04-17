@@ -1607,16 +1607,31 @@ window.openGroupSettings = async () => {
                     const isMe = m.user_id === currentUser.id;
                     
                     const div = document.createElement('div');
-                    div.style = "display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.1); color: var(--text-color, #333);";
+                    div.style = "display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border-color, rgba(0,0,0,0.05));";
+                    
+                    // Logika tombol Keluarkan (hanya muncul kalau yang buka modal adalah Admin dan bukan dirinya sendiri)
+                    const kickButton = (isAdmin && !isMe) 
+                        ? `<button onclick="window.kickMember('${m.user_id}', '${profileName}')" style="margin-left:auto; background:rgba(239, 68, 68, 0.1); color:#ef4444; border:none; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; transition: background 0.2s;">Keluarkan</button>` 
+                        : '';
+
+                    // Label tulisan "(Kamu)" atau "Admin"
+                    let roleLabel = '';
+                    if (isMe && isAdmin) roleLabel = '<span style="font-size:10px; color:#10b981; font-weight:600; background:rgba(16, 185, 129, 0.1); padding:2px 6px; border-radius:4px;">Admin (Kamu)</span>';
+                    else if (isMe) roleLabel = '<span style="font-size:10px; color:#3a7bd5; font-weight:600;">(Kamu)</span>';
+                    else if (group.created_by === m.user_id) roleLabel = '<span style="font-size:10px; color:#10b981; font-weight:600; background:rgba(16, 185, 129, 0.1); padding:2px 6px; border-radius:4px;">Admin</span>';
+
                     div.innerHTML = `
-                        <img src="${profileAvatar}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
-                        <span style="font-size:13px; font-weight:500;">${profileName} ${isMe ? '(Anda)' : ''}</span>
-                        ${isAdmin && !isMe ? `<button onclick="window.kickMember('${m.user_id}', '${profileName}')" style="margin-left:auto; background:#ff4757; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">Tendang</button>` : ''}
+                        <img src="${profileAvatar}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border: 1px solid var(--border-color);">
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                          <span style="font-size:13px; font-weight:600; color: var(--text-color);">${profileName}</span>
+                          ${roleLabel}
+                        </div>
+                        ${kickButton}
                     `;
                     container.appendChild(div);
                 });
             } else {
-                container.innerHTML = "<div style='font-size:12px; color:var(--text-muted, #666); text-align:center;'>Belum ada anggota.</div>";
+                container.innerHTML = "<div style='font-size:12px; color:var(--text-muted); text-align:center;'>Belum ada anggota.</div>";
             }
         }
     } catch (err) {
