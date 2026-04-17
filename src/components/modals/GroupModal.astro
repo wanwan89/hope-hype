@@ -1,13 +1,14 @@
 ---
 ---
 <div id="group-modal" class="delete-overlay" style="display: none; align-items: center; justify-content: center;">
-  <div class="delete-menu" style="width: 90%; max-width: 350px; padding: 25px; text-align: center;">
+  <div class="delete-menu" style="width: 90%; max-width: 350px; padding: 25px; text-align: center; background: var(--bg-panel) !important; color: var(--text-color); transition: all 0.3s;">
     <h2 style="margin: 0 0 10px 0; font-size: 18px; color: #3a7bd5;">Buat Grup Baru</h2>
 
     <div style="margin-bottom: 20px; position: relative; display: inline-block;">
       <label for="group-photo-input" style="cursor: pointer;">
-        <img id="group-photo-preview" src="/asets/png/profile.webp" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #3a7bd5; background: #eee;" />
-        <div style="position: absolute; bottom: 0; right: 0; background: #3a7bd5; color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-weight: bold; font-size: 14px;">
+        <img id="group-photo-preview" src="/asets/png/profile.webp" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #3a7bd5; background: var(--bg-main) !important; transition: all 0.3s;" />
+        
+        <div style="position: absolute; bottom: 0; right: 0; background: #3a7bd5; color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-panel); font-weight: bold; font-size: 14px; transition: border-color 0.3s;">
           +
         </div>
       </label>
@@ -15,13 +16,17 @@
     </div>
 
     <div style="text-align: left;">
-      <label style="font-size: 11px; font-weight: 600;">Nama Grup</label>
-      <input type="text" id="in-group-name" placeholder="Contoh: Gibah Squad" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; box-sizing: border-box;" />
+      <label style="font-size: 11px; font-weight: 600; color: var(--text-color);">Nama Grup</label>
+      <input type="text" id="in-group-name" placeholder="Contoh: Gibah Squad" 
+             style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 20px; box-sizing: border-box; background: var(--bg-main) !important; color: var(--text-color); outline: none; transition: all 0.3s; -webkit-appearance: none;" />
     </div>
 
     <div style="display: flex; gap: 10px;">
       <button class="btn-confirm" id="btn-create-group" style="flex: 2;">Buat Sekarang</button>
-      <button onclick="document.getElementById('group-modal').style.display='none'" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: #ccc; color: #333; font-weight: 600; cursor: pointer;">Batal</button>
+      <button onclick="document.getElementById('group-modal').style.display='none'" 
+              style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: var(--border-color) !important; color: var(--text-color); font-weight: 600; cursor: pointer; transition: all 0.3s;">
+        Batal
+      </button>
     </div>
   </div>
 </div>

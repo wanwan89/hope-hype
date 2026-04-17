@@ -1,9 +1,12 @@
 ---
 ---
-<div class="chat-input-container" style="display: flex; align-items: flex-end; gap: 10px; padding: 10px 15px; background: var(--bg-panel); width: 100%; box-sizing: border-box; border-top: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s;">
-  <div class="input-group-wrapper" style="flex: 1; display: flex; align-items: center; background: var(--bg-main); border-radius: 30px; padding: 4px 16px; position: relative; min-height: 48px; box-sizing: border-box; border: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s;">
+<div class="chat-input-container" 
+     style="display: flex; align-items: flex-end; gap: 10px; padding: 10px 15px; background: var(--bg-panel) !important; width: 100%; box-sizing: border-box; border-top: 1px solid var(--border-color); transition: all 0.3s; -webkit-tap-highlight-color: transparent;">
+  
+  <div class="input-group-wrapper" 
+       style="flex: 1; display: flex; align-items: center; background: var(--bg-main) !important; border-radius: 30px; padding: 4px 16px; position: relative; min-height: 48px; box-sizing: border-box; border: 1px solid var(--border-color); transition: all 0.3s;">
     
-    <button id="sticker-btn" style="background: none; border: none; cursor: pointer; padding: 0; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; outline: none;">
+    <button id="sticker-btn" style="background: none; border: none; cursor: pointer; padding: 0; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; outline: none; -webkit-tap-highlight-color: transparent;">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted, #888)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
         <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
@@ -12,9 +15,14 @@
       </svg>
     </button>
 
-    <textarea id="chat-input" placeholder="Tulis pesan..." rows="1" style="flex: 1; border: none; outline: none; background: transparent !important; resize: none; max-height: 100px; padding: 12px 0; font-family: 'Poppins', sans-serif; font-size: 14px; color: var(--text-color); line-height: 1.4; -webkit-appearance: none; box-shadow: none; transition: color 0.3s;"></textarea>
+    <textarea id="chat-input" 
+              placeholder="Tulis pesan..." 
+              rows="1" 
+              style="flex: 1; border: none; outline: none; background: transparent !important; resize: none; max-height: 100px; padding: 12px 0; font-family: 'Poppins', sans-serif; font-size: 14px; color: var(--text-color); line-height: 1.4; -webkit-appearance: none; box-shadow: none; transition: color 0.3s;">
+    </textarea>
 
-    <div id="vn-overlay" style="display: none; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: var(--bg-main); border-radius: 30px; align-items: center; padding: 0 16px; box-sizing: border-box; z-index: 10;">
+    <div id="vn-overlay" 
+         style="display: none; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: var(--bg-main) !important; border-radius: 30px; align-items: center; padding: 0 16px; box-sizing: border-box; z-index: 10;">
       <div style="display: flex; align-items: center; width: 100%; gap: 12px;">
         <div style="width: 10px; height: 10px; background: #ff4757; border-radius: 50%; animation: pulse 1s infinite;"></div>
         <span id="vn-timer" style="font-weight: 600; font-size: 14px; color: var(--text-color);">00:00</span>
@@ -23,7 +31,8 @@
     </div>
   </div>
 
-  <button id="action-btn" style="width: 48px; height: 48px; border-radius: 50%; background: #3a7bd5; border: none; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3); outline: none;">
+  <button id="action-btn" 
+          style="width: 48px; height: 48px; border-radius: 50%; background: #3a7bd5; border: none; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3); outline: none; -webkit-tap-highlight-color: transparent;">
     <div class="icon-stack" style="display: flex; align-items: center; justify-content: center;">
       <span class="svg-send" style="position: absolute; display: flex;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
