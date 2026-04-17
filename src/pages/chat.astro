@@ -3817,6 +3817,14 @@ html.dark .unread-divider span {
   background: rgba(56, 189, 248, 0.15);
   color: #38bdf8;
 }
+/* 🔥 MENCEGAH GAMBAR DITAHAN / DIDOWNLOAD 🔥 */
+img {
+  -webkit-touch-callout: none; /* Mencegah munculnya popup menu (Download, Share) di iOS & Android */
+  -webkit-user-drag: none;     /* Mencegah gambar bisa diseret (drag) ke tab baru */
+  -webkit-user-select: none;   /* Mencegah gambar terblok/terseleksi */
+  user-select: none;           /* Standar modern untuk mencegah seleksi */
+  pointer-events: auto;        /* Memastikan gambar tetap bisa diklik (jika ada fungsi klik) */
+}
 
 
 </style>
