@@ -1,12 +1,12 @@
 ---
 ---
-<div id="call-overlay" style="display:none; position:fixed; inset:0; background:rgba(18, 24, 34, 0.98); z-index:99999; flex-direction:column; align-items:center; justify-content:center; color:white; font-family: 'Poppins', sans-serif;">
+<div id="call-overlay" style="display:none; position:fixed; inset:0; background:var(--bg-main); z-index:99999; flex-direction:column; align-items:center; justify-content:center; color:var(--text-color); font-family: 'Poppins', sans-serif; transition: background-color 0.3s, color 0.3s;">
   <div class="call-animation" style="position:relative; margin-bottom:20px;">
     <img id="call-avatar" src="/asets/png/profile.webp" style="width:120px; height:120px; border-radius:50%; border:3px solid #3a7bd5; object-fit: cover;" />
     <div class="sonar-wave" style="position:absolute; inset:0; border-radius:50%; background:#3a7bd5; opacity:0.3; z-index:-1; animation: sonar 2s infinite;"></div>
   </div>
   <h2 id="call-name" style="margin:0; font-size:22px;">Username</h2>
-  <p id="call-status" style="margin:10px 0 30px 0; opacity:0.7; letter-spacing:1px;">MEMANGGIL...</p>
+  <p id="call-status" style="margin:10px 0 30px 0; color: var(--text-muted); letter-spacing:1px; transition: color 0.3s;">MEMANGGIL...</p>
 
   <div style="display:flex; gap:30px;">
     <button id="btn-end-call" onclick="window.endCall()" style="background:#ff4757; color:white; border:none; width:65px; height:65px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);">
@@ -17,12 +17,12 @@
   </div>
 </div>
 
-<div id="incoming-call-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100000; flex-direction:column; align-items:center; justify-content:center; color:white; font-family: 'Poppins', sans-serif;">
+<div id="incoming-call-overlay" style="display:none; position:fixed; inset:0; background:var(--bg-main); z-index:100000; flex-direction:column; align-items:center; justify-content:center; color:var(--text-color); font-family: 'Poppins', sans-serif; transition: background-color 0.3s, color 0.3s;">
   <div class="call-animation" style="margin-bottom:20px;">
     <img id="incoming-avatar" src="/asets/png/profile.webp" style="width:120px; height:120px; border-radius:50%; border:3px solid #2ecc71; object-fit: cover;" />
   </div>
   <h2 id="incoming-name" style="margin:0;">Teman kamu</h2>
-  <p style="opacity:0.7; margin:10px 0 40px 0;">MENGHUBUNGI...</p>
+  <p style="color: var(--text-muted); margin:10px 0 40px 0; transition: color 0.3s;">MENGHUBUNGI...</p>
   
   <div style="display:flex; gap:50px;">
     <div onclick="window.rejectCall()" style="cursor:pointer; text-align:center;">

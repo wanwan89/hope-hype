@@ -1,9 +1,12 @@
 ---
 ---
-<div id="sticker-menu" style="display:none; flex-direction:column; padding:10px; background:#f9f9f9; border-top:1px solid #ccc; height: 300px;">
+<div id="sticker-menu" style="display:none; flex-direction:column; padding:10px; background: var(--bg-panel); border-top:1px solid var(--border-color); height: 300px; transition: background-color 0.3s, border-color 0.3s;">
   <div style="display:flex; gap:8px; margin-bottom:10px; padding: 5px;">
-    <input type="text" id="sticker-search-input" placeholder="Cari stiker lucu..." style="flex:1; padding:8px 12px; border-radius:20px; border:1px solid #ddd; outline:none; font-size:14px;" />
+    
+    <input type="text" id="sticker-search-input" placeholder="Cari stiker lucu..." style="flex:1; padding:8px 12px; border-radius:20px; border:1px solid var(--border-color); outline:none; font-size:14px; background: var(--bg-main); color: var(--text-color); transition: background-color 0.3s, border-color 0.3s, color 0.3s;" />
+    
     <button id="sticker-search-btn" style="background:#3a7bd5; color:white; border:none; border-radius:20px; padding:8px 15px; cursor:pointer; font-weight:600; font-size:12px;">Cari</button>
   </div>
+  
   <div id="sticker-list" style="display:flex; flex-wrap:wrap; overflow-y:auto; flex:1; justify-content:center; gap:5px;"></div>
 </div>
