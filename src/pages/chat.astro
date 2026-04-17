@@ -2079,19 +2079,19 @@ init();
   --border-color: #e5e7eb;         /* tipis aja */
 }
 
-/* DARK MODE */
 html.dark {
   --bg-main: #0f172a;
   --bg-panel: rgba(30, 41, 59, 0.9);
   --bg-sidebar: #1e293b;
   --text-color: #f8fafc;
   --text-muted: #94a3b8;
-  --chat-bg-image: none; /* Background gambar dihapus agar chat lebih terbaca */
+
+  --chat-bg-image: url("../asets/png/chat.png"); /* ✅ aktifin lagi */
+
   --chat-item-bg: #0f172a;
   --label-bg: #1e293b;
   --border-color: rgba(255,255,255,0.1);
 }
-
 /* Penerapan transisi halus untuk pergantian mode di seluruh aplikasi */
 body {
   background-color: var(--bg-main);
