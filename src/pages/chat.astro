@@ -1557,11 +1557,15 @@ if (editGroupPhotoInput) {
     };
 }
 
+// [PENTING] FUNGSI GLOBAL OPEN GROUP SETTINGS ADA DI SINI
 window.openGroupSettings = async () => {
     if (!window.activeGroupId || window.currentChatMode !== 'group') return;
     
     const modal = document.getElementById('group-settings-modal');
-    if(modal) modal.style.display = 'flex';
+    if(modal) {
+        modal.style.display = 'flex';
+        modal.style.zIndex = '1000000'; // Paksa ke depan agar bisa dipencet
+    }
 
     const container = document.getElementById('member-list-container');
     if(container) container.innerHTML = "<div style='font-size:12px; color:var(--text-muted, #666); text-align:center;'>Memuat anggota...</div>";
@@ -1742,24 +1746,6 @@ window.kickMember = async (targetId, targetName) => {
     } catch(err) { showToast("Gagal mengeluarkan member"); }
 };
 
-window.updateGroupInfo = async () => {
-    const newName = document.getElementById('edit-group-name')?.value.trim();
-    if(!newName) return;
-    const btn = document.getElementById('btn-save-group-info');
-    if(btn) { btn.innerText = "Menyimpan..."; btn.disabled = true; }
-    try {
-        const { error } = await supabase.from('groups').update({ name: newName }).eq('id', window.activeGroupId);
-        if(error) throw error;
-        showToast("Info grup diperbarui");
-        
-        // Langsung update nama di Header Chat
-        const headerTitle = document.querySelector('.chat-header h3');
-        if(headerTitle) headerTitle.innerHTML = `${newName} <span style="font-size:14px; cursor:pointer; margin-left:8px;" onclick="window.openGroupSettings()">⚙️</span>`;
-        
-        refreshSidebar();
-    } catch(err) { showToast("Gagal update grup"); } 
-    finally { if(btn) { btn.innerText = "Simpan Perubahan"; btn.disabled = false; } }
-};
 // ==========================================
 // 🔥 VARIABEL AUDIO & TIMER TELPON 🔥
 // ==========================================
@@ -2065,62 +2051,62 @@ init();
   </script>
 
   <style is:global>
-/* [TAMBAHAN: CSS VARIABLES GLOBAL THEME] */
-/* LIGHT MODE (Default) */
+/* [FULL FIX: CSS VARIABLES GLOBAL THEME] */
+/* LIGHT MODE (Default - Bersih & Solid) */
 :root {
-  --bg-main: #e5ddd5;
-  --bg-panel: rgba(255, 255, 255, 0.9);
-  --bg-sidebar: white;
-  --text-color: #333;
-  --text-muted: #666;
+  --bg-main: #f0f2f5;        /* Abu-abu sangat muda (seperti WhatsApp/Facebook) */
+  --bg-panel: #ffffff;       /* Putih bersih untuk modal & kotak input */
+  --bg-sidebar: #ffffff;    /* Putih bersih untuk sidebar */
+  --text-color: #1c1e21;     /* Hitam pekat agar terbaca jelas */
+  --text-muted: #65676b;     /* Abu-abu sedang untuk sub-teks */
   --chat-bg-image: url("../asets/png/chat.png");
-  --chat-item-bg: #f9fbff;
-  --label-bg: #f8f9fa;
-  --border-color: rgba(0,0,0,0.1);
+  --chat-item-bg: #ffffff;
+  --label-bg: #f0f2f5;
+  --border-color: #e4e6eb;   /* Garis tipis bersih */
 }
 
-/* DARK MODE */
+/* DARK MODE (Solid & Elegan) */
 html.dark {
-  --bg-main: #0f172a;
-  --bg-panel: rgba(30, 41, 59, 0.9);
-  --bg-sidebar: #1e293b;
-  --text-color: #f8fafc;
-  --text-muted: #94a3b8;
-  --chat-bg-image: none; /* Background gambar dihapus agar chat lebih terbaca */
-  --chat-item-bg: #0f172a;
-  --label-bg: #1e293b;
-  --border-color: rgba(255,255,255,0.1);
+  --bg-main: #0f172a;        /* Navy gelap pekat */
+  --bg-panel: #1e293b;       /* Navy keabu-abuan untuk modal */
+  --bg-sidebar: #1e293b;     /* Navy keabu-abuan untuk sidebar */
+  --text-color: #f8fafc;     /* Putih bersih terang */
+  --text-muted: #94a3b8;     /* Abu-abu terang untuk sub-teks */
+  --chat-bg-image: none;     /* Gambar dihapus di dark mode agar teks chat tidak tenggelam */
+  --chat-item-bg: #1e293b;
+  --label-bg: #0f172a;
+  --border-color: #334155;   /* Garis tipis gelap */
 }
 
-/* Penerapan transisi halus untuk pergantian mode di seluruh aplikasi */
+/* --- FIX BRUTAL UNTUK WARNA KREM AUTOFILL BROWSER --- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-color) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-main) inset !important; /* Paksa timpa warna krem browser */
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Penerapan Dasar */
 body {
-  background-color: var(--bg-main);
+  background-color: var(--bg-main) !important;
   color: var(--text-color);
   transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Menyesuaikan sidebar agar mengikuti tema */
-.sidebar {
-  background: var(--bg-sidebar);
-}
-
-/* Menyesuaikan telegram-chat agar gambarnya hilang/berubah di dark mode jika diperlukan */
-.telegram-chat {
-  background-image: var(--chat-bg-image);
-  background-color: var(--bg-main);
-}
-/* [END TAMBAHAN: CSS VARIABLES GLOBAL THEME] */
-
-/* --- Base Styles --- */
-html,
-body {
   margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: "Poppins", sans-serif;
-  background: var(--bg-main); /* Telah diupdate mengikuti variable CSS */
-  display: flex;
-  flex-direction: column;
+}
+
+/* Pastikan semua input tidak transparan agar tidak bocor warna dasar browser */
+input, textarea, select {
+  background-color: var(--bg-main) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color);
+  outline: none !important;
 }
 
 /* --- Layout & Containers --- */
@@ -2129,7 +2115,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-image: var(--chat-bg-image); /* Telah diupdate mengikuti variable CSS */
+  background-image: var(--chat-bg-image); 
   background-color: var(--bg-main);
   background-size: cover;
   background-position: center;
@@ -2142,7 +2128,6 @@ body {
   display: flex;
   align-items: center;
   padding: 0 16px;
-  /* Diubah menjadi biru #3a7bd5 */
   background: #3a7bd5 !important; 
   color: white;
   font-weight: 600;
@@ -2153,10 +2138,10 @@ body {
 
 .chat-members {
   padding: 6px 16px;
-  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
+  background: var(--bg-panel); 
   font-size: 14px;
-  color: var(--text-color); /* Telah diupdate mengikuti variable CSS */
-  border-bottom: 1px solid var(--border-color); /* Telah diupdate mengikuti variable CSS */
+  color: var(--text-color); 
+  border-bottom: 1px solid var(--border-color); 
   display: flex;
   align-items: center;
   gap: 5px;
@@ -2215,8 +2200,8 @@ body {
 }
 
 .chat-message.other {
-  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
-  color: var(--text-color); /* Telah diupdate mengikuti variable CSS */
+  background: var(--bg-panel); 
+  color: var(--text-color); 
   align-self: flex-start;
   border-bottom-left-radius: 2px;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
@@ -2251,7 +2236,7 @@ body {
 .chat-message .username {
   font-weight: 600;
   font-size: 12px;
-  color: var(--text-color); /* Telah diupdate mengikuti variable CSS */
+  color: var(--text-color); 
   margin-bottom: 2px;
 }
 
@@ -2262,7 +2247,7 @@ body {
 
 .chat-message .timestamp {
   font-size: 10px;
-  color: var(--text-muted); /* Telah diupdate mengikuti variable CSS */
+  color: var(--text-muted); 
   align-self: flex-end;
   margin-top: 2px;
 }
@@ -2285,18 +2270,18 @@ body {
 /* --- Input Area --- */
 .chat-input {
   display: flex;
-  border-top: 1px solid var(--border-color); /* Telah diupdate mengikuti variable CSS */
+  border-top: 1px solid var(--border-color); 
   padding: 10px;
-  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
+  background: var(--bg-panel); 
 }
 
 .chat-input input {
   flex: 1;
   padding: 10px 12px;
   border-radius: 20px;
-  border: 1px solid var(--border-color); /* Telah diupdate mengikuti variable CSS */
-  background: var(--bg-main); /* Tambahan agar input box terintegrasi dark mode */
-  color: var(--text-color); /* Tambahan agar warna text input sesuai dark mode */
+  border: 1px solid var(--border-color); 
+  background: var(--bg-main) !important; 
+  color: var(--text-color) !important; 
   outline: none;
 }
 
@@ -2338,19 +2323,16 @@ body {
 }
 
 .logo-besar-header {
-  position: relative !important; /* Biar sejajar sama tombol telpon */
+  position: relative !important; 
   right: auto !important;
   top: auto !important;
   transform: none !important;
-  
-  /* Ukuran Baru - Lebih Besar */
   height: 50px !important; 
   width: auto !important;
-  
   object-fit: contain;
   filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.2));
   flex-shrink: 0; 
-  margin-left: 5px; /* Jeda tipis biar nggak nempel banget ke tombol */
+  margin-left: 5px; 
 }
 
 /* --- Sidebar & Hamburger --- */
@@ -2391,8 +2373,8 @@ body {
   left: -280px;
   width: 280px;
   height: 100%;
-  background: var(--bg-sidebar); /* Telah diupdate mengikuti variable CSS */
-  color: var(--text-color); /* Tambahan pewarnaan text */
+  background: var(--bg-sidebar); 
+  color: var(--text-color); 
   z-index: 10001;
   transition: transform 0.3s ease-out, left 0.3s ease-out, background-color 0.3s ease, color 0.3s ease;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
@@ -2422,8 +2404,8 @@ body {
   display: none;
   flex-wrap: wrap;
   padding: 8px;
-  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
-  border-top: 1px solid var(--border-color); /* Telah diupdate mengikuti variable CSS */
+  background: var(--bg-panel); 
+  border-top: 1px solid var(--border-color); 
   height: 250px;
   overflow-y: auto;
   justify-content: center;
@@ -2431,14 +2413,14 @@ body {
 
 .reaction-menu {
   position: absolute;
-  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
+  background: var(--bg-panel); 
   padding: 8px 12px;
   border-radius: 30px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
   display: none;
   gap: 12px;
   z-index: 10006;
-  border: 1px solid var(--border-color); /* Telah diupdate mengikuti variable CSS */
+  border: 1px solid var(--border-color); 
   transform: translateX(-50%);
   animation: reactionPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -2458,12 +2440,12 @@ body {
   gap: 2px;
   position: absolute;
   bottom: -8px;
-  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
+  background: var(--bg-panel); 
   padding: 1px 4px;
   border-radius: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 5;
-  border: 1px solid var(--border-color); /* Telah diupdate mengikuti variable CSS */
+  border: 1px solid var(--border-color); 
 }
 
 .reaction-badge {
@@ -2475,14 +2457,14 @@ body {
 .reply-container {
   display: none;
   padding: 8px 12px;
-  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
+  background: var(--bg-panel); 
   border-left: 4px solid #3a7bd5 !important;
   position: relative;
 }
 
 .reply-container .reply-text {
   font-size: 12px;
-  color: var(--text-color); /* Telah diupdate mengikuti variable CSS */
+  color: var(--text-color); 
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2517,7 +2499,7 @@ body {
   display: none;
   position: relative;
   width: 100%;
-  background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */
+  background: var(--bg-panel); 
   border-left: 4px solid #3a7bd5 !important;
   padding: 8px 12px;
   box-sizing: border-box;
@@ -2547,7 +2529,7 @@ body {
 
 .reply-text-preview {
   font-size: 12px;
-  color: var(--text-muted); /* Telah diupdate mengikuti variable CSS */
+  color: var(--text-muted); 
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2572,7 +2554,7 @@ body {
 }
 .private-mode.telegram-chat {
   background-image: none;
-  background-color: var(--bg-main); /* Telah diupdate mengikuti variable CSS */
+  background-color: var(--bg-main); 
 }
 
 /* --- UI Elements --- */
@@ -2583,7 +2565,7 @@ body {
   font-family: "Poppins", sans-serif;
   font-size: 14px;
   color: white;
-  background: #3a7bd5 !important; /* Diubah ke biru pilihanmu */
+  background: #3a7bd5 !important; 
   transition: 1s;
   box-shadow: 4px 4px 0 black;
   transform: skewX(-15deg);
@@ -2601,7 +2583,7 @@ body {
 .cta:hover {
   transition: 0.5s;
   box-shadow: 7px 7px 0 #869da6;
-  background: #2a5cb8 !important; /* Biru sedikit lebih gelap saat di-hover */
+  background: #2a5cb8 !important; 
 }
 .cta:hover .second {
   margin-right: 15px;
@@ -2635,7 +2617,7 @@ body {
   color: #aaa !important;
 }
 
-/* --- Overlays & Modals --- */
+/* --- Overlays & Modals (Z-INDEX SANGAT TINGGI AGAR BISA DIKLIK) --- */
 .delete-overlay,
 .searching-overlay {
   position: fixed;
@@ -2643,38 +2625,32 @@ body {
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
+  z-index: 100005 !important;
 }
 
 .delete-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 31, 63, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 10005;
-  padding: 20px;
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   animation: fadeIn 0.2s ease-out;
 }
 
 .delete-menu {
-  background: #ffffff;
+  background: var(--bg-panel) !important;
+  color: var(--text-color);
   width: 100%;
   max-width: 280px;
   padding: 25px;
   border-radius: 24px;
   text-align: center;
-  box-shadow: 0 15px 35px rgba(58, 123, 213, 0.2) !important; /* Update bayangan senada biru baru (#3a7bd5 rgb: 58,123,213) */
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important; 
   animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .delete-menu p {
   font-size: 16px;
   font-weight: 700;
-  color: #004466;
+  color: var(--text-color);
   margin: 0 0 20px 0;
 }
 
@@ -2697,7 +2673,7 @@ body {
 #confirm-delete {
   background: linear-gradient(135deg, #3a7bd5, #00d2ff) !important;
   color: white;
-  box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3) !important; /* Update bayangan senada biru baru */
+  box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3) !important; 
 }
 
 #confirm-delete:active {
@@ -2706,8 +2682,8 @@ body {
 }
 
 .btn-cancel {
-  background: #eef2f5;
-  color: #708090;
+  background: var(--border-color) !important;
+  color: var(--text-color);
 }
 
 .btn-cancel:active {
@@ -2879,7 +2855,7 @@ body {
 .skeleton-msg.right { align-self: flex-end; justify-content: flex-end; margin-left: auto; }
 
 .skeleton-avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, 0.35); flex-shrink: 0; }
-.skeleton-bubble { background: var(--bg-panel); /* Telah diupdate mengikuti variable CSS */ border-radius: 16px 16px 16px 6px; padding: 10px 12px; min-width: 110px; max-width: 220px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); backdrop-filter: blur(3px); }
+.skeleton-bubble { background: var(--bg-panel); border-radius: 16px 16px 16px 6px; padding: 10px 12px; min-width: 110px; max-width: 220px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); backdrop-filter: blur(3px); }
 .skeleton-bubble.me { background: rgba(220, 248, 198, 0.85); border-radius: 16px 16px 6px 16px; }
 
 .skeleton-line { height: 8px; border-radius: 999px; margin-bottom: 8px; background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.35)); background-size: 200% 100%; animation: shimmerMove 1.2s linear infinite; }
@@ -2910,8 +2886,10 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+.sidebar-chat-item { background-color: var(--bg-sidebar) !important; }
 .sidebar-chat-item:hover { background-color: var(--border-color) !important; cursor: pointer; }
 .sidebar-chat-item.unread { background-color: var(--border-color); }
+#private-chat-list { background-color: var(--bg-sidebar) !important; }
 
 #private-chat-list .unread-badge { animation: bounce 0.5s ease-in-out; }
 
@@ -2937,11 +2915,11 @@ body {
 .svg-send, .svg-mic { position: absolute; inset: 0; transition: all 0.3s ease; }
 .svg-mic { opacity: 0; transform: scale(0.5) rotate(-45deg); }
 
-#action-btn.is-recording { background-color: #ff4757; transform: scale(1.1); }
+#action-btn.is-recording { background-color: #ff4757 !important; transform: scale(1.1); }
 #action-btn.is-recording .svg-send { opacity: 0; transform: scale(0) rotate(45deg); }
 #action-btn.is-recording .svg-mic { opacity: 1; transform: scale(1) rotate(0); }
 
-#vn-overlay { position: absolute; inset: 0; background: var(--bg-panel); display: none; align-items: center; padding: 0 15px; border-radius: 24px; z-index: 10; color: var(--text-color); }
+#vn-overlay { position: absolute; inset: 0; background: var(--bg-panel) !important; display: none; align-items: center; padding: 0 15px; border-radius: 24px; z-index: 10; color: var(--text-color); }
 
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 @keyframes slide-text { 0% { transform: translateX(0); } 50% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
@@ -2973,7 +2951,7 @@ body {
   bottom: -10px; 
   right: auto;
   left: 10px;
-} /* <-- Kurung tutup ini sudah saya tambahkan ya! */
+} 
 
 .message-reactions { animation: badgePop 0.3s ease-out; }
 
@@ -3007,18 +2985,17 @@ body {
 }
 #btn-end-call:active { transform: scale(0.9); }
 #btn-call-trigger {
-    display: none; /* Default sembunyi */
+    display: none; 
     align-items: center;
     justify-content: center;
-    z-index: 1001; /* Di atas elemen header lainnya */
+    z-index: 1001; 
 }
 
-/* Opsional: Efek klik biar user tau tombol kepencet */
 #btn-call-trigger:active {
     transform: scale(0.9);
     background: rgba(255, 255, 255, 0.3);
 }
-/* 🔥 ANIMASI GELOMBANG AVATAR SAAT NELPON 🔥 */
+
 @keyframes radar-pulse {
   0% { 
     box-shadow: 0 0 0 0 rgba(0, 210, 255, 0.7), 0 0 0 0 rgba(0, 210, 255, 0.4); 
@@ -3040,7 +3017,6 @@ body {
   border-radius: 50%;
 }
 
-/* 🔥 ANIMASI TEKS KEDIP 🔥 */
 @keyframes text-blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
@@ -3052,9 +3028,7 @@ body {
   font-weight: bold;
   letter-spacing: 2px;
 }
-/* =========================================
-   ANIMASI CARI DOI (RADAR CINTA TEMA BIRU)
-   ========================================= */
+
 .doi-search-overlay {
   position: fixed;
   inset: 0;
@@ -3080,28 +3054,26 @@ body {
   margin-bottom: 30px;
 }
 
-/* Gelombang Radar Tema Biru */
 .radar-wave {
   position: absolute;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 2px solid #00d2ff; /* Berubah jadi biru muda */
+  border: 2px solid #00d2ff; 
   opacity: 0;
   animation: rippleWave 2s cubic-bezier(0.21, 0.53, 0.56, 0.8) infinite;
-  box-shadow: 0 0 20px rgba(0, 210, 255, 0.5) inset; /* Berubah jadi bayangan biru */
+  box-shadow: 0 0 20px rgba(0, 210, 255, 0.5) inset; 
 }
 
 .radar-wave:nth-child(2) { animation-delay: 0.6s; }
 .radar-wave:nth-child(3) { animation-delay: 1.2s; }
 
-/* Teks Menyala Tema Biru */
 .search-title-glow {
   margin: 0;
   font-size: 22px;
   font-weight: 800;
   letter-spacing: 2px;
-  background: linear-gradient(135deg, #3a7bd5, #00d2ff); /* Gradasi biru khas HopeTalk */
+  background: linear-gradient(135deg, #3a7bd5, #00d2ff); 
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: textPulse 1.5s infinite alternate;
@@ -3124,11 +3096,9 @@ body {
 }
 @keyframes textPulse {
   0% { opacity: 0.6; filter: drop-shadow(0 0 5px rgba(0, 210, 255, 0.3)); }
-  100% { opacity: 1; filter: drop-shadow(0 0 15px rgba(0, 210, 255, 0.8)); } /* Glow biru menyala */
+  100% { opacity: 1; filter: drop-shadow(0 0 15px rgba(0, 210, 255, 0.8)); }
 }
-/* =========================
-   TOAST COMPACT MOBILE FIX
-========================= */
+
 #toast {
   position: fixed;
   top: 14px;
@@ -3234,7 +3204,6 @@ body {
   height: 24px;
 }
 
-/* Mobile super compact */
 @media (max-width: 480px) {
   #toast {
     top: 10px;
