@@ -770,6 +770,7 @@ async function sendAudioMessage(url) {
 }
 
 // ===== Realtime Messages =====
+// ===== Realtime Messages =====
 function initRealtimeMessages() {
   if (!currentUser) return;
   if (messageChannel) {
@@ -782,8 +783,17 @@ function initRealtimeMessages() {
     .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, async (payload) => {
       const newMsg = payload.new;
 
-      // 1. REFRESH SIDEBAR JIKA ADA PESAN MASUK
-      if (newMsg.room_id.startsWith("pv_") || newMsg.room_id.startsWith("group_")) {
+      // 1. REFRESH SIDEBAR & TAMBAH BADGE UNREAD JIKA ADA PESAN MASUK
+      if (newMsg.room_id !== currentRoomId && newMsg.user_id !== currentUser.id) {
+        // Simpan notif angka merah di memori lokal (kecuali private chat karena udah pakai DB)
+        if (newMsg.room_id.startsWith("group_") || newMsg.room_id === "room-1") {
+          let currentUnread = parseInt(localStorage.getItem('unread_' + newMsg.room_id) || '0');
+          localStorage.setItem('unread_' + newMsg.room_id, currentUnread + 1);
+        }
+      }
+      
+      // Update Sidebar kalau ada chat di PV, Grup, atau Global
+      if (newMsg.room_id.startsWith("pv_") || newMsg.room_id.startsWith("group_") || newMsg.room_id === "room-1") {
         triggerLoadChatHistory();
       }
 
@@ -847,7 +857,6 @@ function initRealtimeMessages() {
           updateMessageStatusUI(updated.id, updated.status || "sent");
         }
       }
-
 
       if (updated.room_id !== currentRoomId) return;
 
@@ -918,25 +927,34 @@ async function loadProfile() {
 
 // ===== Render Global Chat Item =====
 function renderGlobalChatItem(container) {
+  // Ambil data badge merah dari memori
+  let unreadGlobal = parseInt(localStorage.getItem('unread_room-1') || '0');
+  let badgeHtml = unreadGlobal > 0 ? `<div class="unread-badge" style="position: absolute; top: -2px; right: -2px; background: #ff4757; color: white; font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; z-index: 2;">${unreadGlobal > 99 ? '99+' : unreadGlobal}</div>` : '';
+
   const globalBtn = document.createElement("div");
   globalBtn.innerHTML = `
     <div style="display:flex; align-items:center; padding:12px; border-bottom:2px solid #f0f0f0; cursor:pointer; background: var(--chat-item-bg, #f9fbff);">
-      <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg, #0088cc, #00d2ff); display:flex; align-items:center; justify-content:center; margin-right:12px;">
-        <span style="color:white; font-size:18px;">🌍</span>
+      <div style="position:relative; width:40px; height:40px; margin-right:12px;">
+        <div style="width:100%; height:100%; border-radius:50%; background:linear-gradient(45deg, #0088cc, #00d2ff); display:flex; align-items:center; justify-content:center;">
+          <span style="color:white; font-size:18px;">🌍</span>
+        </div>
+        ${badgeHtml}
       </div>
       <div>
         <strong style="font-size:14px; color:#0088cc;">Chat Global</strong><br>
         <span style="font-size:11px; color:#888;">Obrolan Umum</span>
       </div>
     </div>`;
-globalBtn.onclick = async () => {
+  globalBtn.onclick = async () => {
+    // Reset badge merah pas dibuka
+    localStorage.setItem('unread_room-1', '0');
+
     window.currentChatMode = null;
     window.activeGroupId = null;
     currentRoomId = "room-1"; 
     
     if (btnOpenInvite) btnOpenInvite.style.display = 'none';
     
-    // Sembunyikan tombol telpon (Hapus duplikatnya)
     const btnCall = document.getElementById('btn-start-call');
     if (btnCall) btnCall.style.display = 'none';
     
@@ -947,7 +965,8 @@ globalBtn.onclick = async () => {
     initPresence(); 
     await loadMessages(); 
     closeSidebar();
-};
+    refreshSidebar(); // Biar badge merahnya langsung hilang
+  };
 
   container.appendChild(globalBtn);
 }
@@ -1449,9 +1468,13 @@ async function loadGroupList() {
     label.innerHTML = `<div style="padding:10px 15px; font-size:11px; color:#999; font-weight:bold; background: var(--label-bg, #f8f9fa); border-top:1px solid rgba(0,0,0,0.1); margin-top:5px;">GRUP SAYA</div>`;
     listContainer.appendChild(label);
 
-    memberships.forEach(item => {
+        memberships.forEach(item => {
         const group = item.groups;
         if (!group) return;
+
+        // Ambil data badge merah untuk grup ini dari memori browser
+        let unreadGroup = parseInt(localStorage.getItem('unread_group_' + group.id) || '0');
+        let badgeHtml = unreadGroup > 0 ? `<div class="unread-badge" style="position: absolute; top: -2px; right: -2px; background: #ff4757; color: white; font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; z-index: 2;">${unreadGroup > 99 ? '99+' : unreadGroup}</div>` : '';
 
         const groupEl = document.createElement('div');
         groupEl.className = 'sidebar-chat-item';
@@ -1462,7 +1485,10 @@ async function loadGroupList() {
             : `<div style="width: 45px; height: 45px; border-radius: 50%; background: #3a7bd5; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">${group.name.substring(0, 2).toUpperCase()}</div>`;
 
         groupEl.innerHTML = `
-            ${avatarHtml}
+            <div style="position: relative;">
+              ${avatarHtml}
+              ${badgeHtml}
+            </div>
             <div style="flex: 1;">
               <div style="font-weight: 600; font-size: 14px; color: var(--text-color, #333);">${group.name}</div>
               <div style="font-size: 11px; color: var(--text-muted, #aaa);">Grup Chat aktif</div>
@@ -1472,7 +1498,6 @@ async function loadGroupList() {
         groupEl.onclick = () => mulaiChatGrup(group.id, group.name);
         listContainer.appendChild(groupEl);
     });
-}
 
 const btnOpenInvite = document.getElementById('btn-open-invite');
 
