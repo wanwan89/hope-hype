@@ -1,0 +1,63 @@
+import { c as createComponent } from './astro-component_Bm-5TSlt.mjs';
+import 'piccolore';
+import { m as maybeRenderHead, r as renderTemplate, l as renderComponent } from './entrypoint_D7e8hfS1.mjs';
+import { r as renderScript } from './script_CRtOvk9E.mjs';
+import { $ as $$Layout } from './Layout_DsOADmIq.mjs';
+import 'clsx';
+
+const $$Sidebarroom = createComponent(($$result, $$props, $$slots) => {
+  return renderTemplate`${maybeRenderHead()}<div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div> <div id="sidebar" class="sidebar"> <div class="sidebar-header"> <button class="close-sidebar-btn" onclick="toggleSidebar()"> <span class="material-icons">chevron_right</span> </button> <img src="/asets/png/profile.png" id="sidebar-avatar" class="sidebar-profile-img"> <span id="sidebar-username">Username</span> </div> <div class="sidebar-menu"> <a href="/data"> <span class="material-icons">person</span> <span>Profil</span> </a> <a href="#" id="menu-mic" onclick="toggleMicSidebar(event)"> <span class="material-icons" id="mic-icon">mic</span> <span id="mic-text">Matikan Mic</span> </a> <a href="#" id="menu-setting" style="display: none;" onclick="openRoomSetting()"> <span class="material-icons">settings</span> <span>Room Settings</span> </a> <a href="#" onclick="keluarRoom()" class="logout-item"> <span class="material-icons">logout</span> <span>Keluar</span> </a> </div> </div>`;
+}, "/data/data/com.termux/files/home/hope-hype/src/components/room/Sidebarroom.astro", void 0);
+
+const $$Modalsroom = createComponent(($$result, $$props, $$slots) => {
+  return renderTemplate`${maybeRenderHead()}<div id="setting-modal" class="modal-overlay"> <div class="modal-box"> <div class="modal-header"> <h3>⚙️ Room Settings</h3> <span class="close-modal" onclick="closeRoomSetting()">×</span> </div> <div class="modal-body"> <label>Nama Room Baru</label> <input type="text" id="edit-room-name" placeholder="Contoh: Klasikan Galau..."> <label>Pesan Sistem (Broadcast ke Chat)</label> <textarea id="system-message" placeholder="Tulis pesan pengumuman..."></textarea> <button class="btn-save-setting" onclick="saveRoomSetting()">SIMPAN PERUBAHAN</button> </div> </div> </div> <div id="confirm-modal" class="modal-overlay" style="z-index: 10005;"> <div class="modal-box" style="text-align: center; max-width: 300px; padding: 25px 20px;"> <h3 style="margin-top: 0; color: #fff; font-size: 18px;">Turun Panggung?</h3> <p style="color: #94a3b8; font-size: 14px; margin-bottom: 25px;">Yakin mau turun dari panggung sekarang? Mic kamu akan otomatis dimatikan.</p> <div style="display: flex; gap: 15px; justify-content: center;"> <button onclick="closeConfirmModal()" style="flex: 1; padding: 12px; border-radius: 14px; border: none; background: #333; color: white; font-weight: bold; cursor: pointer;">BATAL</button> <button onclick="prosesTurunMic()" style="flex: 1; padding: 12px; border-radius: 14px; border: none; background: #ff4d4d; color: white; font-weight: bold; cursor: pointer;">YAKIN</button> </div> </div> </div> <div id="top-gifters-modal" class="modal-overlay" style="display: none; z-index: 10006;"> <div class="modal-box" style="max-width: 320px; padding: 20px; background: #1e293b;"> <div class="modal-header" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;"> <h3 style="margin: 0; color: #FFD700; font-size: 18px; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);">THE SULTAN</h3> <span class="close-modal" onclick="closeTopGiftersModal()" style="cursor:pointer; font-size: 24px; color: #94a3b8;">&times;</span> </div> <div id="top-gifters-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 350px; overflow-y: auto; padding-right: 5px;"></div> </div> </div>`;
+}, "/data/data/com.termux/files/home/hope-hype/src/components/room/Modalsroom.astro", void 0);
+
+const $$Headerroom = createComponent(($$result, $$props, $$slots) => {
+  return renderTemplate`${maybeRenderHead()}<header class="main-header"> <div class="header-left"> <h1 class="room-title">KLASIKAN NYANYI</h1> <div style="font-size: 11px; color: #94a3b8; margin-top: 4px; display: flex; align-items: center; gap: 6px; font-weight: 600;"> <span class="material-icons" style="font-size: 14px; color: #00e676;">people</span> <span id="online-count">1</span> orang di room
+</div> </div> <div class="header-right" style="display: flex; align-items: center;"> <div id="top-gifters-container" style="display: flex; align-items: center; margin-right: 15px; cursor: pointer;" onclick="openTopGiftersModal()"></div> <button class="menu-btn" onclick="toggleSidebar()"> <span class="material-icons" style="font-size: 28px; color: white;">menu</span> </button> </div> </header>`;
+}, "/data/data/com.termux/files/home/hope-hype/src/components/room/Headerroom.astro", void 0);
+
+const $$Stageroom = createComponent(($$result, $$props, $$slots) => {
+  return renderTemplate`${maybeRenderHead()}<section id="stage-grid" class="stage-container"></section>`;
+}, "/data/data/com.termux/files/home/hope-hype/src/components/room/Stageroom.astro", void 0);
+
+const $$ChatBoxroom = createComponent(($$result, $$props, $$slots) => {
+  return renderTemplate`${maybeRenderHead()}<div id="chat-box" class="chat-display"> <div class="msg system"> <span class="user">SISTEM:</span>
+Jangan gunakan kata kasar, hinaan, atau bullying dalam bentuk apa pun. Selalu jawab dengan sopan, santai, dan tetap menghargai orang lain ya!
+</div> </div>`;
+}, "/data/data/com.termux/files/home/hope-hype/src/components/room/ChatBoxroom.astro", void 0);
+
+const $$Footerroom = createComponent(($$result, $$props, $$slots) => {
+  return renderTemplate`${maybeRenderHead()}<footer class="footer-controls"> <button class="btn-gift-main" onclick="toggleGiftDrawer()"> <span class="material-icons">redeem</span> </button> <div class="input-wrapper"> <input type="text" id="chat-input" placeholder="Ketik komentar..." autocomplete="off" onkeydown="if(event.key === 'Enter') kirimKomentar()"> <button class="btn-send" onclick="kirimKomentar()"> <span class="material-icons" style="font-size: 18px; margin-left: 3px;">send</span> </button> </div> </footer>`;
+}, "/data/data/com.termux/files/home/hope-hype/src/components/room/Footerroom.astro", void 0);
+
+const $$GiftDrawerroom = createComponent(($$result, $$props, $$slots) => {
+  return renderTemplate`${maybeRenderHead()}<div id="drawer-overlay" class="drawer-overlay" onclick="toggleGiftDrawer()"></div> <div id="gift-drawer" class="gift-drawer"> <div class="handle"></div> <div class="drawer-header"> <span class="drawer-title">KIRIM HADIAH</span> <div style="display: flex; align-items: center; gap: 10px;"> <div class="coin-panel"> <span id="user-coins">0</span> </div> <span class="material-icons" onclick="toggleGiftDrawer()" style="color: #94a3b8; font-size: 26px; cursor: pointer;">cancel</span> </div> </div> <div id="level-progress-container" style="margin: 15px 20px 5px 20px;"></div> <div class="target-selection-container"> <span class="target-label">KIRIM KE:</span> <div id="gift-targets" class="target-list"></div> </div> <div class="gift-list"> <div class="gift-item" onclick="sendGift('Love', 1, 1)"> <img src="/asets/png/gift1.png" class="gift-img"> <span class="gift-label">LOVE</span> <span class="gift-price">1</span> </div> <div class="gift-item" onclick="sendGift('Daebak', 10, 2)"> <img src="/asets/png/gift2.png" class="gift-img"> <span class="gift-label">DAEBAK</span> <span class="gift-price">10</span> </div> <div class="gift-item" onclick="sendGift('Omoomo', 50, 3)"> <img src="/asets/png/gift3.png" class="gift-img"> <span class="gift-label">OMOOMO</span> <span class="gift-price">50</span> </div> <div class="gift-item" onclick="sendGift('Oppa', 100, 4)"> <img src="/asets/png/gift4.png" class="gift-img"> <span class="gift-label">OPPA</span> <span class="gift-price">100</span> </div> <div class="gift-item" onclick="sendGift('Fighting', 2000, 5)"> <img src="/asets/png/gift5.png" class="gift-img"> <span class="gift-label">FIGHTING</span> <span class="gift-price">2000</span> </div> <div class="gift-item" onclick="sendGift('Saranghae', 5000, 6)"> <img src="/asets/png/gift6.png" class="gift-img"> <span class="gift-label">SARANGHAE</span> <span class="gift-price">5000</span> </div> <div class="gift-item" onclick="sendGift('Kiyowo', 10000, 7)"> <img src="/asets/png/gift7.png" class="gift-img"> <span class="gift-label">KIYOWO</span> <span class="gift-price">10000</span> </div> <div class="gift-item" onclick="sendGift('Gomawo', 25000, 8)"> <img src="/asets/png/gift8.png" class="gift-img"> <span class="gift-label">GOMAWO</span> <span class="gift-price">25000</span> </div> <div class="gift-item" onclick="sendGift('Daesang', 50000, 9)"> <img src="/asets/png/gift9.png" class="gift-img"> <span class="gift-label">DAESANG</span> <span class="gift-price">50000</span> </div> <div class="gift-item" onclick="sendGift('Sultan', 100000, 10)"> <img src="/asets/png/gift10.png" class="gift-img"> <span class="gift-label">SULTAN</span> <span class="gift-price">100000</span> </div> </div> </div>`;
+}, "/data/data/com.termux/files/home/hope-hype/src/components/room/GiftDrawerroom.astro", void 0);
+
+const $$GiftAnimOverlayroom = createComponent(($$result, $$props, $$slots) => {
+  return renderTemplate`${maybeRenderHead()}<div id="gift-anim-overlay"> <img id="gift-anim-img" src="" alt="Gift Animation"> </div>`;
+}, "/data/data/com.termux/files/home/hope-hype/src/components/room/GiftAnimOverlayroom.astro", void 0);
+
+var __freeze = Object.freeze;
+var __defProp = Object.defineProperty;
+var __template = (cooked, raw) => __freeze(__defProp(cooked, "raw", { value: __freeze(cooked.slice()) }));
+var _a;
+const $$Voice = createComponent(async ($$result, $$props, $$slots) => {
+  return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "title": "HypeVoice - Room" }, { "default": async ($$result2) => renderTemplate(_a || (_a = __template([' <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"><\/script> <script src="https://cdn.jsdelivr.net/npm/livekit-client@1.15.12/dist/livekit-client.umd.min.js"><\/script> ', " ", " ", '<div class="app-container"> ', " ", " ", " ", " </div> ", " ", " ", " "])), renderComponent($$result2, "Sidebar", $$Sidebarroom, {}), renderComponent($$result2, "Modals", $$Modalsroom, {}), maybeRenderHead(), renderComponent($$result2, "Header", $$Headerroom, {}), renderComponent($$result2, "Stage", $$Stageroom, {}), renderComponent($$result2, "ChatBox", $$ChatBoxroom, {}), renderComponent($$result2, "Footer", $$Footerroom, {}), renderComponent($$result2, "GiftDrawer", $$GiftDrawerroom, {}), renderComponent($$result2, "GiftAnimOverlay", $$GiftAnimOverlayroom, {}), renderScript($$result2, "/data/data/com.termux/files/home/hope-hype/src/pages/voice.astro?astro&type=script&index=0&lang.ts")) })}`;
+}, "/data/data/com.termux/files/home/hope-hype/src/pages/voice.astro", void 0);
+
+const $$file = "/data/data/com.termux/files/home/hope-hype/src/pages/voice.astro";
+const $$url = "/voice";
+
+const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+    __proto__: null,
+    default: $$Voice,
+    file: $$file,
+    url: $$url
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const page = () => _page;
+
+export { page };

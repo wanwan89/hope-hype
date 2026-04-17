@@ -1,0 +1,34 @@
+---
+import Layout from '../layouts/Layout.astro';
+// 1. Panggil CSS di area Frontmatter (Atas) biar stabil
+import '../styles/home.css'; 
+
+import SkeletonLoader from '../components/SkeletonLoader.astro';
+import AdBanner from '../components/AdBanner.astro';
+import Header from '../components/Header.astro';
+import MenuCards from '../components/MenuCards.astro';
+import Modals from '../components/Modals.astro';
+import Contact from '../components/Contact.astro';
+---
+
+<Layout title="HelloHope-web">
+  <main>
+    <SkeletonLoader />
+    <AdBanner />
+
+    <div class="loader"></div>
+    <div class="grid-bg"></div>
+
+    <div class="container" style="display: none;">
+      <Header />
+      <MenuCards />
+    </div>
+
+    <Modals />
+    <Contact />
+
+    <script>
+      import "../scripts/main.js";
+    </script>
+  </main>
+</Layout>
