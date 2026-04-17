@@ -1319,29 +1319,51 @@ function stopTimer() { clearInterval(timerInterval); }
 
 let mediaRecorder; let audioChunks = []; let isCanceledGlobal = false;
 async function startVN(e) {
-  isRecording = true; audioChunks = []; startX = e.type.includes("touch") ? e.touches[0].clientX : e.clientX;
+  // 1. CEK: Kalau lagi telponan (LiveKit aktif), jangan kasih izin rekam VN
+  if (callRoom && callRoom.state === 'connected') {
+    showToast("Matikan telpon dulu untuk merekam suara!");
+    return;
+  }
+
+  isRecording = true; 
+  audioChunks = []; 
+  startX = e.type.includes("touch") ? e.touches[0].clientX : e.clientX;
+
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = (event) => { if (event.data.size > 0) audioChunks.push(event.data); };
-    mediaRecorder.onstop = async () => {
-      stream.getTracks().forEach((track) => track.stop());
-      if (!isCanceledGlobal && audioChunks.length > 0) { uploadToCloudinary(new Blob(audioChunks, { type: "audio/mpeg" })); }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    
+    mediaRecorder.ondataavailable = (event) => { 
+      if (event.data.size > 0) audioChunks.push(event.data); 
     };
-    mediaRecorder.start(); actionBtn.classList.add("is-recording"); chatInput.style.visibility = "hidden"; vnOverlay.style.display = "flex";
-    if (navigator.vibrate) navigator.vibrate(60); startTimer();
+
+    mediaRecorder.onstop = () => {
+      // 2. PENTING: Matikan aliran mic setelah stop biar gak "nyangkut" di browser
+      stream.getTracks().forEach((track) => track.stop());
+      
+      if (!isCanceledGlobal && audioChunks.length > 0) { 
+        uploadToCloudinary(new Blob(audioChunks, { type: "audio/mpeg" })); 
+      }
+    };
+
+    mediaRecorder.start(); 
+    actionBtn.classList.add("is-recording"); 
+    chatInput.style.visibility = "hidden"; 
+    vnOverlay.style.display = "flex";
+    if (navigator.vibrate) navigator.vibrate(60); 
+    startTimer();
+
   } catch (err) {
     console.error("Detail Error Mic:", err);
     
-    // Ini biar notifnya ngasih tau kode error spesifiknya
     let pesanError = "Gagal akses mic";
     if (err.name === 'NotAllowedError') pesanError = "Izin Mic Ditolak Browser";
-    else if (err.name === 'NotReadableError') pesanError = "Mic sedang dipakai aplikasi lain";
+    else if (err.name === 'NotReadableError') pesanError = "Mic dipakai aplikasi lain (WA/Game/Telpon)";
     else if (err.name === 'SecurityError') pesanError = "Wajib HTTPS untuk pakai Mic";
     
-    showToast(pesanError + " (" + err.name + ")"); 
+    showToast(pesanError); 
     isRecording = false;
   }
-
 }
 
 function stopVN(isCanceled = false) {
