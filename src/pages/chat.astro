@@ -662,9 +662,33 @@ async function loadMessages() {
     return;
   }
 
-  // 🔥 3. JIKA ADA PESAN, TAMPILKAN DI BAWAH INFO ENKRIPSI 🔥
+  // 🔥 3. LOGIKA DETEKSI PESAN BARU 🔥
   const sortedData = data.reverse();
-  sortedData.forEach((msg) => renderMessage(msg));
+  let unreadCount = 0;
+  let firstUnreadMsgId = null;
+
+  // Hitung berapa pesan yang belum dibaca dari lawan bicara
+  sortedData.forEach((msg) => {
+    if (msg.user_id !== currentUser.id && msg.status !== "read" && !msg.is_system) {
+      unreadCount++;
+      if (!firstUnreadMsgId) {
+        firstUnreadMsgId = msg.id; // Catat ID pesan baru pertama
+      }
+    }
+  });
+
+  // 🔥 4. RENDER PESAN & SISIPKAN PEMBATAS 🔥
+  sortedData.forEach((msg) => {
+    // Sisipkan pembatas tepat sebelum pesan baru pertama dirender
+    if (msg.id === firstUnreadMsgId && unreadCount > 0) {
+      const unreadDivider = document.createElement("div");
+      unreadDivider.className = "unread-divider";
+      unreadDivider.innerHTML = `<span>${unreadCount} PESAN BARU</span>`;
+      messagesEl.appendChild(unreadDivider);
+    }
+    
+    renderMessage(msg);
+  });
 
   setTimeout(scrollToBottom, 100);
   await markRoomAsRead();
@@ -3717,6 +3741,48 @@ html.dark .encryption-notice {
   color: #eab308; /* Kuning keemasan yang tidak silau */
   border: 1px solid rgba(212, 175, 55, 0.2);
   box-shadow: none;
+}
+/* =========================================
+   PEMBATAS PESAN BARU (UNREAD DIVIDER)
+   ========================================= */
+.unread-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 15px 0 10px 0;
+  width: 100%;
+  animation: fadeIn 0.4s ease;
+}
+
+/* Membuat garis di kiri dan kanan teks */
+.unread-divider::before,
+.unread-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(58, 123, 213, 0.3); /* Warna garis biru transparan */
+}
+
+/* Kotak teks "X PESAN BARU" */
+.unread-divider span {
+  background: rgba(58, 123, 213, 0.1);
+  color: #3a7bd5; /* Biru utama aplikasimu */
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 12px;
+  margin: 0 10px;
+  letter-spacing: 0.5px;
+}
+
+/* Penyesuaian agar cantik di Dark Mode */
+html.dark .unread-divider::before,
+html.dark .unread-divider::after {
+  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+html.dark .unread-divider span {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
 }
 
 
