@@ -726,11 +726,20 @@ async function loadMessages() {
   setTimeout(scrollToBottom, 100);
   await markRoomAsRead();
 }
-
-// FULL FIX: MULTI-CHANNEL MESSAGE FUNCTION
+// FULL FIX: Fungsi Pengiriman Pesan dengan Reset Indikator Mengetik
 async function Message() {
   const text = chatInput?.value.trim();
   if (!text || !currentUser) return;
+
+  // --- [TAMBAHAN FIX TYPING] ---
+  // Memberitahu Supabase Presence bahwa kita sudah berhenti mengetik
+  if (presenceChannel) {
+    clearTimeout(typingTimeout); // Hentikan timer timeout lama
+    isCurrentlyTyping = false;
+    // Track status baru ke false agar bubble typing di lawan bicara langsung hilang
+    await presenceChannel.track({ isTyping: false, username: myUsername });
+  }
+  // -----------------------------
 
   const replyTo = chatInput.dataset.replyTo || null;
   const tempId = "temp-" + Date.now();
@@ -766,6 +775,7 @@ async function Message() {
   chatInput.value = ""; 
   chatInput.style.height = "auto";
   window.cancelReply();
+  
   if (sendSound) sendSound.play().catch(() => {});
 
   try {
@@ -797,15 +807,25 @@ async function Message() {
     console.error("Gagal kirim:", err);
     showToast("Gagal mengirim pesan");
     const failEl = document.getElementById(`msg-${tempId}`);
-    if (failEl) failEl.querySelector(".message-info")?.insertAdjacentHTML("beforeend", `<span style="font-size:10px; color:#ff4d4f; margin-left:4px;">failed</span>`);
+    if (failEl) {
+        failEl.querySelector(".message-info")?.insertAdjacentHTML(
+            "beforeend", 
+            `<span style="font-size:10px; color:#ff4d4f; margin-left:4px;">failed</span>`
+        );
+    }
   }
 }
 
+// Event Listener Tombol
 if (Btn) Btn.onclick = Message;
 
+// Event Listener Enter
 if (inputEl) {
   inputEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); Message(); }
+    if (e.key === "Enter" && !e.shiftKey) { 
+        e.preventDefault(); 
+        Message(); 
+    }
   });
 }
 
