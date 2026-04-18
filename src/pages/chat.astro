@@ -1648,6 +1648,9 @@ function mulaiChatGrup(groupId, groupName) {
     window.activeGroupId = groupId;
     currentRoomId = `group_${groupId}`; 
 
+    // 👇 INI DIA BARIS UNTUK MERESET ANGKA MERAH DI SIDEBAR 👇
+    localStorage.setItem('unread_group_' + groupId, '0');
+
     // 1. SEMBUNYIKAN TOMBOL TELPON (Cukup panggil sekali saja)
     const btnCall = document.getElementById('btn-start-call');
     if (btnCall) {
@@ -2286,6 +2289,34 @@ if (animChatInput && animActionBtn) {
     if (e.key === "Enter" && !e.shiftKey) resetTombol();
   });
 }
+// ===== [FIX] Fungsi untuk menandai pesan telah dibaca =====
+async function markRoomAsRead() {
+  if (!currentRoomId || !currentUser) return;
+
+  try {
+    // 1. Ubah status pesan lawan dari 'sent'/'delivered' menjadi 'read' di Database
+    await supabase
+      .from("messages")
+      .update({ status: "read" })
+      .eq("room_id", currentRoomId)
+      .neq("user_id", currentUser.id)
+      .neq("status", "read");
+
+    // 2. Hilangkan garis pembatas "PESAN BARU" di layar secara perlahan (Fade Out)
+    setTimeout(() => {
+      const dividers = document.querySelectorAll(".unread-divider");
+      dividers.forEach(d => {
+        d.style.transition = "opacity 0.8s ease";
+        d.style.opacity = "0"; // Memudar
+        setTimeout(() => d.remove(), 800); // Dihapus dari HTML setelah memudar
+      });
+    }, 3500); // Pembatas akan hilang otomatis 3,5 detik setelah chat dibuka
+
+  } catch (err) {
+    console.error("Gagal menandai pesan terbaca:", err);
+  }
+}
+
 
 async function init() {
   try {
