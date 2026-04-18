@@ -173,47 +173,66 @@ function scrollToBottom() {
     messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: "smooth" });
   }
 }
-// Memunculkan bubble typing di layar chat
+// Tambahkan variabel ini di bagian atas bersama variabel global lainnya
+let receiverTypingTimeout = null;
+
+// Ganti fungsi lama dengan ini
 function renderTypingBubble(username, userId) {
   if (!messagesEl) return;
-  if (document.getElementById("typing-indicator-bubble")) return; // Kalau udah ada, skip
 
-  // 1. Buat dan pasang elemen bubble-nya LANGSUNG ke layar (Tanpa Await)
-  const typingEl = document.createElement("div");
-  typingEl.id = "typing-indicator-bubble";
-  typingEl.className = "chat-message other new-msg";
-  
-  // Beri ID "typing-avatar" supaya fotonya bisa kita update nanti
-  typingEl.innerHTML = `
-    <img id="typing-avatar" class="avatar" src="asets/png/profile.webp" onerror="this.src='asets/png/profile.webp'">
-    <div class="content" style="margin-bottom: 5px;">
-      <div class="username">${escapeHtml(username)}</div>
-      <div class="text">
-        <div class="typing-bubble" style="padding: 2px 8px; min-width: auto;">
-          <span></span><span></span><span></span>
+  let typingEl = document.getElementById("typing-indicator-bubble");
+
+  // Buat bubble jika belum ada di layar
+  if (!typingEl) {
+    typingEl = document.createElement("div");
+    typingEl.id = "typing-indicator-bubble";
+    typingEl.className = "chat-message other new-msg";
+    
+    typingEl.innerHTML = `
+      <img id="typing-avatar" class="avatar" src="asets/png/profile.webp" onerror="this.src='asets/png/profile.webp'">
+      <div class="content" style="margin-bottom: 5px;">
+        <div class="username">${escapeHtml(username)}</div>
+        <div class="text">
+          <div class="typing-bubble" style="padding: 2px 8px; min-width: auto;">
+            <span></span><span></span><span></span>
+          </div>
         </div>
       </div>
-    </div>
-  `;
-  
-  // Langsung masukkan ke layar
-  messagesEl.appendChild(typingEl);
-  scrollToBottom();
+    `;
+    
+    messagesEl.appendChild(typingEl);
+    scrollToBottom();
 
-  // 2. Ambil foto profil secara menyusul (Asynchronous)
-  getCachedProfile(userId).then(profile => {
-    const avatarImg = document.getElementById("typing-avatar");
-    // Pastikan bubble-nya belum dihapus sebelum menempelkan foto baru
-    if (avatarImg && profile?.avatar_url) {
-      avatarImg.src = profile.avatar_url;
-    }
-  });
+    getCachedProfile(userId).then(profile => {
+      const avatarImg = document.getElementById("typing-avatar");
+      if (avatarImg && profile?.avatar_url) {
+        avatarImg.src = profile.avatar_url;
+      }
+    });
+  }
+
+  // 🔥 KUNCI PERBAIKAN (FAIL-SAFE): 
+  // Hapus bubble otomatis setelah 4 detik jika server macet/nyangkut
+  clearTimeout(receiverTypingTimeout);
+  receiverTypingTimeout = setTimeout(() => {
+    removeTypingBubble();
+  }, 4000);
 }
 
-// Menghilangkan bubble typing
+// Ganti fungsi lama dengan ini
 function removeTypingBubble() {
   const typingEl = document.getElementById("typing-indicator-bubble");
   if (typingEl) typingEl.remove();
+  
+  clearTimeout(receiverTypingTimeout); // Bersihkan timer
+
+  // Kembalikan status header jika elemennya ada
+  const currentTypingHeader = document.getElementById("typing-header");
+  const currentStatusHeader = document.getElementById("status-header");
+  if (currentTypingHeader && currentStatusHeader) {
+    currentTypingHeader.style.display = "none";
+    currentStatusHeader.style.display = "inline-block";
+  }
 }
 
 function closeSidebar() {
@@ -461,16 +480,33 @@ async function initPresence() {
   }
 }
 
+// Ganti fungsi lama dengan ini
 async function handleTypingInput() {
   if (!presenceChannel) return;
+
+  // Ambil teks dari input box
+  const text = inputEl ? inputEl.value.trim() : "";
+
+  // 🔥 CEGATAN: Kalau teks kosong, paksa berhenti ngetik
+  if (text === "") {
+    clearTimeout(typingTimeout);
+    if (isCurrentlyTyping) {
+      isCurrentlyTyping = false;
+      // Gunakan .catch() agar tidak error kalau ada tumpukan request
+      presenceChannel.track({ isTyping: false, username: myUsername }).catch(()=>{});
+    }
+    return;
+  }
+
   if (!isCurrentlyTyping) {
     isCurrentlyTyping = true;
-    await presenceChannel.track({ isTyping: true, username: myUsername });
+    presenceChannel.track({ isTyping: true, username: myUsername }).catch(()=>{});
   }
+
   clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(async () => {
+  typingTimeout = setTimeout(() => {
     isCurrentlyTyping = false;
-    if (presenceChannel) await presenceChannel.track({ isTyping: false, username: myUsername });
+    if (presenceChannel) presenceChannel.track({ isTyping: false, username: myUsername }).catch(()=>{});
   }, 3000);
 }
 
@@ -751,13 +787,14 @@ async function Message() {
   if (!text || !currentUser) return;
 
   // --- [TAMBAHAN FIX TYPING] ---
-  // Memberitahu Supabase Presence bahwa kita sudah berhenti mengetik
   if (presenceChannel) {
     clearTimeout(typingTimeout);
     isCurrentlyTyping = false;
-    // Dibuat TANPA await agar pengiriman pesan tidak delay/nyangkut!
     presenceChannel.track({ isTyping: false, username: myUsername }).catch(()=>{});
   }
+  
+  // 🔥 MENGHAPUS BUBBLE SECARA INSTAN DI LAYAR SENDIRI
+  removeTypingBubble(); 
   // -----------------------------
 
   const replyTo = chatInput.dataset.replyTo || null;
