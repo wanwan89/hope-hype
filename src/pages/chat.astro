@@ -753,10 +753,10 @@ async function Message() {
   // --- [TAMBAHAN FIX TYPING] ---
   // Memberitahu Supabase Presence bahwa kita sudah berhenti mengetik
   if (presenceChannel) {
-    clearTimeout(typingTimeout); // Hentikan timer timeout lama
+    clearTimeout(typingTimeout);
     isCurrentlyTyping = false;
-    // Track status baru ke false agar bubble typing di lawan bicara langsung hilang
-    await presenceChannel.track({ isTyping: false, username: myUsername });
+    // Dibuat TANPA await agar pengiriman pesan tidak delay/nyangkut!
+    presenceChannel.track({ isTyping: false, username: myUsername }).catch(()=>{});
   }
   // -----------------------------
 
@@ -866,7 +866,6 @@ async function sendAudioMessage(url) {
 }
 
 // ===== Realtime Messages =====
-// ===== Realtime Messages =====
 function initRealtimeMessages() {
   if (!currentUser) return;
   if (messageChannel) {
@@ -881,33 +880,22 @@ function initRealtimeMessages() {
 
       // 1. REFRESH SIDEBAR & TAMBAH BADGE UNREAD JIKA ADA PESAN MASUK
       if (newMsg.room_id !== currentRoomId && newMsg.user_id !== currentUser.id) {
-        // Simpan notif angka merah di memori lokal (kecuali private chat karena udah pakai DB)
         if (newMsg.room_id.startsWith("group_") || newMsg.room_id === "room-1") {
           let currentUnread = parseInt(localStorage.getItem('unread_' + newMsg.room_id) || '0');
           localStorage.setItem('unread_' + newMsg.room_id, currentUnread + 1);
         }
       }
       
-      // Update Sidebar kalau ada chat di PV, Grup, atau Global
       if (newMsg.room_id.startsWith("pv_") || newMsg.room_id.startsWith("group_") || newMsg.room_id === "room-1") {
         triggerLoadChatHistory();
       }
 
-      // ==========================================
-      //  [LOGIKA BARU] DETEKSI SINYAL TELPON 
-      // ==========================================
       if (newMsg.is_system) {
-        // A. Deteksi Panggilan Masuk (Untuk Penerima)
         if (newMsg.message.includes("📞 Memanggil")) {
           if (newMsg.user_id !== currentUser.id) {
-            // Pastikan fungsi showIncomingCall sudah kamu buat di bagian bawah file
-            if (typeof showIncomingCall === "function") {
-              showIncomingCall(newMsg);
-            }
+            if (typeof showIncomingCall === "function") showIncomingCall(newMsg);
           }
         }
-
-        // B. Deteksi Panggilan Ditolak (Untuk Penelepon)
         if (newMsg.message.includes("🚫 Panggilan Ditolak")) {
           if (newMsg.user_id !== currentUser.id) {
             if (typeof window.endCall === "function") window.endCall();
@@ -915,7 +903,6 @@ function initRealtimeMessages() {
           }
         }
       }
-      // ==========================================
 
       // 2. LOGIKA RENDER PESAN KE UI CHAT
       if (newMsg.room_id === currentRoomId) {
@@ -933,6 +920,9 @@ function initRealtimeMessages() {
           if (tempEl) tempEl.remove();
           renderMessage(newMsg);
         } else {
+          // 👉 [FIX UTAMA]: PAKSA HAPUS BUBBLE NGETIK SAAT PESAN DITERIMA!
+          if (typeof removeTypingBubble === "function") removeTypingBubble();
+
           renderMessage(newMsg);
           if (!newMsg.is_system) receiveSound.play().catch(() => {});
 
@@ -947,7 +937,6 @@ function initRealtimeMessages() {
       const updated = payload.new;
       const old = payload.old;
 
-      // Logika Update Status (Read/Delivered) - Hapus Object.keys biar ceklis update instan!
       if (updated.status !== old?.status) {
         if (updated.user_id === currentUser.id) {
           updateMessageStatusUI(updated.id, updated.status || "sent");
@@ -956,7 +945,6 @@ function initRealtimeMessages() {
 
       if (updated.room_id !== currentRoomId) return;
 
-      // Logika Hapus Pesan
       if (updated.message === "Pesan ini telah dihapus") {
         const msgEl = document.getElementById(`msg-${updated.id}`);
         if (msgEl) {
@@ -970,7 +958,6 @@ function initRealtimeMessages() {
         return;
       }
 
-      // Logika Reactions
       if (updated.reactions) {
         const msgEl = document.getElementById(`msg-${updated.id}`);
         if (msgEl) {
