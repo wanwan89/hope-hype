@@ -398,15 +398,12 @@ async function initPresence() {
   if (presenceChannel) { await supabase.removeChannel(presenceChannel); presenceChannel = null; }
   presenceChannel = supabase.channel(`presence-${currentRoomId}`, { config: { presence: { key: currentUser.id } } });
 
-    presenceChannel.on("presence", { event: "sync" }, () => {
+  presenceChannel.on("presence", { event: "sync" }, () => {
     const state = presenceChannel.presenceState();
-    const currentTypingHeader = document.getElementById("typing-header");
-    const currentStatusHeader = document.getElementById("status-header");
-
-    if (!currentTypingHeader || !currentStatusHeader) return;
     const typingUsers = [];
     let typingUserId = null; // Simpan ID yang lagi ngetik
 
+    // 1. CEK SIAPA YANG SEDANG MENGETIK DARI SUPABASE
     for (const userId in state) {
       if (userId !== currentUser.id && state[userId].some((p) => p.isTyping)) {
         typingUsers.push(state[userId][0].username);
@@ -414,15 +411,28 @@ async function initPresence() {
       }
     }
 
+    // 2. MUNCULKAN / HILANGKAN BUBBLE (Tanpa syarat apapun!)
     if (typingUsers.length > 0) {
-      // MUNCULKAN BUBBLE CHAT DI BAWAH
       if (typeof renderTypingBubble === "function") {
         renderTypingBubble(typingUsers[0], typingUserId);
       }
     } else {
-      // HILANGKAN BUBBLE CHAT
       if (typeof removeTypingBubble === "function") {
         removeTypingBubble();
+      }
+    }
+
+    // 3. UPDATE HEADER TEKS (Hanya dieksekusi kalau elemennya ada di HTML)
+    const currentTypingHeader = document.getElementById("typing-header");
+    const currentStatusHeader = document.getElementById("status-header");
+    if (currentTypingHeader && currentStatusHeader) {
+      if (typingUsers.length > 0) {
+        currentTypingHeader.style.display = "inline-block";
+        currentStatusHeader.style.display = "none";
+        currentTypingHeader.innerText = `${typingUsers[0]} sedang mengetik...`;
+      } else {
+        currentTypingHeader.style.display = "none";
+        currentStatusHeader.style.display = "inline-block";
       }
     }
   });
@@ -1057,8 +1067,9 @@ function renderGlobalChatItem(container) {
   container.appendChild(globalBtn);
 }
 
-async function loadChatHistory() {
-  const privateList = document.getElementById("private-chat-list");
+async function loadChatHistory(targetContainer = null) {
+  // Gunakan penampung sementara JIKA ADA
+  const privateList = targetContainer || document.getElementById("private-chat-list");
   if (!privateList || !currentUser || isSidebarLoading) return;
   isSidebarLoading = true; 
 
@@ -1088,7 +1099,8 @@ async function loadChatHistory() {
     privateList.appendChild(label);
 
     if (lastMessagesMap.size === 0) {
-      privateList.innerHTML += `<div style="text-align:center; opacity:0.5; padding:20px; font-size:12px;">Belum ada riwayat chat</div>`;
+      // FIX BUG KECIL: Jangan pakai innerHTML+= karena merusak fungsi klik grup di atasnya
+      privateList.insertAdjacentHTML("beforeend", `<div style="text-align:center; opacity:0.5; padding:20px; font-size:12px;">Belum ada riwayat chat</div>`);
       isSidebarLoading = false; return;
     }
 
@@ -1594,9 +1606,11 @@ document.getElementById('btn-create-group').onclick = async () => {
     finally { btn.innerText = "Buat Sekarang"; btn.disabled = false; }
 };
 
-async function loadGroupList() {
+async function loadGroupList(targetContainer = null) {
     const { data: { user } } = await supabase.auth.getUser();
-    const listContainer = document.getElementById('private-chat-list');
+    
+    // Gunakan penampung sementara JIKA ADA, kalau tidak pakai yang asli di layar
+    const listContainer = targetContainer || document.getElementById('private-chat-list');
     
     const { data: memberships, error } = await supabase
         .from('group_members')
@@ -1609,11 +1623,10 @@ async function loadGroupList() {
     label.innerHTML = `<div style="padding:10px 15px; font-size:11px; color:#999; font-weight:bold; background: var(--label-bg, #f8f9fa); border-top:1px solid rgba(0,0,0,0.1); margin-top:5px;">GRUP SAYA</div>`;
     listContainer.appendChild(label);
 
-        memberships.forEach(item => {
+    memberships.forEach(item => {
         const group = item.groups;
         if (!group) return;
 
-        // Ambil data badge merah untuk grup ini dari memori browser
         let unreadGroup = parseInt(localStorage.getItem('unread_group_' + group.id) || '0');
         let badgeHtml = unreadGroup > 0 ? `<div class="unread-badge" style="position: absolute; top: -2px; right: -2px; background: #ff4757; color: white; font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; z-index: 2;">${unreadGroup > 99 ? '99+' : unreadGroup}</div>` : '';
 
@@ -1639,7 +1652,7 @@ async function loadGroupList() {
         groupEl.onclick = () => mulaiChatGrup(group.id, group.name);
         listContainer.appendChild(groupEl);
     });
-} // <--- INI DIA KURUNG TUTUP YANG HILANG!
+}
 
 const btnOpenInvite = document.getElementById('btn-open-invite');
 
@@ -1693,10 +1706,21 @@ function mulaiChatGrup(groupId, groupName) {
 async function refreshSidebar() {
   const privateList = document.getElementById("private-chat-list");
   if (!privateList) return;
-  privateList.innerHTML = "";
-  renderGlobalChatItem(privateList);
-  await loadGroupList();
-  await loadChatHistory();
+
+  // 1. Buat "kardus" penampung sementara di memori (biar gak berkedip)
+  const tempContainer = document.createElement("div");
+
+  // 2. Muat semua data ke penampung sementara itu DULU (layar belum berubah)
+  renderGlobalChatItem(tempContainer);
+  await loadGroupList(tempContainer);
+  await loadChatHistory(tempContainer);
+
+  // 3. Kalau semua sudah siap, bersihkan layar dan tukar isinya secara instan!
+  privateList.innerHTML = ""; 
+  while (tempContainer.firstChild) {
+    // Gunakan appendChild agar fungsi klik (onclick) tidak rusak
+    privateList.appendChild(tempContainer.firstChild); 
+  }
 }
 
 if (btnOpenInvite) {
