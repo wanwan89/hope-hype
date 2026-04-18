@@ -153,65 +153,95 @@ async function loadMusicLibrary() {
     .order("created_at", { ascending: false });
 
   const userId = user?.id;
+
   const localSongs = data ? data.map((song) => {
-    const userLikedIt = song.user_liked ? song.user_liked.some(l => l.user_id === userId) : false;
+    const userLikedIt = song.user_liked 
+      ? song.user_liked.some(l => l.user_id === userId) 
+      : false;
+
     return {
-      ...song, source: 'local', comment_count: song.comments?.[0]?.count || 0,
-      like_count: song.likes?.[0]?.count || 0, is_liked: userLikedIt
+      ...song,
+      source: 'local',
+      comment_count: song.comments?.[0]?.count || 0,
+      like_count: song.likes?.[0]?.count || 0,
+      is_liked: userLikedIt
     };
   }) : [];
 
   console.log("3. Lagu lokal dapet:", localSongs.length);
+
+  // ✅ tampil dulu biar cepat
   allSongs = [...localSongs];
   renderPlaylist(allSongs);
 
   console.log("4. Mencoba tembak YouTube API...");
+
   try {
-    // ID PLAYLIST POP INDO HITS TERBARU (PASTI ADA)
-    // GANTI JADI INI:
-const MY_PLAYLIST = "PLHg022HMFzFAmNiu-54c7fYyNOYo-uOoB"; 
+    const MY_PLAYLIST = "PLHg022HMFzFAmNiu-54c7fYyNOYo-uOoB"; 
 
-    // Kita buat URL-nya pake URLSearchParams biar gak ada typo spasi atau karakter aneh
-    const params = new URLSearchParams({
-      part: 'snippet',
-      playlistId: MY_PLAYLIST,
-      maxResults: '80',
-      key: YOUTUBE_API_KEY
-    });
+    let apiSongs = [];
+    let nextPageToken = "";
+    let pageCount = 0;
+    const MAX_PAGE = 5; // 🔥 limit biar gak berat (250 lagu)
 
-    const ytApiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?${params.toString()}`;
+    do {
+      const params = new URLSearchParams({
+        part: 'snippet',
+        playlistId: MY_PLAYLIST,
+        maxResults: '50',
+        key: YOUTUBE_API_KEY
+      });
 
-    const res = await fetch(ytApiUrl);
-    console.log("5. Respon YouTube dapet, status:", res.status);
-    
-    const json = await res.json();
-    
-    if (json.items) {
-      console.log("6. Berhasil dapet", json.items.length, "lagu dari YouTube");
-      const apiSongs = json.items
-        .filter(item => item.snippet.title !== "Private video" && item.snippet.title !== "Deleted video")
-        .map((item) => {
-          let cleanTitle = item.snippet.title.replace(/\[.*?\]|\(.*?\)|Official|Video|Music|Audio|Lyrics|Lirik/gi, '').trim();
-          let channelName = item.snippet.videoOwnerChannelTitle ? item.snippet.videoOwnerChannelTitle.replace(' - Topic', '').replace('VEVO', '') : 'Unknown Artist';
+      // ✅ hanya kirim kalau ada token
+      if (nextPageToken) {
+        params.append('pageToken', nextPageToken);
+      }
 
-          return {
-            id: `yt-${item.snippet.resourceId.videoId}`,
-            title: cleanTitle,
-            artist: channelName,
-            cover_url: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '/asets/png/music.png',
-            audio_src: '', 
-            source: 'youtube',
-            play_count: Math.floor(Math.random() * 5000), 
-            like_count: 0, comment_count: 0, is_liked: false, category: 'hits'
-          };
-        });
+      const res = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?${params}`);
+      const json = await res.json();
 
-      allSongs = [...localSongs, ...apiSongs];
-      renderPlaylist(allSongs);
-      console.log("7. ✅ SELESAI: Playlist Hybrid Rendered!");
-    } else {
-      console.error("⚠️ YouTube balikin data kosong. Cek pesan error ini:", json.error?.message);
-    }
+      if (!json.items) {
+        console.error("YouTube error:", json.error?.message);
+        break;
+      }
+
+      const mapped = json.items
+        .filter(item => 
+          item.snippet.title !== "Private video" &&
+          item.snippet.title !== "Deleted video"
+        )
+        .map((item) => ({
+          id: `yt-${item.snippet.resourceId.videoId}`,
+          title: item.snippet.title,
+          artist: item.snippet.videoOwnerChannelTitle || 'Unknown',
+          cover_url: item.snippet.thumbnails?.medium?.url 
+            || item.snippet.thumbnails?.default?.url 
+            || '/asets/png/music.png',
+          source: 'youtube',
+          play_count: Math.floor(Math.random() * 5000),
+          like_count: 0,
+          comment_count: 0,
+          is_liked: false,
+          category: 'hits'
+        }));
+
+      apiSongs = apiSongs.concat(mapped);
+      nextPageToken = json.nextPageToken || "";
+
+      pageCount++;
+
+    } while (nextPageToken && pageCount < MAX_PAGE);
+
+    // ✅ gabung di akhir (INI YANG PALING PENTING)
+    allSongs = [...localSongs, ...apiSongs];
+
+    // 🔥 optional: shuffle biar FYP vibe
+    allSongs.sort(() => Math.random() - 0.5);
+
+    renderPlaylist(allSongs);
+
+    console.log("✅ SELESAI: Semua lagu berhasil digabung!", allSongs.length);
+
   } catch (err) {
     console.error("❌ Error fetch YouTube:", err);
   }
