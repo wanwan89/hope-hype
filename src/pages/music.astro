@@ -455,7 +455,7 @@ async function playSong(song) {
   }
 
   // 6. UPDATE VISUAL BACKGROUND & BORDER
-  document.body.style.background = `linear-gradient(to bottom, rgba(13, 17, 23, 0.9), #0d1117), url('${song.cover_url}') center/cover no-repeat`;
+  updateDynamicBackground(song.cover_url);
 
   document.querySelectorAll(".playlist-card").forEach((card, idx) => {
     card.style.borderColor = idx === currentSongIndex ? "#1f3cff" : "#30363d";
@@ -676,17 +676,17 @@ async function loadComments(songId) {
     const childReplies = replies.filter((r) => r.parent_id === parent.id);
     const hasReplies = childReplies.length > 0;
 
-    finalHtml += `
+        finalHtml += `
             <div class="comment-item" id="comment-${parent.id}" style="margin-bottom: 20px; display: flex; gap: 12px;">
                 <img src="${user?.avatar_url || `https://ui-avatars.com/api/?name=${user?.username}`}" class="comment-avatar" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
                 <div class="comment-content-wrapper" style="flex:1;">
                     <div class="comment-header-row" style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-weight:bold; color:#fff; font-size:14px;">${user?.username}</span>
+                        <span style="font-weight:bold; color:var(--text-main); font-size:14px;">${user?.username}</span>
                         ${getUserBadge(user?.role)}
-                        <span style="color:#666; font-size:11px;">${timeAgo}</span>
+                        <span style="color:var(--text-muted); font-size:11px;">${timeAgo}</span>
                     </div>
-                    <p style="color:#ccc; margin:4px 0; font-size:14px; line-height:1.4;">${parent.content}</p>
-                    <button class="reply-btn" onclick="replyTo('${user?.username}', ${parent.id})" style="background:none; border:none; color:#888; font-size:11px; cursor:pointer; padding:0;">Balas</button>
+                    <p style="color:var(--text-main); opacity:0.9; margin:4px 0; font-size:14px; line-height:1.4;">${parent.content}</p>
+                    <button class="reply-btn" onclick="replyTo('${user?.username}', ${parent.id})" style="background:none; border:none; color:var(--text-muted); font-size:11px; cursor:pointer; padding:0;">Balas</button>
                     
                     ${hasReplies ? `
                         <div class="reply-section" style="margin-top: 10px;">
@@ -694,18 +694,18 @@ async function loadComments(songId) {
                                 ——— Lihat ${childReplies.length} balasan
                             </button>
                             
-                            <div id="reply-container-${parent.id}" data-count="${childReplies.length}" style="display: none; margin-left: 10px; border-left: 1px solid #333; padding-left: 15px; margin-top: 10px;">
+                            <div id="reply-container-${parent.id}" data-count="${childReplies.length}" style="display: none; margin-left: 10px; border-left: 1px solid var(--border-light); padding-left: 15px; margin-top: 10px;">
                                 ${childReplies.map((reply) => `
                                     <div class="comment-item" id="comment-${reply.id}" style="margin-bottom: 12px; display: flex; gap: 10px;">
                                         <img src="${reply.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${reply.profiles?.username}`}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;">
                                         <div style="flex:1;">
                                             <div style="display:flex; align-items:center; gap:5px;">
-                                                <span style="font-size:13px; font-weight:bold; color:#fff;">${reply.profiles?.username}</span>
+                                                <span style="font-size:13px; font-weight:bold; color:var(--text-main);">${reply.profiles?.username}</span>
                                                 ${getUserBadge(reply.profiles?.role)}
-                                                <span style="font-size:10px; color:#666;">${timeSince(new Date(reply.created_at))}</span>
+                                                <span style="font-size:10px; color:var(--text-muted);">${timeSince(new Date(reply.created_at))}</span>
                                             </div>
-                                            <p style="font-size:13px; color:#ccc; margin:2px 0;">${reply.content}</p>
-                                            <button class="reply-btn" onclick="replyTo('${reply.profiles?.username}', ${parent.id})" style="background:none; border:none; color:#888; font-size:10px; cursor:pointer; padding:0;">Balas</button>
+                                            <p style="font-size:13px; color:var(--text-main); opacity:0.9; margin:2px 0;">${reply.content}</p>
+                                            <button class="reply-btn" onclick="replyTo('${reply.profiles?.username}', ${parent.id})" style="background:none; border:none; color:var(--text-muted); font-size:10px; cursor:pointer; padding:0;">Balas</button>
                                         </div>
                                     </div>
                                 `).join("")}
@@ -769,18 +769,19 @@ async function handleSendComment() {
   const avatar = profile?.avatar_url || `https://ui-avatars.com/api/?name=${profile?.username}`;
   const isReply = parentId !== null;
 
-  const tempHtml = `
+      const tempHtml = `
         <div class="comment-item" id="temp-${tempId}" style="display: flex; gap: 10px; opacity: 0.6; margin-bottom: 15px;">
             <img src="${avatar}" style="width:${isReply ? "24px" : "32px"}; height:${isReply ? "24px" : "32px"}; border-radius:50%;">
             <div style="flex:1;">
                 <div style="display:flex; align-items:center; gap:5px;">
-                    <span style="font-weight:bold; color:#fff; font-size:14px;">${profile.username}</span>
-                    <span style="font-size:11px; color:#888;">Mengirim...</span>
+                    <span style="font-weight:bold; color:var(--text-main); font-size:14px;">${profile.username}</span>
+                    <span style="font-size:11px; color:var(--text-muted);">Mengirim...</span>
                 </div>
-                <p style="color:#ccc; font-size:14px; margin:0;">${text}</p>
+                <p style="color:var(--text-main); opacity:0.9; font-size:14px; margin:0;">${text}</p>
             </div>
         </div>
     `;
+
 
   if (isReply) {
     const container = document.getElementById(`reply-container-${parentId}`);
@@ -1023,6 +1024,42 @@ window.showSection = function(sectionId) {
   
   console.log("Pindah ke halaman:", sectionId);
 };
+// ================= THEME SYNC SYSTEM =================
+function syncTheme() {
+  // Asumsi di index.astro kamu simpan tema pakai nama 'theme' di localStorage.
+  // Kalau beda (misal: 'color-mode'), tinggal diganti aja kata 'theme' di bawah.
+  const savedTheme = localStorage.getItem('theme'); 
+  
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-mode');
+  } else {
+    document.body.classList.remove('light-mode');
+  }
+}
+
+// Jalankan pas halaman pertama kali diload
+syncTheme();
+
+// Kalau kamu pindah tab/halaman dan tema diubah, ini otomatis nyesuaiin
+window.addEventListener('storage', (e) => {
+  if (e.key === 'theme') {
+    syncTheme();
+    // Kalau lagi putar lagu, update background-nya juga biar ga stuck di dark
+    if (currentSongIndex !== -1 && currentSongsList.length > 0) {
+        updateDynamicBackground(currentSongsList[currentSongIndex].cover_url);
+    }
+  }
+});
+
+// Fungsi bantuan buat update background saat tema ganti
+function updateDynamicBackground(coverUrl) {
+    const isLight = document.body.classList.contains('light-mode');
+    const bgColors = isLight 
+        ? 'rgba(255, 255, 255, 0.9), #f6f8fa' 
+        : 'rgba(13, 17, 23, 0.9), #0d1117';
+        
+    document.body.style.background = `linear-gradient(to bottom, ${bgColors}), url('${coverUrl}') center/cover no-repeat`;
+}
 
 
 async function initApp() {
@@ -1039,6 +1076,38 @@ initApp();
 </Layout>
 
 <style is:global>
+:root {
+  /* --- DARK MODE (DEFAULT) --- */
+  --bg-main: #0d1117;
+  --text-main: #ffffff;
+  --bg-header: rgba(13, 17, 23, 0.85);
+  --bg-card: #161b22;
+  --bg-card-hover: #1c2128;
+  --border-card: #30363d;
+  --text-muted: #8b949e;
+  --bg-sidebar: #111418;
+  --bg-miniplayer: rgba(22, 27, 34, 0.85);
+  --bg-sheet: #121212;
+  --bg-input: #1c1c1c;
+  --border-light: rgba(255, 255, 255, 0.05);
+}
+
+body.light-mode {
+  /* --- LIGHT MODE --- */
+  --bg-main: #f6f8fa;
+  --text-main: #1f2328;
+  --bg-header: rgba(255, 255, 255, 0.85);
+  --bg-card: #ffffff;
+  --bg-card-hover: #f3f4f6;
+  --border-card: #d0d7de;
+  --text-muted: #656d76;
+  --bg-sidebar: #ffffff;
+  --bg-miniplayer: rgba(255, 255, 255, 0.95);
+  --bg-sheet: #ffffff;
+  --bg-input: #f6f8fa;
+  --border-light: rgba(0, 0, 0, 0.08);
+}
+
 /* ================================= 
    1. RESET & BASE STYLE 
    ================================= */
@@ -1051,8 +1120,8 @@ initApp();
 }
 
 body {
-  background: #0d1117; /* Biru gelap elegan */
-  color: #ffffff;
+  background: var(--bg-main); 
+  color: var(--text-main);
   min-height: 100vh;
   overflow-x: hidden;
   /* Transisi halus saat ganti background via JS */
@@ -1066,11 +1135,11 @@ body {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: rgba(13, 17, 23, 0.85); /* Transparan dikit */
+   background: var(--bg-header);
   backdrop-filter: blur(15px); /* Efek Blur Kaca */
   -webkit-backdrop-filter: blur(15px);
   padding: 20px 16px 10px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .music-header {
@@ -1090,18 +1159,18 @@ body {
 .search-box {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--border-light);
   padding: 10px 15px;
   border-radius: 12px;
   margin-bottom: 15px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
+border: 1px solid var(--border-light);
 }
 
 .search-box input {
   background: transparent;
   border: none;
   outline: none;
-  color: #fff;
+  color: var(--text-main);
   width: 100%;
   margin-left: 10px;
   font-size: 14px;
@@ -1124,8 +1193,8 @@ body {
   padding: 8px 20px;
   border-radius: 20px;
   border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+background: var(--bg-card-hover);
+color: var(--text-main);
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
@@ -1133,8 +1202,8 @@ body {
 }
 
 .category-tabs button.active {
-  background: #ffffff;
-  color: #000000;
+  background: var(--text-main);
+color: var(--bg-main); /* Reverse saat aktif */
 }
 
 /* ================================= 
@@ -1165,7 +1234,8 @@ body {
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 16px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+  /* Shadow ini masih aman di light/dark mode, jadi biarin aja */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4); 
   transition: 0.3s;
 }
 
@@ -1176,6 +1246,7 @@ body {
 .playlist-info h3 {
   font-size: 14px;
   font-weight: 600;
+  color: var(--text-main); /* ✅ Tambahin ini biar judulnya ikutan ganti warna */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1183,7 +1254,7 @@ body {
 
 .artist-name {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted); /* ✅ Ganti warna putih transparan jadi ini */
   margin-top: 3px;
 }
 
@@ -1196,15 +1267,17 @@ body {
   left: -280px;
   width: 280px;
   height: 100%;
-  background: #111418;
+  background: var(--bg-sidebar);
   z-index: 2000;
   transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 30px 20px;
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+  box-shadow: none; /* ✅ Hilangkan shadow di sini biar ga bocor ke layar */
 }
 
 .sidebar.active {
+  transform: translateX(0);
   left: 0;
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.2); /* ✅ Pindahin shadow-nya ke sini (dan dibikin lebih soft dikit) */
 }
 
 .sidebar-overlay {
@@ -1234,7 +1307,7 @@ body {
   align-items: center; /* Icon dan teks rata tengah secara vertikal */
   padding: 12px 20px; /* Memberi ruang klik yang nyaman */
   text-decoration: none; /* Menghapus garis bawah biru */
-  color: #ffffff; /* Mengubah warna teks jadi putih */
+  color: var(--text-main);
   gap: 15px; /* Memberi jarak antara icon dan teks */
   transition: 0.3s; /* Efek halus saat di-hover */
 }
@@ -1242,7 +1315,7 @@ body {
 /* Warna saat menu disentuh atau aktif */
 .sidebar a:hover,
 .nav-item.active {
-  background: rgba(255, 255, 255, 0.1);
+   background: var(--border-light);
   color: #1da1f2; /* Warna biru cerah saat aktif */
 }
 
@@ -1259,14 +1332,14 @@ body {
   bottom: 20px; /* Melayang */
   left: 12px;
   right: 12px;
-  background: rgba(22, 27, 34, 0.85);
+background: var(--bg-miniplayer);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
   padding: 10px 16px;
   display: flex;
   align-items: center;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-light);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   z-index: 1100;
 }
@@ -1293,13 +1366,13 @@ body {
 
 .player-info p {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
 }
 
 .progress-container {
   width: 100%;
   height: 3px;
-  background: rgba(255, 255, 255, 0.1);
+background: var(--border-light);
   margin-top: 6px;
   border-radius: 2px;
 }
@@ -1356,7 +1429,7 @@ body {
   grid-template-columns: repeat(2, 1fr); /* Paksa 2 Kolom */
   gap: 16px;
   padding: 16px;
-  background: #0d1117; /* Warna background utama */
+  background: transparent; /* ✅ Ganti #0d1117 jadi transparent */
 }
 
 /* KARTU UTAMA */
@@ -1435,7 +1508,7 @@ body {
   align-items: center;
   margin-top: auto;
   padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-light);
 }
 
 .stat-item {
@@ -1483,24 +1556,24 @@ body {
 /* SHEET UTAMA */
 .comment-sheet {
   position: fixed;
-  bottom: 0; /* 🔥 FIX */
+  bottom: 0;
   left: 0;
   width: 100%;
   height: 80vh;
-  background: #121212;
+  background: var(--bg-sheet);
   border-radius: 20px 20px 0 0;
   z-index: 2001;
   display: flex;
   flex-direction: column;
-  transform: translateY(100%); /* posisi awal */
+  transform: translateY(100%);
   transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
-  box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.5);
+  box-shadow: none; /* ✅ Hilangkan shadow saat disembunyikan */
   overflow: hidden;
 }
 
-/* SAAT AKTIF */
 .comment-sheet.active {
   transform: translateY(0);
+  box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.15); /* ✅ Munculin shadownya cuma pas kebuka */
 }
 
 /* HANDLE */
@@ -1529,7 +1602,7 @@ body {
 .header-content h3 {
   font-size: 16px;
   font-weight: 700;
-  color: white;
+color: var(--text-main);
 }
 
 .header-content button {
@@ -1559,19 +1632,19 @@ body {
   gap: 10px;
   padding: 10px 14px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  background: #121212;
-  border-top: 1px solid #262626;
+  background: var(--bg-sheet);
+  border-top: 1px solid var(--border-light); /* ✅ Ganti #262626 jadi ini */
   z-index: 10;
 }
 
 /* INPUT */
 #commentInput {
   flex: 1;
-  background: #1c1c1c;
-  border: 1px solid #363636;
+  background: var(--bg-input);
+border: 1px solid var(--border-light);
   border-radius: 20px;
   padding: 10px 14px;
-  color: white;
+color: var(--text-main);
   font-size: 14px;
   outline: none;
 }
@@ -1621,7 +1694,7 @@ body {
 .comment-username {
   font-weight: 600;
   font-size: 13px;
-  color: #fff;
+color: var(--text-main);
 }
 
 .comment-time {
@@ -1632,9 +1705,10 @@ body {
 .comment-text {
   font-size: 14px;
   margin-top: 4px;
-  color: #ddd;
+  color: var(--text-main); /* ✅ Udah aman jaya buat dark/light mode */
   line-height: 1.4;
 }
+
 
 .reply-btn {
   background: none;
