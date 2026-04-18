@@ -174,19 +174,18 @@ function scrollToBottom() {
   }
 }
 // Memunculkan bubble typing di layar chat
-async function renderTypingBubble(username, userId) {
+function renderTypingBubble(username, userId) {
   if (!messagesEl) return;
   if (document.getElementById("typing-indicator-bubble")) return; // Kalau udah ada, skip
 
-  // Ambil foto profil user yang lagi ngetik
-  const profile = await getCachedProfile(userId);
-  const avatarUrl = profile?.avatar_url || "asets/png/profile.webp";
-
+  // 1. Buat dan pasang elemen bubble-nya LANGSUNG ke layar (Tanpa Await)
   const typingEl = document.createElement("div");
   typingEl.id = "typing-indicator-bubble";
   typingEl.className = "chat-message other new-msg";
+  
+  // Beri ID "typing-avatar" supaya fotonya bisa kita update nanti
   typingEl.innerHTML = `
-    <img class="avatar" src="${avatarUrl}" onerror="this.src='asets/png/profile.webp'">
+    <img id="typing-avatar" class="avatar" src="asets/png/profile.webp" onerror="this.src='asets/png/profile.webp'">
     <div class="content" style="margin-bottom: 5px;">
       <div class="username">${escapeHtml(username)}</div>
       <div class="text">
@@ -197,8 +196,18 @@ async function renderTypingBubble(username, userId) {
     </div>
   `;
   
+  // Langsung masukkan ke layar
   messagesEl.appendChild(typingEl);
   scrollToBottom();
+
+  // 2. Ambil foto profil secara menyusul (Asynchronous)
+  getCachedProfile(userId).then(profile => {
+    const avatarImg = document.getElementById("typing-avatar");
+    // Pastikan bubble-nya belum dihapus sebelum menempelkan foto baru
+    if (avatarImg && profile?.avatar_url) {
+      avatarImg.src = profile.avatar_url;
+    }
+  });
 }
 
 // Menghilangkan bubble typing
