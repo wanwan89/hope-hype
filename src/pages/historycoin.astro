@@ -1,12 +1,12 @@
 ---
-// Halaman Riwayat Koin - HypeVoice Clean List Style
+// Halaman Riwayat Koin - HypeVoice Ultra Premium 2.0
 ---
 
 <html lang="id">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Riwayat Transaksi</title>
+  <title>Riwayat Koin</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap');
@@ -14,10 +14,12 @@
     :root {
       --primary: #0b84e3;
       --bg-color: #ffffff;
-      --group-bg: #f5f5f5;
-      --text-main: #111;
-      --text-muted: #888;
-      --divider: #eeeeee;
+      --group-header: #f8f9fa;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --divider: #f3f4f6;
+      --danger: #ef4444;
+      --success: #10b981;
     }
 
     body {
@@ -26,6 +28,7 @@
       background-color: var(--bg-color);
       font-family: 'Inter', sans-serif;
       color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
     }
 
     .app-container {
@@ -38,10 +41,11 @@
 
     /* --- HEADER --- */
     .header {
-      padding: 15px 20px;
+      padding: 16px 20px;
       display: flex;
       align-items: center;
-      background: white;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -54,84 +58,182 @@
       padding: 0;
       cursor: pointer;
       color: var(--text-main);
-      margin-right: 15px;
+      display: flex;
+      align-items: center;
     }
 
     .header-title {
       font-size: 18px;
       font-weight: 700;
-      margin: 0;
+      margin-left: 12px;
+      letter-spacing: -0.5px;
     }
 
-    /* --- GROUP HEADER (Tahun-Bulan) --- */
-    .group-header {
-      background-color: var(--group-bg);
-      padding: 8px 20px;
-      font-size: 14px;
+    /* --- BALANCE SECTION --- */
+    .balance-wrapper {
+      padding: 20px;
+      background: linear-gradient(to bottom, #fff, #f8f9fa);
+    }
+
+    .balance-card {
+      background: linear-gradient(135deg, #0b84e3, #1f3cff);
+      padding: 24px;
+      border-radius: 24px;
+      box-shadow: 0 12px 24px rgba(11, 132, 227, 0.25);
+      color: white;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .balance-card::after {
+      content: "";
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 100px;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+    }
+
+    .balance-label {
+      font-size: 11px;
       font-weight: 600;
-      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      opacity: 0.8;
+    }
+
+    .balance-amount {
+      font-family: 'Poppins', sans-serif;
+      font-size: 34px;
+      font-weight: 700;
+      margin-top: 8px;
       display: flex;
       align-items: center;
-      gap: 5px;
+      justify-content: center;
+      gap: 10px;
     }
 
-    /* --- HISTORY ITEM --- */
+    .coin-glow {
+      font-size: 36px !important;
+      color: #ffd700;
+      filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
+    }
+
+    /* --- GROUPING STYLE --- */
+    .group-label {
+      background: var(--group-header);
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 57px; /* Header height */
+      z-index: 10;
+    }
+
+    /* --- LIST ITEM --- */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+    }
+
     .history-item {
-      padding: 15px 20px;
+      padding: 18px 20px;
       border-bottom: 1px solid var(--divider);
-      background: white;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.2s;
     }
 
-    .item-top {
+    .history-item:active {
+      background-color: #f9fafb;
+    }
+
+    .item-row {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 8px;
+    }
+
+    .item-main {
+      flex: 1;
+      padding-right: 15px;
     }
 
     .item-title {
       font-size: 15px;
-      font-weight: 500;
-      color: #111;
-      flex: 1;
-      padding-right: 10px;
-    }
-
-    .item-amount {
-      font-size: 16px;
-      font-weight: 500;
-      color: #111;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-main);
+      display: block;
     }
 
     .item-user {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .user-avatar {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
+      background: #e5e7eb;
       object-fit: cover;
-      background: #eee;
     }
 
     .user-name {
       font-size: 13px;
-      color: #777;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .item-amount {
+      font-family: 'Poppins', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .item-amount.minus { color: #111; }
+    .item-amount.plus { color: var(--success); }
+
+    .item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
     }
 
     .item-time {
       font-size: 12px;
-      color: #bbb;
+      color: #9ca3af;
+    }
+
+    .detail-link {
+      font-size: 12px;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 2px;
     }
 
     .empty-box {
       text-align: center;
-      padding: 50px 20px;
+      padding: 80px 40px;
       color: var(--text-muted);
+    }
+
+    .empty-box i {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.3;
     }
   </style>
 </head>
@@ -140,27 +242,39 @@
   <div class="app-container">
     <header class="header">
       <button class="back-btn" onclick="window.location.href='/lobby'">
-        <i class="material-icons-round">arrow_back</i>
+        <i class="material-icons-round">arrow_back_ios_new</i>
       </button>
       <h1 class="header-title">Riwayat Koin</h1>
     </header>
 
-    <div id="history-content">
-      <div class="empty-box">Memuat riwayat...</div>
+    <div class="balance-wrapper">
+      <section class="balance-card">
+        <div class="balance-label">Saldo Saat Ini</div>
+        <div class="balance-amount" id="balance-amount">
+          <i class="material-icons-round coin-glow">monetization_on</i>
+          0
+        </div>
+      </section>
+    </div>
+
+    <div id="history-container">
+      <div class="empty-box">
+        <p>Memuat transaksi...</p>
+      </div>
     </div>
   </div>
 
   <script>
     import { supabase } from '../lib/supabase.js';
 
-    // Helper format waktu (DD/MM/YYYY HH:mm:ss)
-    const formatFullTime = (dateString) => {
+    // Format Tanggal ala TikTok
+    const formatTrxTime = (dateString) => {
       const d = new Date(dateString);
       const pad = (n) => n.toString().padStart(2, '0');
       return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     };
 
-    // Helper format group key (YYYY-M)
+    // Grouping Key
     const getGroupKey = (dateString) => {
       const d = new Date(dateString);
       return `${d.getFullYear()}-${d.getMonth() + 1}`;
@@ -171,69 +285,84 @@
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return window.location.href = '/login';
 
-        // Ambil riwayat
-        const { data: transactions, error } = await supabase
-          .from('coin_history')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+        // 1. Ambil Saldo
+        const { data: profile } = await supabase.from('profiles').select('coins').eq('id', user.id).single();
+        if (profile) {
+          document.getElementById('balance-amount').innerHTML = `
+            <i class="material-icons-round coin-glow">monetization_on</i>
+            ${(profile.coins || 0).toLocaleString('id-ID')}
+          `;
+        }
 
-        const container = document.getElementById('history-content');
+        // 2. Ambil Riwayat
+        const { data: tx, error } = await supabase.from('coin_history').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
 
-        if (error || !transactions || transactions.length === 0) {
-          container.innerHTML = '<div class="empty-box">Belum ada riwayat transaksi.</div>';
+        const container = document.getElementById('history-container');
+        if (error || !tx || tx.length === 0) {
+          container.innerHTML = '<div class="empty-box"><i class="material-icons-round">history</i><p>Belum ada riwayat transaksi.</p></div>';
           return;
         }
 
-        // --- PROSES GROUPING BERDASARKAN BULAN ---
+        // --- LOGIKA GROUPING ---
         const groups = {};
-        transactions.forEach(trx => {
-          const key = getGroupKey(trx.created_at);
+        tx.forEach(item => {
+          const key = getGroupKey(item.created_at);
           if (!groups[key]) groups[key] = [];
-          groups[key].push(trx);
+          groups[key].push(item);
         });
 
-        // --- RENDER KE HTML ---
-        let finalHtml = '';
-        
-        // Urutkan grup dari yang terbaru
+        // --- RENDER ---
+        let html = '';
         Object.keys(groups).sort((a, b) => b.localeCompare(a)).forEach(key => {
-          finalHtml += `
-            <div class="group-header">
-              ${key} <i class="material-icons-round" style="font-size: 16px;">arrow_drop_down</i>
+          html += `
+            <div class="group-label">
+              <span>${key}</span>
+              <i class="material-icons-round">arrow_drop_down</i>
             </div>
+            <div class="history-list">
           `;
 
           groups[key].forEach(t => {
             const isOut = t.amount < 0;
-            const amountText = isOut ? t.amount : `+${t.amount}`;
+            const amountClass = isOut ? 'minus' : 'plus';
+            const amountSign = isOut ? '' : '+';
             
-            // Logika judul berdasarkan tipe
-            let title = t.transaction_type.replace(/_/g, ' ');
-            if(t.transaction_type === 'send_gift') title = "Hadiah Terkirim";
-            if(t.transaction_type === 'receive_gift') title = "Hadiah Diterima";
+            // Customize label
+            let typeLabel = t.transaction_type.replace(/_/g, ' ');
+            if (t.transaction_type === 'send_gift') typeLabel = "Hadiah Terkirim";
+            if (t.transaction_type === 'receive_gift') typeLabel = "Hadiah Diterima";
+            if (t.transaction_type === 'daily_login') typeLabel = "Bonus Harian";
 
-            finalHtml += `
+            // Extract target name if exists in description (misal: "Kirim Mawar ke Linda")
+            const desc = t.description || '-';
+            const targetName = desc.includes('ke ') ? desc.split('ke ')[1] : 'HypeUser';
+
+            html += `
               <div class="history-item">
-                <div class="item-top">
-                  <span class="item-title">${title}: ${t.description || '-'}</span>
-                  <span class="item-amount">${amountText}</span>
+                <div class="item-row">
+                  <div class="item-main">
+                    <span class="item-title">${typeLabel}: ${desc}</span>
+                    <div class="item-user">
+                      <img src="/asets/png/profile.png" class="user-avatar" />
+                      <span class="user-name">${targetName}</span>
+                    </div>
+                  </div>
+                  <div class="item-amount ${amountClass}">${amountSign}${t.amount}</div>
                 </div>
-                <div class="item-user">
-                  <img class="user-avatar" src="/asets/png/profile.png" />
-                  <span class="user-name">User</span>
+                <div class="item-footer">
+                  <span class="item-time">${formatTrxTime(t.created_at)}</span>
+                  ${isOut ? '<span class="detail-link">Lihat detail <i class="material-icons-round" style="font-size:14px">chevron_right</i></span>' : ''}
                 </div>
-                <div class="item-time">${formatFullTime(t.created_at)}</div>
               </div>
             `;
           });
+
+          html += `</div>`;
         });
 
-        container.innerHTML = finalHtml;
+        container.innerHTML = html;
 
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (err) { console.error(err); }
     }
 
     loadData();
