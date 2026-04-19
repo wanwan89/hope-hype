@@ -96,10 +96,14 @@
       gap: 12px;
     }
 
+    /* FIX: Kunci ukuran koin biar gak meledak */
     .coin-icon {
-      width: 32px;
-      height: 32px;
+      width: 32px !important;
+      height: 32px !important;
+      max-width: 32px;
+      max-height: 32px;
       object-fit: contain;
+      display: block;
     }
 
     .history-container {
@@ -135,9 +139,13 @@
       flex-shrink: 0;
     }
 
+    /* FIX: Kunci ukuran koin di list riwayat */
     .icon-box img {
-      width: 24px;
-      height: 24px;
+      width: 24px !important;
+      height: 24px !important;
+      max-width: 24px;
+      max-height: 24px;
+      object-fit: contain;
     }
 
     .details {
@@ -214,7 +222,6 @@
   <script>
     import { supabase } from '../lib/supabase.js';
 
-    // Formatter Tanggal Indonesia
     const formatDate = (dateString) => {
       const date = new Date(dateString);
       return date.toLocaleDateString('id-ID', {
@@ -225,15 +232,13 @@
 
     async function loadCoinData() {
       try {
-        // 1. Cek User Session
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (!user || authError) {
           window.location.href = '/login';
           return;
         }
 
-        // 2. Ambil Saldo Realtime dari tabel 'profiles'
-        const { data: profileData, error: profileError } = await supabase
+        const { data: profileData } = await supabase
           .from('profiles')
           .select('coins')
           .eq('id', user.id)
@@ -246,7 +251,6 @@
           `;
         }
 
-        // 3. Ambil Riwayat dari tabel 'coin_history'
         const { data: transactions, error: historyError } = await supabase
           .from('coin_history')
           .select('*')
@@ -260,7 +264,6 @@
           return;
         }
 
-        // 4. Render Riwayat ke UI
         const html = transactions.map((trx) => {
           const isPositive = trx.amount > 0;
           const displayAmount = isPositive ? `+${trx.amount}` : trx.amount;
@@ -289,11 +292,9 @@
 
       } catch (err) {
         console.error("System Error:", err);
-        document.getElementById('history-list').innerHTML = '<div class="empty-state"><p>Gagal memuat data.</p></div>';
       }
     }
 
-    // Jalankan fungsi
     loadCoinData();
   </script>
 </body>
