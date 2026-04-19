@@ -199,7 +199,6 @@
   </div>
 
   <script>
-    // Import Supabase
     import { supabase } from '../lib/supabase.js';
 
     const formatDate = (dateString) => {
@@ -228,16 +227,13 @@
           return;
         }
 
-        // 1. AMBIL SALDO UTAMA DARI TABEL USER
-        // Catatan: Pastikan nama tabelnya 'users' dan kolomnya 'coins' di Supabase lu!
-        // Kalau beda (misal: 'profiles' atau 'balance'), ganti tulisan di bawah ini:
+        // 1. AMBIL SALDO UTAMA DARI TABEL PROFILES
         const { data: userData, error: userError } = await supabase
-          .from('users') 
+          .from('profiles') 
           .select('coins') 
           .eq('id', user.id)
           .single();
 
-        // Kalau datanya ada, ambil koinnya. Kalau null/kosong, set jadi 0.
         const currentBalance = userData ? userData.coins : 0;
         
         document.getElementById('balance-amount').innerHTML = `
@@ -245,7 +241,7 @@
           ${currentBalance.toLocaleString('id-ID')}
         `;
 
-        // 2. AMBIL LIST RIWAYAT TRANSAKSI 
+        // 2. AMBIL LIST RIWAYAT TRANSAKSI DARI COIN_HISTORY
         const { data: rawTransactions, error: historyError } = await supabase
           .from('coin_history')
           .select('*')
@@ -254,13 +250,11 @@
 
         const listContainer = document.getElementById('history-list');
 
-        // Kalau belum ada transaksi, stop di sini, nampilin teks kosong
         if (historyError || !rawTransactions || rawTransactions.length === 0) {
           listContainer.innerHTML = '<div class="empty-state"><p>Belum ada riwayat transaksi.</p></div>';
           return; 
         }
 
-        // Kalau ada transaksi, render list-nya
         const htmlString = rawTransactions.map((trx) => {
           const isPositive = trx.amount > 0;
           const displayAmount = isPositive ? '+' + trx.amount : trx.amount;
@@ -295,7 +289,6 @@
       }
     }
 
-    // Eksekusi fungsi!
     loadData();
   </script>
 </body>
