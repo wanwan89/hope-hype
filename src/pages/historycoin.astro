@@ -1,58 +1,6 @@
 ---
-// Import Supabase client (pastikan path-nya sesuai dengan struktur foldermu)
-import { supabase } from '../lib/supabase'; 
-
-// 1. Ambil data user yang lagi aktif (otomatis dari session/cookies)
-const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-// 2. Keamanan: Kalau ga ada yang login, langsung lempar balik ke halaman login!
-if (!user || authError) {
-  return Astro.redirect('/login'); 
-}
-
-// 3. Tarik userId otomatis dari akun yang login
-const userId = user.id; 
-
-// 4. Fetch data history dari database khusus untuk user tersebut
-const { data: rawTransactions, error } = await supabase
-  .from('coin_history')
-  .select('*')
-  .eq('user_id', userId)
-  .order('created_at', { ascending: false });
-
-if (error) {
-  console.error('Error fetching history:', error);
-}
-
-// Fungsi bantuan untuk memformat tanggal (misal: "19 Apr 2026, 08:00")
-const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).replace('.', ':');
-};
-
-// Fungsi bantuan untuk memilih icon berdasarkan tipe transaksi
-const getIcon = (type) => {
-  if (type === 'daily_login' || type === 'reward') {
-    // Icon Koin/Uang
-    return 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6';
-  } else if (type === 'send_gift' || type === 'receive_gift') {
-    // Icon Kado/Gift
-    return 'M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z';
-  }
-  // Default Icon (Transaksi umum)
-  return 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6';
-};
-
-// Ambil saldo terakhir dari transaksi paling baru untuk ditampilkan di header
-const currentBalance = rawTransactions && rawTransactions.length > 0 
-  ? rawTransactions[0].balance_after 
-  : 0;
+// Bagian server kita kosongin dari pengecekan login biar lu ga dilempar terus.
+// Logikanya kita pindah ke bawah (Client-Side) biar bisa baca status login lu.
 ---
 
 <html lang="id">
@@ -237,45 +185,107 @@ const currentBalance = rawTransactions && rawTransactions.length > 0
 
     <div class="balance-summary">
       <div class="balance-label">Total Koin Saat Ini</div>
-      <div class="balance-amount">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-        {currentBalance.toLocaleString('id-ID')}
+      <div class="balance-amount" id="balance-amount">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f1c40f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle></svg>
+        0
       </div>
     </div>
 
-    <div class="history-container">
-      {rawTransactions && rawTransactions.length > 0 ? (
-        rawTransactions.map((trx) => {
-          const isPositive = trx.amount > 0;
-          const displayAmount = isPositive ? `+${trx.amount}` : trx.amount;
-
-          return (
-            <div class="history-card" key={trx.id}>
-              <div class="icon-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d={getIcon(trx.transaction_type)}></path>
-                </svg>
-              </div>
-              <div class="details">
-                <h3 class="details-title">{trx.transaction_type.replace('_', ' ')}</h3>
-                <p class="details-desc">
-                  <span>{trx.description}</span>
-                  <span>{formatDate(trx.created_at)}</span>
-                </p>
-              </div>
-              <div class={`amount ${isPositive ? 'positive' : 'negative'}`}>
-                {displayAmount}
-              </div>
-            </div>
-          );
-        })
-      ) : (
-        <div class="empty-state">
-          <p>Belum ada riwayat transaksi.</p>
-        </div>
-      )}
+    <div class="history-container" id="history-list">
+      <div class="empty-state">
+        <p>Memuat data...</p>
+      </div>
     </div>
   </div>
 
+  <script type="module">
+    import { supabase } from '/src/lib/supabase.js';
+
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      }).replace('.', ':');
+    };
+
+    const getIcon = (type) => {
+      if (type === 'daily_login' || type === 'reward') {
+        return 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6';
+      } else if (type === 'send_gift' || type === 'receive_gift') {
+        return 'M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z';
+      }
+      return 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6';
+    };
+
+    async function loadData() {
+      // 1. Cek login pake cara yang bener (Browser Side)
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // Kalau beneran belum login, baru lempar ke halaman login
+      if (!user) {
+        window.location.href = '/login';
+        return;
+      }
+
+      // 2. Fetch data sesuai userId yang udah login
+      const { data: rawTransactions, error } = await supabase
+        .from('coin_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error:', error);
+        document.getElementById('history-list').innerHTML = '<div class="empty-state"><p>Gagal memuat data.</p></div>';
+        return;
+      }
+
+      // 3. Update Saldo (Ikon Koin)
+      const currentBalance = rawTransactions && rawTransactions.length > 0 ? rawTransactions[0].balance_after : 0;
+      document.getElementById('balance-amount').innerHTML = `
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f1c40f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle></svg>
+        ${currentBalance.toLocaleString('id-ID')}
+      `;
+
+      // 4. Update List Riwayat
+      const listContainer = document.getElementById('history-list');
+      if (!rawTransactions || rawTransactions.length === 0) {
+        listContainer.innerHTML = '<div class="empty-state"><p>Belum ada riwayat transaksi.</p></div>';
+        return;
+      }
+
+      const htmlString = rawTransactions.map((trx) => {
+        const isPositive = trx.amount > 0;
+        const displayAmount = isPositive ? '+' + trx.amount : trx.amount;
+        const amountClass = isPositive ? 'positive' : 'negative';
+        const title = trx.transaction_type.replace('_', ' ');
+
+        return `
+          <div class="history-card">
+            <div class="icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="${getIcon(trx.transaction_type)}"></path>
+              </svg>
+            </div>
+            <div class="details">
+              <h3 class="details-title">${title}</h3>
+              <p class="details-desc">
+                <span>${trx.description || '-'}</span>
+                <span>${formatDate(trx.created_at)}</span>
+              </p>
+            </div>
+            <div class="amount ${amountClass}">
+              ${displayAmount}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      listContainer.innerHTML = htmlString;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadData);
+  </script>
 </body>
 </html>
