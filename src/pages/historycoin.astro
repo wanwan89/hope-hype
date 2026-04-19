@@ -1,6 +1,6 @@
 ---
-// Halaman Riwayat Koin
-// Menggunakan Client-Side Fetching agar status login (Local Storage) terbaca dengan benar.
+// Bagian server kita kosongin dari pengecekan login biar lu ga dilempar terus.
+// Logikanya kita pindah ke bawah (Client-Side) biar bisa baca status login lu.
 ---
 
 <html lang="id">
@@ -198,9 +198,8 @@
     </div>
   </div>
 
-  <script>
-    // Import Supabase (Astro otomatis akan memproses path ini di belakang layar)
-    import { supabase } from '../lib/supabase';
+  <script type="module">
+    import { supabase } from '/src/lib/supabase.js';
 
     const formatDate = (dateString) => {
       const date = new Date(dateString);
@@ -219,79 +218,74 @@
       return 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6';
     };
 
-    async function loadHistory() {
-      try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+    async function loadData() {
+      // 1. Cek login pake cara yang bener (Browser Side)
+      const { data: { user } } = await supabase.auth.getUser();
 
-        if (!user || authError) {
-          window.location.href = '/login'; 
-          return;
-        }
-
-        const { data: rawTransactions, error } = await supabase
-          .from('coin_history')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Error fetching history:', error);
-          document.getElementById('history-list').innerHTML = '<div class="empty-state"><p>Gagal memuat data.</p></div>';
-          return;
-        }
-
-        const currentBalance = rawTransactions && rawTransactions.length > 0 
-          ? rawTransactions[0].balance_after 
-          : 0;
-        
-        // Render saldo dengan ikon koin emas
-        document.getElementById('balance-amount').innerHTML = `
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f1c40f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle></svg>
-          ${currentBalance.toLocaleString('id-ID')}
-        `;
-
-        const listContainer = document.getElementById('history-list');
-        
-        if (!rawTransactions || rawTransactions.length === 0) {
-          listContainer.innerHTML = '<div class="empty-state"><p>Belum ada riwayat transaksi.</p></div>';
-          return;
-        }
-
-        const htmlString = rawTransactions.map((trx) => {
-          const isPositive = trx.amount > 0;
-          const displayAmount = isPositive ? '+' + trx.amount : trx.amount;
-          const amountClass = isPositive ? 'positive' : 'negative';
-          const title = trx.transaction_type.replace('_', ' ');
-
-          return `
-            <div class="history-card">
-              <div class="icon-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="${getIcon(trx.transaction_type)}"></path>
-                </svg>
-              </div>
-              <div class="details">
-                <h3 class="details-title">${title}</h3>
-                <p class="details-desc">
-                  <span>${trx.description || '-'}</span>
-                  <span>${formatDate(trx.created_at)}</span>
-                </p>
-              </div>
-              <div class="amount ${amountClass}">
-                ${displayAmount}
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        listContainer.innerHTML = htmlString;
-      } catch (err) {
-        console.error("Kesalahan sistem:", err);
+      // Kalau beneran belum login, baru lempar ke halaman login
+      if (!user) {
+        window.location.href = '/login';
+        return;
       }
+
+      // 2. Fetch data sesuai userId yang udah login
+      const { data: rawTransactions, error } = await supabase
+        .from('coin_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error:', error);
+        document.getElementById('history-list').innerHTML = '<div class="empty-state"><p>Gagal memuat data.</p></div>';
+        return;
+      }
+
+      // 3. Update Saldo (Ikon Koin)
+      const currentBalance = rawTransactions && rawTransactions.length > 0 ? rawTransactions[0].balance_after : 0;
+      document.getElementById('balance-amount').innerHTML = `
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f1c40f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle></svg>
+        ${currentBalance.toLocaleString('id-ID')}
+      `;
+
+      // 4. Update List Riwayat
+      const listContainer = document.getElementById('history-list');
+      if (!rawTransactions || rawTransactions.length === 0) {
+        listContainer.innerHTML = '<div class="empty-state"><p>Belum ada riwayat transaksi.</p></div>';
+        return;
+      }
+
+      const htmlString = rawTransactions.map((trx) => {
+        const isPositive = trx.amount > 0;
+        const displayAmount = isPositive ? '+' + trx.amount : trx.amount;
+        const amountClass = isPositive ? 'positive' : 'negative';
+        const title = trx.transaction_type.replace('_', ' ');
+
+        return `
+          <div class="history-card">
+            <div class="icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="${getIcon(trx.transaction_type)}"></path>
+              </svg>
+            </div>
+            <div class="details">
+              <h3 class="details-title">${title}</h3>
+              <p class="details-desc">
+                <span>${trx.description || '-'}</span>
+                <span>${formatDate(trx.created_at)}</span>
+              </p>
+            </div>
+            <div class="amount ${amountClass}">
+              ${displayAmount}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      listContainer.innerHTML = htmlString;
     }
 
-    // Pastikan fungsi berjalan setelah semua elemen HTML termuat
-    document.addEventListener('DOMContentLoaded', loadHistory);
+    document.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
 </html>
