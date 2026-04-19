@@ -1,6 +1,5 @@
 ---
 // Halaman Riwayat Koin - HypeVoice
-// Client-side fetching untuk sinkronisasi status login & database
 ---
 
 <html lang="id">
@@ -8,6 +7,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Riwayat Transaksi</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600&display=swap');
 
@@ -19,6 +19,7 @@
       --text-muted: #8a8b91;
       --success: #00b894;
       --danger: #d63031;
+      --gold: #f1c40f;
     }
 
     body {
@@ -96,14 +97,10 @@
       gap: 12px;
     }
 
-    /* FIX: Kunci ukuran koin biar gak meledak */
-    .coin-icon {
-      width: 32px !important;
-      height: 32px !important;
-      max-width: 32px;
-      max-height: 32px;
-      object-fit: contain;
-      display: block;
+    .coin-icon-main {
+      color: var(--gold);
+      font-size: 36px !important;
+      text-shadow: 0 2px 10px rgba(241, 196, 15, 0.5);
     }
 
     .history-container {
@@ -131,7 +128,7 @@
       width: 44px;
       height: 44px;
       border-radius: 10px;
-      background-color: #f1f8ff;
+      background-color: #fff9db;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -139,13 +136,9 @@
       flex-shrink: 0;
     }
 
-    /* FIX: Kunci ukuran koin di list riwayat */
-    .icon-box img {
-      width: 24px !important;
-      height: 24px !important;
-      max-width: 24px;
-      max-height: 24px;
-      object-fit: contain;
+    .icon-box i {
+      color: var(--gold);
+      font-size: 24px !important;
     }
 
     .details {
@@ -159,9 +152,6 @@
       margin: 0 0 2px 0;
       text-transform: capitalize;
       color: var(--text-main);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .details-desc {
@@ -196,10 +186,7 @@
   <div class="app-container">
     <div class="header">
       <button class="back-btn" onclick="window.location.href='/lobby'">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="19" y1="12" x2="5" y2="12"></line>
-          <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
+        <i class="material-icons-round">arrow_back</i>
       </button>
       <h1 class="header-title">Riwayat Koin</h1>
     </div>
@@ -207,7 +194,7 @@
     <div class="balance-summary">
       <div class="balance-label">Total Koin Saat Ini</div>
       <div class="balance-amount" id="balance-amount">
-        <img src="/asets/svg/koin.svg" class="coin-icon" alt="icon" />
+        <i class="material-icons-round coin-icon-main">monetization_on</i>
         0
       </div>
     </div>
@@ -232,12 +219,10 @@
 
     async function loadCoinData() {
       try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (!user || authError) {
-          window.location.href = '/login';
-          return;
-        }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { window.location.href = '/login'; return; }
 
+        // 1. Ambil Saldo dari profiles
         const { data: profileData } = await supabase
           .from('profiles')
           .select('coins')
@@ -246,12 +231,13 @@
 
         if (profileData) {
           document.getElementById('balance-amount').innerHTML = `
-            <img src="/asets/svg/koin.svg" class="coin-icon" alt="icon" />
+            <i class="material-icons-round coin-icon-main">monetization_on</i>
             ${(profileData.coins || 0).toLocaleString('id-ID')}
           `;
         }
 
-        const { data: transactions, error: historyError } = await supabase
+        // 2. Ambil Riwayat dari coin_history
+        const { data: transactions, error } = await supabase
           .from('coin_history')
           .select('*')
           .eq('user_id', user.id)
@@ -259,7 +245,7 @@
 
         const listContainer = document.getElementById('history-list');
 
-        if (historyError || !transactions || transactions.length === 0) {
+        if (error || !transactions || transactions.length === 0) {
           listContainer.innerHTML = '<div class="empty-state"><p>Belum ada riwayat transaksi.</p></div>';
           return;
         }
@@ -272,7 +258,7 @@
           return `
             <div class="history-card">
               <div class="icon-box">
-                <img src="/asets/svg/koin.svg" alt="coin" />
+                <i class="material-icons-round">stars</i>
               </div>
               <div class="details">
                 <h3 class="details-title">${typeLabel}</h3>
