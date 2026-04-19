@@ -1,318 +1,360 @@
 ---
 // Halaman Riwayat Koin - HypeVoice Ultra Premium UI
 ---
-
 <html lang="id">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Riwayat Koin</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Riwayat Transaksi Premium</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --accent: #f59e0b;
+      --bg-color: #0f172a; /* Dark theme untuk feel lebih mahal */
+      --card-glass: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --danger: #ef4444;
+    }
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap');
+    body {
+      margin: 0;
+      background-color: var(--bg-color);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
 
-:root {
-  --primary: #0b84e3;
-  --gradient: linear-gradient(135deg, #0b84e3, #1f3cff);
-  --bg: #f4f8ff;
-  --glass: rgba(255,255,255,0.7);
-  --text: #0f172a;
-  --muted: #64748b;
-  --success: #22c55e;
-  --danger: #ef4444;
-}
+    /* --- PREMIUM BACKGROUND DECOR --- */
+    .bg-glow {
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(0,0,0,0) 70%);
+      top: -150px;
+      right: -100px;
+      z-index: -1;
+      pointer-events: none;
+    }
 
-body {
-  margin: 0;
-  background: var(--bg);
-  font-family: 'Inter', sans-serif;
-}
+    .app-container {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
 
-/* BACKGROUND GLOW */
-body::before {
-  content: "";
-  position: fixed;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(11,132,227,0.25), transparent);
-  top: -150px;
-  right: -150px;
-  z-index: -1;
-}
+    /* --- HEADER --- */
+    .header {
+      padding: 25px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      background: rgba(15, 23, 42, 0.7);
+    }
 
-/* CONTAINER */
-.app {
-  max-width: 480px;
-  margin: auto;
-}
+    .back-btn {
+      background: var(--card-glass);
+      border: 1px solid var(--card-border);
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: white;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-/* HEADER */
-.header {
-  display: flex;
-  align-items: center;
-  padding: 20px;
-  backdrop-filter: blur(12px);
-}
+    .back-btn:active { transform: scale(0.9); }
 
-.back {
-  width: 45px;
-  height: 45px;
-  border-radius: 14px;
-  background: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
-  cursor: pointer;
-}
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
 
-.title {
-  font-weight: 700;
-  font-size: 20px;
-  margin-left: 14px;
-}
+    /* --- BALANCE SECTION (MESH GRADIENT) --- */
+    .balance-card {
+      margin: 10px 20px 30px;
+      padding: 35px 25px;
+      border-radius: 32px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      animation: float 6s ease-in-out infinite;
+    }
 
-/* BALANCE CARD */
-.balance {
-  margin: 10px 20px 30px;
-  padding: 30px;
-  border-radius: 28px;
-  background: var(--gradient);
-  color: white;
-  text-align: center;
-  box-shadow: 0 20px 40px rgba(11,132,227,0.4);
-  position: relative;
-  overflow: hidden;
-}
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
 
-.balance::after {
-  content: "";
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 50%;
-  top: -80px;
-  left: -80px;
-}
+    .balance-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
 
-.balance h2 {
-  font-size: 13px;
-  opacity: 0.8;
-  letter-spacing: 1px;
-}
+    .balance-amount {
+      font-size: 42px;
+      font-weight: 800;
+      background: linear-gradient(to right, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
 
-.balance-amount {
-  font-family: 'Poppins';
-  font-size: 40px;
-  margin-top: 10px;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  align-items: center;
-}
+    .coin-icon-premium {
+      font-size: 48px !important;
+      color: var(--accent);
+      filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.4));
+    }
 
-.coin {
-  color: gold;
-  filter: drop-shadow(0 0 10px gold);
-}
+    /* --- HISTORY LIST --- */
+    .section-header {
+      padding: 0 24px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-/* SECTION */
-.section {
-  padding: 0 20px;
-  font-weight: 700;
-  margin-bottom: 15px;
-}
+    .section-header span {
+      font-size: 16px;
+      font-weight: 700;
+      opacity: 0.9;
+    }
 
-/* LIST */
-.list {
-  padding: 0 20px 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+    .history-list {
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-/* ITEM */
-.item {
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  border-radius: 22px;
-  background: var(--glass);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-  animation: fadeUp .4s ease;
-  transition: .2s;
-}
+    .transaction-item {
+      background: var(--card-glass);
+      border: 1px solid var(--card-border);
+      padding: 16px;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(20px);
+    }
 
-.item:hover {
-  transform: scale(1.02);
-}
+    .transaction-item.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
-/* ICON */
-.icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 14px;
-}
+    .transaction-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--primary);
+      transform: scale(1.02);
+    }
 
-.icon.in { background: #dcfce7; color: var(--success); }
-.icon.out { background: #fee2e2; color: var(--danger); }
+    .icon-wrapper {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 16px;
+      font-size: 24px;
+    }
 
-/* TEXT */
-.info {
-  flex: 1;
-}
+    .icon-wrapper.in { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .icon-wrapper.out { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
 
-.title2 {
-  font-weight: 600;
-  font-size: 14px;
-}
+    .tx-details { flex: 1; }
 
-.desc {
-  font-size: 12px;
-  color: var(--muted);
-}
+    .tx-title {
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
 
-.date {
-  font-size: 10px;
-  margin-top: 4px;
-  color: #94a3b8;
-}
+    .tx-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-/* VALUE */
-.value {
-  font-weight: 700;
-  font-family: 'Poppins';
-}
+    .tx-amount {
+      text-align: right;
+      font-weight: 800;
+      font-size: 16px;
+    }
 
-.plus { color: var(--success); }
-.minus { color: var(--danger); }
+    .tx-amount.plus { color: var(--success); }
+    .tx-amount.minus { color: var(--danger); }
 
-/* EMPTY */
-.empty {
-  text-align: center;
-  margin-top: 60px;
-  color: var(--muted);
-  animation: fadeUp .5s ease;
-}
+    /* --- SKELETON LOADING --- */
+    .skeleton {
+      height: 80px;
+      background: linear-gradient(90deg, var(--card-glass) 25%, rgba(255,255,255,0.06) 50%, var(--card-glass) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 24px;
+    }
 
-/* ANIMATION */
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-</style>
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state i {
+      font-size: 64px;
+      margin-bottom: 15px;
+      opacity: 0.2;
+    }
+  </style>
 </head>
-
 <body>
+  <div class="bg-glow"></div>
+  
+  <div class="app-container">
+    <header class="header">
+      <button class="back-btn" onclick="history.back()">
+        <i class="material-icons-round">arrow_back_ios_new</i>
+      </button>
+      <div class="header-title">Riwayat Transaksi</div>
+      <div style="width: 42px;"></div> </header>
 
-<div class="app">
-
-  <div class="header">
-    <div class="back" onclick="location.href='/lobby'">
-      <i class="material-icons-round">chevron_left</i>
-    </div>
-    <div class="title">Riwayat Koin</div>
-  </div>
-
-  <div class="balance">
-    <h2>Saldo Aktif</h2>
-    <div class="balance-amount" id="balance">
-      <i class="material-icons-round coin">monetization_on</i>
-      0
-    </div>
-  </div>
-
-  <div class="section">Aktivitas Terakhir</div>
-
-  <div class="list" id="list">
-    <div class="empty">Loading...</div>
-  </div>
-
-</div>
-
-<script type="module">
-import { supabase } from '../lib/supabase.js';
-
-const formatDate = (d) => {
-  return new Date(d).toLocaleDateString('id-ID', {
-    day:'numeric', month:'short',
-    hour:'2-digit', minute:'2-digit'
-  });
-};
-
-async function load() {
-  const { data:{ user } } = await supabase.auth.getUser();
-  if (!user) return location.href='/login';
-
-  // saldo
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('coins')
-    .eq('id', user.id)
-    .single();
-
-  document.getElementById('balance').innerHTML = `
-    <i class="material-icons-round coin">monetization_on</i>
-    ${(profile?.coins || 0).toLocaleString('id-ID')}
-  `;
-
-  // history
-  const { data: tx } = await supabase
-    .from('coin_history')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending:false });
-
-  const list = document.getElementById('list');
-
-  if (!tx || tx.length === 0) {
-    list.innerHTML = `<div class="empty">Belum ada transaksi </div>`;
-    return;
-  }
-
-  list.innerHTML = tx.map(t => {
-    const out = t.amount < 0;
-
-    return `
-      <div class="item">
-        <div class="icon ${out ? 'out':'in'}">
-          <i class="material-icons-round">
-            ${out ? 'payments':'task_alt'}
-          </i>
-        </div>
-
-        <div class="info">
-          <div class="title2">
-            ${t.transaction_type.replace(/_/g,' ')}
-          </div>
-          <div class="desc">${t.description || '-'}</div>
-          <div class="date">${formatDate(t.created_at)}</div>
-        </div>
-
-        <div class="value ${out?'minus':'plus'}">
-          ${out ? '' : '+'}${t.amount}
-        </div>
+    <section class="balance-card">
+      <div class="balance-label">Total Saldo Hype</div>
+      <div class="balance-amount" id="balance-val">
+        <i class="material-icons-round coin-icon-premium">monetization_on</i>
+        <span>0</span>
       </div>
-    `;
-  }).join('');
-}
+    </section>
 
-load();
-</script>
+    <div class="section-header">
+      <span>Aktivitas Finansial</span>
+      <i class="material-icons-round" style="color: var(--primary)">Tune</i>
+    </div>
 
+    <div class="history-list" id="tx-container">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase } from '../lib/supabase.js';
+
+    async function init() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return window.location.href = '/login';
+
+        // 1. Fetch Profile (Balance)
+        const { data: profile } = await supabase.from('profiles').select('coins').eq('id', user.id).single();
+        if (profile) {
+          const balanceEl = document.getElementById('balance-val').querySelector('span');
+          animateValue(balanceEl, 0, profile.coins || 0, 1000);
+        }
+
+        // 2. Fetch History
+        const { data: tx, error } = await supabase.from('coin_history')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        const container = document.getElementById('tx-container');
+        container.innerHTML = ''; // Hapus skeleton
+
+        if (error || !tx || tx.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <i class="material-icons-round">auto_graph</i>
+              <p>Belum ada aktivitas koin di akunmu.</p>
+            </div>`;
+          return;
+        }
+
+        tx.forEach((item, index) => {
+          const isOut = item.amount < 0;
+          const card = document.createElement('div');
+          card.className = 'transaction-item';
+          
+          card.innerHTML = `
+            <div class="icon-wrapper ${isOut ? 'out' : 'in'}">
+              <i class="material-icons-round">${isOut ? 'south_west' : 'north_east'}</i>
+            </div>
+            <div class="tx-details">
+              <div class="tx-title">${item.transaction_type.split('_').join(' ').toUpperCase()}</div>
+              <div class="tx-meta">
+                <span>${new Date(item.created_at).toLocaleDateString('id-ID', {day:'2-digit', month:'short'})}</span>
+                <span>•</span>
+                <span>${item.description || 'No memo'}</span>
+              </div>
+            </div>
+            <div class="tx-amount ${isOut ? 'minus' : 'plus'}">
+              ${isOut ? '' : '+'}${item.amount.toLocaleString('id-ID')}
+            </div>
+          `;
+
+          container.appendChild(card);
+          
+          // Trigger animation staggered
+          setTimeout(() => card.classList.add('show'), index * 100);
+        });
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Fungsi animasi angka saldo biar "hidup"
+    function animateValue(obj, start, end, duration) {
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString('id-ID');
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    init();
+  </script>
 </body>
 </html>
