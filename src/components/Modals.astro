@@ -461,42 +461,49 @@ h3 { color: white; margin-bottom: 20px; font-size: 18px; }
 }
 
 #notificationList { display: none; flex-direction: column; position: fixed; z-index: 10001; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 380px; }
-/* Modifikasi .p-name agar teks dan ikon sejajar */
+/* =========================================
+   1. PENSEJAJARAN TEKS & IKON INFO DI CARD
+   ========================================= */
 .p-name { 
   color: white; 
   font-weight: 700; 
   font-size: 14px; 
   display: flex; 
   align-items: center; 
-  gap: 6px; /* Jarak antara teks dan ikon info */
+  gap: 10px; /* Jarak dilebarkan agar tidak nempel dengan teks */
+  line-height: 1; 
 }
 
-/* Styling untuk ikon info */
 .info-icon {
-  color: #9ca3af; /* Warna abu-abu */
+  color: #9ca3af; 
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  display: block; 
+  transform: translateY(-1px); /* Dinaikkan sedikit agar sejajar sempurna di tengah huruf */
 }
 
-/* Efek hover pada ikon info */
 .info-icon:hover {
-  color: #4ade80; /* Berubah jadi hijau atau sesuaikan dengan tema */
-  transform: scale(1.1);
+  color: #4ade80; 
+  transform: scale(1.1) translateY(-1px);
 }
 
-/* Pastikan saat card di-klik/active, warna ikon info menyesuaikan */
 .product-card:active .info-icon {
   color: black;
 }
-/* --- PREMIUM INFO MODAL CSS --- */
+
+
+/* =========================================
+   2. DESAIN MODAL INFO (VERSI PREMIUM CLEAN)
+   ========================================= */
 .info-modal-content {
   text-align: center;
   padding: 30px 24px 24px;
   background: linear-gradient(145deg, #2a2d31, #1c1e22);
   border: 1px solid rgba(255, 255, 255, 0.08);
   position: relative;
-  width: 320px; /* Sedikit dilebarkan agar teks muat */
+  width: 320px; 
+  border-radius: 16px; 
 }
 
 .close-icon {
@@ -510,7 +517,10 @@ h3 { color: white; margin-bottom: 20px; font-size: 18px; }
   line-height: 1;
 }
 
-.close-icon:hover { color: #ff6b6b; transform: scale(1.1) rotate(90deg); }
+.close-icon:hover { 
+  color: #ff6b6b; 
+  transform: scale(1.1) rotate(90deg); 
+}
 
 .info-icon-showcase {
   width: 70px;
@@ -522,7 +532,7 @@ h3 { color: white; margin-bottom: 20px; font-size: 18px; }
   align-items: center;
   justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 25px rgba(255, 222, 89, 0.15);
+  box-shadow: none !important; /* Bersih tanpa efek bayangan/glow */
 }
 
 .info-icon-showcase img, .info-icon-showcase svg {
@@ -541,7 +551,10 @@ h3 { color: white; margin-bottom: 20px; font-size: 18px; }
   -webkit-text-fill-color: transparent;
 }
 
-/* LIST KEUNTUNGAN */
+
+/* =========================================
+   3. LIST KEUNTUNGAN (STACKING BENEFITS)
+   ========================================= */
 .premium-benefits-list {
   text-align: left;
   display: flex;
@@ -563,7 +576,7 @@ h3 { color: white; margin-bottom: 20px; font-size: 18px; }
 .b-icon {
   font-size: 18px;
   line-height: 1;
-  margin-top: 2px;
+  margin-top: 1px;
   flex-shrink: 0;
 }
 
@@ -579,7 +592,6 @@ h3 { color: white; margin-bottom: 20px; font-size: 18px; }
   margin-bottom: 2px;
 }
 
-/* KHUSUS UNTUK FITUR STACKING (PLUS) */
 .b-highlight {
   background: linear-gradient(135deg, rgba(58, 123, 213, 0.15), rgba(58, 96, 115, 0.1));
   border-color: rgba(58, 123, 213, 0.3);
@@ -591,20 +603,32 @@ h3 { color: white; margin-bottom: 20px; font-size: 18px; }
 }
 
 .b-highlight .b-text b {
-  color: #4ade80; /* Warna hijau untuk tulisan "Plus" */
+  color: #4ade80; 
 }
 .b-highlight.b-gold .b-text b {
-  color: #ffd700; /* Warna emas khusus sultan */
+  color: #ffd700; 
 }
 
+
+/* =========================================
+   4. TOMBOL MENGERTI (BERSIH TANPA BAYANGAN)
+   ========================================= */
 .premium-btn {
-  background: linear-gradient(135deg, #3a7bd5, #3a6073) !important;
-  box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3) !important;
+  background: linear-gradient(135deg, #4b90ff, #2b7af0) !important;
+  box-shadow: none !important; /* Paksa hilangkan bayangan sistem */
+  outline: none !important;
   font-size: 14px !important;
+  font-weight: 600 !important;
   padding: 12px !important;
+  color: white !important; 
+  border-radius: 8px !important; 
+  border: none !important; 
+  cursor: pointer !important; 
+  width: 100% !important; 
+  display: block !important; 
 }
 
 .premium-btn:hover {
-  box-shadow: 0 6px 20px rgba(58, 123, 213, 0.5) !important;
+  box-shadow: none !important; /* Pastikan tetap bersih saat disentuh */
+  opacity: 0.85 !important; 
 }
-
