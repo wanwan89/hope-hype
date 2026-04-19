@@ -1,6 +1,5 @@
 ---
 // Halaman Riwayat Koin
-// Menggunakan Client-Side Fetching agar status login (Local Storage) terbaca dengan benar.
 ---
 
 <html lang="id">
@@ -92,7 +91,14 @@
       font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+    }
+
+    /* Styling khusus icon koin agar rapi */
+    .coin-icon {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
     }
 
     .history-container {
@@ -112,21 +118,21 @@
       transition: transform 0.2s;
     }
 
-    .history-card:active {
-      transform: scale(0.98);
-    }
-
     .icon-box {
       width: 44px;
       height: 44px;
       border-radius: 10px;
       background-color: #f1f8ff;
-      color: var(--primary);
       display: flex;
       align-items: center;
       justify-content: center;
       margin-right: 16px;
       flex-shrink: 0;
+    }
+
+    .icon-box img {
+      width: 24px;
+      height: 24px;
     }
 
     .details {
@@ -155,13 +161,8 @@
       font-size: 16px;
     }
 
-    .amount.positive {
-      color: var(--success);
-    }
-
-    .amount.negative {
-      color: var(--text-main);
-    }
+    .amount.positive { color: var(--success); }
+    .amount.negative { color: var(--text-main); }
 
     .empty-state {
       text-align: center;
@@ -175,10 +176,7 @@
   <div class="app-container">
     <div class="header">
       <button class="back-btn" onclick="history.back()">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="19" y1="12" x2="5" y2="12"></line>
-          <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
       </button>
       <h1 class="header-title">Riwayat Koin</h1>
     </div>
@@ -186,7 +184,7 @@
     <div class="balance-summary">
       <div class="balance-label">Total Koin Saat Ini</div>
       <div class="balance-amount" id="balance-amount">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f1c40f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle></svg>
+        <img src="/asets/png/koin.svg" class="coin-icon" alt="koin" />
         0
       </div>
     </div>
@@ -209,40 +207,22 @@
       }).replace('.', ':');
     };
 
-    const getIcon = (type) => {
-      if (type === 'daily_login' || type === 'reward') {
-        return 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6';
-      } else if (type === 'send_gift' || type === 'receive_gift') {
-        return 'M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z';
-      }
-      return 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6';
-    };
-
     async function loadData() {
       try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { window.location.href = '/login'; return; }
 
-        if (!user || authError) {
-          window.location.href = '/login';
-          return;
-        }
-
-        // 1. AMBIL SALDO UTAMA DARI TABEL PROFILES
-        const { data: userData, error: userError } = await supabase
-          .from('profiles') 
-          .select('coins') 
-          .eq('id', user.id)
-          .single();
-
+        // 1. Ambil Saldo dari profiles
+        const { data: userData } = await supabase.from('profiles').select('coins').eq('id', user.id).single();
         const currentBalance = userData ? userData.coins : 0;
         
         document.getElementById('balance-amount').innerHTML = `
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f1c40f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle></svg>
+          <img src="/asets/png/koin.svg" class="coin-icon" alt="koin" />
           ${currentBalance.toLocaleString('id-ID')}
         `;
 
-        // 2. AMBIL LIST RIWAYAT TRANSAKSI DARI COIN_HISTORY
-        const { data: rawTransactions, error: historyError } = await supabase
+        // 2. Ambil Riwayat
+        const { data: rawTransactions, error } = await supabase
           .from('coin_history')
           .select('*')
           .eq('user_id', user.id)
@@ -250,33 +230,27 @@
 
         const listContainer = document.getElementById('history-list');
 
-        if (historyError || !rawTransactions || rawTransactions.length === 0) {
+        if (error || !rawTransactions || rawTransactions.length === 0) {
           listContainer.innerHTML = '<div class="empty-state"><p>Belum ada riwayat transaksi.</p></div>';
-          return; 
+          return;
         }
 
         const htmlString = rawTransactions.map((trx) => {
           const isPositive = trx.amount > 0;
-          const displayAmount = isPositive ? '+' + trx.amount : trx.amount;
-          const amountClass = isPositive ? 'positive' : 'negative';
-          const title = trx.transaction_type.replace('_', ' ');
-
           return `
             <div class="history-card">
               <div class="icon-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="${getIcon(trx.transaction_type)}"></path>
-                </svg>
+                <img src="/asets/png/koin.svg" alt="icon" />
               </div>
               <div class="details">
-                <h3 class="details-title">${title}</h3>
+                <h3 class="details-title">${trx.transaction_type.replace('_', ' ')}</h3>
                 <p class="details-desc">
                   <span>${trx.description || '-'}</span>
                   <span>${formatDate(trx.created_at)}</span>
                 </p>
               </div>
-              <div class="amount ${amountClass}">
-                ${displayAmount}
+              <div class="amount ${isPositive ? 'positive' : 'negative'}">
+                ${isPositive ? '+' : ''}${trx.amount}
               </div>
             </div>
           `;
@@ -284,8 +258,7 @@
 
         listContainer.innerHTML = htmlString;
       } catch (err) {
-        console.error("Error eksekusi:", err);
-        document.getElementById('history-list').innerHTML = '<div class="empty-state"><p>Terjadi kesalahan.</p></div>';
+        console.error("Error:", err);
       }
     }
 
