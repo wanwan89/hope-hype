@@ -1,0 +1,281 @@
+---
+// Import Supabase client (pastikan path-nya sesuai dengan struktur foldermu)
+import { supabase } from '../lib/supabase'; 
+
+// 1. Ambil data user yang lagi aktif (otomatis dari session/cookies)
+const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+// 2. Keamanan: Kalau ga ada yang login, langsung lempar balik ke halaman login!
+if (!user || authError) {
+  return Astro.redirect('/login'); 
+}
+
+// 3. Tarik userId otomatis dari akun yang login
+const userId = user.id; 
+
+// 4. Fetch data history dari database khusus untuk user tersebut
+const { data: rawTransactions, error } = await supabase
+  .from('coin_history')
+  .select('*')
+  .eq('user_id', userId)
+  .order('created_at', { ascending: false });
+
+if (error) {
+  console.error('Error fetching history:', error);
+}
+
+// Fungsi bantuan untuk memformat tanggal (misal: "19 Apr 2026, 08:00")
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).replace('.', ':');
+};
+
+// Fungsi bantuan untuk memilih icon berdasarkan tipe transaksi
+const getIcon = (type) => {
+  if (type === 'daily_login' || type === 'reward') {
+    // Icon Koin/Uang
+    return 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6';
+  } else if (type === 'send_gift' || type === 'receive_gift') {
+    // Icon Kado/Gift
+    return 'M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z';
+  }
+  // Default Icon (Transaksi umum)
+  return 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6';
+};
+
+// Ambil saldo terakhir dari transaksi paling baru untuk ditampilkan di header
+const currentBalance = rawTransactions && rawTransactions.length > 0 
+  ? rawTransactions[0].balance_after 
+  : 0;
+---
+
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Riwayat Transaksi</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600&display=swap');
+
+    :root {
+      --primary: #0b84e3;
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-main: #1c1e21;
+      --text-muted: #8a8b91;
+      --success: #00b894;
+      --danger: #d63031;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      font-family: 'Inter', sans-serif;
+      color: var(--text-main);
+    }
+
+    .app-container {
+      max-width: 480px;
+      margin: 0 auto;
+      background-color: var(--bg-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background-color: var(--card-bg);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      margin-right: 16px;
+    }
+
+    .header-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .balance-summary {
+      background: linear-gradient(135deg, #0b84e3, #1f3cff);
+      color: white;
+      margin: 20px;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(11, 132, 227, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .balance-label {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .balance-amount {
+      font-family: 'Poppins', sans-serif;
+      font-size: 32px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .history-container {
+      padding: 0 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .history-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      transition: transform 0.2s;
+    }
+
+    .history-card:active {
+      transform: scale(0.98);
+    }
+
+    .icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background-color: #f1f8ff;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 16px;
+      flex-shrink: 0;
+    }
+
+    .details {
+      flex: 1;
+    }
+
+    .details-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+      text-transform: capitalize;
+    }
+
+    .details-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .amount {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .amount.positive {
+      color: var(--success);
+    }
+
+    .amount.negative {
+      color: var(--text-main);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <div class="header">
+      <button class="back-btn" onclick="history.back()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <h1 class="header-title">Riwayat Koin</h1>
+    </div>
+
+    <div class="balance-summary">
+      <div class="balance-label">Total Koin Saat Ini</div>
+      <div class="balance-amount">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        {currentBalance.toLocaleString('id-ID')}
+      </div>
+    </div>
+
+    <div class="history-container">
+      {rawTransactions && rawTransactions.length > 0 ? (
+        rawTransactions.map((trx) => {
+          const isPositive = trx.amount > 0;
+          const displayAmount = isPositive ? `+${trx.amount}` : trx.amount;
+
+          return (
+            <div class="history-card" key={trx.id}>
+              <div class="icon-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d={getIcon(trx.transaction_type)}></path>
+                </svg>
+              </div>
+              <div class="details">
+                <h3 class="details-title">{trx.transaction_type.replace('_', ' ')}</h3>
+                <p class="details-desc">
+                  <span>{trx.description}</span>
+                  <span>{formatDate(trx.created_at)}</span>
+                </p>
+              </div>
+              <div class={`amount ${isPositive ? 'positive' : 'negative'}`}>
+                {displayAmount}
+              </div>
+            </div>
+          );
+        })
+      ) : (
+        <div class="empty-state">
+          <p>Belum ada riwayat transaksi.</p>
+        </div>
+      )}
+    </div>
+  </div>
+
+</body>
+</html>
