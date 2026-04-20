@@ -51,3 +51,35 @@
     Sisa Kuota Cari: <span id="limit-doi-text" style="font-weight: bold; color: #1f3cff;">10</span>/10
   </div>
 </div>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    const btnDoi = document.getElementById('btn-sidebar-search');
+    const textLimit = document.getElementById('limit-doi-text');
+
+    // 1. Sinkronisasi awal saat web dibuka
+    function updateTeks() {
+      let limit = parseInt(localStorage.getItem('doi_limit') || '10');
+      if (textLimit) {
+        textLimit.innerText = limit;
+        textLimit.style.color = limit > 0 ? "#1f3cff" : "#ff4757";
+      }
+    }
+    updateTeks();
+    setInterval(updateTeks, 1000); // Paksa update tiap detik
+
+    // 2. Saat tombol diklik
+    if (btnDoi) {
+      btnDoi.addEventListener('click', () => {
+        let currentLimit = parseInt(localStorage.getItem('doi_limit') || '10');
+        
+        // Kalau limit masih ada, potong 1!
+        if (currentLimit > 0) {
+          currentLimit--;
+          localStorage.setItem('doi_limit', currentLimit.toString());
+          updateTeks(); // Langsung ubah di layar jadi 9, 8, dst
+        }
+      });
+    }
+  });
+</script>
