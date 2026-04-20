@@ -5,64 +5,108 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" is:inline></script>
 
-<div class="dc-wrapper">
-  <div class="dc-container">
+<div class="mission-wrapper">
+  <div class="mission-container">
     
-    <button class="dc-back-btn" onclick="window.history.back()">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      Kembali
-    </button>
-
-    <h1 class="dc-title">Misi Harian</h1>
-
-    <div class="dc-card">
-      <div class="dc-icon-wrapper">
-        <svg class="dc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-        </svg>
-      </div>
-      
-      <h2 class="dc-card-title">Check-in Harian</h2>
-      <p class="dc-card-desc">Login setiap hari dan klaim koin gratis untuk mendukung kreator favoritmu!</p>
-      
-      <div class="dc-reward-box">
-        <span class="dc-reward-text">Hadiah Hari Ini</span>
-        <span class="dc-reward-amount">+50 Koin</span>
-      </div>
-
-      <button id="btnClaim" class="dc-claim-btn">
-        Memeriksa data...
+    <div class="mission-header">
+      <button class="back-btn" onclick="window.history.back()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
       </button>
-      
-      <p id="dcStatusMsg" class="dc-status-msg"></p>
+      <h1 class="header-title">Pusat Misi</h1>
+      <div class="header-coin" id="topCoinDisplay">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8M8 12h8" stroke="#fff"/></svg>
+        <span id="userCoinText">0</span>
+      </div>
+    </div>
+
+    <div class="mission-card streak-card">
+      <div class="streak-header">
+        <div>
+          <h2 class="streak-title">Check-in 7 Hari</h2>
+          <p class="streak-desc">Klaim koin berturut-turut untuk hadiah lebih besar!</p>
+        </div>
+      </div>
+
+      <div class="streak-days-container" id="streakDaysContainer">
+        </div>
+
+      <button id="btnClaimCheckin" class="claim-main-btn">
+        Memuat data...
+      </button>
+    </div>
+
+    <h3 class="section-title">Misi Harian</h3>
+    
+    <div class="mission-list">
+      <div class="mission-item">
+        <div class="m-icon-box bg-blue">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+        </div>
+        <div class="m-info">
+          <h4 class="m-title">Dengarkan 3 Lagu</h4>
+          <div class="m-reward"><span class="coin-dot"></span> +30 Koin</div>
+          <div class="progress-bar"><div class="progress-fill" style="width: 0%;"></div></div>
+          <span class="progress-text">0/3</span>
+        </div>
+        <button class="m-btn" onclick="window.location.href='/'">Mulai</button>
+      </div>
+
+      <div class="mission-item">
+        <div class="m-icon-box bg-purple">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        </div>
+        <div class="m-info">
+          <h4 class="m-title">Upload 1 Karya</h4>
+          <div class="m-reward"><span class="coin-dot"></span> +100 Koin</div>
+          <div class="progress-bar"><div class="progress-fill" style="width: 0%;"></div></div>
+          <span class="progress-text">0/1</span>
+        </div>
+        <button class="m-btn" onclick="window.location.href='/'">Upload</button>
+      </div>
+    </div>
+
+    <h3 class="section-title" style="margin-top: 1.5rem;">Misi Pemula</h3>
+    
+    <div class="mission-list">
+      <div class="mission-item">
+        <div class="m-icon-box bg-orange">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <div class="m-info">
+          <h4 class="m-title">Masukkan Kode Undangan</h4>
+          <div class="m-reward"><span class="coin-dot"></span> +200 Koin</div>
+          <input type="text" placeholder="Masukkan kode..." class="invite-input" />
+        </div>
+        <button class="m-btn" onclick="alert('Fitur kode undangan segera hadir!')">Klaim</button>
+      </div>
     </div>
 
   </div>
 </div>
 
 <style is:global>
-  * { box-sizing: border-box; }
+  /* Reset & Setup Mobile First */
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   
-  .dc-wrapper {
-    --bg-main: #f8fafc;
+  .mission-wrapper {
+    --bg-main: #f4f6f9;
     --bg-card: #ffffff;
     --text-main: #0f172a;
     --text-muted: #64748b;
     --border-color: #e2e8f0;
-    --primary: #f59e0b; /* Warna kuning/orange koin */
+    --primary: #f59e0b; 
     --primary-hover: #d97706;
     
     font-family: 'Inter', sans-serif;
     background: var(--bg-main);
     color: var(--text-main);
     min-height: 100vh;
-    padding: 1.5rem 1rem;
     width: 100%;
+    /* Mencegah zoom di HP */
     touch-action: manipulation;
   }
 
-  /* Dark Mode Support */
-  html.dark .dc-wrapper {
+  html.dark .mission-wrapper {
     --bg-main: #0f172a;
     --bg-card: #1e293b;
     --text-main: #f8fafc;
@@ -70,165 +114,202 @@
     --border-color: #334155;
   }
 
-  .dc-container {
+  .mission-container {
     width: 100%;
-    max-width: 480px;
+    max-width: 480px; /* Pas ukuran HP, kalau di PC tetep di tengah */
     margin: 0 auto;
+    padding: 0 0 2rem 0;
     display: flex;
     flex-direction: column;
   }
 
-  .dc-back-btn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: none;
-    border: none;
-    color: var(--text-main);
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0;
-    margin-bottom: 1.5rem;
-    font-family: 'Inter', sans-serif;
-  }
-
-  .dc-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-
-  .dc-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 1.5rem;
-    padding: 2.5rem 1.5rem;
-    text-align: center;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .dc-icon-wrapper {
-    width: 80px;
-    height: 80px;
-    background: rgba(245, 158, 11, 0.15);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    color: var(--primary);
-  }
-
-  .dc-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .dc-card-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-  }
-
-  .dc-card-desc {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    line-height: 1.5;
-    margin-bottom: 2rem;
-  }
-
-  .dc-reward-box {
+  /* Header Sticky */
+  .mission-header {
+    position: sticky;
+    top: 0;
     background: var(--bg-main);
-    border: 1px solid var(--border-color);
-    border-radius: 1rem;
-    width: 100%;
-    padding: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    padding: 1rem 1.25rem;
+    z-index: 10;
+    border-bottom: 1px solid var(--border-color);
   }
 
-  .dc-reward-text {
-    font-weight: 600;
-    font-size: 0.95rem;
-  }
+  .back-btn { background: none; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center;}
+  .header-title { font-size: 1.1rem; font-weight: 700; }
+  .header-coin { display: flex; align-items: center; gap: 4px; font-weight: 700; font-size: 0.95rem; background: var(--bg-card); padding: 4px 10px; border-radius: 99px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
 
-  .dc-reward-amount {
-    font-weight: 800;
-    font-size: 1.2rem;
-    color: var(--primary);
-  }
-
-  .dc-claim-btn {
-    width: 100%;
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    padding: 1rem;
+  /* Card Check-in */
+  .mission-card {
+    background: var(--bg-card);
+    margin: 1rem;
     border-radius: 1rem;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-    font-family: 'Inter', sans-serif;
+    padding: 1.25rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border-color);
   }
 
-  .dc-claim-btn:hover:not(:disabled) {
-    background: var(--primary-hover);
-    transform: translateY(-2px);
+  .streak-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 2px;}
+  .streak-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;}
+
+  /* Horizontal Scroll untuk 7 Hari */
+  .streak-days-container {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scrollbar-width: none; /* Hide scrollbar Firefox */
+  }
+  .streak-days-container::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome/Safari */
+
+  .day-card {
+    flex: 0 0 65px;
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 5px;
+    position: relative;
+    transition: transform 0.2s;
+  }
+  
+  .day-card.active {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: var(--primary);
+  }
+  
+  .day-card.done {
+    opacity: 0.6;
   }
 
-  .dc-claim-btn:active:not(:disabled) {
-    transform: translateY(0);
+  .day-label { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+  .day-card.active .day-label { color: var(--primary); }
+  
+  .day-coin-icon { width: 24px; height: 24px; margin-bottom: 4px; }
+  .day-reward { font-size: 0.8rem; font-weight: 700; color: var(--text-main); }
+  
+  .day-check-icon {
+    position: absolute; top: -5px; right: -5px;
+    background: #10b981; color: white; border-radius: 50%;
+    width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: bold; border: 2px solid var(--bg-card);
   }
 
-  .dc-claim-btn:disabled {
-    background: var(--border-color);
-    color: var(--text-muted);
-    cursor: not-allowed;
-    transform: none;
+  .claim-main-btn {
+    width: 100%; margin-top: 1rem; background: var(--primary); color: #fff;
+    border: none; padding: 0.875rem; border-radius: 99px; font-size: 1rem;
+    font-weight: 700; cursor: pointer; transition: 0.2s;
+  }
+  .claim-main-btn:disabled { background: var(--border-color); color: var(--text-muted); cursor: not-allowed;}
+  .claim-main-btn:active:not(:disabled) { transform: scale(0.98); }
+
+  /* Misi List */
+  .section-title { font-size: 1rem; font-weight: 700; margin: 1rem 1.25rem 0.5rem; }
+  
+  .mission-list {
+    background: var(--bg-card);
+    margin: 0 1rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
   }
 
-  .dc-status-msg {
-    margin-top: 1rem;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    font-weight: 500;
-    min-height: 1.2rem;
+  .mission-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
   }
+  .mission-item:last-child { border-bottom: none; }
+
+  .m-icon-box {
+    width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;
+  }
+  .bg-blue { background: #3b82f6; }
+  .bg-purple { background: #8b5cf6; }
+  .bg-orange { background: #f97316; }
+
+  .m-info { flex: 1; margin-left: 12px; margin-right: 12px; min-width: 0;}
+  .m-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+  .m-reward { font-size: 0.75rem; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;}
+  .coin-dot { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; display: inline-block;}
+  
+  .progress-bar { width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden; position: relative; margin-bottom: 2px;}
+  .progress-fill { height: 100%; background: #10b981; border-radius: 2px; transition: width 0.3s;}
+  .progress-text { font-size: 0.65rem; color: var(--text-muted); font-weight: 600;}
+
+  .invite-input {
+    width: 100%; padding: 6px 10px; font-size: 0.8rem; border-radius: 6px;
+    border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); outline: none;
+  }
+  .invite-input:focus { border-color: var(--primary); }
+
+  .m-btn {
+    background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main);
+    padding: 6px 14px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; cursor: pointer; flex-shrink: 0;
+  }
+  .m-btn:active { background: var(--border-color); }
 </style>
 
 <script>
   import { supabase } from '../lib/supabase.js';
 
   document.addEventListener('DOMContentLoaded', async () => {
-    const btnClaim = document.getElementById('btnClaim');
-    const statusMsg = document.getElementById('dcStatusMsg');
-    const REWARD_AMOUNT = 50;
+    const btnClaim = document.getElementById('btnClaimCheckin');
+    const daysContainer = document.getElementById('streakDaysContainer');
+    const userCoinText = document.getElementById('userCoinText');
     
-    // Fungsi untuk mendapatkan tanggal WIB (Waktu Indonesia Barat)
-    const getTodayDate = () => {
-      return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+    // Konfigurasi Hadiah 7 Hari
+    const REWARDS = [50, 50, 100, 50, 50, 100, 300]; 
+    
+    const getTodayDate = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+    const getYesterdayDate = () => {
+      let d = new Date(); d.setDate(d.getDate() - 1);
+      return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
     };
 
-    // 1. Cek Sesi Login & Status Check-in saat halaman dibuka
     let currentUser = null;
     let userProfile = null;
-    const today = getTodayDate();
+    let currentStreak = 0;
+    let hasCheckedInToday = false;
+
+    // Render UI 7 Hari
+    const renderDays = () => {
+      daysContainer.innerHTML = '';
+      for (let i = 0; i < 7; i++) {
+        const dayNum = i + 1;
+        let isDone = dayNum <= currentStreak;
+        let isActive = dayNum === currentStreak + 1 && !hasCheckedInToday;
+        
+        // Kasus khusus jika streak 7 sudah selesai
+        if (currentStreak === 7 && hasCheckedInToday) {
+            isDone = true; isActive = false;
+        }
+
+        const coinSvg = i === 6 
+          ? `<svg class="day-coin-icon" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444"><path d="M20 12v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4"/><path d="M12 12v6"/><path d="M12 12c-2-2-4-2-4-4s2-2 4-2 4 2 2 4-2 4-4 4z" stroke="#fff"/></svg>` 
+          : `<svg class="day-coin-icon" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b"><circle cx="12" cy="12" r="10"/></svg>`;
+
+        daysContainer.innerHTML += `
+          <div class="day-card ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}">
+            ${isDone ? `<div class="day-check-icon">✓</div>` : ''}
+            <span class="day-label">Hari ${dayNum}</span>
+            ${coinSvg}
+            <span class="day-reward">+${REWARDS[i]}</span>
+          </div>
+        `;
+      }
+    };
 
     try {
       const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
-      
       if (sessionErr || !session) {
         btnClaim.textContent = "Silakan Login Dulu";
         btnClaim.disabled = true;
-        statusMsg.textContent = "Kamu harus login untuk mengambil hadiah.";
+        renderDays();
         return;
       }
 
@@ -236,91 +317,108 @@
 
       const { data: profile, error: profErr } = await supabase
         .from('profiles')
-        .select('coins, last_checkin')
+        // Ambil checkin_streak, kalau belum ada di database, anggap 0
+        .select('coins, last_checkin, checkin_streak')
         .eq('id', currentUser.id)
         .single();
 
       if (profErr) throw profErr;
       userProfile = profile;
+      userCoinText.textContent = profile.coins || 0;
 
-      // Cek apakah sudah check-in hari ini
+      const today = getTodayDate();
+      const yesterday = getYesterdayDate();
+
+      // Logika Penentuan Streak
+      currentStreak = profile.checkin_streak || 0;
+      
       if (profile.last_checkin === today) {
-        btnClaim.textContent = "Sudah Diklaim ✅";
+        hasCheckedInToday = true;
+      } else if (profile.last_checkin !== yesterday) {
+        // Kalau kemarin bolong login, streak direset ke 0
+        currentStreak = 0;
+      }
+      
+      // Kalau udah tamat 7 hari dan ini hari baru, reset ke 0 lagi
+      if (currentStreak >= 7 && !hasCheckedInToday) {
+        currentStreak = 0;
+      }
+
+      renderDays();
+
+      if (hasCheckedInToday) {
+        btnClaim.textContent = "Sudah Check-in Hari Ini ✅";
         btnClaim.disabled = true;
-        statusMsg.textContent = "Kamu sudah mengambil hadiah hari ini. Kembali besok ya!";
       } else {
-        btnClaim.textContent = "Klaim Koin Sekarang";
+        btnClaim.textContent = "Check-in Sekarang";
         btnClaim.disabled = false;
       }
 
     } catch (err) {
-      console.error("Error loading check-in data:", err);
-      btnClaim.textContent = "Terjadi Kesalahan";
+      console.error("Error loading check-in:", err);
+      btnClaim.textContent = "Error memuat data";
       btnClaim.disabled = true;
-      statusMsg.textContent = "Gagal memuat data. Silakan refresh halaman.";
     }
 
-    // 2. Fungsi Klik Tombol Klaim
+    // Aksi Klik Check-in
     btnClaim.addEventListener('click', async () => {
       if (btnClaim.disabled || !currentUser || !userProfile) return;
 
       btnClaim.disabled = true;
       btnClaim.textContent = "Memproses...";
-      statusMsg.textContent = "";
 
       try {
-        const newBalance = (userProfile.coins || 0) + REWARD_AMOUNT;
+        const targetStreak = currentStreak + 1;
+        const rewardIndex = targetStreak - 1;
+        const rewardAmount = REWARDS[rewardIndex];
+        const newBalance = (userProfile.coins || 0) + rewardAmount;
+        const today = getTodayDate();
 
-        // A. Update Profil (Koin nambah & set last_checkin)
+        // 1. Update Database (Koin, Tanggal, Streak)
         const { error: updateErr } = await supabase
           .from('profiles')
           .update({
             coins: newBalance,
-            last_checkin: today
+            last_checkin: today,
+            checkin_streak: targetStreak
           })
           .eq('id', currentUser.id);
 
         if (updateErr) throw updateErr;
 
-        // B. Catat ke Tabel Riwayat Transaksi (coin_history)
-        const { error: histErr } = await supabase
-          .from('coin_history')
-          .insert({
-            user_id: currentUser.id,
-            type: 'masuk',
-            transaction_type: 'checkin',
-            amount: REWARD_AMOUNT,
-            balance_after: newBalance,
-            description: 'Hadiah Misi Check-in Harian'
-          });
+        // 2. Catat Riwayat
+        await supabase.from('coin_history').insert({
+          user_id: currentUser.id,
+          type: 'masuk',
+          transaction_type: 'checkin',
+          amount: rewardAmount,
+          balance_after: newBalance,
+          description: `Hadiah Check-in Hari ke-${targetStreak}`
+        });
 
-        if (histErr) console.warn("Gagal catat riwayat:", histErr.message);
-
-        // C. Update UI & Storage Lokal
-        btnClaim.textContent = "Berhasil Diklaim! ✅";
-        statusMsg.textContent = "Koin telah ditambahkan ke saldomu. Kembali besok!";
+        // 3. Update State & UI
+        currentStreak = targetStreak;
+        hasCheckedInToday = true;
+        userProfile.coins = newBalance;
+        userCoinText.textContent = newBalance;
         
-        // Tembakkan Confetti
-        if (typeof confetti === 'function') {
-          confetti({
-            particleCount: 150,
-            spread: 80,
-            origin: { y: 0.6 },
-            colors: ['#f59e0b', '#fbbf24', '#ffffff']
-          });
-        }
+        renderDays();
+        btnClaim.textContent = "Sudah Check-in Hari Ini ✅";
 
-        // Update session storage agar koin tidak "hilang" kalau pindah ke halaman lain
+        // Efek Confetti TikTok style
+        if (typeof confetti === 'function') {
+          confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }});
+        }
+        
+        // Simpan ke Session Storage
         let cachedProf = JSON.parse(sessionStorage.getItem(`hh_profile_${currentUser.id}`) || "{}");
         cachedProf.coins = newBalance;
         sessionStorage.setItem(`hh_profile_${currentUser.id}`, JSON.stringify(cachedProf));
 
       } catch (err) {
-        console.error("Gagal klaim:", err);
-        btnClaim.textContent = "Klaim Koin Sekarang";
+        btnClaim.textContent = "Gagal, Coba Lagi";
         btnClaim.disabled = false;
-        statusMsg.textContent = "Gagal memproses klaim. Coba lagi.";
-        alert("Gagal check-in: " + err.message);
+        alert("Gagal Check-in: " + err.message);
       }
     });
 
