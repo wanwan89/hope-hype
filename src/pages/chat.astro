@@ -1373,14 +1373,17 @@ function tampilkanDoiCard(doi) {
 // ===== LOGIKA TOMBOL CARI DOI (INTEGRASI LIMIT & RADAR) =====
 const btnCariDoiActual = document.getElementById("btn-sidebar-search");
 
+// GANTI BLOK btnCariDoiActual MILIKMU DENGAN INI:
 if (btnCariDoiActual) {
   btnCariDoiActual.onclick = async () => {
-    // 1. CEK KUOTA TERLEBIH DAHULU
+    
+    // 1. CEK KUOTA (GANTI CONFIRM JADI MODAL CUSTOM)
     if (sisaLimitDoi <= 0) {
-      if(confirm("Kuota Cari Doi Habis! \n\nMau nonton iklan sponsor 15 detik buat isi ulang +10 kuota?")) {
-        window.jalankanIklanIsiUlangDoi();
+      const modalPremium = document.getElementById('modal-limit-doi');
+      if (modalPremium) {
+        modalPremium.style.display = 'flex'; // Munculin modal sultan lo
       }
-      return; // Berhenti di sini jika kuota habis
+      return; // Berhenti di sini, jangan lanjut potong tiket
     }
 
     // 2. CEK PROFIL (WAJIB ADA GENDER)
@@ -1393,9 +1396,11 @@ if (btnCariDoiActual) {
 
     // 3. KURANGI LIMIT & UPDATE UI SECARA INSTAN
     sisaLimitDoi--;
-    localStorage.setItem('doi_limit', sisaLimitDoi);
+    localStorage.setItem('doi_limit', sisaLimitDoi.toString());
+    
+    // Pastikan fungsi updateTextLimitDoi lo isinya cuma: limitEl.innerText = sisaLimitDoi;
     if (typeof updateTextLimitDoi === 'function') {
-      updateTextLimitDoi(); // Ini yang bikin tulisan 10/10 jadi 9/10 dst.
+      updateTextLimitDoi(); 
     }
     
     // Tutup sidebar agar animasi radar terlihat jelas
@@ -1420,7 +1425,7 @@ if (btnCariDoiActual) {
     document.body.appendChild(loadingOverlay);
 
     // --- LOGIKA MUNCULIN SILUET USER GANTIAN ---
-    const container = document.getElementById('radar-icons-container');
+    const radarContainer = document.getElementById('radar-icons-container');
     const iconInterval = setInterval(() => {
       const siluet = document.createElement('div');
       siluet.className = 'floating-radar-user';
@@ -1428,18 +1433,15 @@ if (btnCariDoiActual) {
       
       const angle = Math.random() * Math.PI * 2;
       const radius = 60 + Math.random() * 60; 
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
+      siluet.style.left = `calc(50% + ${Math.cos(angle) * radius}px)`;
+      siluet.style.top = `calc(50% + ${Math.sin(angle) * radius}px)`;
       
-      siluet.style.left = `calc(50% + ${x}px)`;
-      siluet.style.top = `calc(50% + ${y}px)`;
-      
-      container.appendChild(siluet);
+      radarContainer.appendChild(siluet);
       setTimeout(() => siluet.remove(), 1500);
     }, 450);
 
     const lawanJenis = myProfile.gender === "Pria" ? "Wanita" : "Pria";
-    const waktuTungguAcak = Math.floor(Math.random() * 2000) + 3000; // 3-5 detik biar kerasa nyarinya
+    const waktuTungguAcak = Math.floor(Math.random() * 2000) + 3000; 
     
     // 5. PROSES PENCARIAN KE DATABASE (SUPABASE)
     setTimeout(async () => {
@@ -1460,10 +1462,8 @@ if (btnCariDoiActual) {
           return; 
         }
         
-        // Ambil satu user secara acak dari hasil filter
         const doiAcak = users[Math.floor(Math.random() * users.length)];
         
-        // Tampilkan Card Doi
         if (typeof tampilkanDoiCard === 'function') {
           tampilkanDoiCard(doiAcak);
         }
@@ -1471,9 +1471,8 @@ if (btnCariDoiActual) {
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
 
       } catch (err) {
-        console.error("Gagal cari doi:", err);
-        const overlayToRemove = document.getElementById("active-search-overlay");
-        if (overlayToRemove) overlayToRemove.remove();
+        console.error("Error:", err);
+        document.getElementById("active-search-overlay")?.remove();
         showToast("Terjadi gangguan koneksi.");
       }
     }, waktuTungguAcak);
