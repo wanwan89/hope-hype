@@ -1,389 +1,309 @@
-<html lang="id">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Riwayat Transaksi</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap');
+---
+// historycoin.astro
+// Halaman ini murni menggunakan client-side fetching
+---
 
-    :root {
-      --primary: #0b84e3;
-      --primary-dark: #096bc0;
-      --bg-color: #f4f7fe;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --success: #10b981;
-      --danger: #f43f5e;
-      --gold: #f59e0b;
-      --gold-light: #fde68a;
-    }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: var(--bg-color);
-      font-family: 'Inter', sans-serif;
-      color: var(--text-main);
-    }
+<div class="hc-wrapper">
+  <div class="hc-container">
+    <h1 class="hc-title">Riwayat Koin</h1>
 
-    .app-container {
-      max-width: 480px;
-      margin: 0 auto;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    /* --- BACKGROUND DECOR --- */
-    .bg-circle {
-      position: fixed;
-      width: 400px;
-      height: 400px;
-      background: radial-gradient(circle, rgba(11, 132, 227, 0.08) 0%, rgba(244, 247, 254, 0) 70%);
-      border-radius: 50%;
-      z-index: -1;
-      top: -150px;
-      right: -150px;
-    }
-
-    /* --- HEADER --- */
-    .header {
-      padding: 20px;
-      display: flex;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(244, 247, 254, 0.85);
-      backdrop-filter: blur(12px);
-    }
-
-    .back-btn {
-      background: white;
-      border: none;
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-      cursor: pointer;
-      color: var(--text-main);
-      transition: transform 0.2s;
-    }
-    
-    .back-btn:active {
-      transform: scale(0.95);
-    }
-
-    .header-title {
-      font-family: 'Poppins', sans-serif;
-      font-size: 20px;
-      font-weight: 700;
-      margin-left: 16px;
-      letter-spacing: -0.5px;
-    }
-
-    /* --- BALANCE CARD --- */
-    .balance-card {
-      background: linear-gradient(135deg, #2563eb, #1e40af);
-      margin: 10px 20px 30px;
-      padding: 35px 25px;
-      border-radius: 28px;
-      box-shadow: 0 20px 40px rgba(37, 99, 235, 0.25);
-      color: white;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .balance-card::before {
-      content: "";
-      position: absolute;
-      width: 200px;
-      height: 200px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
-      border-radius: 50%;
-      top: -80px;
-      right: -50px;
-    }
-
-    .balance-label {
-      font-size: 13px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      opacity: 0.85;
-      margin-bottom: 8px;
-    }
-
-    .balance-amount {
-      font-family: 'Poppins', sans-serif;
-      font-size: 42px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      text-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-
-    /* Custom Premium Coin Icon */
-    .premium-coin {
-      width: 38px;
-      height: 38px;
-      background: linear-gradient(135deg, #fcd34d, #f59e0b);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.5);
-      border: 3px solid #fffbeb;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 800;
-      font-size: 20px;
-      color: #78350f;
-    }
-
-    /* --- HISTORY LIST --- */
-    .section-label {
-      padding: 0 25px;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 700;
-      font-size: 17px;
-      margin-bottom: 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: #1e293b;
-    }
-
-    .history-grid {
-      padding: 0 20px 40px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .history-item {
-      background: white;
-      border-radius: 20px;
-      padding: 16px;
-      display: flex;
-      align-items: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.03);
-      border-left: 5px solid transparent;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      opacity: 0;
-      animation: slideUp 0.5s forwards ease-out;
-    }
-    
-    .history-item:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.06);
-    }
-
-    /* Status Colors */
-    .history-item.out { border-left-color: var(--danger); }
-    .history-item.in { border-left-color: var(--success); }
-
-    /* Staggered Animation Delay for items */
-    .history-item:nth-child(1) { animation-delay: 0.1s; }
-    .history-item:nth-child(2) { animation-delay: 0.2s; }
-    .history-item:nth-child(3) { animation-delay: 0.3s; }
-    .history-item:nth-child(4) { animation-delay: 0.4s; }
-    .history-item:nth-child(5) { animation-delay: 0.5s; }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .item-icon {
-      width: 52px;
-      height: 52px;
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 16px;
-      font-size: 24px;
-    }
-
-    .item-icon.out { background: #fff1f2; color: var(--danger); }
-    .item-icon.in { background: #f0fdf4; color: var(--success); }
-
-    .item-info {
-      flex: 1;
-    }
-
-    .item-title {
-      font-family: 'Poppins', sans-serif;
-      font-weight: 700;
-      font-size: 15px;
-      margin-bottom: 2px;
-      color: #0f172a;
-    }
-
-    .item-desc {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
-
-    .item-date {
-      font-size: 11px;
-      color: #94a3b8;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .item-date i {
-      font-size: 12px;
-    }
-
-    /* Badges for Amounts */
-    .amount-badge {
-      font-family: 'Poppins', sans-serif;
-      font-weight: 700;
-      font-size: 14px;
-      padding: 6px 12px;
-      border-radius: 12px;
-      display: inline-block;
-    }
-
-    .amount-badge.minus { 
-      background: #fff1f2; 
-      color: var(--danger); 
-    }
-    
-    .amount-badge.plus { 
-      background: #f0fdf4; 
-      color: var(--success); 
-    }
-
-    .empty-box {
-      text-align: center;
-      margin-top: 40px;
-      color: var(--text-muted);
-      background: white;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.02);
-    }
-    
-    .empty-icon {
-      font-size: 48px;
-      color: #cbd5e1;
-      margin-bottom: 10px;
-    }
-  </style>
-</head>
-<body>
-  <div class="bg-circle"></div>
-  <div class="app-container">
-    <header class="header">
-      <button class="back-btn" onclick="window.location.href='/lobby'">
-        <i class="material-icons-round">chevron_left</i>
-      </button>
-      <h1 class="header-title">Riwayat Koin</h1>
-    </header>
-
-    <section class="balance-card">
-      <div class="balance-label">Saldo Aktif</div>
-      <div class="balance-amount" id="balance-amount">
-        <div class="premium-coin">$</div>
-        0
-      </div>
-    </section>
-
-    <div class="section-label">
-      <span>Aktivitas Terakhir</span>
-      <i class="material-icons-round" style="color: var(--primary-dark); font-size: 22px; cursor: pointer;">filter_list</i>
+    <div id="hc-loading" class="hc-card hc-state-message">
+      <div class="hc-spinner"></div>
+      <p>Memuat data koinmu...</p>
     </div>
 
-    <div class="history-grid" id="history-list">
-      <div class="empty-box">
-        <i class="material-icons-round empty-icon">history_toggle_off</i>
-        <p style="font-weight: 500;">Memuat data transaksi...</p>
+    <div id="hc-auth-warning" class="hc-card hc-state-message" style="display: none;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hc-icon-warning"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <h2>Silakan Login</h2>
+      <p>Kamu harus masuk untuk melihat riwayat koinmu.</p>
+    </div>
+
+    <div id="hc-error" class="hc-card hc-state-message" style="display: none;">
+      <p id="hc-error-text" class="hc-text-danger">Terjadi kesalahan saat memuat data.</p>
+    </div>
+
+    <div id="hc-content" style="display: none;">
+      <div class="hc-card hc-balance-card">
+        <p class="hc-balance-label">Total Koin Saat Ini</p>
+        <h2 class="hc-balance-amount" id="hc-total-coins">0</h2>
       </div>
+
+      <h3 class="hc-subtitle">Riwayat Transaksi</h3>
+
+      <div id="hc-empty-state" class="hc-card hc-state-message" style="display: none;">
+        <p>Belum ada transaksi.</p>
+      </div>
+
+      <div id="hc-history-list" class="hc-history-list">
+        </div>
     </div>
   </div>
+</div>
 
-  <script>
-    // Mock Data untuk preview jika Supabase belum connect
-    const mockData = [
-      { transaction_type: 'send_gift', description: 'Kirim Daebak x20 ke v', amount: -200, created_at: '2026-04-19T12:16:00' },
-      { transaction_type: 'send_gift', description: 'Kirim Fighting x4 ke null', amount: -8000, created_at: '2026-04-19T11:10:00' },
-      { transaction_type: 'top_up', description: 'Top Up via BCA', amount: 50000, created_at: '2026-04-18T09:30:00' },
-      { transaction_type: 'send_gift', description: 'Kirim Love x22 ke null', amount: -22, created_at: '2026-04-17T11:10:00' }
-    ];
+<style>
+  /* Variabel CSS untuk Light/Dark Mode */
+  .hc-wrapper {
+    --hc-bg: #f9fafb;
+    --hc-card-bg: #ffffff;
+    --hc-text-main: #111827;
+    --hc-text-muted: #6b7280;
+    --hc-border: #e5e7eb;
+    --hc-primary: #3b82f6;
+    --hc-success: #10b981;
+    --hc-danger: #ef4444;
+    --hc-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    
+    font-family: 'Inter', sans-serif;
+    background-color: var(--hc-bg);
+    color: var(--hc-text-main);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    transition: background-color 0.3s, color 0.3s;
+  }
 
+  /* Support Dark Mode menggunakan class html.dark */
+  :global(html.dark) .hc-wrapper {
+    --hc-bg: #111827;
+    --hc-card-bg: #1f2937;
+    --hc-text-main: #f9fafb;
+    --hc-text-muted: #9ca3af;
+    --hc-border: #374151;
+    --hc-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  }
+
+  .hc-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .hc-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+  }
+
+  .hc-subtitle {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 1.5rem 0 1rem 0;
+  }
+
+  .hc-card {
+    background-color: var(--hc-card-bg);
+    border: 1px solid var(--hc-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: var(--hc-shadow);
+    transition: background-color 0.3s, border-color 0.3s;
+  }
+
+  .hc-balance-card {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .hc-balance-label {
+    color: var(--hc-text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+
+  .hc-balance-amount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--hc-primary);
+    margin: 0;
+  }
+
+  .hc-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .hc-history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--hc-card-bg);
+    border: 1px solid var(--hc-border);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .hc-history-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .hc-history-desc {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .hc-history-date {
+    font-size: 0.75rem;
+    color: var(--hc-text-muted);
+  }
+
+  .hc-history-amount {
+    font-weight: 700;
+    font-size: 1.125rem;
+  }
+
+  .hc-text-success { color: var(--hc-success); }
+  .hc-text-danger { color: var(--hc-danger); }
+
+  /* Utilities untuk States */
+  .hc-state-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--hc-text-muted);
+  }
+
+  .hc-icon-warning {
+    color: var(--hc-text-muted);
+    margin-bottom: 1rem;
+  }
+
+  .hc-spinner {
+    border: 3px solid var(--hc-border);
+    border-top: 3px solid var(--hc-primary);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: hc-spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes hc-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Responsiveness */
+  @media (max-width: 640px) {
+    .hc-wrapper { padding: 1rem; }
+    .hc-card { padding: 1rem; }
+  }
+</style>
+
+<script>
+  // PENTING: Sesuaikan path ini dengan lokasi file supabase.js milikmu
+  import { supabase } from '../lib/supabase.js';
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Definisi Elemen DOM
+    const elLoading = document.getElementById('hc-loading');
+    const elAuthWarning = document.getElementById('hc-auth-warning');
+    const elError = document.getElementById('hc-error');
+    const elErrorText = document.getElementById('hc-error-text');
+    const elContent = document.getElementById('hc-content');
+    const elTotalCoins = document.getElementById('hc-total-coins');
+    const elEmptyState = document.getElementById('hc-empty-state');
+    const elHistoryList = document.getElementById('hc-history-list');
+
+    // Fungsi utilitas untuk mengatur tampilan elemen
+    const showElement = (element) => element.style.display = 'block';
+    const hideElement = (element) => element.style.display = 'none';
+
+    // Fungsi utilitas untuk memformat tanggal
     const formatDate = (dateString) => {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('id-ID', {
-        day: 'numeric', month: 'short',
-        hour: '2-digit', minute: '2-digit'
+      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' };
+      return new Date(dateString).toLocaleDateString('id-ID', options);
+    };
+
+    // Fungsi untuk merender list HTML
+    const renderHistory = (historyData) => {
+      if (!historyData || historyData.length === 0) {
+        showElement(elEmptyState);
+        return;
+      }
+
+      historyData.forEach(item => {
+        // Asumsi struktur tabel coin_history: 
+        // type ('masuk' / 'keluar'), amount (integer), description (string), created_at (timestamp)
+        const isIncome = item.type === 'masuk';
+        const sign = isIncome ? '+' : '-';
+        const colorClass = isIncome ? 'hc-text-success' : 'hc-text-danger';
+
+        const historyItem = document.createElement('div');
+        historyItem.className = 'hc-history-item';
+        
+        historyItem.innerHTML = `
+          <div class="hc-history-info">
+            <span class="hc-history-desc">${escapeHTML(item.description)}</span>
+            <span class="hc-history-date">${formatDate(item.created_at)}</span>
+          </div>
+          <div class="hc-history-amount ${colorClass}">
+            ${sign}${item.amount}
+          </div>
+        `;
+        
+        elHistoryList.appendChild(historyItem);
       });
     };
 
-    // Simulated Load Data
-    async function loadData() {
-      try {
-        // Simulasi update saldo
-        document.getElementById('balance-amount').innerHTML = `
-          <div class="premium-coin">$</div>
-          22.616
-        `;
+    // Fungsi untuk mencegah XSS dasar pada teks deskripsi
+    const escapeHTML = (str) => {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    };
 
-        const list = document.getElementById('history-list');
-        const tx = mockData; // Ganti dengan logika Supabase aslinya nanti
+    // --- FUNGSI UTAMA (FETCH DATA) ---
+    const fetchCoinData = async () => {
+      try {
+        // 1. Cek Sesi User saat ini
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (!tx || tx.length === 0) {
-          list.innerHTML = `
-            <div class="empty-box">
-              <i class="material-icons-round empty-icon">receipt_long</i>
-              <p>Belum ada riwayat transaksi.</p>
-            </div>`;
-          return;
+        if (sessionError) throw sessionError;
+        
+        if (!session || !session.user) {
+          hideElement(elLoading);
+          showElement(elAuthWarning);
+          return; // Hentikan eksekusi jika tidak login
         }
 
-        list.innerHTML = tx.map(t => {
-          const isOut = t.amount < 0;
-          const statusClass = isOut ? 'out' : 'in';
-          const icon = isOut ? 'card_giftcard' : 'account_balance_wallet';
-          const amountSign = isOut ? '' : '+';
-          const title = t.transaction_type.replace(/_/g, ' ').toUpperCase();
+        const userId = session.user.id;
 
-          return `
-            <div class="history-item ${statusClass}">
-              <div class="item-icon ${statusClass}">
-                <i class="material-icons-round">${icon}</i>
-              </div>
-              <div class="item-info">
-                <div class="item-title">${title}</div>
-                <div class="item-desc">${t.description || '-'}</div>
-                <div class="item-date">
-                  <i class="material-icons-round">schedule</i> ${formatDate(t.created_at)}
-                </div>
-              </div>
-              <div class="item-value">
-                <div class="amount-badge ${statusClass}">${amountSign}${t.amount.toLocaleString('id-ID')}</div>
-              </div>
-            </div>
-          `;
-        }).join('');
-      } catch (e) { console.error(e); }
-    }
-    
-    // Memberikan sedikit delay agar animasi terlihat saat di-load
-    setTimeout(loadData, 300);
-  </script>
-</body>
-</html>
+        // 2. Fetch Data Profil & Riwayat (Berjalan Paralel agar lebih cepat)
+        const [profileResult, historyResult] = await Promise.all([
+          supabase.from('profiles').select('coins').eq('id', userId).single(),
+          supabase.from('coin_history').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+        ]);
+
+        if (profileResult.error) throw profileResult.error;
+        if (historyResult.error) throw historyResult.error;
+
+        // 3. Render Data ke UI
+        elTotalCoins.textContent = profileResult.data.coins || 0;
+        renderHistory(historyResult.data);
+
+        // 4. Sembunyikan Loading, Tampilkan Konten
+        hideElement(elLoading);
+        showElement(elContent);
+
+      } catch (error) {
+        console.error("Error fetching coin data:", error);
+        elErrorText.textContent = `Gagal memuat data: ${error.message || 'Terjadi kesalahan'}`;
+        hideElement(elLoading);
+        showElement(elError);
+      }
+    };
+
+    // Jalankan fungsi utama
+    fetchCoinData();
+  });
+</script>
