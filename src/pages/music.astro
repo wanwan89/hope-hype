@@ -1165,23 +1165,21 @@ if (rewardDeclineBtn) {
 
 if (rewardAcceptBtn) {
   rewardAcceptBtn.addEventListener("click", async () => {
-    // 1. Tutup Popup Melayang
-    if (rewardCard) {
-      rewardCard.classList.remove('active');
-      setTimeout(() => rewardCard.classList.add('hidden'), 400);
-    }
+    rewardCard.classList.remove('active');
+    setTimeout(() => rewardCard.classList.add('hidden'), 400);
 
     const { data: { user } } = await _supabase.auth.getUser();
     if (!user) return;
 
-    // 2. Kasih info ke user pakai Toast
-    window.showToast(
-      "Memuat Sponsor", 
-      "Selesaikan video (15 detik) untuk klaim +5 koin!", 
-      "info"
-    );
+    // 1. Munculin Toast
+    window.showToast("Memutar Video", "Koin cair dalam 15 detik. Jangan tutup tab iklan!", "info");
 
-    // 3. JEDA 15 DETIK (Selama ini script vignette harusnya sudah muncul menutupi layar)
+    // 2. JURUS PAKSA (WAJIB PAKAI INI)
+    // window.open bakal PAKSA browser buka tab baru isi iklan.
+    // Ini 99% PASTI munculin duit buat lu tiap kali diklik.
+    window.open("https://omg10.com/4/10901295", "_blank");
+
+    // 3. Jeda 15 detik baru kasih koin
     setTimeout(() => {
       claimSongReward(user.id);
     }, 15000); 
