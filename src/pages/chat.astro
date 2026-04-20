@@ -2435,47 +2435,37 @@ function updateTextLimitDoi() {
 // Panggil sekali saat load awal
 updateTextLimitDoi();
 
-// 3. Fungsi Eksekusi Pencarian (Dipanggil oleh tombol Sidebar)
+// ======================================================
+// 🔥 FUNGSI UTAMA CARI DOI (FULL FIX - NO CONFIRM) 🔥
+// ======================================================
 window.mulaiCariDoiDenganLimit = async function() {
-  // 1. CEK LIMIT (Pakai Modal Custom)
+  // 1. CEK LIMIT - Kalo habis, panggil modal buatan lo
   if (sisaLimitDoi <= 0) {
-    const customModal = document.getElementById('modal-limit-doi');
-    if (customModal) {
-      customModal.style.display = 'flex'; // Tampilkan modal sultan lo
+    const modal = document.getElementById('modal-limit-doi');
+    if (modal) {
+      modal.style.display = 'flex'; // Munculin modal premium
     }
-    return; // Berhenti di sini, jangan lanjut ke bawah
+    return; // Berhenti di sini, jangan lanjut potong tiket
   }
 
-  // 2. CEK PROFIL (Gender harus ada)
+  // 2. CEK PROFIL (Gender)
   const myProfile = await getCachedProfile(currentUser.id); 
   if (!myProfile?.gender) { 
-    showToast("Setel GENDER kamu dulu di Edit Biodata!"); 
+    showToast("Setel GENDER kamu dulu bro!"); 
     window.openEditProfile(); 
     return; 
   }
 
-  // 3. KURANGI KUOTA & UPDATE UI
+  // 3. POTONG TIKET & UPDATE UI SIDEBAR
   sisaLimitDoi--;
   localStorage.setItem('doi_limit', sisaLimitDoi.toString());
+  if (typeof updateTextLimitDoi === 'function') updateTextLimitDoi();
   
-  // Pastikan fungsi update teks ini dipanggil biar angka 10/10 berubah
-  if (typeof updateTextLimitDoi === 'function') {
-    updateTextLimitDoi();
-  }
-  
-  // 4. JALANKAN ANIMASI RADAR & PENCARIAN
-  // Sesuaikan nama fungsinya dengan yang ada di script lo (tadi ada yang namanya btnCariDoiActual)
+  // 4. JALANKAN ANIMASI RADAR
   if (typeof window.jalankanAnimasiRadarDoi === 'function') {
      window.jalankanAnimasiRadarDoi(myProfile);
-  } else {
-     // Jika fungsi animasi lo ada di dalam tombol btnCariDoiActual, 
-     // pastikan logikanya terpanggil di sini.
-     console.log("Menjalankan pencarian...");
-     // Trigger klik manual ke tombol cari doi yang lama jika perlu:
-     // document.getElementById("btn-sidebar-search").click(); 
   }
 };
-
 
 // 4. Logika Iklan & Refill Kuota
 window.jalankanIklanIsiUlangDoi = function() {
@@ -4143,6 +4133,75 @@ img {
 
 @keyframes modalPop {
   from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+/* MODAL OVERLAY (Latar Hitam Blur) */
+.custom-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999999; /* Pastikan paling depan */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* KARTU MODAL */
+.custom-modal-card {
+  background: var(--bg-panel, #ffffff);
+  width: 100%;
+  max-width: 320px;
+  border-radius: 28px;
+  padding: 30px 24px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-icon-love {
+  width: 70px;
+  height: 70px;
+  background: rgba(255, 51, 102, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.btn-modal-cancel {
+  flex: 1;
+  background: #f1f5f9;
+  border: none;
+  padding: 14px;
+  border-radius: 16px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.btn-modal-confirm {
+  flex: 1.5;
+  background: linear-gradient(135deg, #FF3366, #FF7755);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@keyframes modalPop {
+  from { transform: scale(0.8); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
 
