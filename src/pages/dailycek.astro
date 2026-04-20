@@ -28,7 +28,11 @@
         </div>
         <div class="m-info">
           <h4 class="m-title" style="color: white;">Tukar Koin Misi</h4>
-          <div class="m-reward" style="color: #94a3b8;">1000 Misi ➔ 10 Hope</div>
+          <div class="m-reward" style="color: #94a3b8; display: flex; align-items: center; gap: 4px;">
+            1000 Misi 
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            10 Hope
+          </div>
           <span class="progress-text" style="color: #cbd5e1;">Saldo Hope kamu: <b id="hopeCoinText" style="color: #38bdf8;">0</b></span>
         </div>
         <button class="m-btn" id="btnExchange" style="background: #38bdf8; color: white; border: none;">Tukar</button>
@@ -116,7 +120,7 @@
           <div class="m-info">
             <h4 class="m-title">Masukkan Kode Undangan</h4>
             <div class="m-reward"><span class="coin-dot"></span> +200 Koin (1x Saja)</div>
-            <input type="text" id="inviteInputCode" placeholder="Masukkan username teman..." class="invite-input" />
+            <input type="text" id="inviteInputCode" placeholder="Contoh: HX8M2P..." class="invite-input" />
           </div>
           <button id="btnInviteCode" class="m-btn">Klaim</button>
         </div>
@@ -130,11 +134,11 @@
           <div class="m-info">
             <h4 class="m-title">Undang Teman</h4>
             <div class="m-reward"><span class="coin-dot"></span> +500 Koin Misi / Teman</div>
-            <span class="progress-text">Kode kamu: <b id="myInviteCode" style="color: var(--primary);">...</b></span>
+            <span class="progress-text">Kode kamu: <b id="myInviteCode" style="color: var(--primary); font-family: monospace; letter-spacing: 1px;">...</b></span>
           </div>
-          <button class="m-btn" onclick="copyMyCode()">Salin</button>
+          <button class="m-btn" id="btnShareLink">Bagikan</button>
         </div>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; margin-left: 54px;">Minta teman barumu memasukkan username-mu di atas!</p>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; margin-left: 54px;">Bagikan link di atas. Koin akan otomatis masuk saat temanmu mendaftar!</p>
       </div>
 
     </div>
@@ -178,7 +182,9 @@
   .day-card.active .day-label { color: var(--primary); }
   .day-coin-icon { width: 24px; height: 24px; margin-bottom: 4px; }
   .day-reward { font-size: 0.8rem; font-weight: 700; color: var(--text-main); }
-  .day-check-icon { position: absolute; top: -6px; right: -6px; background: #10b981; color: white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 2px solid var(--bg-card); }
+  
+  /* FIX 1: Hapus icon centang, ganti warna border tipis hijau */
+  .day-card.done { border-color: #10b981; opacity: 0.7; }
 
   .claim-main-btn { width: 100%; margin-top: 1.25rem; background: var(--primary); color: #fff; border: none; padding: 0.875rem; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
   .claim-main-btn:disabled { background: var(--border-color); color: var(--text-muted); cursor: not-allowed;}
@@ -200,31 +206,35 @@
   .progress-fill { height: 100%; background: #10b981; border-radius: 3px; transition: width 0.3s;}
   .progress-text { font-size: 0.65rem; color: var(--text-muted); font-weight: 600;}
 
-  .invite-input { width: 100%; padding: 8px 10px; font-size: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); outline: none; margin-top: 4px; }
+  .invite-input { width: 100%; padding: 8px 10px; font-size: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); outline: none; margin-top: 4px; text-transform: uppercase; font-family: monospace; letter-spacing: 1px;}
   .invite-input:focus { border-color: var(--primary); }
   
   .m-btn { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; cursor: pointer; flex-shrink: 0; transition: 0.2s;}
   .m-btn:active { background: var(--border-color); }
   
-  /* State Tombol Misi */
   .m-btn.btn-klaim { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 2px 6px rgba(245,158,11,0.3); }
-  .m-btn.btn-done { background: #10b981; color: white; border-color: #10b981; cursor: not-allowed; opacity: 0.8;}
+  
+  /* FIX 1: Ubah gaya tombol selesai */
+  .m-btn.btn-done { background: var(--bg-main); color: #10b981; border-color: #10b981; cursor: not-allowed; opacity: 0.9;}
 </style>
 
 <script>
-  // PENTING: Sesuaikan letak file supabase.js kamu!
   import { supabase } from '../lib/supabase.js';
 
-  // Helper untuk salin kode (Misi Sosial)
-  window.copyMyCode = function() {
-    const code = document.getElementById('myInviteCode').innerText;
-    navigator.clipboard.writeText(code);
-    alert('Kode berhasil disalin: ' + code);
-  };
+  // FUNGSI UNTUK MENGHASILKAN KODE UNDANGAN UNIK SECARA ACAK (A-Z, 0-9, panjang 6 karakter)
+  function generateInviteCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
 
   document.addEventListener('DOMContentLoaded', async () => {
     const btnClaimCheckin = document.getElementById('btnClaimCheckin');
     const btnExchange = document.getElementById('btnExchange');
+    const btnShareLink = document.getElementById('btnShareLink');
     const daysContainer = document.getElementById('streakDaysContainer');
     
     // Config Check-in & Misi
@@ -251,6 +261,7 @@
     let userProfile = null;
     let currentStreak = 0;
     let hasCheckedInToday = false;
+    let myUniqueInviteCode = "";
 
     const updateCoinUI = (newMissionCoins, newHopeCoins) => {
       document.getElementById('missionCoinText').textContent = newMissionCoins;
@@ -261,9 +272,6 @@
       if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 70, origin: { y: 0.5 }});
     };
 
-    // ==========================================
-    // 1. RENDER CHECK-IN 7 HARI
-    // ==========================================
     const renderDays = () => {
       daysContainer.innerHTML = '';
       for (let i = 0; i < 7; i++) {
@@ -279,7 +287,6 @@
 
         daysContainer.innerHTML += `
           <div class="day-card ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}">
-            ${isDone ? `<div class="day-check-icon">✓</div>` : ''}
             <span class="day-label">Hari ${dayNum}</span>
             ${coinSvg}
             <span class="day-reward">+${CHECKIN_REWARDS[i]}</span>
@@ -288,9 +295,6 @@
       }
     };
 
-    // ==========================================
-    // 2. SETUP PROGRESS BAR MISI
-    // ==========================================
     const setupMissionUI = (key, currentVal, isClaimed) => {
       const config = MISSIONS[key];
       const val = Math.min(currentVal, config.target);
@@ -304,7 +308,7 @@
       if(progText) progText.textContent = `${val}/${config.target}`;
       
       if (isClaimed) {
-        if(btn) { btn.textContent = 'Selesai ✅'; btn.className = 'm-btn btn-done'; btn.onclick = null; }
+        if(btn) { btn.textContent = 'Selesai'; btn.className = 'm-btn btn-done'; btn.onclick = null; }
       } else if (val >= config.target) {
         if(btn) {
           btn.textContent = 'Klaim'; btn.className = 'm-btn btn-klaim';
@@ -313,7 +317,6 @@
       }
     };
 
-    // Fungsi Klaim Hadiah Misi Biasa
     window.claimMissionReward = async (key) => {
       const config = MISSIONS[key];
       const btn = document.getElementById(`btn${key.charAt(0).toUpperCase() + key.slice(1)}`);
@@ -322,22 +325,18 @@
       try {
         const newMissionCoins = (userProfile.mission_coins || 0) + config.reward;
 
-        // Update Database Profil
         const { error: err1 } = await supabase.from('profiles').update({ mission_coins: newMissionCoins }).eq('id', currentUser.id);
         if (err1) throw err1;
 
-        // Catat ke riwayat
         await supabase.from('coin_history').insert({
           user_id: currentUser.id, type: 'masuk', transaction_type: config.type,
           amount: config.reward, description: `Klaim Misi Harian`
         });
 
-        // Update UI
         userProfile.mission_coins = newMissionCoins;
         updateCoinUI(newMissionCoins);
         setupMissionUI(key, config.target, true);
         triggerConfetti();
-        alert(`Selamat! Kamu dapat +${config.reward} Koin Misi.`);
       } catch (err) {
         alert("Gagal Klaim: " + err.message);
         btn.textContent = "Klaim"; btn.disabled = false;
@@ -356,12 +355,22 @@
       currentUser = session.user;
 
       // Ambil Data Profil
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+      const { data: profile } = await supabase.from('profiles')
+        .select('coins, mission_coins, last_checkin, checkin_streak, referred_by, invite_code')
+        .eq('id', currentUser.id).single();
+      
       userProfile = profile || {};
       
-      // Update Angka Koin di Layar
+      // FIX 3: CEK DAN BUAT KODE UNDANGAN UNIK KALAU BELUM PUNYA
+      myUniqueInviteCode = profile.invite_code;
+      if (!myUniqueInviteCode) {
+        myUniqueInviteCode = generateInviteCode();
+        // Simpan kode baru ke database secara diam-diam
+        await supabase.from('profiles').update({ invite_code: myUniqueInviteCode }).eq('id', currentUser.id);
+      }
+      
       updateCoinUI(profile.mission_coins || 0, profile.coins || 0);
-      document.getElementById('myInviteCode').textContent = profile.username || "TidakAda";
+      document.getElementById('myInviteCode').textContent = myUniqueInviteCode;
 
       // --- SETUP CHECK-IN HARIAN ---
       const today = getTodayDate();
@@ -374,7 +383,7 @@
 
       renderDays();
       if (hasCheckedInToday) {
-        btnClaimCheckin.textContent = "Selesai Hari Ini ✅"; btnClaimCheckin.disabled = true;
+        btnClaimCheckin.textContent = "Klaim Selesai"; btnClaimCheckin.disabled = true;
       } else {
         btnClaimCheckin.textContent = "Check-in Sekarang"; btnClaimCheckin.disabled = false;
       }
@@ -386,42 +395,45 @@
       const { count: commentCount } = await supabase.from('comments').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id).gte('created_at', todayStart);
       const { count: uploadCount } = await supabase.from('posts').select('*', { count: 'exact', head: true }).eq('creator_id', currentUser.id).gte('created_at', todayStart);
       
-      // Karena belum ada database "dengar lagu", kita ambil simulasi dari memori HP
       const listenCount = parseInt(localStorage.getItem('hh_daily_listens') || '0');
 
-      // Cek apakah misi sudah diklaim hari ini (dari tabel history)
       const { data: claims } = await supabase.from('coin_history').select('transaction_type')
         .eq('user_id', currentUser.id).gte('created_at', todayStart)
         .in('transaction_type', ['mission_listen', 'mission_like', 'mission_comment', 'mission_upload']);
       const claimedTypes = claims ? claims.map(c => c.transaction_type) : [];
 
-      // Render Progress Bar Misi
       setupMissionUI('listen', listenCount, claimedTypes.includes('mission_listen'));
       setupMissionUI('like', likeCount || 0, claimedTypes.includes('mission_like'));
       setupMissionUI('comment', commentCount || 0, claimedTypes.includes('mission_comment'));
       setupMissionUI('upload', uploadCount || 0, claimedTypes.includes('mission_upload'));
 
-      // --- SETUP KODE UNDANGAN (REFFERAL DUA ARAH) ---
+      // --- SETUP KODE UNDANGAN (MEMASUKKAN KODE ORANG LAIN) ---
       const inviteContainer = document.getElementById('inviteCodeContainer');
       if (profile.referred_by) {
-        inviteContainer.innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Kode Undangan Selesai ✅</h4></div>`;
+        inviteContainer.innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Selesai</h4><span class="progress-text">Kamu telah menggunakan kode teman.</span></div>`;
       } else {
+        // Cek URL barangkali ada kode referal ?ref=KODE (FIX 2)
+        const urlParams = new URLSearchParams(window.location.search);
+        const refCodeFromUrl = urlParams.get('ref');
+        if (refCodeFromUrl) {
+          document.getElementById('inviteInputCode').value = refCodeFromUrl;
+        }
+
         document.getElementById('btnInviteCode').onclick = async () => {
-          const code = document.getElementById('inviteInputCode').value.trim();
+          const code = document.getElementById('inviteInputCode').value.trim().toUpperCase();
           if (!code) return alert("Masukkan kode temanmu dulu!");
-          if (code === profile.username) return alert("Hayo, tidak bisa memakai kode milik sendiri!");
+          if (code === myUniqueInviteCode) return alert("Hayo, tidak bisa memakai kode milik sendiri!");
 
           const btn = document.getElementById('btnInviteCode');
           btn.textContent = "..."; btn.disabled = true;
 
           try {
-            // Cari data teman di database
-            const { data: friend, error: friendErr } = await supabase.from('profiles').select('id, mission_coins').eq('username', code).single();
+            // Cari data teman berdasarkan KODE UNIK (invite_code)
+            const { data: friend, error: friendErr } = await supabase.from('profiles').select('id, mission_coins').eq('invite_code', code).single();
             if (friendErr || !friend) {
-              btn.textContent = "Klaim"; btn.disabled = false; return alert("Kode tidak ditemukan! Pastikan username temanmu benar.");
+              btn.textContent = "Klaim"; btn.disabled = false; return alert("Kode tidak ditemukan! Pastikan kode temanmu benar.");
             }
 
-            // [PENTING] Jika Supabase RLS memblokir aksi ini, gunakan fungsi RPC (Supabase Edge Function) 
             // 1. Berikan +200 Koin Misi ke dirimu sendiri
             const myNewCoins = (userProfile.mission_coins || 0) + 200;
             await supabase.from('profiles').update({ referred_by: code, mission_coins: myNewCoins }).eq('id', currentUser.id);
@@ -430,13 +442,13 @@
             // 2. Berikan +500 Koin Misi ke teman secara OTOMATIS
             const friendNewCoins = (friend.mission_coins || 0) + 500;
             await supabase.from('profiles').update({ mission_coins: friendNewCoins }).eq('id', friend.id);
-            await supabase.from('coin_history').insert({ user_id: friend.id, type: 'masuk', transaction_type: 'referral_bonus', amount: 500, description: `Bonus undang teman (${profile.username})`});
+            await supabase.from('coin_history').insert({ user_id: friend.id, type: 'masuk', transaction_type: 'referral_bonus', amount: 500, description: `Bonus undang teman (kode dipasang)`});
 
             // Update Layar
             userProfile.mission_coins = myNewCoins; updateCoinUI(myNewCoins);
-            inviteContainer.innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Kode Undangan Selesai ✅</h4></div>`;
+            inviteContainer.innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Selesai</h4><span class="progress-text">Kode berhasil diklaim.</span></div>`;
             triggerConfetti(); 
-            alert(`Sukses! Kamu dapat +200 Koin, dan ${code} otomatis dapat +500 Koin!`);
+            alert(`Sukses! Kamu dapat +200 Koin!`);
           } catch (err) {
             btn.textContent = "Klaim"; btn.disabled = false; alert("Gagal memproses: " + err.message);
           }
@@ -466,7 +478,7 @@
         currentStreak = targetStreak; hasCheckedInToday = true;
         userProfile.mission_coins = newMissionCoins; updateCoinUI(newMissionCoins);
         
-        renderDays(); btnClaimCheckin.textContent = "Selesai Hari Ini ✅";
+        renderDays(); btnClaimCheckin.textContent = "Klaim Selesai";
         triggerConfetti();
       } catch (err) {
         btnClaimCheckin.textContent = "Gagal, Coba Lagi"; btnClaimCheckin.disabled = false; alert("Gagal Check-in: " + err.message);
@@ -489,10 +501,7 @@
         const newMissionCoins = currentMissionCoins - 1000;
         const newHopeCoins = currentHopeCoins + 10; 
 
-        // Update Keduanya di Profile
         await supabase.from('profiles').update({ mission_coins: newMissionCoins, coins: newHopeCoins }).eq('id', currentUser.id);
-        
-        // Catat Transaksi
         await supabase.from('coin_history').insert({ user_id: currentUser.id, type: 'masuk', transaction_type: 'exchange', amount: 10, description: `Tukar 1000 Koin Misi`});
 
         userProfile.mission_coins = newMissionCoins; userProfile.coins = newHopeCoins;
@@ -504,6 +513,34 @@
         alert("Gagal menukar koin: " + err.message);
       } finally {
         btnExchange.disabled = false; btnExchange.textContent = "Tukar";
+      }
+    });
+
+    // ==========================================
+    // 6. LOGIKA BAGIKAN LINK UNDANGAN
+    // ==========================================
+    btnShareLink.addEventListener('click', async () => {
+      if (!myUniqueInviteCode) return alert("Tunggu sebentar, kode undanganmu sedang disiapkan.");
+      
+      // Buat URL Penuh ke website kamu + ?ref=KODE
+      const baseUrl = window.location.origin; // Otomatis baca url website kamu (misal: https://hopecreate.com)
+      const inviteUrl = `${baseUrl}/dailycek?ref=${myUniqueInviteCode}`;
+
+      // Coba pakai fitur Web Share API (Khusus HP)
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Dapatkan Koin Gratis di Pusat Misi!',
+            text: `Yuk daftar pakai kode undanganku ${myUniqueInviteCode} buat dapet koin gratis!`,
+            url: inviteUrl
+          });
+        } catch (err) {
+          console.log("Share dibatalkan user atau error:", err);
+        }
+      } else {
+        // Kalau di PC atau browser lama, salin link ke clipboard
+        navigator.clipboard.writeText(`Daftar di sini buat dapet koin gratis: ${inviteUrl}`);
+        alert('Link undangan berhasil disalin! Silakan paste ke temanmu.');
       }
     });
 
