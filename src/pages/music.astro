@@ -1155,20 +1155,29 @@ if (rewardDeclineBtn) {
   });
 }
 
+// Listener Tombol 'Tonton & Klaim' (Buka Iklan Asli)
 if (rewardAcceptBtn) {
   rewardAcceptBtn.addEventListener("click", async () => {
+    // 1. Tutup Popup Melayang Dulu Biar Rapi
     if (rewardCard) {
       rewardCard.classList.remove('active');
       setTimeout(() => rewardCard.classList.add('hidden'), 400);
     }
+
     const { data: { user } } = await _supabase.auth.getUser();
     if (!user) return;
 
-    alert("Iklan diputar... (Simulasi 3 detik)"); 
-    setTimeout(() => { claimSongReward(user.id); }, 3000);
+    // 2. BUKA IKLAN DIRECT LINK LU DI TAB BARU
+    const adUrl = "https://omg10.com/4/10901295"; 
+    window.open(adUrl, "_blank");
+
+    // 3. KLAIM KOIN OTOMATIS SETELAH JEDA 5 DETIK
+    // (Jeda ini ngasih waktu biar tab iklan ke-load sempurna & lu dapet duitnya)
+    setTimeout(() => {
+      claimSongReward(user.id);
+    }, 5000);
   });
 }
-// BATAS TAMBAHAN
 
 
 async function initApp() {
