@@ -47,6 +47,22 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
     <GroupSettingsModal />
     <InviteModal />
 
+    <div id="modal-limit-doi" class="custom-modal-overlay" style="display: none;">
+      <div class="custom-modal-card">
+        <div class="modal-icon-love">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="#FF3366">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <h3>Kuota Cari Doi Habis!</h3>
+        <p>Mau nonton iklan sponsor 15 detik buat isi ulang <b>+10 kuota</b> biar bisa lanjut cari jodoh?</p>
+        <div class="modal-actions">
+          <button onclick="document.getElementById('modal-limit-doi').style.display='none'" class="btn-modal-cancel">Batal</button>
+          <button onclick="window.jalankanIklanIsiUlangDoi(); document.getElementById('modal-limit-doi').style.display='none'" class="btn-modal-confirm">Nonton Iklan</button>
+        </div>
+      </div>
+    </div>
+
     <div class="chat-messages" id="chat-messages"></div>
 
     <StickerMenu />
@@ -2421,31 +2437,45 @@ updateTextLimitDoi();
 
 // 3. Fungsi Eksekusi Pencarian (Dipanggil oleh tombol Sidebar)
 window.mulaiCariDoiDenganLimit = async function() {
-  if (sisaLimitDoi > 0) {
-    // Cek dulu apakah profile sudah lengkap (Gender)
-    const myProfile = await getCachedProfile(currentUser.id); 
-    if (!myProfile?.gender) { 
-      showToast("Setel GENDER kamu dulu di Edit Biodata!"); 
-      window.openEditProfile(); 
-      return; 
+  // 1. CEK LIMIT (Pakai Modal Custom)
+  if (sisaLimitDoi <= 0) {
+    const customModal = document.getElementById('modal-limit-doi');
+    if (customModal) {
+      customModal.style.display = 'flex'; // Tampilkan modal sultan lo
     }
+    return; // Berhenti di sini, jangan lanjut ke bawah
+  }
 
-    // KURANGI KUOTA
-    sisaLimitDoi--;
-    localStorage.setItem('doi_limit', sisaLimitDoi.toString());
+  // 2. CEK PROFIL (Gender harus ada)
+  const myProfile = await getCachedProfile(currentUser.id); 
+  if (!myProfile?.gender) { 
+    showToast("Setel GENDER kamu dulu di Edit Biodata!"); 
+    window.openEditProfile(); 
+    return; 
+  }
+
+  // 3. KURANGI KUOTA & UPDATE UI
+  sisaLimitDoi--;
+  localStorage.setItem('doi_limit', sisaLimitDoi.toString());
+  
+  // Pastikan fungsi update teks ini dipanggil biar angka 10/10 berubah
+  if (typeof updateTextLimitDoi === 'function') {
     updateTextLimitDoi();
-    
-    // Jalankan fungsi Animasi Radar & Pencarian Supabase yang sudah ada
-    if (typeof window.jalankanAnimasiRadarDoi === 'function') {
-       window.jalankanAnimasiRadarDoi(myProfile);
-    }
+  }
+  
+  // 4. JALANKAN ANIMASI RADAR & PENCARIAN
+  // Sesuaikan nama fungsinya dengan yang ada di script lo (tadi ada yang namanya btnCariDoiActual)
+  if (typeof window.jalankanAnimasiRadarDoi === 'function') {
+     window.jalankanAnimasiRadarDoi(myProfile);
   } else {
-    // KUOTA HABIS -> Tawarkan Iklan
-    if(confirm("Kuota Cari Doi Habis! \n\nMau nonton iklan sponsor 15 detik buat isi ulang +10 kuota?")) {
-      window.jalankanIklanIsiUlangDoi();
-    }
+     // Jika fungsi animasi lo ada di dalam tombol btnCariDoiActual, 
+     // pastikan logikanya terpanggil di sini.
+     console.log("Menjalankan pencarian...");
+     // Trigger klik manual ke tombol cari doi yang lama jika perlu:
+     // document.getElementById("btn-sidebar-search").click(); 
   }
 };
+
 
 // 4. Logika Iklan & Refill Kuota
 window.jalankanIklanIsiUlangDoi = function() {
@@ -4074,6 +4104,46 @@ img {
   -webkit-user-select: none;   /* Mencegah gambar terblok/terseleksi */
   user-select: none;           /* Standar modern untuk mencegah seleksi */
   pointer-events: auto;        /* Memastikan gambar tetap bisa diklik (jika ada fungsi klik) */
+}
+/* TARO DI PALING BAWAH DALAM TAG STYLE */
+.custom-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 1000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.custom-modal-card {
+  background: var(--bg-panel, #fff);
+  width: 100%;
+  max-width: 320px;
+  border-radius: 28px;
+  padding: 30px 24px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.modal-icon-love {
+  width: 70px;
+  height: 70px;
+  background: rgba(255, 51, 102, 0.1);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+}
+.custom-modal-card h3 { margin: 0 0 10px; font-size: 18px; color: var(--text-color); font-weight: 800; }
+.custom-modal-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0 0 25px; }
+.modal-actions { display: flex; gap: 12px; }
+.btn-modal-cancel { flex: 1; background: #f1f5f9; border: none; padding: 14px; border-radius: 16px; font-weight: 600; color: #64748b; cursor: pointer; }
+.btn-modal-confirm { flex: 1.5; background: linear-gradient(135deg, #FF3366, #FF7755); color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; cursor: pointer; }
+
+@keyframes modalPop {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 
