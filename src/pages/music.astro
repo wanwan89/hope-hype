@@ -23,7 +23,22 @@ import AudioPlayer from '../components/music/AudioPlayersong.astro';
   <CommentSheet />
   <AudioPlayer />
 
+  <div id="rewardFloatingCard" class="reward-card hidden">
+    <div class="reward-content">
+      <span class="material-icons reward-icon">redeem</span>
+      <div class="reward-text">
+        <h3>Misi Koin Tersedia!</h3>
+        <p>Nonton iklan sebentar, dapat +5 Misi Koin bro!</p>
+      </div>
+    </div>
+    <div class="reward-actions">
+      <button id="rewardDecline" class="btn-decline">Nanti Aja</button>
+      <button id="rewardAccept" class="btn-accept">Tonton & Klaim</button>
+    </div>
+  </div>
+
   <script>
+
 let activeSongId = null;
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
@@ -134,6 +149,9 @@ const commentOverlay = document.getElementById("commentOverlay");
 const sendCommentBtn = document.getElementById("sendCommentBtn");
 const commentInput = document.getElementById("commentInput");
 const commentList = document.getElementById("commentList");
+const rewardCard = document.getElementById("rewardFloatingCard");
+const rewardAcceptBtn = document.getElementById("rewardAccept");
+const rewardDeclineBtn = document.getElementById("rewardDecline");
 
 // STATE
 let allSongs = [];
@@ -440,18 +458,17 @@ async function playSong(song) {
     audio.play().catch(err => console.log("Autoplay di-block browser:", err));
   }
 
-  // 3. TIMER HITUNG JUMLAH PUTAR & REWARD IKLAN (60 DETIK)
+  // TAMBAHAN: TIMER 60 DETIK TRIGGER IKLAN & VIEWS
   playTimer = setTimeout(async () => {
     const isPlayingAudio = !audio.paused;
     const isPlayingYT = isYTReady && ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === 1;
     
     if ((isPlayingAudio || isPlayingYT) && currentSongsList[currentSongIndex]?.id === song.id) {
-      // 1. Tambah Views buat Kreator
+      // 1. Tambah Views buat Kreator (Lokal)
       if (song.source === 'local') {
         await updatePlayCount(song.id);
       }
-      
-      // 2. Tawarkan Iklan buat Pendengar (Memicu Popup)
+      // 2. Munculkan POPUP MELAYANG buat Pendengar
       window.triggerAdReward(song.id);
     }
   }, 60000);
@@ -1095,59 +1112,63 @@ function updateDynamicBackground(coverUrl) {
         
     document.body.style.background = `linear-gradient(to bottom, ${bgColors}), url('${coverUrl}') center/cover no-repeat`;
 }
-// ================= 6. AD & REWARD SYSTEM (SIMULASI) =================
+// TAMBAHAN: FUNGSI IKLAN & REWARD KLAIM
 window.triggerAdReward = async function(songId) {
   const { data: { user } } = await _supabase.auth.getUser();
-  if (!user) return; // Kalau belum login, gak dapet tawaran koin
+  if (!user) return; 
 
-  // Pake native confirm popup biar gampang dites dulu
-  const mauNonton = confirm("🎁 Mantap! Kamu udah dengerin lagu ini. Mau nonton iklan sebentar buat dapetin +5 Koin Misi?");
-  
-  if (mauNonton) {
-    // Di sini nanti tempat naro script provider Iklan (Monetag/Adsterra)
-    console.log("Memutar Iklan...");
-    alert("Iklan sedang diputar... (Simulasi 3 detik)");
-    
-    // Simulasi nunggu iklan selesai (3 detik)
-    setTimeout(() => {
-      claimSongReward(user.id);
-    }, 3000);
+  if (rewardCard) {
+    rewardCard.classList.remove('hidden'); 
+    setTimeout(() => rewardCard.classList.add('active'), 10); 
   }
 };
 
 async function claimSongReward(userId) {
   try {
-    // 1. Ambil koin user saat ini
     const { data: profile } = await _supabase.from('profiles').select('mission_coins').eq('id', userId).single();
     const currentCoins = profile?.mission_coins || 0;
-    
-    // 2. Tambah +5 Koin Misi
     const newCoins = currentCoins + 5;
-    const { error } = await _supabase.from('profiles').update({ mission_coins: newCoins }).eq('id', userId);
     
-    if (error) throw error;
+    const { error: upErr } = await _supabase.from('profiles').update({ mission_coins: newCoins }).eq('id', userId);
+    if (upErr) throw upErr;
     
-    // 3. Catat di tabel History Biar Aman
     await _supabase.from('coin_history').insert({
-      user_id: userId,
-      type: 'masuk',
-      transaction_type: 'listen_reward', // Bisa kamu lacak nanti
-      amount: 5,
-      description: 'Reward dengar lagu & iklan'
+      user_id: userId, type: 'masuk', transaction_type: 'listen_reward', amount: 5, description: 'Dengar lagu & iklan'
     });
 
-    alert("🎉 Yey! +5 Koin Misi berhasil masuk ke akunmu!");
+    const coinHeaderEl = document.getElementById('missionCoinText'); 
+    if (coinHeaderEl) coinHeaderEl.textContent = newCoins.toLocaleString("id-ID");
     
-    // (Opsional) Kalau ada text koin di header, langsung update angkanya
-    const coinText = document.getElementById('missionCoinText');
-    if (coinText) coinText.textContent = newCoins;
-    
+    alert("🎉 Yey! +5 Koin Misi berhasil masuk!");
   } catch (err) {
     console.error("Gagal klaim koin:", err);
-    alert("Yah, server lagi sibuk. Koin gagal masuk.");
   }
 }
 
+// LOGIKA KLIK TOMBOL POPUP
+if (rewardDeclineBtn) {
+  rewardDeclineBtn.addEventListener("click", () => {
+    if (rewardCard) {
+      rewardCard.classList.remove('active');
+      setTimeout(() => rewardCard.classList.add('hidden'), 400); 
+    }
+  });
+}
+
+if (rewardAcceptBtn) {
+  rewardAcceptBtn.addEventListener("click", async () => {
+    if (rewardCard) {
+      rewardCard.classList.remove('active');
+      setTimeout(() => rewardCard.classList.add('hidden'), 400);
+    }
+    const { data: { user } } = await _supabase.auth.getUser();
+    if (!user) return;
+
+    alert("Iklan diputar... (Simulasi 3 detik)"); 
+    setTimeout(() => { claimSongReward(user.id); }, 3000);
+  });
+}
+// BATAS TAMBAHAN
 
 
 async function initApp() {
@@ -1957,5 +1978,47 @@ color: var(--text-main);
   display: block;
   opacity: 1;
 }
+/* TAMBAHAN: CSS POPUP MELAYANG */
+.reward-card {
+  position: fixed;
+  bottom: -150px; 
+  left: 16px;
+  right: 16px;
+  max-width: 400px;
+  margin: 0 auto;
+  background: #1c1c1c; 
+  border-radius: 16px;
+  border: 1px solid #1f3cff; 
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 9999; 
+  box-shadow: 0 10px 30px rgba(31, 60, 255, 0.4); 
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), bottom 0.4s ease; 
+}
+
+.reward-card.active {
+  bottom: 100px; /* Muncul di atas mini player */
+  transform: translateY(0);
+}
+
+.reward-card.hidden {
+  display: none !important;
+}
+
+.reward-content { display: flex; align-items: center; gap: 12px; }
+.reward-icon { font-size: 36px; color: #f59e0b; }
+.reward-text h3 { font-size: 15px; font-weight: 700; color: white; margin: 0; }
+.reward-text p { font-size: 12px; color: #8b949e; margin: 0; }
+.reward-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+.reward-actions button {
+  padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: 0.2s;
+}
+.btn-decline { background: transparent; color: #64748b; }
+.btn-accept { background: #1f3cff; color: white; }
+.btn-accept:active, .btn-decline:active { transform: scale(0.95); }
+
 
 </style>
