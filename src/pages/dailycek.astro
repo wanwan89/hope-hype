@@ -1,0 +1,328 @@
+---
+// dailycek.astro
+---
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" is:inline></script>
+
+<div class="dc-wrapper">
+  <div class="dc-container">
+    
+    <button class="dc-back-btn" onclick="window.history.back()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Kembali
+    </button>
+
+    <h1 class="dc-title">Misi Harian</h1>
+
+    <div class="dc-card">
+      <div class="dc-icon-wrapper">
+        <svg class="dc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      </div>
+      
+      <h2 class="dc-card-title">Check-in Harian</h2>
+      <p class="dc-card-desc">Login setiap hari dan klaim koin gratis untuk mendukung kreator favoritmu!</p>
+      
+      <div class="dc-reward-box">
+        <span class="dc-reward-text">Hadiah Hari Ini</span>
+        <span class="dc-reward-amount">+50 Koin</span>
+      </div>
+
+      <button id="btnClaim" class="dc-claim-btn">
+        Memeriksa data...
+      </button>
+      
+      <p id="dcStatusMsg" class="dc-status-msg"></p>
+    </div>
+
+  </div>
+</div>
+
+<style is:global>
+  * { box-sizing: border-box; }
+  
+  .dc-wrapper {
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --primary: #f59e0b; /* Warna kuning/orange koin */
+    --primary-hover: #d97706;
+    
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-main);
+    color: var(--text-main);
+    min-height: 100vh;
+    padding: 1.5rem 1rem;
+    width: 100%;
+    touch-action: manipulation;
+  }
+
+  /* Dark Mode Support */
+  html.dark .dc-wrapper {
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+  }
+
+  .dc-container {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dc-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--text-main);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 1.5rem;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .dc-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .dc-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 1.5rem;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dc-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background: rgba(245, 158, 11, 0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    color: var(--primary);
+  }
+
+  .dc-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dc-card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .dc-card-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 2rem;
+  }
+
+  .dc-reward-box {
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    width: 100%;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .dc-reward-text {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .dc-reward-amount {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--primary);
+  }
+
+  .dc-claim-btn {
+    width: 100%;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 1rem;
+    border-radius: 1rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .dc-claim-btn:hover:not(:disabled) {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+  }
+
+  .dc-claim-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .dc-claim-btn:disabled {
+    background: var(--border-color);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .dc-status-msg {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    min-height: 1.2rem;
+  }
+</style>
+
+<script>
+  import { supabase } from '../lib/supabase.js';
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const btnClaim = document.getElementById('btnClaim');
+    const statusMsg = document.getElementById('dcStatusMsg');
+    const REWARD_AMOUNT = 50;
+    
+    // Fungsi untuk mendapatkan tanggal WIB (Waktu Indonesia Barat)
+    const getTodayDate = () => {
+      return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+    };
+
+    // 1. Cek Sesi Login & Status Check-in saat halaman dibuka
+    let currentUser = null;
+    let userProfile = null;
+    const today = getTodayDate();
+
+    try {
+      const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+      
+      if (sessionErr || !session) {
+        btnClaim.textContent = "Silakan Login Dulu";
+        btnClaim.disabled = true;
+        statusMsg.textContent = "Kamu harus login untuk mengambil hadiah.";
+        return;
+      }
+
+      currentUser = session.user;
+
+      const { data: profile, error: profErr } = await supabase
+        .from('profiles')
+        .select('coins, last_checkin')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (profErr) throw profErr;
+      userProfile = profile;
+
+      // Cek apakah sudah check-in hari ini
+      if (profile.last_checkin === today) {
+        btnClaim.textContent = "Sudah Diklaim ✅";
+        btnClaim.disabled = true;
+        statusMsg.textContent = "Kamu sudah mengambil hadiah hari ini. Kembali besok ya!";
+      } else {
+        btnClaim.textContent = "Klaim Koin Sekarang";
+        btnClaim.disabled = false;
+      }
+
+    } catch (err) {
+      console.error("Error loading check-in data:", err);
+      btnClaim.textContent = "Terjadi Kesalahan";
+      btnClaim.disabled = true;
+      statusMsg.textContent = "Gagal memuat data. Silakan refresh halaman.";
+    }
+
+    // 2. Fungsi Klik Tombol Klaim
+    btnClaim.addEventListener('click', async () => {
+      if (btnClaim.disabled || !currentUser || !userProfile) return;
+
+      btnClaim.disabled = true;
+      btnClaim.textContent = "Memproses...";
+      statusMsg.textContent = "";
+
+      try {
+        const newBalance = (userProfile.coins || 0) + REWARD_AMOUNT;
+
+        // A. Update Profil (Koin nambah & set last_checkin)
+        const { error: updateErr } = await supabase
+          .from('profiles')
+          .update({
+            coins: newBalance,
+            last_checkin: today
+          })
+          .eq('id', currentUser.id);
+
+        if (updateErr) throw updateErr;
+
+        // B. Catat ke Tabel Riwayat Transaksi (coin_history)
+        const { error: histErr } = await supabase
+          .from('coin_history')
+          .insert({
+            user_id: currentUser.id,
+            type: 'masuk',
+            transaction_type: 'checkin',
+            amount: REWARD_AMOUNT,
+            balance_after: newBalance,
+            description: 'Hadiah Misi Check-in Harian'
+          });
+
+        if (histErr) console.warn("Gagal catat riwayat:", histErr.message);
+
+        // C. Update UI & Storage Lokal
+        btnClaim.textContent = "Berhasil Diklaim! ✅";
+        statusMsg.textContent = "Koin telah ditambahkan ke saldomu. Kembali besok!";
+        
+        // Tembakkan Confetti
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 150,
+            spread: 80,
+            origin: { y: 0.6 },
+            colors: ['#f59e0b', '#fbbf24', '#ffffff']
+          });
+        }
+
+        // Update session storage agar koin tidak "hilang" kalau pindah ke halaman lain
+        let cachedProf = JSON.parse(sessionStorage.getItem(`hh_profile_${currentUser.id}`) || "{}");
+        cachedProf.coins = newBalance;
+        sessionStorage.setItem(`hh_profile_${currentUser.id}`, JSON.stringify(cachedProf));
+
+      } catch (err) {
+        console.error("Gagal klaim:", err);
+        btnClaim.textContent = "Klaim Koin Sekarang";
+        btnClaim.disabled = false;
+        statusMsg.textContent = "Gagal memproses klaim. Coba lagi.";
+        alert("Gagal check-in: " + err.message);
+      }
+    });
+
+  });
+</script>
