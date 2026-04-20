@@ -1354,6 +1354,17 @@ function tampilkanDoiCard(doi) {
   modal.style.display = "flex";
 }
 
+const btnCariDoiActual = document.getElementById("btn-sidebar-search");
+if (btnCariDoiActual) {
+  btnCariDoiActual.onclick = async () => {
+    const myProfile = await getCachedProfile(currentUser.id); 
+    if (!myProfile?.gender) { 
+      showToast("Setel GENDER kamu dulu di Edit Biodata!"); 
+      window.openEditProfile(); 
+      return; 
+    }
+    
+    closeSidebar();
 
     // 1. TAMPILKAN LAYAR ANIMASI RADAR PREMIUM
     const loadingOverlay = document.createElement("div"); 
@@ -2354,167 +2365,130 @@ async function markRoomAsRead() {
   }
 }
 
-// ==========================================
-// 🔥 SISTEM CARI DOI + LIMIT (EVENT LISTENER FIX) 🔥
-// ==========================================
+// ================= SISTEM LIMIT CARI DOI =================
 
-// 1. Fungsi Update Angka
+// 1. Ambil data limit dari penyimpanan browser (default 10)
+let sisaLimitDoi = localStorage.getItem('doi_limit');
+if (sisaLimitDoi === null) {
+  sisaLimitDoi = 10;
+  localStorage.setItem('doi_limit', sisaLimitDoi);
+} else {
+  sisaLimitDoi = parseInt(sisaLimitDoi);
+}
+
+// 2. Fungsi buat update angka di layar
 function updateTextLimitDoi() {
-  let limit = parseInt(localStorage.getItem('doi_limit') || '10');
   const limitEl = document.getElementById('limit-doi-text');
   if (limitEl) {
-    limitEl.innerText = limit;
-    limitEl.style.color = limit > 0 ? "#1f3cff" : "#ff4757"; 
+    limitEl.innerText = sisaLimitDoi;
+    // Ubah warna jadi merah kalau limitnya 0
+    limitEl.style.color = sisaLimitDoi > 0 ? "#1f3cff" : "#ff4757"; 
   }
 }
-setInterval(updateTextLimitDoi, 1000); // Paksa update teks tiap detik
+// Panggil saat web pertama kali dibuka
+updateTextLimitDoi();
 
-// 2. Logika Tombol Cari Doi (Pakai Event Listener, Dijamin Jalan)
-const btnCariDoiTerbaru = document.getElementById("btn-sidebar-search");
-
-if (btnCariDoiTerbaru) {
-  btnCariDoiTerbaru.addEventListener("click", async () => {
-    let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
-
-    // CEK TIKET
-    if (sisaLimitDoi <= 0) {
-      if(confirm("Tiket Cari Doi Habis! 😭\n\nMau lihat sponsor 15 detik buat dapetin +10 tiket lagi?")) {
-        jalankanSponsorDoiBaru();
-      }
-      return; // Stop pencarian
-    }
-
-    const myProfile = await getCachedProfile(currentUser.id); 
-    if (!myProfile?.gender) { 
-      showToast("Setel GENDER kamu dulu di Edit Biodata!"); 
-      window.openEditProfile(); 
-      return; 
-    }
-
-    // KURANGI TIKET & UPDATE LAYAR
+// 3. Fungsi saat tombol Cari Doi diklik
+window.handleKlikCariDoi = function() {
+  if (sisaLimitDoi > 0) {
+    // Kurangi 1 tiket
     sisaLimitDoi--;
-    localStorage.setItem('doi_limit', sisaLimitDoi.toString());
+    localStorage.setItem('doi_limit', sisaLimitDoi);
     updateTextLimitDoi();
+    
+    // JALANKAN FUNGSI ASLI CARI DOI LU
+    if (typeof window.mulaiCariDoi === 'function') {
+      window.mulaiCariDoi();
+    }
+  } else {
+    // Kalau 0, tawarkan nonton iklan
+    if(confirm("Kuota Cari Doi Habis! \n\nMau nonton iklan sponsor 15 detik buat isi ulang +10 kuota?")) {
+      window.jalankanIklanIsiUlangDoi();
+    }
+  }
+};
 
-    closeSidebar();
-
-    // MUNCULIN ANIMASI RADAR
-    const loadingOverlay = document.createElement("div"); 
-    loadingOverlay.className = "doi-search-overlay"; 
-    loadingOverlay.id = "active-search-overlay";
-    loadingOverlay.innerHTML = `
-      <div class="radar-container">
-        <div class="radar-wave"></div><div class="radar-wave"></div><div class="radar-wave"></div>
-        <div id="radar-icons-container"></div>
-      </div>
-      <div style="text-align: center; z-index: 10;">
-        <h3 class="search-title-glow">Mencari kecocokan...</h3>
-        <p class="search-subtitle-glow">Memindai profil di sekitarmu</p>
-      </div>
-    `; 
-    document.body.appendChild(loadingOverlay);
-
-    const container = document.getElementById('radar-icons-container');
-    const iconInterval = setInterval(() => {
-      if (!container) return;
-      const siluet = document.createElement('div');
-      siluet.className = 'floating-radar-user';
-      siluet.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 60 + Math.random() * 60; 
-      siluet.style.left = `calc(50% + ${Math.cos(angle) * radius}px)`;
-      siluet.style.top = `calc(50% + ${Math.sin(angle) * radius}px)`;
-      container.appendChild(siluet);
-      setTimeout(() => siluet.remove(), 1500);
-    }, 450);
-
-    const lawanJenis = myProfile.gender === "Pria" ? "Wanita" : "Pria";
-    const waktuTungguAcak = Math.floor(Math.random() * 3000) + 4000; 
-
-    setTimeout(async () => {
-      clearInterval(iconInterval);
-      const { data: users } = await supabase.from("profiles").select("*").neq("id", currentUser.id).eq("gender", lawanJenis);
-      
-      const overlayToRemove = document.getElementById("active-search-overlay");
-      if (overlayToRemove) overlayToRemove.remove();
-
-      if (!users || users.length === 0) { 
-        showToast(`Waduh, belum ada ${lawanJenis} yang tersedia.`); 
-        return; 
-      }
-      
-      tampilkanDoiCard(users[Math.floor(Math.random() * users.length)]);
-      if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
-    }, waktuTungguAcak);
-  });
-}
-
-// 3. LAYAR SPONSOR 15 DETIK
-function jalankanSponsorDoiBaru() {
+// 4. Logika Iklan Premium (Sama kayak misi koin)
+window.jalankanIklanIsiUlangDoi = function() {
+  // MUNCULIN LAYAR PENGUNCI
   const overlay = document.createElement('div');
   overlay.id = "video-ads-overlay-doi";
   overlay.style = `
-    position: fixed; inset: 0; background: #0a0a0a; z-index: 999999999; 
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: white; font-family: 'Poppins', sans-serif; text-align: center;
+    position: fixed; inset: 0; background: #0a0a0a; z-index: 9999999; 
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.4s ease; font-family: 'Poppins', sans-serif;
   `;
 
+  // Animasi warna Pink/Merah khas "Cari Doi"
   overlay.innerHTML = `
-    <div style="padding: 20px;">
+    <div style="text-align: center; width: 100%; padding: 20px;">
       <div style="display: flex; justify-content: center; align-items: flex-end; gap: 6px; height: 40px; margin-bottom: 25px;">
-        <div style="width: 8px; background: #ff4757; animation: barUp 0.5s infinite alternate;"></div>
-        <div style="width: 8px; background: #ff6b81; animation: barUp 0.8s infinite alternate-reverse;"></div>
-        <div style="width: 8px; background: #ff4757; animation: barUp 0.6s infinite alternate;"></div>
+        <div style="width: 8px; background: #ff4757; border-radius:3px; animation: barUp 0.5s infinite alternate;"></div>
+        <div style="width: 8px; background: #ff6b81; border-radius:3px; animation: barUp 0.8s infinite alternate-reverse;"></div>
+        <div style="width: 8px; background: #ff4757; border-radius:3px; animation: barUp 0.6s infinite alternate;"></div>
       </div>
-      <h2 id="status-header-doi" style="margin-bottom:10px; font-weight:800; color: #ff4757;">MENGISI TIKET...</h2>
-      <p id="status-desc-doi" style="color:#888; font-size:13px; margin-bottom:30px;">Tunggu sponsor selesai diproses untuk dapat +10 Tiket!</p>
-      <div id="ad-timer-doi" style="font-size:48px; font-weight:900; color:#ff4757;">15s</div>
+      <h3 style="color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 5px;">MENGISI ULANG KUOTA...</h3>
+      <p style="color: #888; font-size: 12px; margin-bottom: 30px;">Jangan tutup tab iklan sampai proses selesai!</p>
+      
+      <div style="position: relative; width: 80px; height: 80px; margin: 0 auto;">
+        <svg width="80" height="80" style="transform: rotate(-90deg);">
+          <circle cx="40" cy="40" r="35" stroke="rgba(255,255,255,0.05)" stroke-width="6" fill="none" />
+          <circle id="timer-line-doi" cx="40" cy="40" r="35" stroke="#ff4757" stroke-width="6" fill="none" 
+            stroke-dasharray="220" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;" />
+        </svg>
+        <div id="ad-timer-doi" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 22px; font-weight: 900;">15s</div>
+      </div>
     </div>
-    <style> 
-      @keyframes barUp { from { height: 10px; } to { height: 40px; } } 
-      body { overflow: hidden !important; }
-    </style>
+    <style> @keyframes barUp { from { height: 10px; } to { height: 40px; } } </style>
   `;
+  
   document.body.appendChild(overlay);
+  setTimeout(() => { overlay.style.opacity = "1"; }, 10);
 
-  // BUKA LINK IKLAN MONETAG LU
+  // BUKA IKLAN (Direct Link Monetag Lu)
   setTimeout(() => {
-    window.open("https://omg10.com/4/10901295", "_blank"); 
-  }, 1000);
+    window.open("https://omg10.com/4/10901295", "_blank");
+  }, 1200);
 
+  // LOGIKA TIMER 15 DETIK
   let sec = 15;
+  const totalSec = 15;
+  const timerLine = document.getElementById('timer-line-doi');
+
   const countdown = setInterval(() => {
     sec--;
     const timerEl = document.getElementById('ad-timer-doi');
     if (timerEl) timerEl.innerText = sec + "s";
-
+    
+    if (timerLine) {
+      const offset = 220 - (sec / totalSec) * 220;
+      timerLine.style.strokeDashoffset = offset;
+    }
+    
     if (sec <= 0) {
       clearInterval(countdown);
+      overlay.style.opacity = "0";
       
-      const header = document.getElementById('status-header-doi');
-      const desc = document.getElementById('status-desc-doi');
-      
-      if(header) { header.innerText = "TIKET TERISI!"; header.style.color = "#22c55e"; }
-      if(desc) desc.innerText = "Selamat mencari doi baru!";
-
       setTimeout(() => {
-        overlay.style.opacity = "0";
-        overlay.style.transition = "opacity 0.5s ease";
+        overlay.remove();
         
-        setTimeout(() => {
-          overlay.remove();
-          document.body.style.overflow = "auto";
-          
-          // 🔥 RESET TIKET JADI 10 LAGI 🔥
-          localStorage.setItem('doi_limit', '10');
-          updateTextLimitDoi();
-          
-          showToast("Mantap! +10 Tiket Cari Doi berhasil ditambahkan!");
-        }, 500);
-      }, 1000);
+        // ISI ULANG KUOTA JADI 10 LAGI
+        sisaLimitDoi = 10;
+        localStorage.setItem('doi_limit', sisaLimitDoi);
+        updateTextLimitDoi();
+        
+        if(window.showToast) {
+          window.showToast("Berhasil Isi Ulang!", "Kuota udah full 10 lagi. Gas cari doi!", "success");
+        } else {
+          alert("Kuota berhasil diisi ulang!");
+        }
+      }, 500);
     }
   }, 1000);
-}
+};
+
+ 
+
 
 async function init() {
   try {
