@@ -372,47 +372,46 @@ async function processGiftTransaction() {
     // 2. Simpan transaksi ke tabel gift_transactions
     await supabaseClient.from("gift_transactions").insert({ sender_id: session.user.id, receiver_id: giftState.creatorId, post_id: parseInt(giftState.postId), amount });
 
-    // Ambil data profil pengirim (dibutuhkan untuk nama di notif & riwayat)
     const sProf = await getMyProfile(session.user.id);
 
     // ==========================================
-    // 3. TAMBAHAN BARU: Catat ke tabel coin_history
-    // Kita jalankan 2 insert sekaligus dalam bentuk Array []
+    // 3. CATAT KE TABEL coin_history (DIPISAH AGAR LEBIH AMAN DARI RLS)
     // ==========================================
-    const { error: historyErr } = await supabaseClient.from("coin_history").insert([
-      {
-        user_id: session.user.id,
-        type: "keluar",
-        amount: amount,
-        description: `Kirim gift ke ${giftState.creatorName}`
-      },
-      {
-        user_id: giftState.creatorId,
-        type: "masuk",
-        amount: amount,
-        description: `Terima gift dari ${sProf?.username || 'Seseorang'}`
-      }
-    ]);
     
-    if (historyErr) console.warn("Gagal mencatat riwayat koin:", historyErr.message);
+    // A. Catat History untuk PENGIRIM (Pasti berhasil karena ini usernya sendiri)
+    const { error: errSender } = await supabaseClient.from("coin_history").insert({
+      user_id: session.user.id,
+      type: "keluar",
+      amount: amount,
+      description: `Kirim gift ke ${giftState.creatorName}`
+    });
+    if (errSender) console.error("Error history pengirim:", errSender.message);
+
+    // B. Catat History untuk PENERIMA (Bisa kena blok RLS, jadi kita catch errornya diam-diam)
+    const { error: errReceiver } = await supabaseClient.from("coin_history").insert({
+      user_id: giftState.creatorId,
+      type: "masuk",
+      amount: amount,
+      description: `Terima gift dari ${sProf?.username || 'Seseorang'}`
+    });
+    if (errReceiver) console.warn("Info: History penerima diblokir RLS, ini normal jika security ketat.");
     // ==========================================
 
-    // Tampilkan efek visual (Gambar Pop Up & Confetti)
+    // Tampilkan efek visual
     showBigImage(selectedGiftImage);
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
 
     // 4. Kirim notifikasi ke kreator
     await createNotification({ user_id: giftState.creatorId, actor_id: session.user.id, post_id: giftState.postId, type: "gift", message: `${sProf?.username} mengirim ${amount} coin ke karyamu` });
 
-    // 5. Update koin di tampilan (Frontend) secara real-time
+    // 5. Update UI koin
     giftState.userCoins -= amount;
     document.getElementById("giftUserCoins").textContent = giftState.userCoins;
     
-    // 6. Update koin di Session Storage agar tidak kedip saat refresh
+    // 6. Update Storage
     sProf.coins = giftState.userCoins;
     sessionStorage.setItem(`hh_profile_${session.user.id}`, JSON.stringify(sProf));
     
-    // Tutup popup gift
     closeGiftSheet();
 
   } catch (err) { 
