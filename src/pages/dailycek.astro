@@ -28,12 +28,12 @@
         </div>
         <div class="m-info">
           <h4 class="m-title" style="color: white;">Tukar Koin Misi</h4>
-          <div class="m-reward" style="color: #94a3b8; display: flex; align-items: center; gap: 4px;">
+          <div class="m-reward" style="color: #94a3b8; display: flex; align-items: center; gap: 6px;">
             1000 Misi 
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             10 Hope
           </div>
-          <span class="progress-text" style="color: #cbd5e1;">Saldo Hope kamu: <b id="hopeCoinText" style="color: #38bdf8;">0</b></span>
+          <span class="progress-text" style="color: #cbd5e1;">Saldo Hope: <b id="hopeCoinText" style="color: #38bdf8;">0</b></span>
         </div>
         <button class="m-btn" id="btnExchange" style="background: #38bdf8; color: white; border: none;">Tukar</button>
       </div>
@@ -42,41 +42,49 @@
     <div class="mission-card streak-card">
       <div class="streak-header">
         <h2 class="streak-title">Check-in 7 Hari</h2>
-        <p class="streak-desc">Klaim Koin Misi berturut-turut untuk hadiah lebih besar!</p>
+        <p class="streak-desc">Klaim koin gratis tiap hari untuk hadiah lebih besar!</p>
       </div>
-      <div class="streak-days-container" id="streakDaysContainer">
-        </div>
-      <button id="btnClaimCheckin" class="claim-main-btn">
-        Memuat data...
-      </button>
+      <div class="streak-days-container" id="streakDaysContainer"></div>
+      <button id="btnClaimCheckin" class="claim-main-btn">Memuat data...</button>
     </div>
 
     <h3 class="section-title">Misi Pemula</h3>
     <div class="mission-list">
-      
-      <div class="mission-item" id="downloadApkContainer">
+      <div class="mission-item" id="apkContainer">
         <div class="m-icon-box" style="background: #10b981;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line><path d="M12 7v6"></path><path d="M9 10h6"></path></svg>
         </div>
         <div class="m-info">
-          <h4 class="m-title">Download Aplikasi HopeHype</h4>
-          <div class="m-reward"><span class="coin-dot"></span> +300 Koin Misi</div>
-          <span class="progress-text">Lebih cepat dan hemat kuota!</span>
+          <h4 class="m-title">Instal Aplikasi HopeHype</h4>
+          <div class="m-reward"><span class="coin-dot"></span> +300 Koin</div>
+          <span class="progress-text">Akses lebih cepat via Home Screen</span>
         </div>
-        <button id="btnDownloadApk" class="m-btn" style="background: #10b981; color: white; border: none;">Unduh</button>
+        <button id="btnInstallPWA" class="m-btn" style="background: #10b981; color: white; border: none; display:none;">Instal</button>
+        <span id="pwaStatus" style="font-size: 11px; color: #94a3b8; display:none;">Selesai</span>
       </div>
 
+      <div class="mission-item" id="inviteCodeContainer">
+        <div class="m-icon-box" style="background: #f97316;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <div class="m-info">
+          <h4 class="m-title">Masukkan Kode Undangan</h4>
+          <div class="m-reward"><span class="coin-dot"></span> +200 Koin</div>
+          <input type="text" id="inviteInputCode" placeholder="Kode teman..." class="invite-input" />
+        </div>
+        <button id="btnInviteCode" class="m-btn">Klaim</button>
+      </div>
     </div>
 
     <h3 class="section-title" style="margin-top: 1.25rem;">Misi Harian</h3>
     <div class="mission-list">
       <div class="mission-item">
         <div class="m-icon-box bg-blue">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
         </div>
         <div class="m-info">
-          <h4 class="m-title">Dengarkan 3 Lagu</h4>
-          <div class="m-reward"><span class="coin-dot"></span> +30 Koin Misi</div>
+          <h4 class="m-title">Dengar 3 Lagu</h4>
+          <div class="m-reward"><span class="coin-dot"></span> +30 Koin</div>
           <div class="progress-bar"><div id="progFillListen" class="progress-fill" style="width: 0%;"></div></div>
           <span id="progTextListen" class="progress-text">0/3</span>
         </div>
@@ -85,11 +93,11 @@
 
       <div class="mission-item">
         <div class="m-icon-box bg-pink">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
         </div>
         <div class="m-info">
           <h4 class="m-title">Sukai 5 Postingan</h4>
-          <div class="m-reward"><span class="coin-dot"></span> +25 Koin Misi</div>
+          <div class="m-reward"><span class="coin-dot"></span> +25 Koin</div>
           <div class="progress-bar"><div id="progFillLike" class="progress-fill" style="width: 0%;"></div></div>
           <span id="progTextLike" class="progress-text">0/5</span>
         </div>
@@ -98,11 +106,11 @@
 
       <div class="mission-item">
         <div class="m-icon-box bg-green">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
         </div>
         <div class="m-info">
-          <h4 class="m-title">Komentar di 3 Postingan</h4>
-          <div class="m-reward"><span class="coin-dot"></span> +40 Koin Misi</div>
+          <h4 class="m-title">Komen di 3 Post</h4>
+          <div class="m-reward"><span class="coin-dot"></span> +40 Koin</div>
           <div class="progress-bar"><div id="progFillComment" class="progress-fill" style="width: 0%;"></div></div>
           <span id="progTextComment" class="progress-text">0/3</span>
         </div>
@@ -114,11 +122,11 @@
     <div class="mission-list">
       <div class="mission-item">
         <div class="m-icon-box bg-purple">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
         </div>
         <div class="m-info">
-          <h4 class="m-title">Upload 1 Lagu / Karya</h4>
-          <div class="m-reward"><span class="coin-dot"></span> +100 Koin Misi</div>
+          <h4 class="m-title">Upload 1 Karya</h4>
+          <div class="m-reward"><span class="coin-dot"></span> +100 Koin</div>
           <div class="progress-bar"><div id="progFillUpload" class="progress-fill" style="width: 0%;"></div></div>
           <span id="progTextUpload" class="progress-text">0/1</span>
         </div>
@@ -126,466 +134,251 @@
       </div>
     </div>
 
-    <h3 class="section-title" style="margin-top: 1.25rem;">Misi Sosial</h3>
+    <h3 class="section-title" style="margin-top: 1.25rem;">Program Referral</h3>
     <div class="mission-list" style="margin-bottom: 2rem;">
-      
-      <div class="mission-item" style="flex-direction: column; align-items: flex-start;" id="inviteCodeContainer">
-        <div style="display: flex; width: 100%; align-items: center;">
-          <div class="m-icon-box bg-orange">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          </div>
-          <div class="m-info">
-            <h4 class="m-title">Masukkan Kode Undangan</h4>
-            <div class="m-reward"><span class="coin-dot"></span> +200 Koin (1x Saja)</div>
-            <input type="text" id="inviteInputCode" placeholder="Contoh: HX8M2P..." class="invite-input" />
-          </div>
-          <button id="btnInviteCode" class="m-btn">Klaim</button>
-        </div>
-      </div>
-
       <div class="mission-item" style="flex-direction: column; align-items: flex-start;">
         <div style="display: flex; width: 100%; align-items: center;">
           <div class="m-icon-box bg-red">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5c-2.2 0-4 1.8-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
           </div>
           <div class="m-info">
-            <h4 class="m-title">Undang Teman</h4>
-            <div class="m-reward"><span class="coin-dot"></span> +500 Koin Misi / Teman</div>
-            <span class="progress-text">Kode kamu: <b id="myInviteCode" style="color: var(--primary); font-family: monospace; letter-spacing: 1px;">...</b></span>
+            <h4 class="m-title">Undang & Dapat Koin</h4>
+            <div class="m-reward"><span class="coin-dot"></span> +500 Koin / Teman</div>
+            <span class="progress-text">Kode: <b id="myInviteCode" style="color: var(--primary); font-family: monospace;">...</b></span>
           </div>
           <button class="m-btn" id="btnShareLink">Bagikan</button>
         </div>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; margin-left: 54px;">Bagikan link di atas. Koin akan otomatis masuk saat temanmu mendaftar!</p>
       </div>
-
     </div>
 
   </div>
 </div>
 
 <style is:global>
-  /* RESET & SETUP */
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; outline: none; }
   body, html { background: #f4f6f9; }
-  
-  .mission-wrapper { 
-    --bg-main: #f4f6f9; --bg-card: #ffffff; --text-main: #0f172a; --text-muted: #64748b; 
-    --border-color: #e2e8f0; --primary: #f59e0b; --primary-hover: #d97706; 
-    font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main); 
-    min-height: 100vh; width: 100vw; overflow-x: hidden; 
-  }
-  
-  html.dark .mission-wrapper, html.dark body { 
-    --bg-main: #0f172a; --bg-card: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; 
-    --border-color: #334155; background: var(--bg-main); 
-  }
-
+  .mission-wrapper { --bg-main: #f4f6f9; --bg-card: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border-color: #e2e8f0; --primary: #f59e0b; --primary-hover: #d97706; font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main); min-height: 100vh; width: 100vw; overflow-x: hidden; }
+  html.dark .mission-wrapper, html.dark body { --bg-main: #0f172a; --bg-card: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border-color: #334155; background: var(--bg-main); }
   .mission-container { width: 100%; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100vh; background: var(--bg-main); }
   .mission-header { position: sticky; top: 0; background: var(--bg-card); display: flex; justify-content: space-between; align-items: center; padding: 1rem; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
   .back-btn { background: none; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center;}
   .header-title { font-size: 1.1rem; font-weight: 700; flex: 1; text-align: center; }
-  .header-coin { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.95rem; background: rgba(245,158,11,0.1); padding: 5px 12px; border-radius: 99px;}
-
+  .header-coin { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.9rem; background: rgba(245,158,11,0.1); padding: 5px 12px; border-radius: 99px;}
   .mission-card { background: var(--bg-card); margin: 1rem; border-radius: 1rem; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); }
-  .streak-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; color: var(--text-main);}
+  .streak-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px;}
   .streak-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;}
-
   .streak-days-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
   .streak-days-container::-webkit-scrollbar { display: none; } 
-  .day-card { flex: 0 0 62px; background: var(--bg-main); border: 1.5px solid transparent; border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 10px 5px; position: relative; }
+  .day-card { flex: 0 0 62px; background: var(--bg-main); border: 1.5px solid transparent; border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 10px 5px; position: relative; transition: 0.3s; }
   .day-card.active { background: rgba(245, 158, 11, 0.1); border-color: var(--primary); }
-  .day-card.done { opacity: 0.5; }
+  .day-card.done { border-color: #10b981; opacity: 0.7; }
   .day-label { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
-  .day-card.active .day-label { color: var(--primary); }
   .day-coin-icon { width: 24px; height: 24px; margin-bottom: 4px; }
   .day-reward { font-size: 0.8rem; font-weight: 700; color: var(--text-main); }
-  
-  /* FIX 1: Hapus icon centang, ganti warna border tipis hijau */
-  .day-card.done { border-color: #10b981; opacity: 0.7; }
-
   .claim-main-btn { width: 100%; margin-top: 1.25rem; background: var(--primary); color: #fff; border: none; padding: 0.875rem; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
   .claim-main-btn:disabled { background: var(--border-color); color: var(--text-muted); cursor: not-allowed;}
-  .claim-main-btn:active:not(:disabled) { transform: scale(0.98); }
-
-  .section-title { font-size: 0.95rem; font-weight: 700; margin: 1rem 1rem 0.5rem; color: var(--text-main); }
+  .section-title { font-size: 0.95rem; font-weight: 700; margin: 1rem 1rem 0.5rem; }
   .mission-list { background: var(--bg-card); margin: 0 1rem; border-radius: 1rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); }
   .mission-item { display: flex; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border-color); }
   .mission-item:last-child { border-bottom: none; }
-
-  .m-icon-box { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
-  .bg-blue { background: #3b82f6; } .bg-purple { background: #8b5cf6; } .bg-orange { background: #f97316; } .bg-pink { background: #ec4899; } .bg-green { background: #10b981; } .bg-red { background: #ef4444; }
-
+  .m-icon-box { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
+  .bg-blue { background: #3b82f6; } .bg-purple { background: #8b5cf6; } .bg-pink { background: #ec4899; } .bg-green { background: #10b981; } .bg-red { background: #ef4444; }
   .m-info { flex: 1; margin-left: 12px; margin-right: 12px; min-width: 0;}
-  .m-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; color: var(--text-main);}
+  .m-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
   .m-reward { font-size: 0.75rem; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;}
-  .coin-dot { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; display: inline-block;}
-  .progress-bar { width: 100%; height: 5px; background: var(--bg-main); border-radius: 3px; overflow: hidden; position: relative; margin-bottom: 2px;}
-  .progress-fill { height: 100%; background: #10b981; border-radius: 3px; transition: width 0.3s;}
+  .coin-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; }
+  .progress-bar { width: 100%; height: 5px; background: var(--bg-main); border-radius: 3px; overflow: hidden; margin-bottom: 2px;}
+  .progress-fill { height: 100%; background: #10b981; transition: width 0.4s;}
   .progress-text { font-size: 0.65rem; color: var(--text-muted); font-weight: 600;}
-
-  .invite-input { width: 100%; padding: 8px 10px; font-size: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); outline: none; margin-top: 4px; text-transform: uppercase; font-family: monospace; letter-spacing: 1px;}
-  .invite-input:focus { border-color: var(--primary); }
-  
-  .m-btn { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; cursor: pointer; flex-shrink: 0; transition: 0.2s;}
-  .m-btn:active { background: var(--border-color); }
-  
-  .m-btn.btn-klaim { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 2px 6px rgba(245,158,11,0.3); }
-  
-  /* FIX 1: Ubah gaya tombol selesai */
-  .m-btn.btn-done { background: var(--bg-main); color: #10b981; border-color: #10b981; cursor: not-allowed; opacity: 0.9;}
+  .invite-input { width: 100%; padding: 8px 10px; font-size: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); outline: none; margin-top: 4px; text-transform: uppercase; font-family: monospace; }
+  .m-btn { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+  .m-btn.btn-klaim { background: var(--primary); color: white; border-color: var(--primary); }
+  .m-btn.btn-done { color: #10b981; border-color: #10b981; background: transparent; cursor: not-allowed; }
 </style>
 
 <script>
   import { supabase } from '../lib/supabase.js';
 
-  function generateInviteCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 6; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
-    return result;
-  }
-
-  // Helper untuk salin kode (Misi Sosial)
-  window.copyMyCode = function() {
-    const code = document.getElementById('myInviteCode').innerText;
-    navigator.clipboard.writeText(code);
-    alert('Kode berhasil disalin: ' + code);
-  };
+  // HELPER: Generate Kode Unik
+  const genCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
   document.addEventListener('DOMContentLoaded', async () => {
-    const btnClaimCheckin = document.getElementById('btnClaimCheckin');
-    const btnExchange = document.getElementById('btnExchange');
-    const btnShareLink = document.getElementById('btnShareLink');
-    const daysContainer = document.getElementById('streakDaysContainer');
+    const missionCoinEl = document.getElementById('missionCoinText');
+    const hopeCoinEl = document.getElementById('hopeCoinText');
     
-    // Config Check-in & Misi
-    const CHECKIN_REWARDS = [50, 50, 100, 50, 50, 100, 300]; 
+    const REWARDS = [50, 50, 100, 50, 50, 100, 300]; 
     const MISSIONS = {
       listen:  { target: 3, reward: 30, type: 'mission_listen' },
       like:    { target: 5, reward: 25, type: 'mission_like' },
       comment: { target: 3, reward: 40, type: 'mission_comment' },
       upload:  { target: 1, reward: 100, type: 'mission_upload' },
-      apk:     { reward: 300, type: 'mission_apk' } // Config untuk APK
-    };
-
-    const getTodayDate = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
-    const getYesterdayDate = () => {
-      let d = new Date(); d.setDate(d.getDate() - 1);
-      return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
-    };
-    const getTodayStartISO = () => {
-      let d = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Jakarta"}));
-      d.setHours(0, 0, 0, 0);
-      return new Date(d.getTime() - (7 * 60 * 60 * 1000)).toISOString();
+      apk:     { reward: 300, type: 'mission_apk' }
     };
 
     let currentUser = null;
     let userProfile = null;
-    let currentStreak = 0;
-    let hasCheckedInToday = false;
-    let myUniqueInviteCode = "";
+    let deferredPrompt = null;
 
-    const updateCoinUI = (newMissionCoins, newHopeCoins) => {
-      document.getElementById('missionCoinText').textContent = newMissionCoins;
-      if (newHopeCoins !== undefined) document.getElementById('hopeCoinText').textContent = newHopeCoins;
-    };
-
-    const triggerConfetti = () => {
-      if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 70, origin: { y: 0.5 }});
-    };
-
-    const renderDays = () => {
-      daysContainer.innerHTML = '';
-      for (let i = 0; i < 7; i++) {
-        const dayNum = i + 1;
-        let isDone = dayNum <= currentStreak;
-        let isActive = dayNum === currentStreak + 1 && !hasCheckedInToday;
-        
-        if (currentStreak === 7 && hasCheckedInToday) { isDone = true; isActive = false; }
-
-        const coinSvg = i === 6 
-          ? `<svg class="day-coin-icon" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444"><path d="M20 12v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4"/><path d="M12 12v6"/><path d="M12 12c-2-2-4-2-4-4s2-2 4-2 4 2 2 4-2 4-4 4z" stroke="#fff"/></svg>` 
-          : `<svg class="day-coin-icon" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b"><circle cx="12" cy="12" r="10"/></svg>`;
-
-        daysContainer.innerHTML += `
-          <div class="day-card ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}">
-            <span class="day-label">Hari ${dayNum}</span>
-            ${coinSvg}
-            <span class="day-reward">+${CHECKIN_REWARDS[i]}</span>
-          </div>
-        `;
-      }
-    };
-
-    const setupMissionUI = (key, currentVal, isClaimed) => {
-      const config = MISSIONS[key];
-      const val = Math.min(currentVal, config.target);
-      const percent = (val / config.target) * 100;
-      
-      const progFill = document.getElementById(`progFill${key.charAt(0).toUpperCase() + key.slice(1)}`);
-      const progText = document.getElementById(`progText${key.charAt(0).toUpperCase() + key.slice(1)}`);
-      const btn = document.getElementById(`btn${key.charAt(0).toUpperCase() + key.slice(1)}`);
-      
-      if(progFill) progFill.style.width = `${percent}%`;
-      if(progText) progText.textContent = `${val}/${config.target}`;
-      
-      if (isClaimed) {
-        if(btn) { btn.textContent = 'Selesai'; btn.className = 'm-btn btn-done'; btn.onclick = null; }
-      } else if (val >= config.target) {
-        if(btn) {
-          btn.textContent = 'Klaim'; btn.className = 'm-btn btn-klaim';
-          btn.onclick = () => claimMissionReward(key);
-        }
-      }
-    };
-
-    window.claimMissionReward = async (key) => {
-      const config = MISSIONS[key];
-      const btn = document.getElementById(`btn${key.charAt(0).toUpperCase() + key.slice(1)}`);
-      btn.textContent = "..."; btn.disabled = true;
-
-      try {
-        const newMissionCoins = (userProfile.mission_coins || 0) + config.reward;
-
-        const { error: err1 } = await supabase.from('profiles').update({ mission_coins: newMissionCoins }).eq('id', currentUser.id);
-        if (err1) throw err1;
-
-        await supabase.from('coin_history').insert({
-          user_id: currentUser.id, type: 'masuk', transaction_type: config.type,
-          amount: config.reward, description: `Klaim Misi Harian`
-        });
-
-        userProfile.mission_coins = newMissionCoins;
-        updateCoinUI(newMissionCoins);
-        setupMissionUI(key, config.target, true);
-        triggerConfetti();
-      } catch (err) {
-        alert("Gagal Klaim: " + err.message);
-        btn.textContent = "Klaim"; btn.disabled = false;
-      }
+    const updateUI = (m, h) => {
+      missionCoinEl.textContent = m;
+      if(h !== undefined) hopeCoinEl.textContent = h;
     };
 
     // ==========================================
-    // 3. AMBIL SEMUA DATA DARI SUPABASE
+    // 1. PWA INSTALL SYSTEM
+    // ==========================================
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (!userProfile?.apk_downloaded) {
+        document.getElementById('btnInstallPWA').style.display = 'block';
+      }
+    });
+
+    document.getElementById('btnInstallPWA')?.addEventListener('click', async () => {
+      if (!deferredPrompt) return alert("Buka menu browser dan pilih 'Instal Aplikasi'.");
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        const newM = (userProfile.mission_coins || 0) + 300;
+        await supabase.from('profiles').update({ mission_coins: newM, apk_downloaded: true }).eq('id', currentUser.id);
+        await supabase.from('coin_history').insert({ user_id: currentUser.id, type:'masuk', transaction_type:'mission_apk', amount:300, description:'Hadiah Instal PWA'});
+        userProfile.mission_coins = newM; updateUI(newM);
+        document.getElementById('apkContainer').innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Selesai</h4></div>`;
+      }
+    });
+
+    // ==========================================
+    // 2. MAIN LOGIC (LOAD DATA)
     // ==========================================
     try {
-      const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
-      if (sessionErr || !session) {
-        btnClaimCheckin.textContent = "Silakan Login Dulu"; btnClaimCheckin.disabled = true;
-        renderDays(); return;
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
       currentUser = session.user;
 
-      // Ambil Data Profil Termasuk apk_downloaded
-      const { data: profile } = await supabase.from('profiles')
-        .select('coins, mission_coins, last_checkin, checkin_streak, referred_by, invite_code, apk_downloaded')
-        .eq('id', currentUser.id).single();
-      
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
       userProfile = profile || {};
-      
-      // CEK DAN BUAT KODE UNDANGAN UNIK KALAU BELUM PUNYA
-      myUniqueInviteCode = profile.invite_code;
-      if (!myUniqueInviteCode) {
-        myUniqueInviteCode = generateInviteCode();
-        await supabase.from('profiles').update({ invite_code: myUniqueInviteCode }).eq('id', currentUser.id);
+
+      // Handle Invite Code Unik
+      if (!profile.invite_code) {
+        const newCode = genCode();
+        await supabase.from('profiles').update({ invite_code: newCode }).eq('id', currentUser.id);
+        userProfile.invite_code = newCode;
       }
       
-      updateCoinUI(profile.mission_coins || 0, profile.coins || 0);
-      document.getElementById('myInviteCode').textContent = myUniqueInviteCode;
+      updateUI(userProfile.mission_coins || 0, userProfile.coins || 0);
+      document.getElementById('myInviteCode').textContent = userProfile.invite_code;
 
-      // --- SETUP CHECK-IN HARIAN ---
-      const today = getTodayDate();
-      const yesterday = getYesterdayDate();
-      currentStreak = profile.checkin_streak || 0;
+      // --- 7 DAYS CHECKIN ---
+      const today = new Date().toLocaleDateString('en-CA', {timeZone:'Asia/Jakarta'});
+      const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA', {timeZone:'Asia/Jakarta'});
+      
+      let streak = profile.checkin_streak || 0;
+      let hasDone = profile.last_checkin === today;
 
-      if (profile.last_checkin === today) hasCheckedInToday = true;
-      else if (profile.last_checkin !== yesterday) currentStreak = 0;
-      if (currentStreak >= 7 && !hasCheckedInToday) currentStreak = 0;
+      if (!hasDone && profile.last_checkin !== yesterday) streak = 0;
+      if (streak >= 7 && !hasDone) streak = 0;
 
-      renderDays();
-      if (hasCheckedInToday) {
-        btnClaimCheckin.textContent = "Klaim Selesai"; btnClaimCheckin.disabled = true;
-      } else {
-        btnClaimCheckin.textContent = "Check-in Sekarang"; btnClaimCheckin.disabled = false;
+      // Render Hari
+      const container = document.getElementById('streakDaysContainer');
+      for (let i=0; i<7; i++) {
+        let isDone = (i+1) <= streak;
+        let isActive = (i+1) === (streak + 1) && !hasDone;
+        container.innerHTML += `
+          <div class="day-card ${isDone?'done':''} ${isActive?'active':''}">
+            <span class="day-label">Hari ${i+1}</span>
+            <svg class="day-coin-icon" viewBox="0 0 24 24" fill="#f59e0b"><circle cx="12" cy="12" r="10"/></svg>
+            <span class="day-reward">+${REWARDS[i]}</span>
+          </div>`;
+      }
+      
+      const btnCheck = document.getElementById('btnClaimCheckin');
+      if (hasDone) { btnCheck.textContent = 'Klaim Selesai'; btnCheck.disabled = true; }
+      else {
+        btnCheck.textContent = 'Check-in Sekarang';
+        btnCheck.onclick = async () => {
+          const newStreak = streak + 1;
+          const rew = REWARDS[newStreak - 1];
+          const newM = (userProfile.mission_coins || 0) + rew;
+          await supabase.from('profiles').update({ mission_coins: newM, last_checkin: today, checkin_streak: newStreak }).eq('id', currentUser.id);
+          await supabase.from('coin_history').insert({ user_id:currentUser.id, type:'masuk', transaction_type:'checkin', amount:rew, description:`Check-in Hari ${newStreak}`});
+          location.reload();
+        }
       }
 
-      // --- HITUNG PROGRESS MISI HARI INI ---
-      const todayStart = getTodayStartISO();
-      
-      const { count: likeCount } = await supabase.from('likes').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id).gte('created_at', todayStart);
-      const { count: commentCount } = await supabase.from('comments').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id).gte('created_at', todayStart);
-      const { count: uploadCount } = await supabase.from('posts').select('*', { count: 'exact', head: true }).eq('creator_id', currentUser.id).gte('created_at', todayStart);
-      const listenCount = parseInt(localStorage.getItem('hh_daily_listens') || '0');
+      // --- DAILY MISSION TRACKING ---
+      const start = new Date(); start.setHours(0,0,0,0);
+      const iso = start.toISOString();
 
-      const { data: claims } = await supabase.from('coin_history').select('transaction_type')
-        .eq('user_id', currentUser.id).gte('created_at', todayStart)
-        .in('transaction_type', ['mission_listen', 'mission_like', 'mission_comment', 'mission_upload']);
-      const claimedTypes = claims ? claims.map(c => c.transaction_type) : [];
+      const { count: lk } = await supabase.from('likes').select('*',{count:'exact', head:true}).eq('user_id', currentUser.id).gte('created_at', iso);
+      const { count: cm } = await supabase.from('comments').select('*',{count:'exact', head:true}).eq('user_id', currentUser.id).gte('created_at', iso);
+      const { count: up } = await supabase.from('posts').select('*',{count:'exact', head:true}).eq('creator_id', currentUser.id).gte('created_at', iso);
+      const ls = parseInt(localStorage.getItem('hh_daily_listens') || '0');
 
-      setupMissionUI('listen', listenCount, claimedTypes.includes('mission_listen'));
-      setupMissionUI('like', likeCount || 0, claimedTypes.includes('mission_like'));
-      setupMissionUI('comment', commentCount || 0, claimedTypes.includes('mission_comment'));
-      setupMissionUI('upload', uploadCount || 0, claimedTypes.includes('mission_upload'));
+      const { data: clm } = await supabase.from('coin_history').select('transaction_type').eq('user_id', currentUser.id).gte('created_at', iso);
+      const done = clm ? clm.map(c => c.transaction_type) : [];
 
-      // --- MISI DOWNLOAD APK ---
-      const apkContainer = document.getElementById('downloadApkContainer');
-      const btnApk = document.getElementById('btnDownloadApk');
-      
-      if (profile.apk_downloaded) {
-        apkContainer.innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Selesai</h4><span class="progress-text">Aplikasi sudah diunduh.</span></div>`;
-      } else if (btnApk) {
-        btnApk.onclick = async () => {
-          btnApk.textContent = "..."; btnApk.disabled = true;
-          
-          try {
-            // 1. Catat ke database kalo udah download
-            const newCoins = (userProfile.mission_coins || 0) + MISSIONS.apk.reward;
-            await supabase.from('profiles').update({ apk_downloaded: true, mission_coins: newCoins }).eq('id', currentUser.id);
-            await supabase.from('coin_history').insert({ user_id: currentUser.id, type: 'masuk', transaction_type: MISSIONS.apk.type, amount: MISSIONS.apk.reward, description: `Hadiah Download APK`});
-            
-            // 2. Update UI
-            userProfile.mission_coins = newCoins; updateCoinUI(newCoins);
-            apkContainer.innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Selesai</h4><span class="progress-text">Aplikasi sudah diunduh.</span></div>`;
-            triggerConfetti();
-            
-            // 3. Arahkan ke link download asli kamu (GANTI LINK INI)
-            window.location.href = "https://link-download-apk-kamu.com/hopehype.apk";
-            
-          } catch(err) {
-            alert("Gagal: " + err.message);
-            btnApk.textContent = "Unduh"; btnApk.disabled = false;
+      const setup = (k, cur, tag) => {
+        const fill = document.getElementById(`progFill${tag}`);
+        const txt = document.getElementById(`progText${tag}`);
+        const b = document.getElementById(`btn${tag}`);
+        const c = MISSIONS[k];
+        const v = Math.min(cur, c.target);
+        fill.style.width = `${(v/c.target)*100}%`;
+        txt.textContent = `${v}/${c.target}`;
+        if(done.includes(c.type)) { b.textContent = 'Selesai'; b.className = 'm-btn btn-done'; }
+        else if(v >= c.target) {
+          b.textContent = 'Klaim'; b.className = 'm-btn btn-klaim';
+          b.onclick = async () => {
+            const newM = (userProfile.mission_coins || 0) + c.reward;
+            await supabase.from('profiles').update({ mission_coins: newM }).eq('id', currentUser.id);
+            await supabase.from('coin_history').insert({ user_id:currentUser.id, type:'masuk', transaction_type:c.type, amount:c.reward, description:'Klaim Misi Harian'});
+            location.reload();
           }
-        };
-      }
+        }
+      };
 
-      // --- SETUP KODE UNDANGAN (MEMASUKKAN KODE ORANG LAIN) ---
-      const inviteContainer = document.getElementById('inviteCodeContainer');
+      setup('listen', ls, 'Listen');
+      setup('like', lk||0, 'Like');
+      setup('comment', cm||0, 'Comment');
+      setup('upload', up||0, 'Upload');
+
+      // --- REFERRAL SYSTEM ---
       if (profile.referred_by) {
-        inviteContainer.innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Selesai</h4><span class="progress-text">Kamu telah menggunakan kode teman.</span></div>`;
+        document.getElementById('inviteCodeContainer').innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Referral Berhasil</h4></div>`;
       } else {
-        const urlParams = new URLSearchParams(window.location.search);
-        const refCodeFromUrl = urlParams.get('ref');
-        if (refCodeFromUrl) {
-          document.getElementById('inviteInputCode').value = refCodeFromUrl;
-        }
-
         document.getElementById('btnInviteCode').onclick = async () => {
-          const code = document.getElementById('inviteInputCode').value.trim().toUpperCase();
-          if (!code) return alert("Masukkan kode temanmu dulu!");
-          if (code === myUniqueInviteCode) return alert("Hayo, tidak bisa memakai kode milik sendiri!");
-
-          const btn = document.getElementById('btnInviteCode');
-          btn.textContent = "..."; btn.disabled = true;
-
-          try {
-            const { data: friend, error: friendErr } = await supabase.from('profiles').select('id, mission_coins').eq('invite_code', code).single();
-            if (friendErr || !friend) {
-              btn.textContent = "Klaim"; btn.disabled = false; return alert("Kode tidak ditemukan! Pastikan kode temanmu benar.");
-            }
-
-            const myNewCoins = (userProfile.mission_coins || 0) + 200;
-            await supabase.from('profiles').update({ referred_by: code, mission_coins: myNewCoins }).eq('id', currentUser.id);
-            await supabase.from('coin_history').insert({ user_id: currentUser.id, type: 'masuk', transaction_type: 'mission_invite', amount: 200, description: `Hadiah pakai kode ${code}`});
-
-            const friendNewCoins = (friend.mission_coins || 0) + 500;
-            await supabase.from('profiles').update({ mission_coins: friendNewCoins }).eq('id', friend.id);
-            await supabase.from('coin_history').insert({ user_id: friend.id, type: 'masuk', transaction_type: 'referral_bonus', amount: 500, description: `Bonus undang teman (kode dipasang)`});
-
-            userProfile.mission_coins = myNewCoins; updateCoinUI(myNewCoins);
-            inviteContainer.innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Selesai</h4><span class="progress-text">Kode berhasil diklaim.</span></div>`;
-            triggerConfetti(); 
-            alert(`Sukses! Kamu dapat +200 Koin!`);
-          } catch (err) {
-            btn.textContent = "Klaim"; btn.disabled = false; alert("Gagal memproses: " + err.message);
-          }
-        };
-      }
-
-    } catch (err) {
-      console.error("Kesalahan Utama:", err);
-    }
-
-    // ==========================================
-    // 4. LOGIKA TOMBOL CHECK-IN
-    // ==========================================
-    btnClaimCheckin.addEventListener('click', async () => {
-      if (btnClaimCheckin.disabled || !currentUser || !userProfile) return;
-      btnClaimCheckin.disabled = true; btnClaimCheckin.textContent = "Memproses...";
-
-      try {
-        const targetStreak = currentStreak + 1;
-        const rewardAmount = CHECKIN_REWARDS[targetStreak - 1];
-        const newMissionCoins = (userProfile.mission_coins || 0) + rewardAmount;
-        const today = getTodayDate();
-
-        await supabase.from('profiles').update({ mission_coins: newMissionCoins, last_checkin: today, checkin_streak: targetStreak }).eq('id', currentUser.id);
-        await supabase.from('coin_history').insert({ user_id: currentUser.id, type: 'masuk', transaction_type: 'checkin', amount: rewardAmount, description: `Hadiah Check-in Hari ke-${targetStreak}`});
-
-        currentStreak = targetStreak; hasCheckedInToday = true;
-        userProfile.mission_coins = newMissionCoins; updateCoinUI(newMissionCoins);
-        
-        renderDays(); btnClaimCheckin.textContent = "Klaim Selesai";
-        triggerConfetti();
-      } catch (err) {
-        btnClaimCheckin.textContent = "Gagal, Coba Lagi"; btnClaimCheckin.disabled = false; alert("Gagal Check-in: " + err.message);
-      }
-    });
-
-    // ==========================================
-    // 5. LOGIKA TOMBOL TUKAR KOIN
-    // ==========================================
-    btnExchange.addEventListener('click', async () => {
-      if (!currentUser || !userProfile) return alert("Silakan login dulu!");
-      const currentMissionCoins = userProfile.mission_coins || 0;
-      const currentHopeCoins = userProfile.coins || 0;
-
-      if (currentMissionCoins < 1000) return alert(`Koin Misi belum cukup! Saldo: ${currentMissionCoins}`);
-      if (!confirm("Tukar 1000 Koin Misi menjadi 10 Koin Hope?")) return;
-
-      btnExchange.disabled = true; btnExchange.textContent = "...";
-      try {
-        const newMissionCoins = currentMissionCoins - 1000;
-        const newHopeCoins = currentHopeCoins + 10; 
-
-        await supabase.from('profiles').update({ mission_coins: newMissionCoins, coins: newHopeCoins }).eq('id', currentUser.id);
-        await supabase.from('coin_history').insert({ user_id: currentUser.id, type: 'masuk', transaction_type: 'exchange', amount: 10, description: `Tukar 1000 Koin Misi`});
-
-        userProfile.mission_coins = newMissionCoins; userProfile.coins = newHopeCoins;
-        updateCoinUI(newMissionCoins, newHopeCoins);
-
-        alert("Berhasil! Koin Hope kamu bertambah +10 🪙");
-        triggerConfetti();
-      } catch (err) {
-        alert("Gagal menukar koin: " + err.message);
-      } finally {
-        btnExchange.disabled = false; btnExchange.textContent = "Tukar";
-      }
-    });
-
-    // ==========================================
-    // 6. LOGIKA BAGIKAN LINK UNDANGAN
-    // ==========================================
-    btnShareLink.addEventListener('click', async () => {
-      if (!myUniqueInviteCode) return alert("Tunggu sebentar, kode undanganmu sedang disiapkan.");
-      
-      const baseUrl = window.location.origin; 
-      const inviteUrl = `${baseUrl}/dailycek?ref=${myUniqueInviteCode}`;
-
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Dapatkan Koin Gratis di Pusat Misi!',
-            text: `Yuk daftar pakai kode undanganku ${myUniqueInviteCode} buat dapet koin gratis!`,
-            url: inviteUrl
-          });
-        } catch (err) {
-          console.log("Share dibatalkan user atau error:", err);
+          const val = document.getElementById('inviteInputCode').value.trim().toUpperCase();
+          if (val === userProfile.invite_code) return alert("Gunakan kode teman.");
+          const { data: f } = await supabase.from('profiles').select('id, mission_coins').eq('invite_code', val).single();
+          if (!f) return alert("Kode salah.");
+          const newM = (userProfile.mission_coins || 0) + 200;
+          const fNewM = (f.mission_coins || 0) + 500;
+          await supabase.from('profiles').update({ referred_by: val, mission_coins: newM }).eq('id', currentUser.id);
+          await supabase.from('profiles').update({ mission_coins: fNewM }).eq('id', f.id);
+          await supabase.from('coin_history').insert([{ user_id:currentUser.id, type:'masuk', transaction_type:'referral', amount:200, description:'Pakai kode teman'}, {user_id:f.id, type:'masuk', transaction_type:'referral_bonus', amount:500, description:'Teman pakai kodemu'}]);
+          location.reload();
         }
-      } else {
-        navigator.clipboard.writeText(`Daftar di sini buat dapet koin gratis: ${inviteUrl}`);
-        alert('Link undangan berhasil disalin! Silakan paste ke temanmu.');
       }
-    });
 
+      // --- EXCHANGE SYSTEM ---
+      document.getElementById('btnExchange').onclick = async () => {
+        if (userProfile.mission_coins < 1000) return alert("Koin tidak cukup.");
+        if (!confirm("Tukar 1000 Misi ke 10 Hope?")) return;
+        const nM = userProfile.mission_coins - 1000;
+        const nH = (userProfile.coins || 0) + 10;
+        await supabase.from('profiles').update({ mission_coins: nM, coins: nH }).eq('id', currentUser.id);
+        await supabase.from('coin_history').insert({ user_id:currentUser.id, type:'masuk', transaction_type:'exchange', amount:10, description:'Tukar koin misi'});
+        location.reload();
+      };
+
+      // --- SHARE LINK ---
+      document.getElementById('btnShareLink').onclick = () => {
+        const link = `${window.location.origin}/dailycek?ref=${userProfile.invite_code}`;
+        if(navigator.share) navigator.share({ title:'HopeHype', text:'Join pakai kodemu!', url:link });
+        else { navigator.clipboard.writeText(link); alert("Link disalin!"); }
+      };
+
+    } catch (e) { console.log(e); }
   });
 </script>
