@@ -1165,24 +1165,99 @@ if (rewardDeclineBtn) {
 
 if (rewardAcceptBtn) {
   rewardAcceptBtn.addEventListener("click", async () => {
-    rewardCard.classList.remove('active');
-    setTimeout(() => rewardCard.classList.add('hidden'), 400);
+    // 1. Tutup Popup Misi dengan smooth
+    if (rewardCard) {
+      rewardCard.classList.remove('active');
+      setTimeout(() => rewardCard.classList.add('hidden'), 400);
+    }
 
     const { data: { user } } = await _supabase.auth.getUser();
     if (!user) return;
 
-    // 1. Munculin Toast
-    window.showToast("Memutar Video", "Koin cair dalam 15 detik. Jangan tutup tab iklan!", "info");
-
-    // 2. JURUS PAKSA (WAJIB PAKAI INI)
-    // window.open bakal PAKSA browser buka tab baru isi iklan.
-    // Ini 99% PASTI munculin duit buat lu tiap kali diklik.
+    // 2. BUKA IKLAN DI TAB BARU (Duit masuk ke lu)
     window.open("https://omg10.com/4/10901295", "_blank");
 
-    // 3. Jeda 15 detik baru kasih koin
-    setTimeout(() => {
-      claimSongReward(user.id);
-    }, 15000); 
+    // 3. MUNCULIN LAYAR LOADING PREMIUM (Gak cuma hitam polos)
+    const overlay = document.createElement('div');
+    overlay.id = "video-ads-overlay";
+    
+    // Styling Overlay (Efek Blur & Dark Mode)
+    overlay.style = `
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 10, 0.98);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 100000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+      font-family: sans-serif;
+    `;
+
+    overlay.innerHTML = `
+      <div style="padding: 30px; border-radius: 20px; width: 80%; max-width: 320px;">
+        <div style="display: flex; justify-content: center; align-items: flex-end; gap: 5px; height: 40px; margin-bottom: 20px;">
+          <div style="width: 6px; background: #1f3cff; animation: barUp 0.5s infinite alternate;"></div>
+          <div style="width: 6px; background: #3b82f6; animation: barUp 0.8s infinite alternate-reverse;"></div>
+          <div style="width: 6px; background: #1f3cff; animation: barUp 0.6s infinite alternate;"></div>
+          <div style="width: 6px; background: #3b82f6; animation: barUp 0.4s infinite alternate-reverse;"></div>
+        </div>
+
+        <h3 style="font-size: 18px; margin-bottom: 5px;">Memproses Sponsor...</h3>
+        <p style="font-size: 13px; color: #888; margin-bottom: 20px;">Koin cair otomatis setelah iklan selesai.</p>
+
+        <div style="position: relative; width: 60px; height: 60px; margin: 0 auto;">
+          <svg width="60" height="60" style="transform: rotate(-90deg);">
+            <circle cx="30" cy="30" r="25" stroke="rgba(255,255,255,0.1)" stroke-width="4" fill="none" />
+            <circle id="timer-line" cx="30" cy="30" r="25" stroke="#1f3cff" stroke-width="4" fill="none" 
+              stroke-dasharray="157" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;" />
+          </svg>
+          <div id="ad-timer" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 16px; font-weight: bold;">15s</div>
+        </div>
+      </div>
+
+      <style>
+        @keyframes barUp { from { height: 10px; } to { height: 40px; } }
+      </style>
+    `;
+    
+    document.body.appendChild(overlay);
+
+    // 4. LOGIKA HITUNG MUNDUR 15 DETIK
+    let sec = 15;
+    const totalSec = 15;
+    const timerLine = document.getElementById('timer-line');
+
+    const countdown = setInterval(() => {
+      sec--;
+      
+      // Update angka detik
+      const timerEl = document.getElementById('ad-timer');
+      if (timerEl) timerEl.innerText = sec + "s";
+      
+      // Update animasi lingkaran biru
+      if (timerLine) {
+        const offset = 157 - (sec / totalSec) * 157;
+        timerLine.style.strokeDashoffset = offset;
+      }
+      
+      if (sec <= 0) {
+        clearInterval(countdown);
+        // Fade out overlay
+        overlay.style.opacity = "0";
+        overlay.style.transition = "opacity 0.5s ease";
+        
+        setTimeout(() => {
+          overlay.remove();
+          claimSongReward(user.id); // 🔥 Koin Masuk!
+          window.showToast("Berhasil!", "5 Koin telah ditambahkan ke akunmu.", "success");
+        }, 500);
+      }
+    }, 1000);
   });
 }
 
