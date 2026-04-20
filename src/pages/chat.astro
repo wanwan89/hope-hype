@@ -2355,35 +2355,33 @@ async function markRoomAsRead() {
 }
 
 // ==========================================
-// 🔥 SISTEM CARI DOI + LIMIT (GABUNGAN FIX) 🔥
+// 🔥 SISTEM CARI DOI + LIMIT (EVENT LISTENER FIX) 🔥
 // ==========================================
-let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
 
+// 1. Fungsi Update Angka
 function updateTextLimitDoi() {
+  let limit = parseInt(localStorage.getItem('doi_limit') || '10');
   const limitEl = document.getElementById('limit-doi-text');
   if (limitEl) {
-    limitEl.innerText = sisaLimitDoi;
-    limitEl.style.color = sisaLimitDoi > 0 ? "#1f3cff" : "#ff4757"; 
+    limitEl.innerText = limit;
+    limitEl.style.color = limit > 0 ? "#1f3cff" : "#ff4757"; 
   }
 }
+setInterval(updateTextLimitDoi, 1000); // Paksa update teks tiap detik
 
-// Cek terus menerus di awal buat mastiin elemen Sidebar udah ke-load
-let cekSidebar = setInterval(() => {
-    if(document.getElementById('limit-doi-text')) {
-        updateTextLimitDoi();
-        clearInterval(cekSidebar);
-    }
-}, 500);
+// 2. Logika Tombol Cari Doi (Pakai Event Listener, Dijamin Jalan)
+const btnCariDoiTerbaru = document.getElementById("btn-sidebar-search");
 
-const btnCariDoiActual = document.getElementById("btn-sidebar-search");
-if (btnCariDoiActual) {
-  btnCariDoiActual.onclick = async () => {
-    // 1. CEK LIMIT DULU
+if (btnCariDoiTerbaru) {
+  btnCariDoiTerbaru.addEventListener("click", async () => {
+    let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
+
+    // CEK TIKET
     if (sisaLimitDoi <= 0) {
       if(confirm("Tiket Cari Doi Habis! 😭\n\nMau lihat sponsor 15 detik buat dapetin +10 tiket lagi?")) {
-        window.jalankanSponsorDoi();
+        jalankanSponsorDoiBaru();
       }
-      return; // STOP animasi radar kalau tiket habis
+      return; // Stop pencarian
     }
 
     const myProfile = await getCachedProfile(currentUser.id); 
@@ -2393,14 +2391,14 @@ if (btnCariDoiActual) {
       return; 
     }
 
-    // 2. KURANGI LIMIT
+    // KURANGI TIKET & UPDATE LAYAR
     sisaLimitDoi--;
-    localStorage.setItem('doi_limit', sisaLimitDoi);
+    localStorage.setItem('doi_limit', sisaLimitDoi.toString());
     updateTextLimitDoi();
 
     closeSidebar();
 
-    // 3. JALANKAN ANIMASI RADAR PREMIUM
+    // MUNCULIN ANIMASI RADAR
     const loadingOverlay = document.createElement("div"); 
     loadingOverlay.className = "doi-search-overlay"; 
     loadingOverlay.id = "active-search-overlay";
@@ -2418,6 +2416,7 @@ if (btnCariDoiActual) {
 
     const container = document.getElementById('radar-icons-container');
     const iconInterval = setInterval(() => {
+      if (!container) return;
       const siluet = document.createElement('div');
       siluet.className = 'floating-radar-user';
       siluet.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
@@ -2447,11 +2446,11 @@ if (btnCariDoiActual) {
       tampilkanDoiCard(users[Math.floor(Math.random() * users.length)]);
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
     }, waktuTungguAcak);
-  };
+  });
 }
 
-// 4. LOGIKA LAYAR IKLAN SPONSOR DOI (Z-INDEX MAX)
-window.jalankanSponsorDoi = function() {
+// 3. LAYAR SPONSOR 15 DETIK
+function jalankanSponsorDoiBaru() {
   const overlay = document.createElement('div');
   overlay.id = "video-ads-overlay-doi";
   overlay.style = `
@@ -2478,8 +2477,9 @@ window.jalankanSponsorDoi = function() {
   `;
   document.body.appendChild(overlay);
 
+  // BUKA LINK IKLAN MONETAG LU
   setTimeout(() => {
-    window.open("https://omg10.com/4/10901295", "_blank"); // INI YANG BIKIN CUAN
+    window.open("https://omg10.com/4/10901295", "_blank"); 
   }, 1000);
 
   let sec = 15;
@@ -2505,8 +2505,8 @@ window.jalankanSponsorDoi = function() {
           overlay.remove();
           document.body.style.overflow = "auto";
           
-          sisaLimitDoi = 10; // FULL LAGI 10
-          localStorage.setItem('doi_limit', sisaLimitDoi);
+          // 🔥 RESET TIKET JADI 10 LAGI 🔥
+          localStorage.setItem('doi_limit', '10');
           updateTextLimitDoi();
           
           showToast("Mantap! +10 Tiket Cari Doi berhasil ditambahkan!");
@@ -2514,8 +2514,7 @@ window.jalankanSponsorDoi = function() {
       }, 1000);
     }
   }, 1000);
-};
-
+}
 
 async function init() {
   try {
