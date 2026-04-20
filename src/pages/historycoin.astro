@@ -26,7 +26,7 @@
 
     <div id="hc-content" style="display: none;">
       <div class="hc-card hc-balance-card">
-        <p class="hc-balance-label">Total Koin Saat Ini</p>
+        <p class="hc-balance-label">TOTAL KOIN SAAT INI</p>
         <h2 class="hc-balance-amount" id="hc-total-coins">0</h2>
       </div>
 
@@ -43,9 +43,11 @@
 </div>
 
 <style is:global>
-  /* Memastikan padding tidak menambah lebar elemen secara keseluruhan */
+  /* Reset dasar agar tidak terpengaruh CSS bawaan website */
   .hc-wrapper, .hc-wrapper * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
 
   /* Variabel CSS untuk Light/Dark Mode */
@@ -58,16 +60,14 @@
     --hc-primary: #3b82f6;
     --hc-success: #10b981;
     --hc-danger: #ef4444;
-    --hc-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --hc-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
     
     font-family: 'Inter', sans-serif;
     background-color: var(--hc-bg);
     color: var(--hc-text-main);
     min-height: 100vh;
-    padding: 1.5rem 1rem;
-    transition: background-color 0.3s, color 0.3s;
     width: 100%;
-    overflow-x: hidden; /* Mencegah layar bisa digeser ke samping (horizontal scroll) */
+    padding: 1.25rem 1rem; /* Jarak pas ke pinggir layar HP */
   }
 
   /* Support Dark Mode menggunakan class html.dark */
@@ -81,62 +81,61 @@
   }
 
   .hc-container {
-    width: 100%; /* PERBAIKAN: Menggunakan 100% agar pas dengan lebar HP */
-    max-width: 600px; /* Batas maksimal untuk layar tablet/laptop */
+    width: 100%;
+    max-width: 600px; /* Menjaga agar di laptop tidak terlalu lebar */
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
   }
 
   .hc-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
     text-align: center;
+    color: var(--hc-text-main);
   }
 
   .hc-subtitle {
-    font-size: 1.125rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    margin: 1.5rem 0 1rem 0;
+    margin: 1.5rem 0 0.75rem 0;
+    color: var(--hc-text-main);
   }
 
   .hc-card {
     background-color: var(--hc-card-bg);
     border: 1px solid var(--hc-border);
-    border-radius: 1rem;
-    padding: 1.5rem;
+    border-radius: 0.75rem; /* Siku membulat yang modern */
+    padding: 1.25rem;
     box-shadow: var(--hc-shadow);
-    transition: background-color 0.3s, border-color 0.3s;
     width: 100%;
   }
 
   .hc-balance-card {
     text-align: center;
-    margin-bottom: 2rem;
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem;
   }
 
   .hc-balance-label {
     color: var(--hc-text-muted);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
     margin-bottom: 0.5rem;
   }
 
   .hc-balance-amount {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 700;
     color: var(--hc-primary);
-    margin: 0;
-    line-height: 1.2;
-    word-break: break-all; /* Agar angka sangat besar tidak menabrak batas kartu */
+    line-height: 1;
   }
 
   .hc-history-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem; /* Jarak antar kartu riwayat */
+    gap: 0.5rem; /* Jarak antar list dibuat lebih rapat sesuai gambar */
     width: 100%;
   }
 
@@ -144,40 +143,41 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.25rem;
+    padding: 0.875rem 1rem;
     background-color: var(--hc-card-bg);
     border: 1px solid var(--hc-border);
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    gap: 1rem;
+    border-radius: 0.5rem; /* Border radius list sedikit lebih kecil dari card utama */
     width: 100%;
   }
 
   .hc-history-info {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    flex: 1; /* Mengisi sisa ruang di kiri */
-    min-width: 0; /* Penting untuk mencegah flexbox meluap jika teks terlalu panjang */
+    gap: 0.2rem;
+    flex: 1;
+    min-width: 0;
   }
 
   .hc-history-desc {
-    font-weight: 600;
-    font-size: 0.95rem;
-    line-height: 1.4;
-    word-break: break-word; /* Mencegah teks panjang menembus layar hp */
+    font-weight: 500;
+    font-size: 0.85rem;
+    color: var(--hc-text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Menambahkan titik-titik (...) jika teks terlalu panjang */
   }
 
   .hc-history-date {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--hc-text-muted);
   }
 
   .hc-history-amount {
     font-weight: 700;
-    font-size: 1.125rem;
-    white-space: nowrap; /* Memastikan angka tidak terpotong ke bawah */
-    flex-shrink: 0; /* Mencegah angka mengecil tertekan teks deskripsi */
+    font-size: 1rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 0.5rem;
   }
 
   .hc-text-success { color: var(--hc-success); }
@@ -213,15 +213,6 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
-
-  /* Responsiveness tambahan untuk HP kecil */
-  @media (max-width: 480px) {
-    .hc-wrapper { padding: 1rem 0.5rem; }
-    .hc-card { padding: 1.25rem 1rem; }
-    .hc-history-item { padding: 0.875rem 1rem; gap: 0.5rem; }
-    .hc-history-desc { font-size: 0.9rem; }
-    .hc-history-amount { font-size: 1rem; }
-  }
 </style>
 
 <script>
@@ -237,12 +228,14 @@
     const elEmptyState = document.getElementById('hc-empty-state');
     const elHistoryList = document.getElementById('hc-history-list');
 
-    const showElement = (element) => element.style.display = 'block';
+    const showElement = (element) => element.style.display = 'flex'; // Pakai flex agar styling container tetap jalan
     const hideElement = (element) => element.style.display = 'none';
 
     const formatDate = (dateString) => {
       const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' };
-      return new Date(dateString).toLocaleDateString('id-ID', options);
+      const date = new Date(dateString);
+      // Format seperti di gambar: "19 Apr 2026, 11.10"
+      return date.toLocaleDateString('id-ID', options).replace('pukul ', '').replace(':', '.'); 
     };
 
     const renderHistory = (historyData) => {
@@ -252,14 +245,12 @@
       }
 
       historyData.forEach(item => {
-        // Ambil nilai absolut untuk menghindari double minus (misal: --200)
+        // Mencegah double minus
         const amountValue = Number(item.amount) || 0;
         const displayAmount = Math.abs(amountValue); 
         
-        // Cek apakah transaksi ini uang masuk atau keluar
-        // Jika dari database tidak ada type-nya, asumsikan minus = keluar, plus = masuk
+        // Logika Uang Masuk/Keluar
         const isIncome = item.type === 'masuk' || (item.type !== 'keluar' && amountValue >= 0);
-        
         const sign = isIncome ? '+' : '-';
         const colorClass = isIncome ? 'hc-text-success' : 'hc-text-danger';
 
@@ -269,7 +260,7 @@
         historyItem.innerHTML = `
           <div class="hc-history-info">
             <span class="hc-history-desc">${escapeHTML(item.description || 'Transaksi')}</span>
-            <span class="hc-history-date">${item.created_at ? formatDate(item.created_at) : 'Tanggal tidak diketahui'}</span>
+            <span class="hc-history-date">${item.created_at ? formatDate(item.created_at) : '-'}</span>
           </div>
           <div class="hc-history-amount ${colorClass}">
             ${sign}${displayAmount}
@@ -314,6 +305,8 @@
 
         hideElement(elLoading);
         showElement(elContent);
+        // Reset display ke block/flex sesuai kebutuhan content utama
+        elContent.style.display = 'block';
 
       } catch (error) {
         console.error("Error fetching coin data:", error);
