@@ -2355,7 +2355,7 @@ async function markRoomAsRead() {
 }
 
 // ==========================================
-// 🔥 SISTEM CARI DOI + LIMIT (JURUS DELEGASI FIX) 🔥
+// 🔥 SISTEM CARI DOI + LIMIT (EVENT LISTENER FIX) 🔥
 // ==========================================
 
 // 1. Fungsi Update Angka
@@ -2369,14 +2369,11 @@ function updateTextLimitDoi() {
 }
 setInterval(updateTextLimitDoi, 1000); // Paksa update teks tiap detik
 
-// 2. Jurus Delegasi (Nangkep klik di seluruh halaman, cari tombolnya)
-document.addEventListener('click', async function(e) {
-  // Cek apakah yang diklik adalah tombol Cari Doi (atau bagian dalem tombolnya kayak SVG/span)
-  const targetBtn = e.target.closest('#btn-sidebar-search');
-  
-  if (targetBtn) {
-    e.preventDefault(); // Cegah fungsi bawaan
-    
+// 2. Logika Tombol Cari Doi (Pakai Event Listener, Dijamin Jalan)
+const btnCariDoiTerbaru = document.getElementById("btn-sidebar-search");
+
+if (btnCariDoiTerbaru) {
+  btnCariDoiTerbaru.addEventListener("click", async () => {
     let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
 
     // CEK TIKET
@@ -2449,8 +2446,8 @@ document.addEventListener('click', async function(e) {
       tampilkanDoiCard(users[Math.floor(Math.random() * users.length)]);
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
     }, waktuTungguAcak);
-  }
-}); // <-- Penutup Event Listener Document
+  });
+}
 
 // 3. LAYAR SPONSOR 15 DETIK
 function jalankanSponsorDoiBaru() {
