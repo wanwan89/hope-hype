@@ -440,17 +440,22 @@ async function playSong(song) {
     audio.play().catch(err => console.log("Autoplay di-block browser:", err));
   }
 
-  // 3. TIMER HITUNG JUMLAH PUTAR (60 DETIK)
+  // 3. TIMER HITUNG JUMLAH PUTAR & REWARD IKLAN (60 DETIK)
   playTimer = setTimeout(async () => {
     const isPlayingAudio = !audio.paused;
     const isPlayingYT = isYTReady && ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === 1;
     
     if ((isPlayingAudio || isPlayingYT) && currentSongsList[currentSongIndex]?.id === song.id) {
+      // 1. Tambah Views buat Kreator
       if (song.source === 'local') {
         await updatePlayCount(song.id);
       }
+      
+      // 2. Tawarkan Iklan buat Pendengar (Memicu Popup)
+      window.triggerAdReward(song.id);
     }
   }, 60000);
+
 
   // 4. UPDATE TAMPILAN MINI PLAYER & TOMBOL
   if (miniCover) miniCover.src = song.cover_url;
@@ -1090,6 +1095,59 @@ function updateDynamicBackground(coverUrl) {
         
     document.body.style.background = `linear-gradient(to bottom, ${bgColors}), url('${coverUrl}') center/cover no-repeat`;
 }
+// ================= 6. AD & REWARD SYSTEM (SIMULASI) =================
+window.triggerAdReward = async function(songId) {
+  const { data: { user } } = await _supabase.auth.getUser();
+  if (!user) return; // Kalau belum login, gak dapet tawaran koin
+
+  // Pake native confirm popup biar gampang dites dulu
+  const mauNonton = confirm("🎁 Mantap! Kamu udah dengerin lagu ini. Mau nonton iklan sebentar buat dapetin +5 Koin Misi?");
+  
+  if (mauNonton) {
+    // Di sini nanti tempat naro script provider Iklan (Monetag/Adsterra)
+    console.log("Memutar Iklan...");
+    alert("Iklan sedang diputar... (Simulasi 3 detik)");
+    
+    // Simulasi nunggu iklan selesai (3 detik)
+    setTimeout(() => {
+      claimSongReward(user.id);
+    }, 3000);
+  }
+};
+
+async function claimSongReward(userId) {
+  try {
+    // 1. Ambil koin user saat ini
+    const { data: profile } = await _supabase.from('profiles').select('mission_coins').eq('id', userId).single();
+    const currentCoins = profile?.mission_coins || 0;
+    
+    // 2. Tambah +5 Koin Misi
+    const newCoins = currentCoins + 5;
+    const { error } = await _supabase.from('profiles').update({ mission_coins: newCoins }).eq('id', userId);
+    
+    if (error) throw error;
+    
+    // 3. Catat di tabel History Biar Aman
+    await _supabase.from('coin_history').insert({
+      user_id: userId,
+      type: 'masuk',
+      transaction_type: 'listen_reward', // Bisa kamu lacak nanti
+      amount: 5,
+      description: 'Reward dengar lagu & iklan'
+    });
+
+    alert("🎉 Yey! +5 Koin Misi berhasil masuk ke akunmu!");
+    
+    // (Opsional) Kalau ada text koin di header, langsung update angkanya
+    const coinText = document.getElementById('missionCoinText');
+    if (coinText) coinText.textContent = newCoins;
+    
+  } catch (err) {
+    console.error("Gagal klaim koin:", err);
+    alert("Yah, server lagi sibuk. Koin gagal masuk.");
+  }
+}
+
 
 
 async function initApp() {
