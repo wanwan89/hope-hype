@@ -1165,56 +1165,36 @@ if (rewardDeclineBtn) {
 
 if (rewardAcceptBtn) {
   rewardAcceptBtn.addEventListener("click", async () => {
-    // 1. Ambil data user dulu (biar loading overlay gak sia-sia kalau belum login)
+    // 1. Cek User duluan
     const { data: { user } } = await _supabase.auth.getUser();
     if (!user) return window.showToast("Waduh!", "Login dulu bro buat klaim koin.", "error");
 
-    // 2. Tutup Popup Misi
-    if (rewardCard) {
-      rewardCard.classList.remove('active');
-      setTimeout(() => rewardCard.classList.add('hidden'), 400);
-    }
-
-    // 3. MUNCULIN LAYAR LOADING PREMIUM DULUAN
+    // 2. MUNCULIN LAYAR LOADING PREMIUM SECEPAT MUNGKIN
     const overlay = document.createElement('div');
     overlay.id = "video-ads-overlay";
     overlay.style = `
-      position: fixed;
-      inset: 0;
-      background: rgba(10, 10, 10, 0.98);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      z-index: 100000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      text-align: center;
-      font-family: 'Poppins', sans-serif;
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      position: fixed; inset: 0; background: #0a0a0a; z-index: 100000;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.4s ease; font-family: 'Poppins', sans-serif;
     `;
 
     overlay.innerHTML = `
-      <div style="padding: 30px; border-radius: 24px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); width: 85%; max-width: 320px;">
-        <div style="display: flex; justify-content: center; align-items: flex-end; gap: 5px; height: 40px; margin-bottom: 20px;">
-          <div style="width: 6px; background: #1f3cff; border-radius: 3px; animation: barUp 0.5s infinite alternate;"></div>
-          <div style="width: 6px; background: #3b82f6; border-radius: 3px; animation: barUp 0.8s infinite alternate-reverse;"></div>
-          <div style="width: 6px; background: #1f3cff; border-radius: 3px; animation: barUp 0.6s infinite alternate;"></div>
-          <div style="width: 6px; background: #3b82f6; border-radius: 3px; animation: barUp 0.4s infinite alternate-reverse;"></div>
+      <div style="text-align: center; width: 100%; padding: 20px;">
+        <div style="display: flex; justify-content: center; align-items: flex-end; gap: 6px; height: 40px; margin-bottom: 25px;">
+          <div style="width: 8px; background: #1f3cff; border-radius: 3px; animation: barUp 0.5s infinite alternate;"></div>
+          <div style="width: 8px; background: #3b82f6; border-radius: 3px; animation: barUp 0.8s infinite alternate-reverse;"></div>
+          <div style="width: 8px; background: #1f3cff; border-radius: 3px; animation: barUp 0.6s infinite alternate;"></div>
         </div>
-
-        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 5px;">Memproses Sponsor...</h3>
-        <p style="font-size: 12px; color: #888; margin-bottom: 25px;">Koin cair otomatis setelah timer selesai. Jangan tutup tab iklan!</p>
-
-        <div style="position: relative; width: 70px; height: 70px; margin: 0 auto;">
-          <svg width="70" height="70" style="transform: rotate(-90deg);">
-            <circle cx="35" cy="35" r="30" stroke="rgba(255,255,255,0.1)" stroke-width="5" fill="none" />
-            <circle id="timer-line" cx="35" cy="35" r="30" stroke="#1f3cff" stroke-width="5" fill="none" 
-              stroke-dasharray="188.5" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;" />
+        <h3 style="color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 5px;">Menghubungkan Sponsor...</h3>
+        <p style="color: #666; font-size: 12px; margin-bottom: 30px;">Koin cair otomatis setelah timer selesai.</p>
+        
+        <div style="position: relative; width: 80px; height: 80px; margin: 0 auto;">
+          <svg width="80" height="80" style="transform: rotate(-90deg);">
+            <circle cx="40" cy="40" r="35" stroke="rgba(255,255,255,0.05)" stroke-width="6" fill="none" />
+            <circle id="timer-line" cx="40" cy="40" r="35" stroke="#1f3cff" stroke-width="6" fill="none" 
+              stroke-dasharray="220" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;" />
           </svg>
-          <div id="ad-timer" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 18px; font-weight: 800;">15s</div>
+          <div id="ad-timer" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 22px; font-weight: 900;">15s</div>
         </div>
       </div>
       <style> @keyframes barUp { from { height: 10px; } to { height: 40px; } } </style>
@@ -1222,19 +1202,25 @@ if (rewardAcceptBtn) {
     
     document.body.appendChild(overlay);
     
-    // Trigger fade in overlay
+    // Smooth fade in overlay
     setTimeout(() => { overlay.style.opacity = "1"; }, 10);
 
-    // 4. KASIH JEDA 300ms BARU BUKA IKLAN (Biar Overlay Muncul Duluan)
+    // 3. Tutup Popup Misi
+    if (rewardCard) {
+      rewardCard.classList.remove('active');
+      setTimeout(() => rewardCard.classList.add('hidden'), 400);
+    }
+
+    // 4. JEDA 1.2 DETIK BARU BUKA IKLAN (Biar Overlay "Nempel" dulu)
     setTimeout(() => {
       window.open("https://omg10.com/4/10901295", "_blank");
-    }, 350);
+    }, 1200);
 
     // 5. LOGIKA TIMER 15 DETIK
     let sec = 15;
     const totalSec = 15;
     const timerLine = document.getElementById('timer-line');
-    const dashArray = 188.5; // Keliling r=30
+    const dashArray = 220; 
 
     const countdown = setInterval(() => {
       sec--;
