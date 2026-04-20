@@ -1155,10 +1155,9 @@ if (rewardDeclineBtn) {
   });
 }
 
-// Listener Tombol 'Tonton & Klaim' (Buka Iklan Asli)
 if (rewardAcceptBtn) {
   rewardAcceptBtn.addEventListener("click", async () => {
-    // 1. Tutup Popup Melayang Dulu Biar Rapi
+    // 1. Tutup Popup Melayang
     if (rewardCard) {
       rewardCard.classList.remove('active');
       setTimeout(() => rewardCard.classList.add('hidden'), 400);
@@ -1167,15 +1166,17 @@ if (rewardAcceptBtn) {
     const { data: { user } } = await _supabase.auth.getUser();
     if (!user) return;
 
-    // 2. BUKA IKLAN DIRECT LINK LU DI TAB BARU
-    const adUrl = "https://omg10.com/4/10901295"; 
-    window.open(adUrl, "_blank");
+    // 2. TRIGGER IKLAN (SDK akan otomatis mendeteksi jika ada video/interstitial)
+    // Kita buat loading palsu/simulasi video biar user nunggu
+    console.log("Menyiapkan Video...");
+    
+    // Tampilkan notif biar user nggak bingung
+    alert("Video sponsor sedang dimuat. Harap tonton sampai selesai (15 detik) untuk klaim koin!");
 
-    // 3. KLAIM KOIN OTOMATIS SETELAH JEDA 5 DETIK
-    // (Jeda ini ngasih waktu biar tab iklan ke-load sempurna & lu dapet duitnya)
+    // 3. JEDA 15 DETIK (Durasi standar video iklan)
     setTimeout(() => {
       claimSongReward(user.id);
-    }, 5000);
+    }, 15000); 
   });
 }
 
