@@ -48,38 +48,61 @@
   </button>
   
   <div style="text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 8px;">
-    Sisa Kuota Cari: <span id="limit-doi-text" style="font-weight: bold; color: #1f3cff;">10</span>/10
+    Sisa Kuota Cari: <span id="limit-doi-text" style="font-weight: bold; color: #1f3cff;">--</span>/10
   </div>
 </div>
 
 <script is:inline>
-  document.addEventListener('DOMContentLoaded', () => {
-    const btnDoi = document.getElementById('btn-sidebar-search');
+  // Fungsi ini harus jalan sesegera mungkin
+  (function() {
     const textLimit = document.getElementById('limit-doi-text');
+    
+    // 1. Ambil atau Set limit awal di LocalStorage
+    let currentLimit = localStorage.getItem('doi_limit');
+    if (currentLimit === null) {
+      currentLimit = 10;
+      localStorage.setItem('doi_limit', '10');
+    } else {
+      currentLimit = parseInt(currentLimit);
+    }
 
-    // 1. Sinkronisasi awal saat web dibuka
-    function updateTeks() {
-      let limit = parseInt(localStorage.getItem('doi_limit') || '10');
+    // 2. Fungsi untuk nampilin angka ke layar
+    function refreshDisplay() {
+      const val = localStorage.getItem('doi_limit') || '10';
       if (textLimit) {
-        textLimit.innerText = limit;
-        textLimit.style.color = limit > 0 ? "#1f3cff" : "#ff4757";
+        textLimit.innerText = val;
+        textLimit.style.color = parseInt(val) > 0 ? "#1f3cff" : "#ff4757";
       }
     }
-    updateTeks();
-    setInterval(updateTeks, 1000); // Paksa update tiap detik
 
-    // 2. Saat tombol diklik
-    if (btnDoi) {
-      btnDoi.addEventListener('click', () => {
-        let currentLimit = parseInt(localStorage.getItem('doi_limit') || '10');
+    // Jalankan refresh pertama kali
+    refreshDisplay();
+
+    // 3. Tangkap klik tombol (Gunakan delegasi document biar anti-gagal)
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('#btn-sidebar-search');
+      if (btn) {
+        let nowLimit = parseInt(localStorage.getItem('doi_limit') || '10');
         
-        // Kalau limit masih ada, potong 1!
-        if (currentLimit > 0) {
-          currentLimit--;
-          localStorage.setItem('doi_limit', currentLimit.toString());
-          updateTeks(); // Langsung ubah di layar jadi 9, 8, dst
+        if (nowLimit > 0) {
+          // KURANGI LIMIT
+          nowLimit--;
+          localStorage.setItem('doi_limit', nowLimit.toString());
+          refreshDisplay();
+          console.log("Limit berkurang jadi:", nowLimit);
+        } else {
+          // LIMIT HABIS -> panggil fungsi iklan di file utama
+          if (typeof window.jalankanSponsorDoiBaru === 'function') {
+            window.jalankanSponsorDoiBaru();
+          } else {
+            alert("Kuota Habis! Tonton iklan untuk isi ulang.");
+            // Fallback jika fungsi iklan tidak terbaca
+            window.open("https://omg10.com/4/10901295", "_blank");
+            localStorage.setItem('doi_limit', '10');
+            refreshDisplay();
+          }
         }
-      });
-    }
-  });
+      }
+    });
+  })();
 </script>
