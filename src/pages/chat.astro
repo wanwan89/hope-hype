@@ -2403,11 +2403,15 @@ async function markRoomAsRead() {
 // 1. Inisialisasi awal (Ambil dari LocalStorage atau default 10)
 let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
 
-// 2. Fungsi untuk Update UI (Biar tampil X/10)
+// ===== KODE DI SCRIPT UTAMA =====
 function updateTextLimitDoi() {
   const limitEl = document.getElementById('limit-doi-text');
   if (limitEl) {
-    limitEl.innerText = `${sisaLimitDoi}/10`; // Menampilkan format 10/10
+    // Masukkan angkanya saja (misal: 10)
+    // Karena di HTML sudah ada tulisan "/10" di luar span
+    limitEl.innerText = sisaLimitDoi; 
+    
+    // Warna berubah jadi merah kalau kuota 0
     limitEl.style.color = sisaLimitDoi > 0 ? "#1f3cff" : "#ff4757"; 
   }
 }
