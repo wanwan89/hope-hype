@@ -364,25 +364,63 @@ async function processGiftTransaction() {
 
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
+    
+    // 1. Transfer koin menggunakan RPC
     const { error: rpcErr } = await supabaseClient.rpc("transfer_coins", { sender_id: session.user.id, receiver_id: giftState.creatorId, amount });
     if (rpcErr) throw rpcErr;
 
+    // 2. Simpan transaksi ke tabel gift_transactions
     await supabaseClient.from("gift_transactions").insert({ sender_id: session.user.id, receiver_id: giftState.creatorId, post_id: parseInt(giftState.postId), amount });
+
+    // Ambil data profil pengirim (dibutuhkan untuk nama di notif & riwayat)
+    const sProf = await getMyProfile(session.user.id);
+
+    // ==========================================
+    // 3. TAMBAHAN BARU: Catat ke tabel coin_history
+    // Kita jalankan 2 insert sekaligus dalam bentuk Array []
+    // ==========================================
+    const { error: historyErr } = await supabaseClient.from("coin_history").insert([
+      {
+        user_id: session.user.id,
+        type: "keluar",
+        amount: amount,
+        description: `Kirim gift ke ${giftState.creatorName}`
+      },
+      {
+        user_id: giftState.creatorId,
+        type: "masuk",
+        amount: amount,
+        description: `Terima gift dari ${sProf?.username || 'Seseorang'}`
+      }
+    ]);
+    
+    if (historyErr) console.warn("Gagal mencatat riwayat koin:", historyErr.message);
+    // ==========================================
+
+    // Tampilkan efek visual (Gambar Pop Up & Confetti)
     showBigImage(selectedGiftImage);
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
 
-    const sProf = await getMyProfile(session.user.id);
+    // 4. Kirim notifikasi ke kreator
     await createNotification({ user_id: giftState.creatorId, actor_id: session.user.id, post_id: giftState.postId, type: "gift", message: `${sProf?.username} mengirim ${amount} coin ke karyamu` });
 
+    // 5. Update koin di tampilan (Frontend) secara real-time
     giftState.userCoins -= amount;
     document.getElementById("giftUserCoins").textContent = giftState.userCoins;
     
+    // 6. Update koin di Session Storage agar tidak kedip saat refresh
     sProf.coins = giftState.userCoins;
     sessionStorage.setItem(`hh_profile_${session.user.id}`, JSON.stringify(sProf));
     
+    // Tutup popup gift
     closeGiftSheet();
-  } catch (err) { showNotif("Gagal: " + err.message, "error"); }
-  finally { sendBtn.disabled = false; sendBtn.textContent = "Kirim"; }
+
+  } catch (err) { 
+    showNotif("Gagal: " + err.message, "error"); 
+  } finally { 
+    sendBtn.disabled = false; 
+    sendBtn.textContent = "Kirim"; 
+  }
 }
 
 function showBigImage(imageName) {
