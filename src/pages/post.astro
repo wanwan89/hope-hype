@@ -382,6 +382,7 @@ async function processGiftTransaction() {
     const { error: errSender } = await supabaseClient.from("coin_history").insert({
       user_id: session.user.id,
       type: "keluar",
+      transaction_type: "keluar", // <--- INI TAMBAHANNYA BIAR GAK ERROR
       amount: amount,
       description: `Kirim gift ke ${giftState.creatorName}`
     });
@@ -395,6 +396,7 @@ async function processGiftTransaction() {
     const { error: errReceiver } = await supabaseClient.from("coin_history").insert({
       user_id: giftState.creatorId,
       type: "masuk",
+      transaction_type: "masuk", // <--- INI JUGA DITAMBAH
       amount: amount,
       description: `Terima gift dari ${sProf?.username || 'Seseorang'}`
     });
