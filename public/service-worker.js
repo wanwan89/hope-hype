@@ -1,11 +1,3 @@
-// --- KODE IKLAN MONETAG (TARUH PALING ATAS BIAR JALAN DULUAN) ---
-self.options = {
-    "domain": "3nbf4.com",
-    "zoneId": 10901272
-}
-self.lary = ""
-importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
-
 
 // ==========================================
 // PWA CACHE SYSTEM (Supaya bisa di-install)
