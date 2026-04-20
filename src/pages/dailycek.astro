@@ -51,7 +51,24 @@
       </button>
     </div>
 
-    <h3 class="section-title">Misi Harian</h3>
+    <h3 class="section-title">Misi Pemula</h3>
+    <div class="mission-list">
+      
+      <div class="mission-item" id="downloadApkContainer">
+        <div class="m-icon-box" style="background: #10b981;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </div>
+        <div class="m-info">
+          <h4 class="m-title">Download Aplikasi HopeHype</h4>
+          <div class="m-reward"><span class="coin-dot"></span> +300 Koin Misi</div>
+          <span class="progress-text">Lebih cepat dan hemat kuota!</span>
+        </div>
+        <button id="btnDownloadApk" class="m-btn" style="background: #10b981; color: white; border: none;">Unduh</button>
+      </div>
+
+    </div>
+
+    <h3 class="section-title" style="margin-top: 1.25rem;">Misi Harian</h3>
     <div class="mission-list">
       <div class="mission-item">
         <div class="m-icon-box bg-blue">
@@ -221,15 +238,19 @@
 <script>
   import { supabase } from '../lib/supabase.js';
 
-  // FUNGSI UNTUK MENGHASILKAN KODE UNDANGAN UNIK SECARA ACAK (A-Z, 0-9, panjang 6 karakter)
   function generateInviteCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    for (let i = 0; i < 6; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
     return result;
   }
+
+  // Helper untuk salin kode (Misi Sosial)
+  window.copyMyCode = function() {
+    const code = document.getElementById('myInviteCode').innerText;
+    navigator.clipboard.writeText(code);
+    alert('Kode berhasil disalin: ' + code);
+  };
 
   document.addEventListener('DOMContentLoaded', async () => {
     const btnClaimCheckin = document.getElementById('btnClaimCheckin');
@@ -244,6 +265,7 @@
       like:    { target: 5, reward: 25, type: 'mission_like' },
       comment: { target: 3, reward: 40, type: 'mission_comment' },
       upload:  { target: 1, reward: 100, type: 'mission_upload' },
+      apk:     { reward: 300, type: 'mission_apk' } // Config untuk APK
     };
 
     const getTodayDate = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
@@ -354,18 +376,17 @@
       }
       currentUser = session.user;
 
-      // Ambil Data Profil
+      // Ambil Data Profil Termasuk apk_downloaded
       const { data: profile } = await supabase.from('profiles')
-        .select('coins, mission_coins, last_checkin, checkin_streak, referred_by, invite_code')
+        .select('coins, mission_coins, last_checkin, checkin_streak, referred_by, invite_code, apk_downloaded')
         .eq('id', currentUser.id).single();
       
       userProfile = profile || {};
       
-      // FIX 3: CEK DAN BUAT KODE UNDANGAN UNIK KALAU BELUM PUNYA
+      // CEK DAN BUAT KODE UNDANGAN UNIK KALAU BELUM PUNYA
       myUniqueInviteCode = profile.invite_code;
       if (!myUniqueInviteCode) {
         myUniqueInviteCode = generateInviteCode();
-        // Simpan kode baru ke database secara diam-diam
         await supabase.from('profiles').update({ invite_code: myUniqueInviteCode }).eq('id', currentUser.id);
       }
       
@@ -394,7 +415,6 @@
       const { count: likeCount } = await supabase.from('likes').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id).gte('created_at', todayStart);
       const { count: commentCount } = await supabase.from('comments').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id).gte('created_at', todayStart);
       const { count: uploadCount } = await supabase.from('posts').select('*', { count: 'exact', head: true }).eq('creator_id', currentUser.id).gte('created_at', todayStart);
-      
       const listenCount = parseInt(localStorage.getItem('hh_daily_listens') || '0');
 
       const { data: claims } = await supabase.from('coin_history').select('transaction_type')
@@ -407,12 +427,42 @@
       setupMissionUI('comment', commentCount || 0, claimedTypes.includes('mission_comment'));
       setupMissionUI('upload', uploadCount || 0, claimedTypes.includes('mission_upload'));
 
+      // --- MISI DOWNLOAD APK ---
+      const apkContainer = document.getElementById('downloadApkContainer');
+      const btnApk = document.getElementById('btnDownloadApk');
+      
+      if (profile.apk_downloaded) {
+        apkContainer.innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Selesai</h4><span class="progress-text">Aplikasi sudah diunduh.</span></div>`;
+      } else if (btnApk) {
+        btnApk.onclick = async () => {
+          btnApk.textContent = "..."; btnApk.disabled = true;
+          
+          try {
+            // 1. Catat ke database kalo udah download
+            const newCoins = (userProfile.mission_coins || 0) + MISSIONS.apk.reward;
+            await supabase.from('profiles').update({ apk_downloaded: true, mission_coins: newCoins }).eq('id', currentUser.id);
+            await supabase.from('coin_history').insert({ user_id: currentUser.id, type: 'masuk', transaction_type: MISSIONS.apk.type, amount: MISSIONS.apk.reward, description: `Hadiah Download APK`});
+            
+            // 2. Update UI
+            userProfile.mission_coins = newCoins; updateCoinUI(newCoins);
+            apkContainer.innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Selesai</h4><span class="progress-text">Aplikasi sudah diunduh.</span></div>`;
+            triggerConfetti();
+            
+            // 3. Arahkan ke link download asli kamu (GANTI LINK INI)
+            window.location.href = "https://link-download-apk-kamu.com/hopehype.apk";
+            
+          } catch(err) {
+            alert("Gagal: " + err.message);
+            btnApk.textContent = "Unduh"; btnApk.disabled = false;
+          }
+        };
+      }
+
       // --- SETUP KODE UNDANGAN (MEMASUKKAN KODE ORANG LAIN) ---
       const inviteContainer = document.getElementById('inviteCodeContainer');
       if (profile.referred_by) {
         inviteContainer.innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Selesai</h4><span class="progress-text">Kamu telah menggunakan kode teman.</span></div>`;
       } else {
-        // Cek URL barangkali ada kode referal ?ref=KODE (FIX 2)
         const urlParams = new URLSearchParams(window.location.search);
         const refCodeFromUrl = urlParams.get('ref');
         if (refCodeFromUrl) {
@@ -428,23 +478,19 @@
           btn.textContent = "..."; btn.disabled = true;
 
           try {
-            // Cari data teman berdasarkan KODE UNIK (invite_code)
             const { data: friend, error: friendErr } = await supabase.from('profiles').select('id, mission_coins').eq('invite_code', code).single();
             if (friendErr || !friend) {
               btn.textContent = "Klaim"; btn.disabled = false; return alert("Kode tidak ditemukan! Pastikan kode temanmu benar.");
             }
 
-            // 1. Berikan +200 Koin Misi ke dirimu sendiri
             const myNewCoins = (userProfile.mission_coins || 0) + 200;
             await supabase.from('profiles').update({ referred_by: code, mission_coins: myNewCoins }).eq('id', currentUser.id);
             await supabase.from('coin_history').insert({ user_id: currentUser.id, type: 'masuk', transaction_type: 'mission_invite', amount: 200, description: `Hadiah pakai kode ${code}`});
 
-            // 2. Berikan +500 Koin Misi ke teman secara OTOMATIS
             const friendNewCoins = (friend.mission_coins || 0) + 500;
             await supabase.from('profiles').update({ mission_coins: friendNewCoins }).eq('id', friend.id);
             await supabase.from('coin_history').insert({ user_id: friend.id, type: 'masuk', transaction_type: 'referral_bonus', amount: 500, description: `Bonus undang teman (kode dipasang)`});
 
-            // Update Layar
             userProfile.mission_coins = myNewCoins; updateCoinUI(myNewCoins);
             inviteContainer.innerHTML = `<div class="m-info"><h4 class="m-title" style="color:#10b981;">Misi Selesai</h4><span class="progress-text">Kode berhasil diklaim.</span></div>`;
             triggerConfetti(); 
@@ -486,7 +532,7 @@
     });
 
     // ==========================================
-    // 5. LOGIKA TOMBOL TUKAR KOIN (1000 Misi -> 10 Hope)
+    // 5. LOGIKA TOMBOL TUKAR KOIN
     // ==========================================
     btnExchange.addEventListener('click', async () => {
       if (!currentUser || !userProfile) return alert("Silakan login dulu!");
@@ -522,11 +568,9 @@
     btnShareLink.addEventListener('click', async () => {
       if (!myUniqueInviteCode) return alert("Tunggu sebentar, kode undanganmu sedang disiapkan.");
       
-      // Buat URL Penuh ke website kamu + ?ref=KODE
-      const baseUrl = window.location.origin; // Otomatis baca url website kamu (misal: https://hopecreate.com)
+      const baseUrl = window.location.origin; 
       const inviteUrl = `${baseUrl}/dailycek?ref=${myUniqueInviteCode}`;
 
-      // Coba pakai fitur Web Share API (Khusus HP)
       if (navigator.share) {
         try {
           await navigator.share({
@@ -538,7 +582,6 @@
           console.log("Share dibatalkan user atau error:", err);
         }
       } else {
-        // Kalau di PC atau browser lama, salin link ke clipboard
         navigator.clipboard.writeText(`Daftar di sini buat dapet koin gratis: ${inviteUrl}`);
         alert('Link undangan berhasil disalin! Silakan paste ke temanmu.');
       }
