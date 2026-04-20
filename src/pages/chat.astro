@@ -2365,6 +2365,130 @@ async function markRoomAsRead() {
   }
 }
 
+// ================= SISTEM LIMIT CARI DOI =================
+
+// 1. Ambil data limit dari penyimpanan browser (default 10)
+let sisaLimitDoi = localStorage.getItem('doi_limit');
+if (sisaLimitDoi === null) {
+  sisaLimitDoi = 10;
+  localStorage.setItem('doi_limit', sisaLimitDoi);
+} else {
+  sisaLimitDoi = parseInt(sisaLimitDoi);
+}
+
+// 2. Fungsi buat update angka di layar
+function updateTextLimitDoi() {
+  const limitEl = document.getElementById('limit-doi-text');
+  if (limitEl) {
+    limitEl.innerText = sisaLimitDoi;
+    // Ubah warna jadi merah kalau limitnya 0
+    limitEl.style.color = sisaLimitDoi > 0 ? "#1f3cff" : "#ff4757"; 
+  }
+}
+// Panggil saat web pertama kali dibuka
+updateTextLimitDoi();
+
+// 3. Fungsi saat tombol Cari Doi diklik
+window.handleKlikCariDoi = function() {
+  if (sisaLimitDoi > 0) {
+    // Kurangi 1 tiket
+    sisaLimitDoi--;
+    localStorage.setItem('doi_limit', sisaLimitDoi);
+    updateTextLimitDoi();
+    
+    // JALANKAN FUNGSI ASLI CARI DOI LU
+    if (typeof window.mulaiCariDoi === 'function') {
+      window.mulaiCariDoi();
+    }
+  } else {
+    // Kalau 0, tawarkan nonton iklan
+    if(confirm("Kuota Cari Doi Habis! \n\nMau nonton iklan sponsor 15 detik buat isi ulang +10 kuota?")) {
+      window.jalankanIklanIsiUlangDoi();
+    }
+  }
+};
+
+// 4. Logika Iklan Premium (Sama kayak misi koin)
+window.jalankanIklanIsiUlangDoi = function() {
+  // MUNCULIN LAYAR PENGUNCI
+  const overlay = document.createElement('div');
+  overlay.id = "video-ads-overlay-doi";
+  overlay.style = `
+    position: fixed; inset: 0; background: #0a0a0a; z-index: 9999999; 
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.4s ease; font-family: 'Poppins', sans-serif;
+  `;
+
+  // Animasi warna Pink/Merah khas "Cari Doi"
+  overlay.innerHTML = `
+    <div style="text-align: center; width: 100%; padding: 20px;">
+      <div style="display: flex; justify-content: center; align-items: flex-end; gap: 6px; height: 40px; margin-bottom: 25px;">
+        <div style="width: 8px; background: #ff4757; border-radius:3px; animation: barUp 0.5s infinite alternate;"></div>
+        <div style="width: 8px; background: #ff6b81; border-radius:3px; animation: barUp 0.8s infinite alternate-reverse;"></div>
+        <div style="width: 8px; background: #ff4757; border-radius:3px; animation: barUp 0.6s infinite alternate;"></div>
+      </div>
+      <h3 style="color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 5px;">MENGISI ULANG KUOTA...</h3>
+      <p style="color: #888; font-size: 12px; margin-bottom: 30px;">Jangan tutup tab iklan sampai proses selesai!</p>
+      
+      <div style="position: relative; width: 80px; height: 80px; margin: 0 auto;">
+        <svg width="80" height="80" style="transform: rotate(-90deg);">
+          <circle cx="40" cy="40" r="35" stroke="rgba(255,255,255,0.05)" stroke-width="6" fill="none" />
+          <circle id="timer-line-doi" cx="40" cy="40" r="35" stroke="#ff4757" stroke-width="6" fill="none" 
+            stroke-dasharray="220" stroke-dashoffset="0" style="transition: stroke-dashoffset 1s linear;" />
+        </svg>
+        <div id="ad-timer-doi" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 22px; font-weight: 900;">15s</div>
+      </div>
+    </div>
+    <style> @keyframes barUp { from { height: 10px; } to { height: 40px; } } </style>
+  `;
+  
+  document.body.appendChild(overlay);
+  setTimeout(() => { overlay.style.opacity = "1"; }, 10);
+
+  // BUKA IKLAN (Direct Link Monetag Lu)
+  setTimeout(() => {
+    window.open("https://omg10.com/4/10901295", "_blank");
+  }, 1200);
+
+  // LOGIKA TIMER 15 DETIK
+  let sec = 15;
+  const totalSec = 15;
+  const timerLine = document.getElementById('timer-line-doi');
+
+  const countdown = setInterval(() => {
+    sec--;
+    const timerEl = document.getElementById('ad-timer-doi');
+    if (timerEl) timerEl.innerText = sec + "s";
+    
+    if (timerLine) {
+      const offset = 220 - (sec / totalSec) * 220;
+      timerLine.style.strokeDashoffset = offset;
+    }
+    
+    if (sec <= 0) {
+      clearInterval(countdown);
+      overlay.style.opacity = "0";
+      
+      setTimeout(() => {
+        overlay.remove();
+        
+        // ISI ULANG KUOTA JADI 10 LAGI
+        sisaLimitDoi = 10;
+        localStorage.setItem('doi_limit', sisaLimitDoi);
+        updateTextLimitDoi();
+        
+        if(window.showToast) {
+          window.showToast("Berhasil Isi Ulang!", "Kuota udah full 10 lagi. Gas cari doi!", "success");
+        } else {
+          alert("Kuota berhasil diisi ulang!");
+        }
+      }, 500);
+    }
+  }, 1000);
+};
+
+ 
+
 
 async function init() {
   try {
