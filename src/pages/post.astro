@@ -375,36 +375,35 @@ async function processGiftTransaction() {
     const sProf = await getMyProfile(session.user.id);
 
     // ==========================================
-    // 3. CATAT KE TABEL coin_history (MODE DEBUG)
+    // 3. CATAT KE TABEL coin_history (FINAL FIX)
     // ==========================================
     
+    // Ambil saldo terbaru pengirim untuk mengisi balance_after (khusus pengirim)
+    const currentBalanceSender = (sProf?.coins || 0) - amount;
+
     // A. Catat History untuk PENGIRIM
     const { error: errSender } = await supabaseClient.from("coin_history").insert({
       user_id: session.user.id,
       type: "keluar",
-      transaction_type: "keluar", // <--- INI TAMBAHANNYA BIAR GAK ERROR
+      transaction_type: "keluar", 
       amount: amount,
+      balance_after: currentBalanceSender, // Kita isi buat pengirim
       description: `Kirim gift ke ${giftState.creatorName}`
     });
     
-    // Munculkan pop-up jika gagal
-    if (errSender) {
-      alert("ERROR PENGIRIM: " + errSender.message);
-    }
+    if (errSender) console.error("ERROR PENGIRIM: " + errSender.message);
 
     // B. Catat History untuk PENERIMA
     const { error: errReceiver } = await supabaseClient.from("coin_history").insert({
       user_id: giftState.creatorId,
       type: "masuk",
-      transaction_type: "masuk", // <--- INI JUGA DITAMBAH
+      transaction_type: "masuk",
       amount: amount,
+      // balance_after dibiarkan kosong (NULL) karena SQL sudah kita DROP NOT NULL
       description: `Terima gift dari ${sProf?.username || 'Seseorang'}`
     });
 
-    // Munculkan pop-up jika gagal
-    if (errReceiver) {
-      alert("ERROR PENERIMA: " + errReceiver.message);
-    }
+    if (errReceiver) console.error("ERROR PENERIMA: " + errReceiver.message);
     // ==========================================
 
     // Tampilkan efek visual
