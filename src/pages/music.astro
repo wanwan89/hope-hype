@@ -1309,10 +1309,10 @@ async function getSidebarData(category) {
     let error = null;
 
     if (category === 'top-song') {
-      // Ambil 5 lagu dengan play_count terbanyak
+      // ✅ Tambahkan play_count di select
       const result = await _supabase
         .from('songs')
-        .select('title, artist')
+        .select('title, artist, play_count')
         .eq('status', 'approved')
         .order('play_count', { ascending: false })
         .limit(5);
@@ -1320,7 +1320,7 @@ async function getSidebarData(category) {
       error = result.error;
 
     } else if (category === 'top-singer') {
-      // Ambil artis dari lagu-lagu teratas (karena kita pakai tabel songs)
+      // Untuk penyanyi, kita cukup ambil namanya saja
       const result = await _supabase
         .from('songs')
         .select('artist')
@@ -1328,7 +1328,6 @@ async function getSidebarData(category) {
         .order('play_count', { ascending: false })
         .limit(10);
       
-      // Hapus nama artis yang duplikat
       if (result.data) {
          const uniqueArtists = [...new Set(result.data.map(item => item.artist))];
          responseData = uniqueArtists.map(name => ({ title: null, artist: name })).slice(0, 5);
@@ -1336,10 +1335,10 @@ async function getSidebarData(category) {
       error = result.error;
 
     } else if (category === 'week-song') {
-      // Ambil 5 lagu paling baru di-upload (minggu ini)
+      // ✅ Tambahkan play_count di select
       const result = await _supabase
         .from('songs')
-        .select('title, artist')
+        .select('title, artist, play_count')
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
         .limit(5);
@@ -1349,12 +1348,31 @@ async function getSidebarData(category) {
 
     if (error) throw error;
 
-    let htmlContent = '<ul>';
+    // ✅ Mulai membuat daftar HTML-nya
+    let htmlContent = '<ul style="list-style: none; padding: 0; margin: 0;">';
+    
     if (responseData && responseData.length > 0) {
       responseData.forEach((item, index) => {
         let text = item.title ? `${item.title} - ${item.artist}` : item.artist;
-        // Tambahkan inline styling color #333 agar teksnya terbaca di background pop-up putih
-        htmlContent += `<li style="color:#333; padding: 10px 0; border-bottom: 1px dashed #eee;"><strong>${index + 1}. ${text}</strong></li>`;
+        
+        // ✅ Cek apakah ini lagu (ada title) dan punya data play_count
+        let playInfoHtml = '';
+        if (item.title && item.play_count !== undefined) {
+          // Format angkanya pakai titik (misal: 1.200)
+          let formattedPlays = item.play_count.toLocaleString('id-ID');
+          playInfoHtml = `
+            <div style="font-size: 12px; color: #666; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+              <span class="material-icons" style="font-size: 14px;">headphones</span> 
+              ${formattedPlays} kali diputar
+            </div>`;
+        }
+
+        // Masukkan ke dalam list
+        htmlContent += `
+          <li style="color:#333; padding: 12px 0; border-bottom: 1px dashed #eee; display: flex; flex-direction: column;">
+            <span><strong>${index + 1}. ${text}</strong></span>
+            ${playInfoHtml}
+          </li>`;
       });
     } else {
       htmlContent += '<li style="color:#333;">Belum ada data bro.</li>';
@@ -1368,24 +1386,29 @@ async function getSidebarData(category) {
   }
 }
 
-// Kita pakai Event Delegation karena menu sidebar ada di komponen terpisah
+// Event Delegation untuk Menu Sidebar
 document.addEventListener('click', function(event) {
-  // Cek apakah yang diklik adalah nav-item
   const navItem = event.target.closest('.nav-item');
   if (navItem) {
     const category = navItem.getAttribute('data-category');
     
-    // Jika kategori sesuai dengan yang kita buat
     if (category === 'top-singer' || category === 'top-song' || category === 'week-song') {
-       event.preventDefault(); // Mencegah pindah halaman
+       event.preventDefault(); 
        
-       if(popupTitle) popupTitle.innerText = navItem.innerText.trim();
+       // ✅ LOGIKA BARU: Hilangkan teks ikon dari Judul Pop-up
+       if(popupTitle) {
+         const iconElement = navItem.querySelector('.material-icons');
+         const iconText = iconElement ? iconElement.innerText : '';
+         const cleanTitle = navItem.innerText.replace(iconText, '').trim();
+         popupTitle.innerText = cleanTitle;
+       }
+       
        if(dataPopup) dataPopup.style.display = 'flex';
        
        // Jalankan fungsi ambil data
        getSidebarData(category);
        
-       // (Opsional) Tutup otomatis sidebar saat pop-up muncul
+       // Tutup otomatis sidebar
        if (typeof window.toggleSidebar === 'function') {
            window.toggleSidebar();
        }
@@ -1393,6 +1416,7 @@ document.addEventListener('click', function(event) {
   }
 });
 
+// Event menutup pop-up
 if (closeDataPopup) {
   closeDataPopup.addEventListener('click', () => {
     dataPopup.style.display = 'none';
@@ -1404,6 +1428,7 @@ window.addEventListener('click', (e) => {
     dataPopup.style.display = 'none';
   }
 });
+
 
 async function initApp() {
   await loadMusicLibrary();
