@@ -94,10 +94,21 @@
   .hc-title {
     font-size: 1.25rem;
     font-weight: 700;
-    margin-bottom: 1.5rem;
     text-align: center;
     color: var(--hc-text-main);
+    
+    /* --- EFEK HEADER TETAP (STICKY) --- */
+    position: sticky; 
+    top: 0; /* Menempel tepat di atas layar */
+    z-index: 50; /* Memastikan judul selalu berada di lapisan teratas (di atas daftar transaksi) */
+    background-color: var(--hc-bg); /* Menyamarkan konten yang lewat di bawahnya dengan warna latar */
+    
+    /* Penyesuaian ruang agar terlihat rapi */
+    padding: 1.25rem 0 1rem 0; /* Memberi jarak dalam di atas dan bawah teks */
+    margin-top: -1.25rem; /* Mengimbangi padding atas dari .hc-wrapper supaya benar-benar mentok ke atas */
+    margin-bottom: 1.5rem; /* Jarak luar bawah ke kotak total koin */
   }
+
 
   .hc-subtitle {
     font-size: 0.95rem;
