@@ -1,0 +1,1034 @@
+
+:root {
+  /* --- DARK MODE (DEFAULT) --- */
+  --bg-main: #0d1117;
+  --text-main: #ffffff;
+  --bg-header: rgba(13, 17, 23, 0.85);
+  --bg-card: #161b22;
+  --bg-card-hover: #1c2128;
+  --border-card: #30363d;
+  --text-muted: #8b949e;
+  --bg-sidebar: #111418;
+  --bg-miniplayer: rgba(22, 27, 34, 0.85);
+  --bg-sheet: #121212;
+  --bg-input: #1c1c1c;
+  --border-light: rgba(255, 255, 255, 0.05);
+}
+
+body.light-mode {
+  /* --- LIGHT MODE --- */
+  --bg-main: #f6f8fa;
+  --text-main: #1f2328;
+  --bg-header: rgba(255, 255, 255, 0.85);
+  --bg-card: #ffffff;
+  --bg-card-hover: #f3f4f6;
+  --border-card: #d0d7de;
+  --text-muted: #656d76;
+  --bg-sidebar: #ffffff;
+  --bg-miniplayer: rgba(255, 255, 255, 0.95);
+  --bg-sheet: #ffffff;
+  --bg-input: #f6f8fa;
+  --border-light: rgba(0, 0, 0, 0.08);
+}
+
+/* ================================= 
+   1. RESET & BASE STYLE 
+   ================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+  -webkit-tap-highlight-color: transparent; /* Hilangkan highlight biru di HP */
+}
+
+body {
+  background: var(--bg-main); 
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  /* Transisi halus saat ganti background via JS */
+  transition: background 0.8s ease;
+}
+
+/* ================================= 
+   2. STICKY HEADER SYSTEM 
+   ================================= */
+.header-container {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+   background: var(--bg-header);
+  backdrop-filter: blur(15px); /* Efek Blur Kaca */
+  -webkit-backdrop-filter: blur(15px);
+  padding: 20px 16px 10px 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.music-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.music-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* SEARCH BOX */
+.search-box {
+  display: flex;
+  align-items: center;
+  background: var(--border-light);
+  padding: 10px 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+border: 1px solid var(--border-light);
+}
+
+.search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-main);
+  width: 100%;
+  margin-left: 10px;
+  font-size: 14px;
+}
+
+/* CATEGORY TABS */
+.category-tabs {
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+  gap: 10px;
+  scrollbar-width: none; /* Firefox */
+}
+
+.category-tabs::-webkit-scrollbar {
+  display: none;
+} /* Chrome/Safari */
+
+.category-tabs button {
+  padding: 8px 20px;
+  border-radius: 20px;
+  border: none;
+background: var(--bg-card-hover);
+color: var(--text-main);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.category-tabs button.active {
+  background: var(--text-main);
+color: var(--bg-main); /* Reverse saat aktif */
+}
+
+/* ================================= 
+   3. PLAYLIST GRID (CLEAN GAYA AWAL) 
+   ================================= */
+.playlist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 20px 16px 120px 16px;
+}
+
+.playlist-card {
+  background: transparent; /* Transparan agar menyatu */
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* EFEK KLIK MEMBAL (BOUNCE) */
+.playlist-card:active {
+  transform: scale(0.92);
+}
+
+.playlist-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 16px;
+  /* Shadow ini masih aman di light/dark mode, jadi biarin aja */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4); 
+  transition: 0.3s;
+}
+
+.playlist-info {
+  padding: 10px 4px;
+}
+
+.playlist-info h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main); /* ✅ Tambahin ini biar judulnya ikutan ganti warna */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artist-name {
+  font-size: 12px;
+  color: var(--text-muted); /* ✅ Ganti warna putih transparan jadi ini */
+  margin-top: 3px;
+}
+
+/* ================================= 
+   4. SIDEBAR & OVERLAY 
+   ================================= */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -280px;
+  width: 280px;
+  height: 100%;
+  background: var(--bg-sidebar);
+  z-index: 2000;
+  transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 30px 20px;
+  box-shadow: none; /* ✅ Hilangkan shadow di sini biar ga bocor ke layar */
+}
+
+.sidebar.active {
+  transform: translateX(0);
+  left: 0;
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.2); /* ✅ Pindahin shadow-nya ke sini (dan dibikin lebih soft dikit) */
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: none;
+  z-index: 1500;
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+/* Pastikan container nav-item membungkus ke bawah */
+.sidebar a,
+.nav-item {
+  display: flex; /* Membuat icon dan teks sejajar horizontal */
+  align-items: center; /* Icon dan teks rata tengah secara vertikal */
+  padding: 12px 20px; /* Memberi ruang klik yang nyaman */
+  text-decoration: none; /* Menghapus garis bawah biru */
+  color: var(--text-main);
+  gap: 15px; /* Memberi jarak antara icon dan teks */
+  transition: 0.3s; /* Efek halus saat di-hover */
+}
+
+/* Warna saat menu disentuh atau aktif */
+.sidebar a:hover,
+.nav-item.active {
+   background: var(--border-light);
+  color: #1da1f2; /* Warna biru cerah saat aktif */
+}
+
+/* Ukuran Icon */
+.material-icons {
+  font-size: 20px;
+}
+
+/* ================================= 
+   5. UPGRADED MINI PLAYER 
+   ================================= */
+.mini-player {
+  position: fixed;
+  bottom: 20px; /* Melayang */
+  left: 12px;
+  right: 12px;
+background: var(--bg-miniplayer);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  border-radius: 16px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 1100;
+}
+
+.mini-player img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.player-info {
+  flex: 1;
+  margin: 0 12px;
+  min-width: 0;
+}
+
+.player-info h4 {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-info p {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.progress-container {
+  width: 100%;
+  height: 3px;
+background: var(--border-light);
+  margin-top: 6px;
+  border-radius: 2px;
+}
+
+.progress {
+  height: 100%;
+  background: #1f3cff; /* Warna aksen biru */
+  width: 0%;
+  border-radius: 2px;
+}
+
+.player-controls .material-icons {
+  font-size: 38px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.player-controls .material-icons:active {
+  transform: scale(0.85);
+}
+
+/* Container Foto Profil */
+.profile-image {
+  width: 80px;
+  height: 80px;
+  overflow: hidden; /* Memastikan foto tidak keluar dari lingkaran */
+  border-radius: 50%; /* Membuat foto jadi bulat sempurna */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Elemen Foto */
+.profile-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Agar foto tidak gepeng */
+  border: none; /* Menghapus border sesuai permintaan */
+  outline: none; /* Menghapus garis luar */
+  display: block;
+}
+
+#adminPanelBtn {
+  display: none; /* Sembunyikan dulu */
+}
+
+.menu-dots {
+  display: none !important;
+}
+
+/* ================= CSS PLAYLIST GRID ================= */
+#playlistGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Paksa 2 Kolom */
+  gap: 16px;
+  padding: 16px;
+  background: transparent; /* ✅ Ganti #0d1117 jadi transparent */
+}
+
+/* KARTU UTAMA */
+.playlist-card {
+  position: relative;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Menghapus highlight biru/hitam default di HP */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* EFEK HOVER (DESKTOP) */
+.playlist-card:hover {
+  background: #1c2128;
+  transform: translateY(-4px);
+  border-color: #444c56;
+}
+
+/* EFEK KLIK (YANG DICARI: GLOW PREMIUM) */
+.playlist-card:active {
+  transform: scale(0.96); /* Sedikit mengecil pas ditekan (efek pegas) */
+  border-color: #1f3cff; /* Border jadi biru terang */
+  box-shadow: 0 0 15px rgba(31, 60, 255, 0.4); /* Efek cahaya biru */
+  background: #1f242c;
+}
+
+/* COVER IMAGE KOTAK */
+.card-cover-wrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.card-cover-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* TEKS INFO */
+.card-text-info {
+  margin-bottom: 12px;
+}
+
+.song-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f0f6fc;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1; /* Batasi 1 baris */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.artist-name {
+  font-size: 12px;
+  color: #8b949e;
+  margin: 2px 0 0 0;
+}
+
+/* FOOTER STATISTIK */
+.card-stats-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #8b949e;
+  font-size: 11px;
+}
+
+.stat-item .material-icons {
+  font-size: 16px;
+}
+
+.stat-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* WARNA INTERAKTIF */
+.stat-item.interactive:active .material-icons {
+  color: #ff4757; /* Hati jadi merah pas diklik */
+  transform: scale(1.2);
+}
+
+.active-card {
+  border-color: #1f3cff !important;
+  background: #1c2128;
+}
+
+/* ================================= 
+   COMMENT SYSTEM FINAL FIX (CLEAN & PREMIUM)
+   ================================= */
+
+/* OVERLAY */
+.comment-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: none;
+}
+
+/* SHEET UTAMA */
+.comment-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80vh;
+  background: var(--bg-sheet);
+  border-radius: 20px 20px 0 0;
+  z-index: 2001;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: none; /* ✅ Hilangkan shadow saat disembunyikan */
+  overflow: hidden;
+}
+
+.comment-sheet.active {
+  transform: translateY(0);
+  box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.15); /* ✅ Munculin shadownya cuma pas kebuka */
+}
+
+/* HANDLE */
+.drag-handle {
+  width: 40px;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  margin: 12px auto 8px auto;
+  flex-shrink: 0;
+}
+
+/* HEADER */
+.sheet-header {
+  padding: 0 20px 15px 20px;
+  border-bottom: 1px solid #262626;
+  flex-shrink: 0;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-content h3 {
+  font-size: 16px;
+  font-weight: 700;
+color: var(--text-main);
+}
+
+.header-content button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+/* BODY KOMENTAR */
+.comment-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  padding-bottom: 90px; /* 🔥 biar ga ketutup input */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* FOOTER INPUT */
+.comment-footer {
+  position: sticky; /* 🔥 FIX dari absolute */
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  background: var(--bg-sheet);
+  border-top: 1px solid var(--border-light); /* ✅ Ganti #262626 jadi ini */
+  z-index: 10;
+}
+
+/* INPUT */
+#commentInput {
+  flex: 1;
+  background: var(--bg-input);
+border: 1px solid var(--border-light);
+  border-radius: 20px;
+  padding: 10px 14px;
+color: var(--text-main);
+  font-size: 14px;
+  outline: none;
+}
+
+/* BUTTON SEND */
+#sendCommentBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #1f3cff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+#sendCommentBtn:active {
+  transform: scale(0.9);
+}
+
+/* ITEM KOMENTAR */
+.comment-item {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.comment-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-content-wrapper {
+  flex: 1;
+}
+
+.comment-header-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.comment-username {
+  font-weight: 600;
+  font-size: 13px;
+color: var(--text-main);
+}
+
+.comment-time {
+  font-size: 11px;
+  color: #888;
+}
+
+.comment-text {
+  font-size: 14px;
+  margin-top: 4px;
+  color: var(--text-main); /* ✅ Udah aman jaya buat dark/light mode */
+  line-height: 1.4;
+}
+
+
+.reply-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 12px;
+  margin-top: 6px;
+  cursor: pointer;
+}
+
+.replies {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+}
+
+.replies.show {
+  max-height: 1000px; /* besar biar muat semua komentar */
+}
+
+/* Animasi Denyut Bass */
+@keyframes pulse-bg {
+  0% {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  50% {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  100% {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.skeleton-comment {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 10px;
+  animation: pulse-bg 1.5s infinite ease-in-out;
+  border-radius: 8px;
+}
+
+.skeleton-avatar {
+  width: 32px;
+  height: 32px;
+  background: #333;
+  border-radius: 50%;
+}
+
+.skeleton-text {
+  flex: 1;
+}
+
+.skeleton-line {
+  height: 10px;
+  background: #333;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.skeleton-line.short {
+  width: 40%;
+}
+
+.skeleton-line.long {
+  width: 80%;
+}
+
+/* Warna merah untuk ikon yang aktif di-like */
+.is-liked {
+  color: #ff4757 !important;
+}
+
+/* Animasi blup-blup pas diklik (biar makin kerasa) */
+.heart-pop {
+  animation: heartPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes heartPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Warna merah buat ikon hati yang aktif */
+.stat-item.interactive.is-liked .material-icons {
+  color: #ff4757 !important;
+}
+
+/* Efek pop pas diklik biar makin 'blup-blup' */
+.heart-pop {
+  animation: heartPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes heartPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Style Tombol Pilih File Custom */
+.custom-file-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1a1a1a;
+  border: 1px dashed #444;
+  color: #888;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 15px;
+}
+
+.custom-file-upload:hover {
+  border-color: #1f3cff;
+  color: #fff;
+}
+
+.custom-file-upload .material-icons {
+  color: #1f3cff;
+}
+
+#previewContainer {
+  animation: fadeInDown 0.4s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sidebar.active {
+  transform: translateX(0); /* Munculin sidebar */
+  left: 0;
+}
+
+.sidebar-overlay.active {
+  display: block;
+  opacity: 1;
+}
+/* TAMBAHAN: CSS POPUP MELAYANG */
+.reward-card {
+  position: fixed;
+  bottom: -150px; 
+  left: 16px;
+  right: 16px;
+  max-width: 400px;
+  margin: 0 auto;
+  background: #1c1c1c; 
+  border-radius: 16px;
+  border: 1px solid #1f3cff; 
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 9999; 
+  box-shadow: 0 10px 30px rgba(31, 60, 255, 0.4); 
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), bottom 0.4s ease; 
+}
+
+.reward-card.active {
+  bottom: 100px; /* Muncul di atas mini player */
+  transform: translateY(0);
+}
+
+.reward-card.hidden {
+  display: none !important;
+}
+
+.reward-content { display: flex; align-items: center; gap: 12px; }
+.reward-icon { font-size: 36px; color: #f59e0b; }
+.reward-text h3 { font-size: 15px; font-weight: 700; color: white; margin: 0; }
+.reward-text p { font-size: 12px; color: #8b949e; margin: 0; }
+.reward-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+.reward-actions button {
+  padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: 0.2s;
+}
+.btn-decline { background: transparent; color: #64748b; }
+.btn-accept { background: #1f3cff; color: white; }
+.btn-accept:active, .btn-decline:active { transform: scale(0.95); }
+
+/* =========================
+   TOAST COMPACT MOBILE FIX
+========================= */
+#toast {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  width: calc(100% - 24px);
+  max-width: 420px;
+  pointer-events: none;
+}
+
+.toast-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1f2937;
+  border-radius: 20px;
+  padding: 12px 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  opacity: 0;
+  transform: translateY(-20px) scale(0.96);
+  transition: all 0.28s ease;
+  pointer-events: auto;
+  min-height: 64px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.toast-card.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.toast-icon-wrap {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.toast-icon-wrap.success {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.toast-icon-wrap.warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.toast-icon-wrap.error {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.toast-icon-wrap.info {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.toast-icon {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.toast-title {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  color: #111827;
+}
+
+.toast-subtitle {
+  font-size: 12px;
+  line-height: 1.3;
+  color: #6b7280;
+  word-break: break-word;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+/* Mobile super compact */
+@media (max-width: 480px) {
+  #toast {
+    top: 10px;
+    width: calc(100% - 16px);
+  }
+
+  .toast-card {
+    border-radius: 18px;
+    padding: 10px 12px;
+    gap: 8px;
+    min-height: 56px;
+  }
+
+  .toast-icon-wrap {
+    width: 38px;
+    height: 38px;
+  }
+
+  .toast-icon {
+    font-size: 18px;
+  }
+
+  .toast-title {
+    font-size: 13px;
+    margin-bottom: 1px;
+  }
+
+  .toast-subtitle {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .toast-close {
+    font-size: 18px;
+    width: 20px;
+    height: 20px;
+  }
+}
+/* Gaya untuk latar belakang gelap saat pop-up muncul */
+.popup-overlay {
+  display: none; /* Disembunyikan secara default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Warna hitam transparan */
+  z-index: 2000; /* Pastikan berada di atas elemen lain */
+  justify-content: center;
+  align-items: center;
+}
+
+/* Gaya untuk kotak putih pop-up */
+.popup-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px; /* Lebar maksimal pop-up */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* Gaya untuk bagian atas pop-up (Judul & Tombol Close) */
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.popup-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.popup-body ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.popup-body li {
+  padding: 10px 0;
+  border-bottom: 1px dashed #eee;
+  color: #555;
+}
