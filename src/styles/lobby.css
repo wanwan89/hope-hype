@@ -1,0 +1,31 @@
+
+:root {
+    --bg-app: #f4f7fc;
+    --bg-card: #ffffff;      
+    --primary: #2563eb;
+    --primary-light: #eff6ff; 
+    --text-dark: #0f172a;    
+    --text-muted: #64748b;   
+    --accent-coin: #f59e0b;  
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-app);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-dark);
+}
+
+.lobby-container {
+    padding-bottom: 100px; 
+    max-width: 480px; 
+    margin: 0 auto;
+    min-height: 100vh;
+}

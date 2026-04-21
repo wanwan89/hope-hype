@@ -1,0 +1,178 @@
+
+// 1. IMPORT DARI FILE LIB (Wajib di baris paling atas)
+import { supabase } from '../lib/supabase.js';
+
+// 2. Konek-in ke window.sb biar sisa kode lu di bawahnya tetap jalan normal
+window.sb = supabase;
+
+// 3. Lanjutin deklarasi variabel lu
+let MY_USER_ID = null; 
+let kategoriAktif = 'Populer';
+
+    const showMsg = (title, msg, type) => {
+        if (typeof toast === "function") toast(title, msg, type);
+        else alert(title + " - " + msg);
+    };
+
+    window.filterKategori = function(kategori, elemen) {
+        kategoriAktif = kategori;
+        const semuaTab = document.querySelectorAll('.tabs span');
+        semuaTab.forEach(tab => tab.classList.remove('active'));
+        if (elemen) elemen.classList.add('active');
+        loadRooms(); 
+    };
+
+    window.createRoom = function() {
+        document.getElementById('modal-create').style.display = 'flex';
+    };
+
+    window.closeModal = function() {
+        document.getElementById('modal-create').style.display = 'none';
+    };
+
+    window.handleStartSinging = async function() {
+        if (!MY_USER_ID) return showMsg("Waduh", "Login dulu Bree!", "warning");
+
+        const { data: existingRoom } = await window.sb.from('rooms')
+            .select('id, name')
+            .eq('owner_id', MY_USER_ID)
+            .eq('is_active', true)
+            .maybeSingle(); 
+
+        if (existingRoom) {
+            window.location.href = `/voice?id=${existingRoom.id}&name=${encodeURIComponent(existingRoom.name)}`;
+        } else {
+            window.createRoom();
+        }
+    };
+
+    window.confirmCreateRoom = async function() {
+        const nameInput = document.getElementById('new-room-name');
+        const descInput = document.getElementById('new-room-desc');
+        const categoryInput = document.getElementById('new-room-category');
+        const btn = document.querySelector('.btn-confirm');
+
+        const name = nameInput.value.trim();
+        const desc = descInput.value.trim();
+        const category = categoryInput.value;
+
+        if (!name) return showMsg("Waduh", "Kasih nama panggung dulu dong!", "warning");
+        if (!MY_USER_ID) return showMsg("Error", "Sesi login hilang, coba refresh/login ulang.", "error");
+
+        btn.disabled = true;
+        btn.innerText = "SEDANG MEMBUAT...";
+
+        try {
+            const { data: oldRooms } = await window.sb.from('rooms').select('id').eq('owner_id', MY_USER_ID);
+            if (oldRooms && oldRooms.length > 0) {
+                const oldRoomIds = oldRooms.map(r => r.id);
+                await window.sb.from('room_slots').delete().in('room_id', oldRoomIds);
+                await window.sb.from('rooms').delete().in('id', oldRoomIds);
+            }
+
+            const { data: newRoom, error: roomError } = await window.sb.from('rooms').insert([{
+                name: name,
+                description: desc,
+                category: category,
+                owner_id: MY_USER_ID,
+                is_active: true
+            }]).select().single();
+
+            if (roomError) throw roomError;
+
+            const slots = Array.from({ length: 6 }, (_, i) => ({
+                room_id: newRoom.id,
+                slot_index: i,
+                profile_id: null
+            }));
+            
+            const { error: slotError } = await window.sb.from('room_slots').insert(slots);
+            if (slotError) throw slotError;
+
+            showMsg("Berhasil", "Panggung lo udah siap!", "success");
+            window.closeModal();
+
+            setTimeout(() => {
+                window.location.href = `/voice?id=${newRoom.id}&name=${encodeURIComponent(name)}`;
+            }, 1000);
+
+        } catch (e) {
+            console.error("Gagal bikin panggung:", e);
+            showMsg("Error", "Gagal bikin panggung nih.", "error");
+            btn.disabled = false;
+            btn.innerText = "BUAT SEKARANG";
+        }
+    };
+
+    async function loadUserProfile() {
+        if (!window.sb) return;
+        const { data: { user } } = await window.sb.auth.getUser();
+        
+        if (user) {
+            MY_USER_ID = user.id; 
+            const { data: profile } = await window.sb.from('profiles')
+                .select('username, avatar_url, coins')
+                .eq('id', user.id)
+                .single();
+
+            if (profile) {
+                document.getElementById('lobby-username').innerText = profile.username;
+                document.getElementById('lobby-coins').innerText = (profile.coins || 0).toLocaleString();
+                if (profile.avatar_url) document.getElementById('lobby-avatar').src = profile.avatar_url;
+            }
+        }
+    }
+    async function loadRooms() {
+        if (!window.sb) return;
+        const list = document.getElementById('room-list');
+        
+        list.innerHTML = `
+            <div class="skeleton-card"><div class="skeleton skeleton-thumb"></div><div class="skeleton-info"><div class="skeleton skeleton-text skeleton-title"></div><div class="skeleton skeleton-text skeleton-desc" style="width: 70%"></div></div></div>
+            <div class="skeleton-card"><div class="skeleton skeleton-thumb"></div><div class="skeleton-info"><div class="skeleton skeleton-text skeleton-title"></div><div class="skeleton skeleton-text skeleton-desc" style="width: 40%"></div></div></div>
+        `;
+        
+        let query = window.sb.from('rooms').select('id, name, description').eq('is_active', true);
+
+        if (kategoriAktif !== 'Populer') query = query.eq('category', kategoriAktif); 
+        else query = query.order('created_at', { ascending: false }); 
+
+        const { data: rooms, error } = await query;
+        
+        if (error) return list.innerHTML = `<div style="text-align:center; padding: 20px; color: #ff4d4d;">Gagal memuat room.</div>`;
+        list.innerHTML = "";
+
+        if (!rooms || rooms.length === 0) {
+            list.innerHTML = `<div style="text-align:center; padding: 40px 20px; color: #888; font-size: 13px;">Belum ada panggung di kategori ${kategoriAktif}.</div>`;
+            return;
+        }
+
+        const roomIds = rooms.map(r => r.id);
+        const { data: occupiedSlots } = await window.sb.from('room_slots').select('room_id').in('room_id', roomIds).not('profile_id', 'is', null);
+
+        const onlineCounts = {};
+        if (occupiedSlots) {
+            occupiedSlots.forEach(slot => {
+                onlineCounts[slot.room_id] = (onlineCounts[slot.room_id] || 0) + 1;
+            });
+        }
+
+        rooms.forEach(room => {
+            const onlineCount = onlineCounts[room.id] || 0; 
+            const card = document.createElement('div');
+            card.className = 'room-card';
+            card.onclick = () => window.location.href = `/voice?id=${room.id}&name=${encodeURIComponent(room.name)}`;
+            card.innerHTML = `
+                <div class="room-thumb"><span class="material-icons">graphic_eq</span></div>
+                <div class="room-info">
+                    <h4>${room.name.toUpperCase()}</h4>
+                    <p>${room.description || 'Ayo nyanyi bareng di panggung ini!'}</p>
+                </div>
+                <div class="room-status"><div class="online-pill">${onlineCount} Online</div></div>
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    setTimeout(() => {
+        loadUserProfile().then(() => loadRooms());
+    }, 500); 
