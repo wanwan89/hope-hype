@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-
 // Ngambil key dari file .env (Astro way)
 const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
