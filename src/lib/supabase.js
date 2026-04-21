@@ -1,6 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
-// Ngambil key dari file .env (Astro way)
-const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+// Cek dulu, kalau kosong kasih peringatan di console browser
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("🔥 Error: Supabase URL atau Key belum diset di Environment Variables!");
+}
+
+export const supabase = createClient(
+  supabaseUrl || '', 
+  supabaseAnonKey || ''
+);
