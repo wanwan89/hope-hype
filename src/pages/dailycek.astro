@@ -167,10 +167,27 @@
 <style is:global>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; outline: none; }
   body, html { background: #f4f6f9; }
-  .mission-wrapper { --bg-main: #f4f6f9; --bg-card: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border-color: #e2e8f0; --primary: #f59e0b; --primary-hover: #d97706; font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main); min-height: 100vh; width: 100vw; overflow-x: hidden; }
+ .mission-wrapper { 
+    --bg-main: #f4f6f9; 
+    --bg-card: #ffffff; 
+    --text-main: #0f172a; 
+    --text-muted: #64748b; 
+    --border-color: #e2e8f0; 
+    --primary: #f59e0b; 
+    --primary-hover: #d97706; 
+    font-family: 'Inter', sans-serif; 
+    background: var(--bg-main); 
+    color: var(--text-main); 
+    min-height: 100vh; 
+    width: 100vw; 
+    
+    /* Ubah hidden menjadi clip agar sticky bisa berjalan */
+    overflow-x: clip; 
+  }
   html.dark .mission-wrapper, html.dark body { --bg-main: #0f172a; --bg-card: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border-color: #334155; background: var(--bg-main); }
   .mission-container { width: 100%; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100vh; background: var(--bg-main); }
-  .mission-header { position: sticky; top: 0; background: var(--bg-card); display: flex; justify-content: space-between; align-items: center; padding: 1rem; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.mission-header { position: sticky; top: 0; background: var(--bg-card); display: flex; justify-content: space-between; align-items: center; padding: 1rem; z-index: 50; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
   .back-btn { background: none; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center;}
   .header-title { font-size: 1.1rem; font-weight: 700; flex: 1; text-align: center; }
   .header-coin { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.9rem; background: rgba(245,158,11,0.1); padding: 5px 12px; border-radius: 99px;}
