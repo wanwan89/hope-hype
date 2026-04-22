@@ -210,20 +210,17 @@ async function fetchPosts(category = "all") {
   // Tampilkan loading skeleton
   gallery.innerHTML = `<div class="skeleton-wrapper" style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%;">${Array(6).fill(0).map(() => `<div class="skeleton-card"><div class="skeleton-shimmer"></div></div>`).join("")}</div>`;
 
-  try {
-    // 🔥 TAMBAHIN audio_url DI SELECT INI
 let query = supabaseClient
   .from("posts")
   .select(`
     id, 
     image_url, 
     audio_url,
-    title, 
-    artist,
     bio,
     created_at, 
     creator_id, 
-    profiles (username, role, avatar_url)
+    profiles (username, role, avatar_url),
+    songs (title, artist)  // 🔥 Kita panggil data dari tabel songs lewat relasi tadi
   `) 
   .eq("status", "approved")
   .limit(10);
@@ -273,14 +270,18 @@ let query = supabaseClient
       const isOwner = currentUser && currentUser.id === post.creator_id;
 
       // 🔥 LOGIKA TOMBOL PLAY MUSIK (Muncul kalau ada lagu)
+// Ambil data dari tabel songs hasil join
+const songInfo = post.songs; 
+
 const musicHtml = post.audio_url ? `
   <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 140px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
     <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
-      ${post.title || 'Untitled'} — ${post.artist || 'Unknown Artist'}
+      ${songInfo?.title || 'Untitled'} — ${songInfo?.artist || 'Unknown Artist'}
     </div>
     <audio class="post-audio-element" src="${post.audio_url}" loop preload="auto" muted></audio>
   </div>
 ` : '';
+
 
 
       card.innerHTML = `
@@ -679,10 +680,10 @@ function setupCustomCategory() {
   });
 }
 
-async function handlePostSubmit(e) {
+async function handlePostSubmit(e) { // Pakai 'a' kecil
   e.preventDefault();
   const btn = document.getElementById("submitPostBtn");
-  const selectedTitle = document.getElementById("selectedMusicTitle"); // Ambil elemen judul di modal
+  const selectedTitle = document.getElementById("selectedMusicTitle"); 
 
   if (!selectedPostFile) return showNotif("Pilih foto dulu", "warning");
   
@@ -693,28 +694,38 @@ async function handlePostSubmit(e) {
     const { data: { session } } = await supabaseClient.auth.getSession();
     const cData = await uploadImageToCloudinary(selectedPostFile);
     
-    // 🔥 Kita pecah judul dan artist dari teks di modal (Asumsi format: "Judul — Artist")
-    const fullMusicText = selectedTitle.innerText;
+    // 🔥 Pecah teks dari UI
+    const fullMusicText = selectedTitle ? selectedTitle.innerText : "";
     const musicParts = fullMusicText.split(" — ");
     const finalTitle = musicParts[0] || "Untitled";
     const finalArtist = musicParts[1] || "Unknown Artist";
 
-    await supabaseClient.from("posts").insert({ 
+    const { error } = await supabaseClient.from("posts").insert({ 
         creator_id: session.user.id, 
         bio: document.getElementById("postCaption").value, 
         category: document.getElementById("postCategory").value, 
         image_url: cData.secure_url, 
         audio_url: selectedAudioUrl, 
-        title: finalTitle,  // 🔥 Simpan ke tabel posts
-        artist: finalArtist, // 🔥 Simpan ke tabel posts
+        title: finalTitle,  
+        artist: finalArtist, 
         status: "pending" 
     });
 
+    if (error) throw error;
+
     showNotif("Karya dikirim! Menunggu review", "success");
     document.getElementById("postModal").classList.remove("active");
-    // Reset form
-    e.target.reset();
-    selectedAudioUrl = null;
+
+    // --- 🚀 RESET TOTAL AGAR BERSIH ---
+    e.target.reset(); // Reset input caption & category
+    selectedAudioUrl = null; // Reset link lagu
+    selectedPostFile = null; // 🔥 Reset file gambar (Penting!)
+    
+    // Reset tampilan di Modal
+    if (selectedTitle) selectedTitle.innerText = "Pilih Musik...";
+    document.getElementById("postPreviewImage").style.display = "none";
+    document.getElementById("postUploadPlaceholder").style.display = "block";
+
   } catch (err) { 
     showNotif(err.message, "error"); 
   } finally { 
@@ -722,6 +733,7 @@ async function handlePostSubmit(e) {
     btn.textContent = "Kirim ke Review"; 
   }
 }
+
 
 async function uploadImageToCloudinary(file) {
   const fd = new FormData(); fd.append("file", file); fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
