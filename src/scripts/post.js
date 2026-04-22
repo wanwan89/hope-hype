@@ -1,16 +1,49 @@
 // Ganti namanya biar gak bentrok sama library (Recursion Fix)
 function showNotif(msg, type = "info") {
-  console.log(`[Notif]: ${msg} (${type})`);
-  if (typeof window.toast === "function" && window.toast !== showNotif) {
-    const title = type === "success" ? "Berhasil" : type === "error" ? "Gagal" : "Info";
-    try {
-      window.toast(title, msg, type);
-      return;
-    } catch (e) {
-      console.warn("Gagal panggil library toast, pakai fallback alert.");
-    }
+  // 1. Cari atau buat container #toast sesuai CSS lu
+  let container = document.getElementById("toast");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toast";
+    document.body.appendChild(container);
   }
-  alert(`${type.toUpperCase()}: ${msg}`);
+
+  // 2. Setting Icon & Title biar otomatis
+  const config = {
+    success: { title: "Berhasil", icon: "✓" },
+    error: { title: "Gagal", icon: "✕" },
+    warning: { title: "Peringatan", icon: "!" },
+    info: { title: "Info", icon: "i" }
+  };
+  const { title, icon } = config[type] || config.info;
+
+  // 3. Render HTML sesuai struktur CSS yang lu kasih
+  const toastCard = document.createElement("div");
+  toastCard.className = "toast-card";
+  
+  toastCard.innerHTML = `
+    <div class="toast-icon-wrap ${type}">
+      <span class="toast-icon">${icon}</span>
+    </div>
+    <div class="toast-content">
+      <div class="toast-title">${title}</div>
+      <div class="toast-subtitle">${msg}</div>
+    </div>
+    <button class="toast-close" onclick="this.parentElement.classList.remove('show'); setTimeout(()=>this.parentElement.remove(), 300)">×</button>
+  `;
+
+  container.appendChild(toastCard);
+
+  // 4. Trigger animasi muncul (class .show di CSS lu)
+  setTimeout(() => toastCard.classList.add("show"), 10);
+
+  // 5. Hapus otomatis biar gak numpuk di layar
+  setTimeout(() => {
+    if(toastCard) {
+      toastCard.classList.remove("show");
+      setTimeout(() => toastCard.remove(), 300);
+    }
+  }, 4000);
 }
 
 console.log("JS CONNECTED - EGRESS OPTIMIZED 🔥");
@@ -179,19 +212,22 @@ async function fetchPosts(category = "all") {
 
   try {
     // 🔥 TAMBAHIN audio_url DI SELECT INI
-    let query = supabaseClient
-      .from("posts")
-      .select(`
-        id, 
-        image_url, 
-        audio_url,
-        bio,
-        created_at, 
-        creator_id, 
-        profiles (username, role, avatar_url)
-      `) 
-      .eq("status", "approved")
-      .limit(10); 
+let query = supabaseClient
+  .from("posts")
+  .select(`
+    id, 
+    image_url, 
+    audio_url,
+    title, 
+    artist,
+    bio,
+    created_at, 
+    creator_id, 
+    profiles (username, role, avatar_url)
+  `) 
+  .eq("status", "approved")
+  .limit(10);
+
 
     if (category && category !== "all") {
       query = query.ilike("category", `%${category.trim()}%`);
@@ -242,7 +278,7 @@ const musicHtml = post.audio_url ? `
     <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
       ${post.title || 'Untitled'} — ${post.artist || 'Unknown Artist'}
     </div>
-    <audio class="post-audio-element" src="${post.audio_url}" loop preload="none"></audio>
+    <audio class="post-audio-element" src="${post.audio_url}" loop preload="auto" muted></audio>
   </div>
 ` : '';
 
@@ -889,14 +925,23 @@ function initAutoPlayObserver() {
             if (!audio) return;
 
             if (entry.isIntersecting) {
-                // Matikan audio lain, nyalakan yang ini
-                document.querySelectorAll('.post-audio-element').forEach(el => { el.pause(); });
-                audio.play().catch(() => console.log("Autoplay blocked, user must click once first"));
+                // Matikan audio lain & mute mereka
+                document.querySelectorAll('.post-audio-element').forEach(el => { 
+                    el.pause(); 
+                    el.muted = true; 
+                });
+
+                // 🔥 Nyalakan suara audio ini lalu putar
+                audio.muted = false; 
+                audio.play().catch(err => {
+                    console.log("Autoplay ditunda sampai user klik layar");
+                });
             } else {
                 audio.pause();
+                audio.muted = true;
             }
         });
-    }, { threshold: 0.7 }); // 70% postingan harus kelihatan di layar
+    }, { threshold: 0.7 });
 
     document.querySelectorAll('.card').forEach(card => observer.observe(card));
 }
