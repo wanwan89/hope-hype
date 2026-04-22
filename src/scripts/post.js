@@ -662,7 +662,7 @@ function closeBigImage() {
 }
 
 // =======================
-// MUSIC PICKER SYSTEM (OTOMATIS DARI ITUNES)
+// MUSIC PICKER SYSTEM (OTOMATIS DARI ITUNES + FIX CORS)
 // =======================
 async function initMusicPicker() {
   const listContainer = document.getElementById("predefinedMusicList");
@@ -676,11 +676,14 @@ async function initMusicPicker() {
   listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 10px;'>Memuat daftar musik...</div>";
 
   try {
-    // 🔥 KATA KUNCI PENCARIAN DEFAULT (Bebas lu ganti apa aja!)
     const keyword = "hits indonesia"; 
     
-    // Tembak API iTunes langsung pas modal kebuka (Limit 5 lagu)
-    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(keyword)}&entity=song&limit=5`);
+    // 🔥 FIX: Pakai jalur Proxy biar gak kena blokir CORS di Localhost
+    const targetUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(keyword)}&entity=song&limit=5&country=ID`;
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+    
+    // Tembak API lewat proxy
+    const res = await fetch(proxyUrl);
     const data = await res.json();
     
     listContainer.innerHTML = ""; // Bersihin loading
@@ -720,6 +723,7 @@ async function initMusicPicker() {
     });
 
   } catch (err) {
+    console.error("Error Musik:", err); // Biar ketahuan kalau ada error di console
     listContainer.innerHTML = "<div style='font-size:12px; color:#ef4444; text-align:center;'>Gagal koneksi ke server musik</div>";
   }
 
