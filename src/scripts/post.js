@@ -261,15 +261,36 @@ async function fetchPosts(category = "all") {
       const isOwner = currentUser && currentUser.id === post.creator_id;
       const songInfo = post.songs; 
 // 2. Render HTML-nya
-const musicHtml = post.audio_src ? `
-  <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 140px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
-    <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
-      ${songInfo?.title || 'Untitled'} — ${songInfo?.artist || 'Unknown Artist'}
-    </div>
-    <audio class="post-audio-element" src="${post.audio_src}" loop preload="auto"></audio>
-  </div>
-` : '';
+const musicHtml = post.audio_src ? (() => {
+  let cleanAudio = (post.audio_src || "").trim();
 
+  // 🔥 FIX CLOUDINARY
+  if (cleanAudio.includes('/video/upload/')) {
+    cleanAudio = cleanAudio.replace('/video/upload/', '/video/upload/f_mp3/');
+  }
+
+  // 🔥 FIX PATH LOKAL
+  const finalAudio = cleanAudio.startsWith("http")
+    ? cleanAudio
+    : `/songs/${cleanAudio}`;
+
+  return `
+    <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 140px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
+      
+      <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
+        ${songInfo?.title || 'Untitled'} — ${songInfo?.artist || 'Unknown Artist'}
+      </div>
+
+      <audio 
+        class="post-audio-element" 
+        src="${finalAudio}" 
+        loop 
+        preload="auto"
+      ></audio>
+
+    </div>
+  `;
+})() : '';
 
       card.innerHTML = `
         <div class="slider" style="position: relative;">
@@ -941,9 +962,12 @@ function confirmDeletePost(postId) {
 // AUTO PLAY POSTINGAN (ANTI BISU TIKTOK STYLE)
 // ==========================================
 function initAutoPlayObserver() {
-    // Variabel buat ngecek apakah user udah pernah tap layar
     let userHasInteracted = false;
-    document.body.addEventListener('click', () => { userHasInteracted = true; }, { once: true });
+
+    document.body.addEventListener('click', () => { 
+        userHasInteracted = true; 
+        console.log("User unlocked audio 🔓");
+    }, { once: true });
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -951,46 +975,52 @@ function initAutoPlayObserver() {
             if (!audio) return;
 
             if (entry.isIntersecting) {
-                // 1. Matikan semua audio di postingan lain
+                // 🔥 STOP semua audio lain
                 document.querySelectorAll('.post-audio-element').forEach(el => { 
-                    if(el !== audio) {
-                        el.pause(); 
-                        el.muted = true; 
+                    if (el !== audio) {
+                        el.pause();
+                        el.muted = true;
                     }
                 });
 
-                // 2. Set volume ke MAX
+                // 🔥 RESET biar ga lanjut dari tengah
+                audio.currentTime = 0;
+
+                // 🔥 SET VOLUME
                 audio.volume = 1.0;
 
-                // 3. Logika Unmute Pintar
-                // Kalau user udah klik layar, buka suaranya. Kalau belum, biarin bisu sementara biar tetep play.
-                if (userHasInteracted) {
-                    audio.muted = false; 
+                // 🔥 UNMUTE kalau user sudah interaksi
+                audio.muted = !userHasInteracted;
+
+                // 🔥 ANTI SPAM PLAY
+                if (!audio.paused) return;
+
+                const playPromise = audio.play();
+
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            console.log("✅ Autoplay jalan:", audio.src);
+                        })
+                        .catch(() => {
+                            // 🔥 fallback: paksa mute biar tetep jalan
+                            audio.muted = true;
+                            audio.play().catch(() => {});
+                            console.log("⏳ Nunggu user interaction...");
+                        });
                 }
 
-                // 4. Putar Audio
-                let playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        console.log("Postingan bunyi!");
-                    }).catch(err => {
-                        // Kalau browser tetep nolak, paksa MUTE dulu aja biar lagunya tetep jalan (nanti pas diklik baru nyala suaranya)
-                        audio.muted = true;
-                        audio.play().catch(e => console.log("Menunggu interaksi user..."));
-                    });
-                }
             } else {
-                // Kalau postingan di-scroll ke luar layar, matikan audionya
+                // 🔥 keluar viewport → stop total
                 audio.pause();
+                audio.currentTime = 0;
                 audio.muted = true;
             }
         });
-    }, { threshold: 0.6 }); // Threshold 0.6 biar lebih responsif pas di-scroll
+    }, { threshold: 0.6 });
 
-    // Pantau semua card postingan
     document.querySelectorAll('.card').forEach(card => observer.observe(card));
 }
-
 // --- DAFTARKAN FUNGSI KE WINDOW BIAR BISA DIBACA HTML ---
 window.selectGift = selectGift;
 window.processGiftTransaction = processGiftTransaction;
