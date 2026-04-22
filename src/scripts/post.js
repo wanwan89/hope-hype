@@ -196,35 +196,30 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// Taruh variabel ini di paling atas file JS kamu (di luar fungsi)
-let isFetchingPosts = false;
-
 async function fetchPosts(category = "all") {
-  // [ANTI-SPAM] Cegah pemanggilan ganda
   if (isFetchingPosts) return;
   isFetchingPosts = true;
 
   const gallery = document.getElementById("mainGallery");
   if (!gallery) { isFetchingPosts = false; return; }
 
-  // Tampilkan loading skeleton
   gallery.innerHTML = `<div class="skeleton-wrapper" style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%;">${Array(6).fill(0).map(() => `<div class="skeleton-card"><div class="skeleton-shimmer"></div></div>`).join("")}</div>`;
 
-let query = supabaseClient
-  .from("posts")
-  .select(`
-    id, 
-    image_url, 
-    audio_url,
-    bio,
-    created_at, 
-    creator_id, 
-    profiles (username, role, avatar_url),
-    songs (title, artist)  // 🔥 Kita panggil data dari tabel songs lewat relasi tadi
-  `) 
-  .eq("status", "approved")
-  .limit(10);
-
+  try { // 🔥 TRY HARUS DI SINI
+    let query = supabaseClient
+      .from("posts")
+      .select(`
+        id, 
+        image_url, 
+        audio_url,
+        bio,
+        created_at, 
+        creator_id, 
+        profiles (username, role, avatar_url),
+        songs (title, artist)
+      `) 
+      .eq("status", "approved")
+      .limit(10);
 
     if (category && category !== "all") {
       query = query.ilike("category", `%${category.trim()}%`);
@@ -242,7 +237,6 @@ let query = supabaseClient
     }
 
     const postIds = posts.map(p => p.id);
-
     const [likesRes, commentsRes] = await Promise.all([
       supabaseClient.from("likes").select("post_id").in("post_id", postIds),
       supabaseClient.from("comments").select("post_id").in("post_id", postIds)
@@ -255,34 +249,23 @@ let query = supabaseClient
     if (likesRes.data) likesRes.data.forEach(l => { if(likeCounts[l.post_id] !== undefined) likeCounts[l.post_id]++; });
     if (commentsRes.data) commentsRes.data.forEach(c => { if(commentCounts[c.post_id] !== undefined) commentCounts[c.post_id]++; });
 
-    // --- RENDER ---
     posts.forEach((post) => {
       const card = document.createElement("div");
       card.className = "card post-fade-in";
       
       const userRole = (post.profiles?.role || "user").toLowerCase().trim();
       const badge = getUserBadge(userRole);
-      
-      const dateObj = new Date(post.created_at);
-      const formattedDate = dateObj.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
-
-      // 🔥 LOGIKA CEK KEPEMILIKAN POSTINGAN
+      const formattedDate = new Date(post.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
       const isOwner = currentUser && currentUser.id === post.creator_id;
+      const songInfo = post.songs; 
 
-      // 🔥 LOGIKA TOMBOL PLAY MUSIK (Muncul kalau ada lagu)
-// Ambil data dari tabel songs hasil join
-const songInfo = post.songs; 
-
-const musicHtml = post.audio_url ? `
-  <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 140px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
-    <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
-      ${songInfo?.title || 'Untitled'} — ${songInfo?.artist || 'Unknown Artist'}
-    </div>
-    <audio class="post-audio-element" src="${post.audio_url}" loop preload="auto" muted></audio>
-  </div>
-` : '';
-
-
+      const musicHtml = post.audio_url ? `
+        <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 140px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
+          <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
+            ${songInfo?.title || 'Untitled'} — ${songInfo?.artist || 'Unknown Artist'}
+          </div>
+          <audio class="post-audio-element" src="${post.audio_url}" loop preload="auto" muted></audio>
+        </div>` : '';
 
       card.innerHTML = `
         <div class="slider" style="position: relative;">
@@ -291,7 +274,6 @@ const musicHtml = post.audio_url ? `
           <div class="watermark-overlay"><img src="/asets/svg/watermark.svg"></div>
         </div>
         <div class="overlay">
-          
           <div style="display: flex; align-items: center; margin-bottom: 6px; width: 100%;">
             <h2 class="name" onclick="window.location.href='/data?id=${post.creator_id}'" style="cursor:pointer; display:flex; align-items:center; margin: 0;">
               ${post.profiles?.username || "User"} ${badge} 
@@ -300,15 +282,12 @@ const musicHtml = post.audio_url ? `
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
             </button>
           </div>
-
           <p class="post-bio" style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 400;">
             ${post.bio || ""}
           </p>
-
           <div class="post-date-wrapper" style="margin-bottom: 12px;">
             <span style="font-size: 10px; color: var(--text-muted); opacity: 0.8;">Diunggah ${formattedDate}</span>
           </div>
-
           <div class="actions">
             <a href="/data?id=${post.creator_id}" class="primary">Detail</a>
             <div class="engagement-group">
@@ -319,7 +298,7 @@ const musicHtml = post.audio_url ? `
           </div>
         </div>`;
       gallery.appendChild(card);
-    }); // Tutup loop forEach
+    });
 
     initGiftButtons(); 
     initLikeButtons(); 
@@ -330,12 +309,12 @@ const musicHtml = post.audio_url ? `
         initAutoPlayObserver();
     }, 500);
 
-  } catch (err) { // <--- Ini menutup blok try { yang ada di atas select query
+  } catch (err) {
     console.error(err);
   } finally {
     isFetchingPosts = false;
   }
-} // <--- INI WAJIB ADA untuk menutup async function fetchPosts(category)
+}
 
 // =======================
 // GIFT SYSTEM
