@@ -666,8 +666,6 @@ function setupCustomCategory() {
 
 async function handlePostSubmit(e) {
   e.preventDefault();
-  console.log("Submit Triggered! 🚀"); // Buat cek di console f12
-
   const btn = document.getElementById("submitPostBtn");
   const selectedTitle = document.getElementById("selectedMusicTitle"); 
 
@@ -678,56 +676,46 @@ async function handlePostSubmit(e) {
 
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) throw new Error("Sesi habis, silakan login ulang");
-
-    console.log("Uploading image to Cloudinary...");
     const cData = await uploadImageToCloudinary(selectedPostFile);
     
-    // 🔥 Ambil & Pecah Teks Musik
-    const fullMusicText = selectedTitle ? selectedTitle.innerText : "";
-    let finalTitle = "Untitled";
-    let finalArtist = "Unknown Artist";
+    // --- LOGIKA OPSIONAL MUSIK ---
+    let finalTitle = null;
+    let finalArtist = null;
+    let finalAudioUrl = null;
 
-    if (fullMusicText && fullMusicText !== "Pilih Musik...") {
+    // Cek apakah user milih musik atau nggak
+    if (selectedAudioUrl) {
+      finalAudioUrl = selectedAudioUrl;
+      const fullMusicText = selectedTitle ? selectedTitle.innerText : "";
       const musicParts = fullMusicText.split(" — ");
       finalTitle = musicParts[0] || "Untitled";
       finalArtist = musicParts[1] || "Unknown Artist";
     }
 
-    console.log("Inserting to Supabase...");
-    // 🚀 PROSES INSERT KE TABEL POSTS
-    const { data, error } = await supabaseClient.from("posts").insert({ 
+    const { error } = await supabaseClient.from("posts").insert({ 
         creator_id: session.user.id, 
         bio: document.getElementById("postCaption").value || "", 
-        category: document.getElementById("postCategory").value || "Lainnya", 
+        category: document.getElementById("postCategory").value || "Umum", 
         image_url: cData.secure_url, 
-        audio_url: selectedAudioUrl || null, 
-        title: finalTitle,  
-        artist: finalArtist, 
+        audio_url: finalAudioUrl, // Bakal NULL kalau gak pilih musik
+        title: finalTitle,        // Bakal NULL kalau gak pilih musik
+        artist: finalArtist,      // Bakal NULL kalau gak pilih musik
         status: "pending" 
-    }).select(); // Tambahin .select() biar kita tau datanya masuk
+    });
 
-    if (error) {
-      console.error("Supabase Error:", error);
-      throw error;
-    }
+    if (error) throw error;
 
-    console.log("Post Success:", data);
     showNotif("Karya dikirim! Menunggu review", "success");
-    
-    // --- RESET SEMUA ---
     document.getElementById("postModal").classList.remove("active");
-    e.target.reset(); 
-    selectedAudioUrl = null; 
-    selectedPostFile = null; 
     
-    if (selectedTitle) selectedTitle.innerText = "Pilih Musik...";
-    document.getElementById("postPreviewImage").style.display = "none";
-    document.getElementById("postUploadPlaceholder").style.display = "block";
+    // Reset form & state
+    e.target.reset();
+    selectedAudioUrl = null; 
+    selectedPostFile = null;
+    if (selectedTitle) selectedTitle.innerText = "Pilih Musik (Opsional)...";
 
   } catch (err) { 
-    console.error("Full Error:", err);
-    showNotif("Gagal: " + err.message, "error"); 
+    showNotif(err.message, "error"); 
   } finally { 
     btn.disabled = false; 
     btn.textContent = "Kirim ke Review"; 
