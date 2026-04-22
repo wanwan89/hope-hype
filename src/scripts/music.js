@@ -381,7 +381,7 @@ async function playSong(song) {
       }
   } 
   else {
-    // 🔥 FIX FINAL LAGU LOKAL 🔥
+    // 🔥 PEMBERSIHAN TOTAL: TANPA FETCH, TANPA CROSS-ORIGIN, TANPA F_MP3 🔥
     if (!song.audio_src || song.audio_src === "null") return;
 
     let rawUrl = song.audio_src.trim();
@@ -393,52 +393,33 @@ async function playSong(song) {
        rawUrl = window.location.origin + "/songs/" + rawUrl;
     }
 
-    // 2. Sihir Convert Cloudinary
+    // 2. Ganti ekstensi aja (Jangan pake /f_mp3/ karena Cloudinary nolak)
     if (rawUrl.includes('res.cloudinary.com')) {
         rawUrl = rawUrl.replace(/\.webm$/i, '.mp3').replace(/\.ogg$/i, '.mp3');
-        if (!rawUrl.includes('/f_mp3/')) {
-            rawUrl = rawUrl.replace('/video/upload/', '/video/upload/f_mp3/');
-        }
     }
 
-    // 3. Cache Buster
+    // 3. Cache Buster biasa
     const finalSrc = rawUrl.includes('?') ? `${rawUrl}&cb=${Date.now()}` : `${rawUrl}?cb=${Date.now()}`;
 
-    console.log("🚀 Memutar Audio (Bypass Strict CORS):", finalSrc);
+    console.log("🚀 URL Mentah & Bersih:", finalSrc);
 
-    // 4. RESET TOTAL (Hapus crossOrigin yang bikin ribet)
+    // 4. RESET ELEMEN AUDIO (Hancurkan sisa-sisa error lama)
     audio.pause();
-    audio.removeAttribute('crossOrigin'); // Pastikan ini dihapus!
-    audio.src = "";
-    audio.load();
+    audio.removeAttribute('crossOrigin'); 
+    audio.innerHTML = ''; // Bersihin tag <source> di dalem HTML kalau ada
     
-    // 5. Masukin Sumber Baru
+    // 5. Eksekusi
     audio.src = finalSrc;
-    
-    // 6. Eksekusi
+    audio.load();
+
     setTimeout(() => {
-      let playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          console.log("✅ JRENG! Akhirnya bunyi di web!");
-          if (playBtn) playBtn.textContent = "pause";
-        }).catch(err => {
-          console.error("❌ Masih di-block browser:", err.name);
-          
-          // JURUS BLOB (Ultimate Bypass kalau Browser super ketat)
-          if (err.name === 'NotSupportedError') {
-             console.log("🔄 Mencoba ambil file via Data Mentah (Blob)...");
-             fetch(finalSrc)
-                .then(response => response.blob())
-                .then(blob => {
-                   audio.src = URL.createObjectURL(blob);
-                   audio.play();
-                   if (playBtn) playBtn.textContent = "pause";
-                })
-                .catch(e => console.error("Gagal total:", e));
-          }
-        });
-      }
+      audio.play().then(() => {
+        console.log("✅ JRENG! Suara berhasil keluar!");
+        if (playBtn) playBtn.textContent = "pause";
+      }).catch(err => {
+        console.error("❌ Fix diblock:", err.name);
+        window.showToast("Gagal Memutar", "Server Cloudinary menolak koneksi dari web ini.", "error");
+      });
     }, 200);
   }
 
