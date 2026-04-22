@@ -43,18 +43,17 @@
       </div>
 
       <div class="music-picker-section" style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px; margin-bottom: 15px;">
-        <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-dark);">Tambahkan Musik (Opsional)</div>
-        <input type="text" id="musicSearchInput" placeholder="Cari judul lagu / artis..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; font-family: inherit; font-size: 13px;">
-        <div id="musicSearchResults" style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+        <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-dark);">Pilih Musik (Opsional)</div>
         
-        <div id="selectedMusicBox" style="display: none; align-items: center; justify-content: space-between; background: var(--light-blue-bg, #e7f3ff); padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--primary-blue, #007bff);">
+        <div id="predefinedMusicList" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">
+        </div>
+        
+        <div id="selectedMusicBox" style="display: none; align-items: center; justify-content: space-between; background: var(--light-blue-bg, #e7f3ff); padding: 10px 12px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--primary-blue, #007bff);">
           <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
-            <div style="background: var(--primary-blue, #007bff); color: white; min-width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            </div>
+            <span style="font-size: 10px; font-weight: 800; background: var(--primary-blue, #007bff); color: white; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.5px;">AUDIO</span>
             <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; font-weight: 600; color: var(--primary-blue, #007bff);" id="selectedMusicTitle">Judul Lagu</div>
           </div>
-          <button type="button" id="removeMusicBtn" style="background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer; padding: 5px; font-size: 16px;">×</button>
+          <button type="button" id="removeMusicBtn" style="background: none; border: none; color: #ef4444; font-weight: 800; cursor: pointer; padding: 5px; font-size: 11px; letter-spacing: 0.5px;">HAPUS</button>
         </div>
       </div>
       <button type="submit" id="submitPostBtn" class="post-submit-btn">
