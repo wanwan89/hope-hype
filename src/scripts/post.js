@@ -695,11 +695,22 @@ function initPostModal() {
 }
 
 function setupCustomCategory() {
-  const d = document.getElementById("categoryDropdown");
-  if (!d) return;
-  d.querySelector(".select-trigger").onclick = () => d.classList.toggle("active");
-  d.querySelectorAll(".option-item").forEach(o => {
-    o.onclick = () => { document.getElementById("selectedCategoryText").innerText = o.innerText; document.getElementById("postCategory").value = o.dataset.value; d.classList.remove("active"); };
+  const dropdown = document.getElementById("categoryDropdown");
+  const trigger = dropdown.querySelector(".select-trigger");
+
+  trigger.onclick = (e) => {
+    e.stopPropagation();
+    // Ini kuncinya! Nambahin class 'active' ke div paling luar
+    dropdown.classList.toggle("active"); 
+  };
+
+  // Tutup kalau pilih salah satu
+  dropdown.querySelectorAll(".option-item").forEach(opt => {
+    opt.onclick = () => {
+      document.getElementById("selectedCategoryText").innerText = opt.innerText;
+      document.getElementById("postCategory").value = opt.dataset.value;
+      dropdown.classList.remove("active"); // Tutup lagi
+    };
   });
 }
 

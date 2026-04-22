@@ -1,4 +1,5 @@
 ---
+// Jika ada logic Astro ditaruh di sini
 ---
 <div id="postModal" class="post-modal">
   <div class="post-modal-content">
@@ -28,29 +29,29 @@
       ></textarea>
 
       <div class="category-dropdown" id="categoryDropdown" style="margin-top: 10px;">
-        <div class="select-trigger" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer;">
+        <div class="select-trigger">
           <span id="selectedCategoryText">Pilih kategori</span>
-          <i class="arrow-icon" style="font-style: normal; font-size: 10px;">▼</i>
+          <i class="arrow-icon">▼</i>
         </div>
         
-        <div class="options-container" style="display: none; position: absolute; background: var(--bg-card); width: 100%; z-index: 100; border: 1px solid var(--border-color); border-radius: 12px; margin-top: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-          <div class="option-item" data-value="Karya" style="padding: 12px; cursor: pointer;">Karya</div>
-          <div class="option-item" data-value="Prestasi" style="padding: 12px; cursor: pointer;">Prestasi</div>
-          <div class="option-item" data-value="Photography" style="padding: 12px; cursor: pointer;">Photography</div>
-          <div class="option-item" data-value="Mountain" style="padding: 12px; cursor: pointer;">Mountain</div>
+        <div class="options-container">
+          <div class="option-item" data-value="Karya">Karya</div>
+          <div class="option-item" data-value="Prestasi">Prestasi</div>
+          <div class="option-item" data-value="Photography">Photography</div>
+          <div class="option-item" data-value="Mountain">Mountain</div>
         </div>
         
         <input type="hidden" id="postCategory" name="category" value="Karya" />
       </div>
 
-      <div class="music-picker-section" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-        <div style="font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--text-dark);">Pilih Musik (Opsional)</div>
+      <div class="music-picker-section" style="margin-top: 20px; border-top: 1px solid var(--border-card); padding-top: 15px;">
+        <div style="font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--text-main);">Pilih Musik (Opsional)</div>
         
         <input 
           type="text" 
           id="searchMusicInput" 
           placeholder="Cari lagu di iTunes (Contoh: Hindia)..." 
-          style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-main, #f8f9fa); color: var(--text-main); margin-bottom: 12px; font-size: 13px; outline: none; border: 1px solid #ddd;"
+          style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border-card); background: var(--bg-input); color: var(--text-main); margin-bottom: 12px; font-size: 13px; outline: none;"
         >
         
         <div id="predefinedMusicList" style="max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">
