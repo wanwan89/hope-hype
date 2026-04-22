@@ -753,82 +753,94 @@ function closeBigImage() {
 }
 
 // =======================
-// MUSIC PICKER - TABLE SONGS VERSION
+// MUSIC PICKER - ITUNES API VERSION
 // =======================
+let searchTimer;
+
 async function initMusicPicker() {
   const listContainer = document.getElementById("predefinedMusicList");
   const selectedBox = document.getElementById("selectedMusicBox");
   const selectedTitle = document.getElementById("selectedMusicTitle");
   const removeBtn = document.getElementById("removeMusicBtn");
+  
+  // Pastiin lu punya input search di HTML dengan ID ini
+  const searchInput = document.getElementById("searchMusicInput"); 
 
   if(!listContainer) return;
 
-  listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 15px;'>Memuat koleksi lagu...</div>";
-
-  try {
-    // 🔥 Ambil dari table 'songs'
-    // Gue tambahin filter .eq('status', 'approved') biar cuma lagu yang aktif yang muncul
-    const { data: songsData, error } = await supabaseClient
-      .from('songs')
-      .select('*')
-      .eq('status', 'approved') 
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    listContainer.innerHTML = ""; 
-
-    if(!songsData || songsData.length === 0) {
-      listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 10px;'>Belum ada lagu yang disetujui.</div>";
+  // Fungsi buat tembak ke API iTunes
+  const searchITunes = async (query) => {
+    if (!query) {
+      listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 15px;'>Ketik judul lagu atau artis...</div>";
       return;
     }
 
-    songsData.forEach(song => {
-      const div = document.createElement("div");
-      div.style.cssText = "display:flex; align-items:center; gap:12px; padding:10px; border-radius:12px; cursor:pointer; background:var(--bg-secondary, #f1f3f5); border: 1px solid var(--border-color); transition:0.2s; margin-bottom:8px;";
-      
-      div.innerHTML = `
-        <img src="${song.cover_url || 'https://placehold.co/100x100?text=♫'}" style="width:38px; height:38px; border-radius:8px; object-fit:cover;">
-        <div style="flex:1; overflow:hidden;">
-          <div style="font-size:13px; font-weight:700; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${song.title || 'Untitled'}</div>
-          <div style="font-size:11px; color:gray;">${song.artist || 'Unknown Artist'}</div>
-        </div>
-      `;
-      
-            div.onclick = () => {
-        // 1. Simpan URL audionya (audio_src sesuai SS lu)
-        selectedAudioUrl = song.audio_src; 
-        
-        // 2. 🔥 GABUNGIN JUDUL & ARTIST
-        // Kita simpan teksnya dengan format "Judul — Artist"
-        selectedTitle.innerText = `${song.title} — ${song.artist}`;
-        
-        selectedBox.style.display = "flex";
-        
-        // --- Sisa kode style seleksi lu (tetap sama) ---
-        document.querySelectorAll('#predefinedMusicList > div').forEach(el => {
-            el.style.borderColor = 'var(--border-color)';
-            el.style.background = 'var(--bg-secondary)';
-        });
-        div.style.borderColor = 'var(--primary-blue, #007bff)';
-        div.style.background = 'rgba(0, 123, 255, 0.05)';
-      };
-      
-      listContainer.appendChild(div);
-    });
+    listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 15px;'>Mencari lagu di iTunes... </div>";
+    
+    try {
+      // Kita limit 10 aja biar gak kepanjangan
+      const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=10`);
+      const data = await response.json();
 
-  } catch (err) {
-    console.error("Database Error:", err);
-    listContainer.innerHTML = "<div style='font-size:12px; color:#ef4444; text-align:center; padding: 10px;'>Gagal memuat lagu dari tabel songs.</div>";
-  }
+      listContainer.innerHTML = "";
+
+      if (data.results.length === 0) {
+        listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 10px;'>Lagu gak ketemu, coba keyword lain.</div>";
+        return;
+      }
+
+      data.results.forEach(song => {
+        const div = document.createElement("div");
+        div.style.cssText = "display:flex; align-items:center; gap:12px; padding:10px; border-radius:12px; cursor:pointer; background:var(--bg-secondary, #f1f3f5); border: 1px solid var(--border-color); transition:0.2s; margin-bottom:8px;";
+        
+        // iTunes pake artworkUrl100 buat gambar album
+        div.innerHTML = `
+          <img src="${song.artworkUrl100}" style="width:38px; height:38px; border-radius:8px; object-fit:cover;">
+          <div style="flex:1; overflow:hidden;">
+            <div style="font-size:13px; font-weight:700; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${song.trackName}</div>
+            <div style="font-size:11px; color:gray;">${song.artistName}</div>
+          </div>
+        `;
+        
+        div.onclick = () => {
+          // iTunes kasih previewUrl (30 detik)
+          selectedAudioUrl = song.previewUrl; 
+          
+          // Set tampilan lagu terpilih
+          selectedTitle.innerText = `${song.trackName} — ${song.artistName}`;
+          selectedBox.style.display = "flex";
+          
+          // Reset border yang lain
+          document.querySelectorAll('#predefinedMusicList > div').forEach(el => {
+              el.style.borderColor = 'var(--border-color)';
+              el.style.background = 'var(--bg-secondary)';
+          });
+          div.style.borderColor = '#1DA1F2';
+          div.style.background = 'rgba(29, 161, 242, 0.05)';
+        };
+        
+        listContainer.appendChild(div);
+      });
+
+    } catch (err) {
+      console.error("iTunes Error:", err);
+      listContainer.innerHTML = "<div style='font-size:12px; color:red; text-align:center; padding: 10px;'>Gagal nyambung ke iTunes.</div>";
+    }
+  };
+
+  // Listener buat ngetik (pake debounce biar gak spam API)
+  searchInput?.addEventListener("input", (e) => {
+    clearTimeout(searchTimer);
+    const query = e.target.value.trim();
+    searchTimer = setTimeout(() => searchITunes(query), 600);
+  });
 
   if(removeBtn) {
     removeBtn.onclick = () => {
       selectedAudioUrl = null;
       selectedBox.style.display = "none";
-      document.querySelectorAll('#predefinedMusicList > div').forEach(el => {
-          el.style.borderColor = 'var(--border-color)';
-      });
+      if(searchInput) searchInput.value = "";
+      listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 15px;'>Ketik judul lagu atau artis...</div>";
     };
   }
 }
