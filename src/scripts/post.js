@@ -1,4 +1,3 @@
-
 // Ganti namanya biar gak bentrok sama library (Recursion Fix)
 function showNotif(msg, type = "info") {
   console.log(`[Notif]: ${msg} (${type})`);
@@ -31,6 +30,7 @@ let replyTo = null;
 let replyToUsername = null;
 let giftState = { postId: null, creatorId: null, creatorName: "", userCoins: 0, selectedAmount: 0 };
 let selectedPostFile = null;
+let selectedAudioUrl = null; // 🔥 VAR BARU BUAT MUSIK
 
 // =======================
 // CACHE HELPER (OPTIMIZED)
@@ -170,12 +170,13 @@ async function fetchPosts(category = "all") {
   gallery.innerHTML = `<div class="skeleton-wrapper" style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%;">${Array(6).fill(0).map(() => `<div class="skeleton-card"><div class="skeleton-shimmer"></div></div>`).join("")}</div>`;
 
   try {
-    // Pastikan 'bio' tetap ada di select
+    // 🔥 TAMBAHIN audio_url DI SELECT INI
     let query = supabaseClient
       .from("posts")
       .select(`
         id, 
         image_url, 
+        audio_url,
         bio,
         created_at, 
         creator_id, 
@@ -227,9 +228,17 @@ async function fetchPosts(category = "all") {
       // 🔥 LOGIKA CEK KEPEMILIKAN POSTINGAN
       const isOwner = currentUser && currentUser.id === post.creator_id;
 
-      // POSISI DIUBAH: Header (Nama mentok kiri, Titik Tiga mentok kanan)
+      // 🔥 LOGIKA TOMBOL PLAY MUSIK (Muncul kalau ada lagu)
+      const musicHtml = post.audio_url ? `
+        <div class="music-player-btn" onclick="togglePostMusic(this)" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.65); color: white; border-radius: 6px; padding: 6px 10px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; cursor: pointer; z-index: 10; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2);">
+          <span style="letter-spacing: 0.5px;">PLAY AUDIO</span>
+          <audio class="post-audio-element" src="${post.audio_url}" loop></audio>
+        </div>
+      ` : '';
+
       card.innerHTML = `
-        <div class="slider">
+        <div class="slider" style="position: relative;">
+          ${musicHtml}
           <img src="${post.image_url || "/asets/png/karya.png"}" class="active" loading="lazy">
           <div class="watermark-overlay"><img src="/asets/svg/watermark.svg"></div>
         </div>
@@ -243,6 +252,7 @@ async function fetchPosts(category = "all") {
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
             </button>
           </div>
+
           <p class="post-bio" style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 400;">
             ${post.bio || ""}
           </p>
@@ -262,7 +272,6 @@ async function fetchPosts(category = "all") {
         </div>`;
       gallery.appendChild(card);
     });
-
 
     initGiftButtons(); initLikeButtons(); initComments(); loadLikes(); 
   } catch (err) {
@@ -324,63 +333,24 @@ async function processGiftTransaction() {
 
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
-    
-    // 1. Transfer koin menggunakan RPC
     const { error: rpcErr } = await supabaseClient.rpc("transfer_coins", { sender_id: session.user.id, receiver_id: giftState.creatorId, amount });
     if (rpcErr) throw rpcErr;
-
-    // 2. Simpan transaksi ke tabel gift_transactions
     await supabaseClient.from("gift_transactions").insert({ sender_id: session.user.id, receiver_id: giftState.creatorId, post_id: parseInt(giftState.postId), amount });
 
     const sProf = await getMyProfile(session.user.id);
-
-    // ==========================================
-    // 3. CATAT KE TABEL coin_history (FINAL FIX)
-    // ==========================================
-    
-    // Ambil saldo terbaru pengirim untuk mengisi balance_after (khusus pengirim)
     const currentBalanceSender = (sProf?.coins || 0) - amount;
 
-    // A. Catat History untuk PENGIRIM
-    const { error: errSender } = await supabaseClient.from("coin_history").insert({
-      user_id: session.user.id,
-      type: "keluar",
-      transaction_type: "keluar", 
-      amount: amount,
-      balance_after: currentBalanceSender, // Kita isi buat pengirim
-      description: `Kirim gift ke ${giftState.creatorName}`
-    });
-    
-    if (errSender) console.error("ERROR PENGIRIM: " + errSender.message);
+    await supabaseClient.from("coin_history").insert({ user_id: session.user.id, type: "keluar", transaction_type: "keluar", amount: amount, balance_after: currentBalanceSender, description: `Kirim gift ke ${giftState.creatorName}` });
+    await supabaseClient.from("coin_history").insert({ user_id: giftState.creatorId, type: "masuk", transaction_type: "masuk", amount: amount, description: `Terima gift dari ${sProf?.username || 'Seseorang'}` });
 
-    // B. Catat History untuk PENERIMA
-    const { error: errReceiver } = await supabaseClient.from("coin_history").insert({
-      user_id: giftState.creatorId,
-      type: "masuk",
-      transaction_type: "masuk",
-      amount: amount,
-      // balance_after dibiarkan kosong (NULL) karena SQL sudah kita DROP NOT NULL
-      description: `Terima gift dari ${sProf?.username || 'Seseorang'}`
-    });
-
-    if (errReceiver) console.error("ERROR PENERIMA: " + errReceiver.message);
-    // ==========================================
-
-    // Tampilkan efek visual
     showBigImage(selectedGiftImage);
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-
-    // 4. Kirim notifikasi ke kreator
     await createNotification({ user_id: giftState.creatorId, actor_id: session.user.id, post_id: giftState.postId, type: "gift", message: `${sProf?.username} mengirim ${amount} coin ke karyamu` });
 
-    // 5. Update UI koin
     giftState.userCoins -= amount;
     document.getElementById("giftUserCoins").textContent = giftState.userCoins;
-    
-    // 6. Update Storage
     sProf.coins = giftState.userCoins;
     sessionStorage.setItem(`hh_profile_${session.user.id}`, JSON.stringify(sProf));
-    
     closeGiftSheet();
 
   } catch (err) { 
@@ -405,7 +375,7 @@ function closeGiftSheet() {
 }
 
 // =======================
-// COMMENTS SYSTEM (OPTIMIZED)
+// COMMENTS SYSTEM
 // =======================
 function initComments() {
   const modal = document.getElementById("commentModal");
@@ -463,7 +433,6 @@ async function loadCommentsStructured() {
   const list = document.querySelector(".comment-list");
   if (!list || !currentPostId) return;
   
-  // FIX: Seleksi kolom profil agar tidak boros
   const { data } = await supabaseClient.from("comments")
     .select("id, content, created_at, user_id, parent_id, reply_to_username, profiles(id, username, avatar_url, role)")
     .eq("post_id", currentPostId)
@@ -516,7 +485,7 @@ function initReplyClick() {
 }
 
 // =======================
-// LIKES SYSTEM (CLEAN OPTIMIZED)
+// LIKES SYSTEM
 // =======================
 function initLikeButtons() {
   document.querySelectorAll(".like-btn").forEach((btn) => {
@@ -556,7 +525,6 @@ async function loadLikes() {
 
   const postIds = Array.from(likeBtns).map(btn => btn.dataset.post);
 
-  // FIX: Gunakan .in untuk request borongan tunggal
   const { data } = await supabaseClient.from("likes")
       .select("post_id")
       .eq("user_id", session.user.id)
@@ -643,6 +611,7 @@ function initPostModal() {
   });
   document.getElementById("postForm")?.addEventListener("submit", handlePostSubmit);
   setupCustomCategory();
+  initMusicSearch(); // 🔥 PANGGIL PENCARIAN MUSIK DI SINI
 }
 
 function setupCustomCategory() {
@@ -663,7 +632,18 @@ async function handlePostSubmit(e) {
     const { data: { session } } = await supabaseClient.auth.getSession();
     const cData = await uploadImageToCloudinary(selectedPostFile);
     const prof = await getMyProfile(session.user.id);
-    await supabaseClient.from("posts").insert({ creator_id: session.user.id, name: prof.username, bio: document.getElementById("postCaption").value, category: document.getElementById("postCategory").value, image_url: cData.secure_url, status: "pending" });
+    
+    // 🔥 TAMBAHIN audio_url KE DATABASE
+    await supabaseClient.from("posts").insert({ 
+        creator_id: session.user.id, 
+        name: prof.username, 
+        bio: document.getElementById("postCaption").value, 
+        category: document.getElementById("postCategory").value, 
+        image_url: cData.secure_url, 
+        audio_url: selectedAudioUrl, 
+        status: "pending" 
+    });
+
     showNotif("Karya dikirim! Menunggu review", "success");
     document.getElementById("postModal").classList.remove("active");
   } catch (err) { showNotif(err.message, "error"); }
@@ -676,45 +656,122 @@ async function uploadImageToCloudinary(file) {
   return await res.json();
 }
 
-// --- FUNGSI TAMBAHAN (Wajib ada biar overlay gambar bisa ditutup) ---
 function closeBigImage() {
   const container = document.getElementById("bigImageContainer");
   if (container) container.style.display = "none";
 }
+
+// =======================
+// MUSIC SEARCH & PLAY SYSTEM (BARU)
+// =======================
+function initMusicSearch() {
+  const searchInput = document.getElementById("musicSearchInput");
+  const resultsBox = document.getElementById("musicSearchResults");
+  const selectedBox = document.getElementById("selectedMusicBox");
+  const selectedTitle = document.getElementById("selectedMusicTitle");
+  const removeBtn = document.getElementById("removeMusicBtn");
+
+  if(!searchInput) return;
+
+  let typingTimer;
+  searchInput.addEventListener("input", () => {
+    clearTimeout(typingTimer);
+    resultsBox.innerHTML = "<div style='font-size:12px; color:gray; text-align:center;'>Mencari musik...</div>";
+    
+    typingTimer = setTimeout(async () => {
+      const query = searchInput.value.trim();
+      if(query.length < 2) { resultsBox.innerHTML = ""; return; }
+      
+      try {
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=4`);
+        const data = await res.json();
+        
+        resultsBox.innerHTML = "";
+        if(data.results.length === 0) {
+          resultsBox.innerHTML = "<div style='font-size:12px; color:gray; text-align:center;'>Lagu tidak ditemukan</div>";
+          return;
+        }
+
+        data.results.forEach(song => {
+          if(!song.previewUrl) return; 
+          
+          const div = document.createElement("div");
+          div.style.cssText = "display:flex; align-items:center; gap:10px; padding:8px; border-radius:6px; cursor:pointer; background:var(--bg-secondary); transition:0.2s;";
+          div.innerHTML = `
+            <img src="${song.artworkUrl60}" style="width:40px; height:40px; border-radius:4px; object-fit:cover;">
+            <div style="flex:1; overflow:hidden;">
+              <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-main);">${song.trackName}</div>
+              <div style="font-size:11px; color:gray;">${song.artistName}</div>
+            </div>
+          `;
+          
+          div.onclick = () => {
+            selectedAudioUrl = song.previewUrl;
+            selectedTitle.innerText = `${song.trackName} - ${song.artistName}`;
+            selectedBox.style.display = "flex";
+            resultsBox.innerHTML = "";
+            searchInput.value = "";
+          };
+          
+          resultsBox.appendChild(div);
+        });
+      } catch (err) {
+        resultsBox.innerHTML = "<div style='font-size:12px; color:red; text-align:center;'>Gagal memuat musik</div>";
+      }
+    }, 500); 
+  });
+
+  removeBtn.onclick = () => {
+    selectedAudioUrl = null;
+    selectedBox.style.display = "none";
+  };
+}
+
+window.togglePostMusic = function(btn) {
+    const audio = btn.querySelector('.post-audio-element');
+    const text = btn.querySelector('span');
+
+    // Matiin lagu postingan lain dulu
+    document.querySelectorAll('.post-audio-element').forEach(el => {
+        if (el !== audio) {
+            el.pause();
+            const otherBtn = el.closest('.music-player-btn');
+            otherBtn.querySelector('span').innerText = 'PLAY AUDIO';
+        }
+    });
+
+    if (audio.paused) {
+        audio.play();
+        text.innerText = 'PAUSE AUDIO';
+    } else {
+        audio.pause();
+        text.innerText = 'PLAY AUDIO';
+    }
+};
+
 // =======================
 // DELETE POST SYSTEM
 // =======================
 async function deletePost(postId) {
-  // Peringatan sebelum menghapus
   if (!confirm("Yakin ingin menghapus karya ini secara permanen?")) return;
-
   showNotif("Sedang menghapus karya...", "info");
   
   try {
-    // Eksekusi hapus di Supabase
-    const { error } = await supabaseClient
-      .from("posts")
-      .delete()
-      .eq("id", postId);
-
+    const { error } = await supabaseClient.from("posts").delete().eq("id", postId);
     if (error) throw error;
-
     showNotif("Karya berhasil dihapus!", "success");
-    
-    // Refresh otomatis galeri setelah dihapus
     fetchPosts("all"); 
-
   } catch (err) {
     showNotif("Gagal menghapus: " + err.message, "error");
   }
 }
+
 // =======================
 // POST OPTIONS (BOTTOM SHEET)
 // =======================
 function openPostOptions(postId, isOwner, creatorId) {
     let sheet = document.getElementById('postOptionsSheet');
     
-    // Kalau belum ada, kita bikin elemen dan CSS-nya secara dinamis
     if (!sheet) {
         sheet = document.createElement('div');
         sheet.id = 'postOptionsSheet';
@@ -728,7 +785,6 @@ function openPostOptions(postId, isOwner, creatorId) {
         `;
         document.body.appendChild(sheet);
 
-        // Inject CSS animasi ke head
         const style = document.createElement('style');
         style.innerHTML = `
             .action-sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 99999; display: flex; flex-direction: column; justify-content: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
@@ -744,7 +800,6 @@ function openPostOptions(postId, isOwner, creatorId) {
         `;
         document.head.appendChild(style);
 
-        // Tutup kalau klik area gelap di luar sheet
         sheet.addEventListener('click', (e) => {
             if (e.target === sheet) closePostOptions();
         });
@@ -752,7 +807,6 @@ function openPostOptions(postId, isOwner, creatorId) {
 
     const content = document.getElementById('sheetOptionsContent');
     
-    // Isi tombolnya beda antara owner sama user biasa
     content.innerHTML = `
         <button class="sheet-btn" onclick="sharePost('${postId}')">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
@@ -775,7 +829,6 @@ function openPostOptions(postId, isOwner, creatorId) {
         `}
     `;
 
-    // Timeout dikit biar animasi CSS slide-up nya jalan mulus
     setTimeout(() => sheet.classList.add('active'), 10);
 }
 
@@ -797,7 +850,6 @@ function sharePost(postId) {
 
 function confirmDeletePost(postId) {
     closePostOptions();
-    // Tunggu modal turun dulu, baru panggil fungsi hapus
     setTimeout(() => deletePost(postId), 300); 
 }
 
