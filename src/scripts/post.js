@@ -282,6 +282,7 @@ const musicHtml = post.audio_url ? `
   </div>
 ` : '';
 
+
       card.innerHTML = `
         <div class="slider" style="position: relative;">
           ${musicHtml}
@@ -681,28 +682,45 @@ function setupCustomCategory() {
 async function handlePostSubmit(e) {
   e.preventDefault();
   const btn = document.getElementById("submitPostBtn");
+  const selectedTitle = document.getElementById("selectedMusicTitle"); // Ambil elemen judul di modal
+
   if (!selectedPostFile) return showNotif("Pilih foto dulu", "warning");
-  btn.disabled = true; btn.textContent = "Mengirim...";
+  
+  btn.disabled = true; 
+  btn.textContent = "Mengirim...";
+
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
     const cData = await uploadImageToCloudinary(selectedPostFile);
-    const prof = await getMyProfile(session.user.id);
     
-    // 🔥 TAMBAHIN audio_url KE DATABASE
+    // 🔥 Kita pecah judul dan artist dari teks di modal (Asumsi format: "Judul — Artist")
+    const fullMusicText = selectedTitle.innerText;
+    const musicParts = fullMusicText.split(" — ");
+    const finalTitle = musicParts[0] || "Untitled";
+    const finalArtist = musicParts[1] || "Unknown Artist";
+
     await supabaseClient.from("posts").insert({ 
         creator_id: session.user.id, 
-        name: prof.username, 
         bio: document.getElementById("postCaption").value, 
         category: document.getElementById("postCategory").value, 
         image_url: cData.secure_url, 
         audio_url: selectedAudioUrl, 
+        title: finalTitle,  // 🔥 Simpan ke tabel posts
+        artist: finalArtist, // 🔥 Simpan ke tabel posts
         status: "pending" 
     });
 
     showNotif("Karya dikirim! Menunggu review", "success");
     document.getElementById("postModal").classList.remove("active");
-  } catch (err) { showNotif(err.message, "error"); }
-  finally { btn.disabled = false; btn.textContent = "Kirim ke Review"; }
+    // Reset form
+    e.target.reset();
+    selectedAudioUrl = null;
+  } catch (err) { 
+    showNotif(err.message, "error"); 
+  } finally { 
+    btn.disabled = false; 
+    btn.textContent = "Kirim ke Review"; 
+  }
 }
 
 async function uploadImageToCloudinary(file) {
@@ -759,13 +777,17 @@ async function initMusicPicker() {
         </div>
       `;
       
-      div.onclick = () => {
-        // 🔥 Sesuaikan pake song.audio_src sesuai SS lu
+            div.onclick = () => {
+        // 1. Simpan URL audionya (audio_src sesuai SS lu)
         selectedAudioUrl = song.audio_src; 
-        selectedTitle.innerText = song.title;
+        
+        // 2. 🔥 GABUNGIN JUDUL & ARTIST
+        // Kita simpan teksnya dengan format "Judul — Artist"
+        selectedTitle.innerText = `${song.title} — ${song.artist}`;
+        
         selectedBox.style.display = "flex";
         
-        // Style seleksi
+        // --- Sisa kode style seleksi lu (tetap sama) ---
         document.querySelectorAll('#predefinedMusicList > div').forEach(el => {
             el.style.borderColor = 'var(--border-color)';
             el.style.background = 'var(--bg-secondary)';
