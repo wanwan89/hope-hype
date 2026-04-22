@@ -662,7 +662,7 @@ function closeBigImage() {
 }
 
 // =======================
-// MUSIC PICKER - DATABASE VERSION (SUPABASE)
+// MUSIC PICKER - TABLE SONGS VERSION
 // =======================
 async function initMusicPicker() {
   const listContainer = document.getElementById("predefinedMusicList");
@@ -672,46 +672,45 @@ async function initMusicPicker() {
 
   if(!listContainer) return;
 
-  // Loading state ala profesional
-  listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 15px;'>Mengambil koleksi musik...</div>";
+  listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 15px;'>Memuat koleksi lagu...</div>";
 
   try {
-    // 1. Ambil data dari tabel 'music'
-    // Pastikan 'supabaseClient' sudah terdefinisi di project lu
-    const { data: musicData, error } = await supabaseClient
-      .from('music')
+    // 🔥 Ambil dari table 'songs'
+    // Gue tambahin filter .eq('status', 'approved') biar cuma lagu yang aktif yang muncul
+    const { data: songsData, error } = await supabaseClient
+      .from('songs')
       .select('*')
+      .eq('status', 'approved') 
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
-    listContainer.innerHTML = ""; // Bersihin loading
+    listContainer.innerHTML = ""; 
 
-    if(!musicData || musicData.length === 0) {
-      listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 10px;'>Belum ada musik di database.</div>";
+    if(!songsData || songsData.length === 0) {
+      listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 10px;'>Belum ada lagu yang disetujui.</div>";
       return;
     }
 
-    // 2. Looping data dari table ke UI
-    musicData.forEach(song => {
+    songsData.forEach(song => {
       const div = document.createElement("div");
       div.style.cssText = "display:flex; align-items:center; gap:12px; padding:10px; border-radius:12px; cursor:pointer; background:var(--bg-secondary, #f1f3f5); border: 1px solid var(--border-color); transition:0.2s; margin-bottom:8px;";
       
       div.innerHTML = `
         <img src="${song.cover_url || 'https://placehold.co/100x100?text=♫'}" style="width:38px; height:38px; border-radius:8px; object-fit:cover;">
         <div style="flex:1; overflow:hidden;">
-          <div style="font-size:13px; font-weight:700; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${song.title}</div>
-          <div style="font-size:11px; color:gray;">${song.artist}</div>
+          <div style="font-size:13px; font-weight:700; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${song.title || 'Untitled'}</div>
+          <div style="font-size:11px; color:gray;">${song.artist || 'Unknown Artist'}</div>
         </div>
       `;
       
       div.onclick = () => {
-        // Set variabel global buat dipake pas post
-        selectedAudioUrl = song.audio_url; 
+        // 🔥 Sesuaikan pake song.audio_src sesuai SS lu
+        selectedAudioUrl = song.audio_src; 
         selectedTitle.innerText = song.title;
         selectedBox.style.display = "flex";
         
-        // Efek seleksi
+        // Style seleksi
         document.querySelectorAll('#predefinedMusicList > div').forEach(el => {
             el.style.borderColor = 'var(--border-color)';
             el.style.background = 'var(--bg-secondary)';
@@ -725,7 +724,7 @@ async function initMusicPicker() {
 
   } catch (err) {
     console.error("Database Error:", err);
-    listContainer.innerHTML = "<div style='font-size:12px; color:#ef4444; text-align:center; padding: 10px;'>Gagal terhubung ke database musik.</div>";
+    listContainer.innerHTML = "<div style='font-size:12px; color:#ef4444; text-align:center; padding: 10px;'>Gagal memuat lagu dari tabel songs.</div>";
   }
 
   if(removeBtn) {
