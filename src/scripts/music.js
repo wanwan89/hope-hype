@@ -404,12 +404,19 @@ async function playSong(song) {
       // Delay dikit buat handshake mobile
       setTimeout(() => ytPlayer.playVideo(), 300);
     }
-  } 
-  else {
-    // LAGU LOKAL (DARI SUPABASE)
-    audio.src = song.audio_src.startsWith("http") ? song.audio_src : `songs/${song.audio_src}`;
-    audio.play().catch(err => console.log("Autoplay di-block browser:", err));
+// Cari bagian ini di playSong(song)
+} else {
+  // LAGU LOKAL (DARI SUPABASE)
+  if (!song.audio_src) {
+    console.error("Link audio kosong di database!");
+    return;
   }
+  
+  // Pastikan link-nya valid sebelum di-load
+  audio.src = song.audio_src;
+  audio.load(); 
+  audio.play().catch(err => console.log("Autoplay di-block:", err));
+}
 
   // TAMBAHAN: TIMER 60 DETIK TRIGGER IKLAN & VIEWS
   playTimer = setTimeout(async () => {
