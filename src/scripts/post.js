@@ -219,7 +219,7 @@ try {
         created_at, 
         creator_id, 
         profiles:creator_id (
-          username, 
+          name, 
           role, 
           avatar_url
         )
