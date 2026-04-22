@@ -611,7 +611,7 @@ function initPostModal() {
   });
   document.getElementById("postForm")?.addEventListener("submit", handlePostSubmit);
   setupCustomCategory();
-  initMusicSearch(); // 🔥 PANGGIL PENCARIAN MUSIK DI SINI
+  initMusicPicker(); // 🔥 PANGGIL PENCARIAN MUSIK DI SINI
 }
 
 function setupCustomCategory() {
