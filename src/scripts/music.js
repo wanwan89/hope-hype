@@ -336,7 +336,7 @@ window.handleLike = async function (songId, event) {
 // ================= 2. PLAYER LOGIC =================
 let playTimer = null;
 
-async function playSong(song) {
+async function playSong(song) { // 🔥 Typo 'a' udah dibenerin
   if (!miniPlayer || !audio) return;
 
   // Reset timer hitung putar lagu lama
@@ -352,8 +352,6 @@ async function playSong(song) {
   audio.pause();
 
   // 🔥 [PENTING] UNLOCK MESIN YOUTUBE DI MOBILE 🔥
-  // Kita pancing perintah play & pause sekejap saat stack klik user masih aktif.
-  // Ini kunci biar browser HP ngijinin audio YouTube keluar.
   if (isYTReady && ytPlayer) {
     ytPlayer.playVideo();
     ytPlayer.pauseVideo();
@@ -375,48 +373,63 @@ async function playSong(song) {
       if (data.items && data.items.length > 0) {
         const videoId = data.items[0].id.videoId;
         if (isYTReady && ytPlayer) {
-          // ✅ Pake format objek biar lebih stabil di Android/iOS
           ytPlayer.loadVideoById({
             videoId: videoId,
             startSeconds: 0
           });
           
-          // Kasih jeda 600ms nunggu buffering awal, baru paksa PLAY
           setTimeout(() => {
             ytPlayer.playVideo();
             if (playBtn) playBtn.textContent = "pause";
           }, 600);
-          console.log("✅ Memutar dari YouTube API:", videoId);
         }
       } else {
         throw new Error("Video Gak Ketemu");
       }
     } catch (e) {
       console.error("YouTube API Gagal, balik ke audio lokal:", e.message);
-      audio.src = song.audio_src;
-      audio.play();
+      if(song.audio_src) {
+         const finalSrc = song.audio_src.startsWith("http") ? song.audio_src : `songs/${song.audio_src}`;
+         if (audio.src !== finalSrc) {
+             audio.src = finalSrc;
+             audio.load();
+         }
+         setTimeout(() => audio.play().catch(err => console.log(err)), 50);
+      }
     }
   } 
   else if (song.source === 'youtube') {
     const ytId = String(song.id).replace('yt-', '');
     if (isYTReady && ytPlayer) { 
       ytPlayer.loadVideoById(ytId); 
-      // Delay dikit buat handshake mobile
       setTimeout(() => ytPlayer.playVideo(), 300);
     }
-// Cari bagian ini di playSong(song)
-} else {
-  // LAGU LOKAL (DARI SUPABASE)
-  if (!song.audio_src) {
-    console.error("Link audio kosong di database!");
-    return;
+  } 
+  else {
+    // 🔥 LAGU LOKAL (DARI SUPABASE) - SUDAH DIPERBAIKI FULL 🔥
+    if (!song.audio_src || song.audio_src === "null") {
+      console.error("Link audio kosong di database!");
+      return;
+    }
+    
+    const finalSrc = song.audio_src.startsWith("http") ? song.audio_src : `songs/${song.audio_src}`;
+    
+    // Cek biar gak nge-load ulang kalau lagunya sama
+    if (audio.src !== finalSrc) {
+      audio.src = finalSrc;
+      audio.load(); // Paksa browser baca memori baru
+    }
+
+    // Jeda dikit biar browser HP gak kaget (Anti NotSupportedError)
+    setTimeout(() => {
+      audio.play().catch(err => {
+        console.warn("Autoplay ditahan browser:", err);
+        if (err.name === 'NotAllowedError' && typeof showNotif === 'function') {
+           showNotif("Klik layar sekali untuk memutar audio!", "warning");
+        }
+      });
+    }, 50);
   }
-  
-  // Pastikan link-nya valid sebelum di-load
-  audio.src = song.audio_src;
-  audio.load(); 
-  audio.play().catch(err => console.log("Autoplay di-block:", err));
-}
 
   // TAMBAHAN: TIMER 60 DETIK TRIGGER IKLAN & VIEWS
   playTimer = setTimeout(async () => {
@@ -424,11 +437,9 @@ async function playSong(song) {
     const isPlayingYT = isYTReady && ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === 1;
     
     if ((isPlayingAudio || isPlayingYT) && currentSongsList[currentSongIndex]?.id === song.id) {
-      // 1. Tambah Views buat Kreator (Lokal)
       if (song.source === 'local') {
         await updatePlayCount(song.id);
       }
-      // 2. Munculkan POPUP MELAYANG buat Pendengar
       window.triggerAdReward(song.id);
     }
   }, 180000);
@@ -504,7 +515,6 @@ if (audio) {
   audio.addEventListener("pause", () => {
     if (playBtn) playBtn.textContent = "play_arrow";
   });
-  // (timeupdate dihapus dari sini, diganti setInterval di bawah)
 }
 
 // ================= TOMBOL PLAY/PAUSE HYBRID =================
