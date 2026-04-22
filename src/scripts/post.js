@@ -750,10 +750,14 @@ async function handlePostSubmit(e) {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) return openLogin();
 
-    // 🔥 LANGKAH 1.5: Ambil Nama Pengunggah dari Profil
-    // Supaya di tabel 'posts' kolom 'name' ada isinya buat Admin Review
-    const userProf = await getMyProfile(session.user.id);
-    const uploaderName = userProf?.name || "User"; 
+    // 🔥 JURUS BIAR GAK JADI "USER": Ambil nama langsung dari DB
+    const { data: profileData } = await supabaseClient
+      .from("profiles")
+      .select("name") // Pastikan kolom di tabel profiles lu namanya 'name'
+      .eq("id", session.user.id)
+      .single();
+
+    const uploaderName = profileData?.name || "Anonymous"; 
 
     // 1. Upload Gambar ke Cloudinary
     const cData = await uploadImageToCloudinary(selectedPostFile);
@@ -772,9 +776,10 @@ async function handlePostSubmit(e) {
     }
 
     // 3. Simpan ke Tabel 'posts'
+    // Kolom 'name' di sini bakal keisi uploaderName yang kita ambil tadi
     const { error } = await supabaseClient.from("posts").insert({ 
         creator_id: session.user.id, 
-        name: uploaderName,       // 🔥 SEKARANG NAMA MASUK KE DATABASE (Tabel Posts)
+        name: uploaderName,       // 🔥 SEKARANG NAMA USERNAME MASUK KE SINI
         bio: document.getElementById("postCaption").value || "", 
         category: document.getElementById("postCategory").value || "Umum", 
         image_url: cData.secure_url, 
@@ -786,7 +791,7 @@ async function handlePostSubmit(e) {
 
     if (error) throw error;
 
-    showNotif("Karya dikirim! Admin bakal liat nama lu di review 🔥", "success");
+    showNotif("Karya dikirim! Username lu udah tercatat di database 🔥", "success");
     
     // 4. Tutup Modal & Reset Form
     document.getElementById("postModal").classList.remove("active");
