@@ -125,7 +125,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof initGiftSheet === "function") safeInit("GiftSheet", initGiftSheet);
   };
 
-  startApp();
+    startApp();
+
+  // 🔥 TAMBAHKAN INI (Jurus Sakti Biar Autoplay Gak Diblokir Browser)
+  document.body.addEventListener('click', () => {
+      console.log("Audio Engine Unlocked 🔓");
+      // Opsional: Langsung coba panggil play() kosong buat ngetes izin
+      const silentAudio = new Audio();
+      silentAudio.play().catch(() => {});
+  }, { once: true });
 
   const navItems = document.querySelectorAll(".nav-item");
   const sidebar = document.querySelector(".sidebar");
@@ -230,9 +238,9 @@ async function fetchPosts(category = "all") {
 
       // 🔥 LOGIKA TOMBOL PLAY MUSIK (Muncul kalau ada lagu)
 const musicHtml = post.audio_url ? `
-  <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 130px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
-    <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite;">
-      ${post.profiles?.username || 'Hope Hype'} — Audio Track 
+  <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 140px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
+    <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
+      ${post.title || 'Untitled'} — ${post.artist || 'Unknown Artist'}
     </div>
     <audio class="post-audio-element" src="${post.audio_url}" loop preload="none"></audio>
   </div>
