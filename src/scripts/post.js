@@ -206,18 +206,19 @@ async function fetchPosts(category = "all") {
 
   gallery.innerHTML = `<div class="skeleton-wrapper" style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%;">${Array(6).fill(0).map(() => `<div class="skeleton-card"><div class="skeleton-shimmer"></div></div>`).join("")}</div>`;
 
-    try { // 🔥 TRY HARUS DI SINI
+      try { // 🔥 TRY HARUS DI SINI
     let query = supabaseClient
       .from("posts")
       .select(`
         id, 
         image_url, 
         audio_src,  
+        title,      
+        artist,   
         bio,
         created_at, 
         creator_id, 
-        profiles (username, role, avatar_url),
-        songs (title, artist)
+        profiles (username, role, avatar_url)
       `) 
       .eq("status", "approved")
       .limit(10);
@@ -252,45 +253,49 @@ async function fetchPosts(category = "all") {
     if (commentsRes.data) commentsRes.data.forEach(c => { if(commentCounts[c.post_id] !== undefined) commentCounts[c.post_id]++; });
 
     posts.forEach((post) => {
-      const card = document.createElement("div");
-      card.className = "card post-fade-in";
-      
-      const userRole = (post.profiles?.role || "user").toLowerCase().trim();
-      const badge = getUserBadge(userRole);
-      const formattedDate = new Date(post.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
-      const isOwner = currentUser && currentUser.id === post.creator_id;
-      const songInfo = post.songs; 
-// 2. Render HTML-nya
-const musicHtml = post.audio_src ? (() => {
-  let cleanAudio = (post.audio_src || "").trim();
+  const card = document.createElement("div");
+  card.className = "card post-fade-in";
+  
+  const userRole = (post.profiles?.role || "user").toLowerCase().trim();
+  const badge = getUserBadge(userRole);
+  const formattedDate = new Date(post.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+  const isOwner = currentUser && currentUser.id === post.creator_id;
 
-  // 🔥 FIX CLOUDINARY
-  if (cleanAudio.includes('/video/upload/')) {
-    cleanAudio = cleanAudio.replace('/video/upload/', '/video/upload/f_mp3/');
-  }
+  // 🔥 1. AMBIL DATA LANGSUNG DARI TABEL POSTS (BUKAN post.songs)
+  const musicTitle = post.title || 'Untitled';
+  const musicArtist = post.artist || 'Unknown Artist';
 
-  // 🔥 FIX PATH LOKAL
-  const finalAudio = cleanAudio.startsWith("http")
-    ? cleanAudio
-    : `/songs/${cleanAudio}`;
+  // 2. Render HTML-nya
+  const musicHtml = post.audio_src ? (() => {
+    let cleanAudio = (post.audio_src || "").trim();
 
-  return `
-    <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 140px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
-      
-      <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
-        ${songInfo?.title || 'Untitled'} — ${songInfo?.artist || 'Unknown Artist'}
+    // 🔥 FIX CLOUDINARY & ITUNES
+    // iTunes biasanya .m4a, ini tetep aman dimasukin src audio
+    if (cleanAudio.includes('/video/upload/')) {
+      cleanAudio = cleanAudio.replace('/video/upload/', '/video/upload/f_mp3/');
+    }
+
+    const finalAudio = cleanAudio.startsWith("http")
+      ? cleanAudio
+      : `/songs/${cleanAudio}`;
+
+    return `
+      <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 140px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
+        
+        <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
+          ${musicTitle} — ${musicArtist}
+        </div>
+
+        <audio 
+          class="post-audio-element" 
+          src="${finalAudio}" 
+          loop 
+          preload="auto"
+        ></audio>
+
       </div>
-
-      <audio 
-        class="post-audio-element" 
-        src="${finalAudio}" 
-        loop 
-        preload="auto"
-      ></audio>
-
-    </div>
-  `;
-})() : '';
+    `;
+  })() : '';
 
       card.innerHTML = `
         <div class="slider" style="position: relative;">
