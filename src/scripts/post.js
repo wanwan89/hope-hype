@@ -662,9 +662,9 @@ function closeBigImage() {
 }
 
 // =======================
-// MUSIC PICKER - ITUNES DIRECT (THE HYBRID WAY)
+// MUSIC PICKER - DATABASE VERSION (SUPABASE)
 // =======================
-function initMusicPicker() {
+async function initMusicPicker() {
   const listContainer = document.getElementById("predefinedMusicList");
   const selectedBox = document.getElementById("selectedMusicBox");
   const selectedTitle = document.getElementById("selectedMusicTitle");
@@ -672,47 +672,61 @@ function initMusicPicker() {
 
   if(!listContainer) return;
 
-  // 🔥 DATA ITUNES YANG UDAH GUE AMBILIN (Anti Server Sibuk)
-  // Lu bisa tambah/ganti link preview-nya kapan aja
-  const ITUNES_HITS = [
-    { name: "Bernafas Terpaut", artist: "Hindia", url: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/4b/31/5a/4b315a51-926c-941c-223d-0f9c2401f82c/mzaf_13506456015694269151.plus.aac.p.m4a", img: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/3d/8a/53/3d8a5312-3294-f8b1-4f16-169f4c39121c/cover.jpg/100x100bb.jpg" },
-    { name: "Sial", artist: "Mahalini", url: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview116/v4/31/1d/18/311d1822-0941-8653-488b-2d7c54f34608/mzaf_11306304245995254117.plus.aac.p.m4a", img: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/4e/d8/d7/4ed8d76d-9988-5182-16a7-0e9e4f358356/192641887162.jpg/100x100bb.jpg" },
-    { name: "Komang", artist: "Raim Laode", url: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/80/7e/40/807e408a-211c-2795-3642-1e96772782e4/mzaf_5938805204481514782.plus.aac.p.m4a", img: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/f2/36/53/f2365313-0949-65f5-0453-60586e96a40e/5059801538356.jpg/100x100bb.jpg" },
-    { name: "Tak Segampang Itu", artist: "Anggi Marito", url: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/f4/43/6b/f4436b76-47a3-e886-0694-c7857211e038/mzaf_15024765691168019623.plus.aac.p.m4a", img: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/7c/49/61/7c496152-78d1-d309-8488-812e967a57a5/192641838843.jpg/100x100bb.jpg" },
-    { name: "Jiwa Yang Bersedih", artist: "Ghea Indrawari", url: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview116/v4/28/01/2d/28012d26-2917-7798-9844-31535497424d/mzaf_3990924976451633519.plus.aac.p.m4a", img: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/71/34/00/7134006c-8430-80a9-2509-3221b0662650/cover.jpg/100x100bb.jpg" }
-  ];
+  // Loading state ala profesional
+  listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 15px;'>Mengambil koleksi musik...</div>";
 
-  listContainer.innerHTML = ""; // Bersihin tulisan loading
+  try {
+    // 1. Ambil data dari tabel 'music'
+    // Pastikan 'supabaseClient' sudah terdefinisi di project lu
+    const { data: musicData, error } = await supabaseClient
+      .from('music')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  ITUNES_HITS.forEach(song => {
-    const div = document.createElement("div");
-    div.style.cssText = "display:flex; align-items:center; gap:12px; padding:10px; border-radius:10px; cursor:pointer; background:var(--bg-secondary); border: 1px solid var(--border-color); transition:0.2s; margin-bottom:8px;";
-    
-    div.innerHTML = `
-      <img src="${song.img}" style="width:35px; height:35px; border-radius:6px; object-fit:cover;">
-      <div style="flex:1; overflow:hidden;">
-        <div style="font-size:13px; font-weight:700; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${song.name}</div>
-        <div style="font-size:11px; color:var(--text-muted);">${song.artist}</div>
-      </div>
-      <div style="font-size:10px; color:var(--primary-blue); font-weight:800;">PILIH</div>
-    `;
-    
-    div.onclick = () => {
-      selectedAudioUrl = song.url;
-      selectedTitle.innerText = song.name;
-      selectedBox.style.display = "flex";
+    if (error) throw error;
+
+    listContainer.innerHTML = ""; // Bersihin loading
+
+    if(!musicData || musicData.length === 0) {
+      listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 10px;'>Belum ada musik di database.</div>";
+      return;
+    }
+
+    // 2. Looping data dari table ke UI
+    musicData.forEach(song => {
+      const div = document.createElement("div");
+      div.style.cssText = "display:flex; align-items:center; gap:12px; padding:10px; border-radius:12px; cursor:pointer; background:var(--bg-secondary, #f1f3f5); border: 1px solid var(--border-color); transition:0.2s; margin-bottom:8px;";
       
-      // Reset style border
-      document.querySelectorAll('#predefinedMusicList > div').forEach(el => {
-          el.style.borderColor = 'var(--border-color)';
-          el.style.background = 'var(--bg-secondary)';
-      });
-      div.style.borderColor = 'var(--primary-blue)';
-      div.style.background = 'var(--light-blue-bg)';
-    };
-    
-    listContainer.appendChild(div);
-  });
+      div.innerHTML = `
+        <img src="${song.cover_url || 'https://placehold.co/100x100?text=♫'}" style="width:38px; height:38px; border-radius:8px; object-fit:cover;">
+        <div style="flex:1; overflow:hidden;">
+          <div style="font-size:13px; font-weight:700; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${song.title}</div>
+          <div style="font-size:11px; color:gray;">${song.artist}</div>
+        </div>
+      `;
+      
+      div.onclick = () => {
+        // Set variabel global buat dipake pas post
+        selectedAudioUrl = song.audio_url; 
+        selectedTitle.innerText = song.title;
+        selectedBox.style.display = "flex";
+        
+        // Efek seleksi
+        document.querySelectorAll('#predefinedMusicList > div').forEach(el => {
+            el.style.borderColor = 'var(--border-color)';
+            el.style.background = 'var(--bg-secondary)';
+        });
+        div.style.borderColor = 'var(--primary-blue, #007bff)';
+        div.style.background = 'rgba(0, 123, 255, 0.05)';
+      };
+      
+      listContainer.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error("Database Error:", err);
+    listContainer.innerHTML = "<div style='font-size:12px; color:#ef4444; text-align:center; padding: 10px;'>Gagal terhubung ke database musik.</div>";
+  }
 
   if(removeBtn) {
     removeBtn.onclick = () => {
