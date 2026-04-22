@@ -680,8 +680,10 @@ function setupCustomCategory() {
   });
 }
 
-async function handlePostSubmit(e) { // Pakai 'a' kecil
+async function handlePostSubmit(e) {
   e.preventDefault();
+  console.log("Submit Triggered! 🚀"); // Buat cek di console f12
+
   const btn = document.getElementById("submitPostBtn");
   const selectedTitle = document.getElementById("selectedMusicTitle"); 
 
@@ -692,48 +694,61 @@ async function handlePostSubmit(e) { // Pakai 'a' kecil
 
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) throw new Error("Sesi habis, silakan login ulang");
+
+    console.log("Uploading image to Cloudinary...");
     const cData = await uploadImageToCloudinary(selectedPostFile);
     
-    // 🔥 Pecah teks dari UI
+    // 🔥 Ambil & Pecah Teks Musik
     const fullMusicText = selectedTitle ? selectedTitle.innerText : "";
-    const musicParts = fullMusicText.split(" — ");
-    const finalTitle = musicParts[0] || "Untitled";
-    const finalArtist = musicParts[1] || "Unknown Artist";
+    let finalTitle = "Untitled";
+    let finalArtist = "Unknown Artist";
 
-    const { error } = await supabaseClient.from("posts").insert({ 
+    if (fullMusicText && fullMusicText !== "Pilih Musik...") {
+      const musicParts = fullMusicText.split(" — ");
+      finalTitle = musicParts[0] || "Untitled";
+      finalArtist = musicParts[1] || "Unknown Artist";
+    }
+
+    console.log("Inserting to Supabase...");
+    // 🚀 PROSES INSERT KE TABEL POSTS
+    const { data, error } = await supabaseClient.from("posts").insert({ 
         creator_id: session.user.id, 
-        bio: document.getElementById("postCaption").value, 
-        category: document.getElementById("postCategory").value, 
+        bio: document.getElementById("postCaption").value || "", 
+        category: document.getElementById("postCategory").value || "Lainnya", 
         image_url: cData.secure_url, 
-        audio_url: selectedAudioUrl, 
+        audio_url: selectedAudioUrl || null, 
         title: finalTitle,  
         artist: finalArtist, 
         status: "pending" 
-    });
+    }).select(); // Tambahin .select() biar kita tau datanya masuk
 
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase Error:", error);
+      throw error;
+    }
 
+    console.log("Post Success:", data);
     showNotif("Karya dikirim! Menunggu review", "success");
-    document.getElementById("postModal").classList.remove("active");
-
-    // --- 🚀 RESET TOTAL AGAR BERSIH ---
-    e.target.reset(); // Reset input caption & category
-    selectedAudioUrl = null; // Reset link lagu
-    selectedPostFile = null; // 🔥 Reset file gambar (Penting!)
     
-    // Reset tampilan di Modal
+    // --- RESET SEMUA ---
+    document.getElementById("postModal").classList.remove("active");
+    e.target.reset(); 
+    selectedAudioUrl = null; 
+    selectedPostFile = null; 
+    
     if (selectedTitle) selectedTitle.innerText = "Pilih Musik...";
     document.getElementById("postPreviewImage").style.display = "none";
     document.getElementById("postUploadPlaceholder").style.display = "block";
 
   } catch (err) { 
-    showNotif(err.message, "error"); 
+    console.error("Full Error:", err);
+    showNotif("Gagal: " + err.message, "error"); 
   } finally { 
     btn.disabled = false; 
     btn.textContent = "Kirim ke Review"; 
   }
 }
-
 
 async function uploadImageToCloudinary(file) {
   const fd = new FormData(); fd.append("file", file); fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
