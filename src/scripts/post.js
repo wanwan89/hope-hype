@@ -750,19 +750,21 @@ async function handlePostSubmit(e) {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) return openLogin();
 
-    // 🔥 JURUS BIAR GAK JADI "USER": Ambil nama langsung dari DB
+    // 1. AMBIL USERNAME LANGSUNG DARI TABEL PROFILES
+    // Kita tembak kolom 'username' karena itu nama kolom di DB lu
     const { data: profileData } = await supabaseClient
       .from("profiles")
-      .select("name") // Pastikan kolom di tabel profiles lu namanya 'name'
+      .select("username") 
       .eq("id", session.user.id)
       .single();
 
-    const uploaderName = profileData?.name || "Anonymous"; 
+    // Simpan ke variabel, kalau ga ketemu baru User
+    const uploaderName = profileData?.username || "User"; 
 
-    // 1. Upload Gambar ke Cloudinary
+    // 2. Upload Gambar ke Cloudinary
     const cData = await uploadImageToCloudinary(selectedPostFile);
     
-    // 2. Olah Logika Musik
+    // 3. Olah Logika Musik
     let finalTitle = null;
     let finalArtist = null;
     let finalAudioSrc = null;
@@ -775,11 +777,11 @@ async function handlePostSubmit(e) {
       finalArtist = musicParts[1]?.trim() || "Unknown Artist";
     }
 
-    // 3. Simpan ke Tabel 'posts'
-    // Kolom 'name' di sini bakal keisi uploaderName yang kita ambil tadi
+    // 4. Simpan ke Tabel 'posts'
+    // Kolom 'name' di tabel posts akan terisi dengan 'uploaderName' (Username asli)
     const { error } = await supabaseClient.from("posts").insert({ 
         creator_id: session.user.id, 
-        name: uploaderName,       // 🔥 SEKARANG NAMA USERNAME MASUK KE SINI
+        name: uploaderName,       // 🔥 FIX: Sekarang data username masuk ke sini
         bio: document.getElementById("postCaption").value || "", 
         category: document.getElementById("postCategory").value || "Umum", 
         image_url: cData.secure_url, 
@@ -791,9 +793,9 @@ async function handlePostSubmit(e) {
 
     if (error) throw error;
 
-    showNotif("Karya dikirim! Username lu udah tercatat di database 🔥", "success");
+    showNotif("Karya dikirim! Admin bisa liat nama lu sekarang 🔥", "success");
     
-    // 4. Tutup Modal & Reset Form
+    // 5. Tutup Modal & Reset Form
     document.getElementById("postModal").classList.remove("active");
     e.target.reset();
     
