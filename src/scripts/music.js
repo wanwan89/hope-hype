@@ -406,27 +406,28 @@ async function playSong(song) { // 🔥 Typo 'a' udah dibenerin
     }
   } 
   else {
-    // 🔥 LAGU LOKAL (DARI SUPABASE) - SUDAH DIPERBAIKI FULL 🔥
+    // LAGU LOKAL (DARI SUPABASE)
     if (!song.audio_src || song.audio_src === "null") {
       console.error("Link audio kosong di database!");
       return;
     }
     
-    const finalSrc = song.audio_src.startsWith("http") ? song.audio_src : `songs/${song.audio_src}`;
+    // Bikin link final
+    const finalSrc = song.audio_src.startsWith("http") ? song.audio_src : `/songs/${song.audio_src}`;
     
-    // Cek biar gak nge-load ulang kalau lagunya sama
+    // 🔥 INTIP LINK-NYA DI SINI 🔥
+    console.log("Mencoba play lagu:", song.title);
+    console.log("URL Audio yang mau diputar:", finalSrc);
+    
     if (audio.src !== finalSrc) {
       audio.src = finalSrc;
-      audio.load(); // Paksa browser baca memori baru
+      audio.load();
     }
 
-    // Jeda dikit biar browser HP gak kaget (Anti NotSupportedError)
     setTimeout(() => {
       audio.play().catch(err => {
         console.warn("Autoplay ditahan browser:", err);
-        if (err.name === 'NotAllowedError' && typeof showNotif === 'function') {
-           showNotif("Klik layar sekali untuk memutar audio!", "warning");
-        }
+        console.error("Browser menolak URL ini ->", finalSrc); // Tunjukin URL yang ditolak
       });
     }, 50);
   }
