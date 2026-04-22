@@ -1,0 +1,57 @@
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; outline: none; }
+  body, html { background: #f4f6f9; }
+ .mission-wrapper { 
+    --bg-main: #f4f6f9; 
+    --bg-card: #ffffff; 
+    --text-main: #0f172a; 
+    --text-muted: #64748b; 
+    --border-color: #e2e8f0; 
+    --primary: #f59e0b; 
+    --primary-hover: #d97706; 
+    font-family: 'Inter', sans-serif; 
+    background: var(--bg-main); 
+    color: var(--text-main); 
+    min-height: 100vh; 
+    width: 100vw; 
+    
+    /* Ubah hidden menjadi clip agar sticky bisa berjalan */
+    overflow-x: clip; 
+  }
+  html.dark .mission-wrapper, html.dark body { --bg-main: #0f172a; --bg-card: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border-color: #334155; background: var(--bg-main); }
+  .mission-container { width: 100%; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100vh; background: var(--bg-main); }
+.mission-header { position: sticky; top: 0; background: var(--bg-card); display: flex; justify-content: space-between; align-items: center; padding: 1rem; z-index: 50; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
+  .back-btn { background: none; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center;}
+  .header-title { font-size: 1.1rem; font-weight: 700; flex: 1; text-align: center; }
+  .header-coin { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.9rem; background: rgba(245,158,11,0.1); padding: 5px 12px; border-radius: 99px;}
+  .mission-card { background: var(--bg-card); margin: 1rem; border-radius: 1rem; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); }
+  .streak-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px;}
+  .streak-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;}
+  .streak-days-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+  .streak-days-container::-webkit-scrollbar { display: none; } 
+  .day-card { flex: 0 0 62px; background: var(--bg-main); border: 1.5px solid transparent; border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 10px 5px; position: relative; transition: 0.3s; }
+  .day-card.active { background: rgba(245, 158, 11, 0.1); border-color: var(--primary); }
+  .day-card.done { border-color: #10b981; opacity: 0.7; }
+  .day-label { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+  .day-coin-icon { width: 24px; height: 24px; margin-bottom: 4px; }
+  .day-reward { font-size: 0.8rem; font-weight: 700; color: var(--text-main); }
+  .claim-main-btn { width: 100%; margin-top: 1.25rem; background: var(--primary); color: #fff; border: none; padding: 0.875rem; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
+  .claim-main-btn:disabled { background: var(--border-color); color: var(--text-muted); cursor: not-allowed;}
+  .section-title { font-size: 0.95rem; font-weight: 700; margin: 1rem 1rem 0.5rem; }
+  .mission-list { background: var(--bg-card); margin: 0 1rem; border-radius: 1rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); }
+  .mission-item { display: flex; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border-color); }
+  .mission-item:last-child { border-bottom: none; }
+  .m-icon-box { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
+  .bg-blue { background: #3b82f6; } .bg-purple { background: #8b5cf6; } .bg-orange { background: #f97316; } .bg-pink { background: #ec4899; } .bg-green { background: #10b981; } .bg-red { background: #ef4444; }
+  .m-info { flex: 1; margin-left: 12px; margin-right: 12px; min-width: 0;}
+  .m-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+  .m-reward { font-size: 0.75rem; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;}
+  .coin-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; }
+  .progress-bar { width: 100%; height: 5px; background: var(--bg-main); border-radius: 3px; overflow: hidden; margin-bottom: 2px;}
+  .progress-fill { height: 100%; background: #10b981; transition: width 0.4s;}
+  .progress-text { font-size: 0.65rem; color: var(--text-muted); font-weight: 600;}
+  .invite-input { width: 100%; padding: 8px 10px; font-size: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); outline: none; margin-top: 4px; text-transform: uppercase; font-family: monospace; }
+  .m-btn { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+  .m-btn.btn-klaim { background: var(--primary); color: white; border-color: var(--primary); }
+  .m-btn.btn-done { color: #10b981; border-color: #10b981; background: transparent; cursor: not-allowed; }
