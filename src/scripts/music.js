@@ -381,61 +381,65 @@ async function playSong(song) {
       }
   } 
   else {
-    // 🔥 FIX LAGU LOKAL - JURUS BARU + SIHIR CONVERT MP3 🔥
+    // 🔥 FIX FINAL LAGU LOKAL 🔥
     if (!song.audio_src || song.audio_src === "null") return;
 
     let rawUrl = song.audio_src.trim();
     
-    // 1. Paksa HTTPS kecil biar browser nggak bingung protokol
+    // 1. Paksa HTTPS kecil
     if (rawUrl.toLowerCase().startsWith("http")) {
        rawUrl = "https://" + rawUrl.split("://")[1];
     } else {
        rawUrl = window.location.origin + "/songs/" + rawUrl;
     }
 
-    // 2. 🔥 JURUS SIHIR CLOUDINARY: OTOMATIS CONVERT WEBM/OGG KE MP3 🔥
+    // 2. Sihir Convert Cloudinary
     if (rawUrl.includes('res.cloudinary.com')) {
-        // Ubah tulisan ekstensinya ke .mp3
         rawUrl = rawUrl.replace(/\.webm$/i, '.mp3').replace(/\.ogg$/i, '.mp3');
-        
-        // Pasang filter 'f_mp3' biar Cloudinary ngerender ulang filenya
         if (!rawUrl.includes('/f_mp3/')) {
             rawUrl = rawUrl.replace('/video/upload/', '/video/upload/f_mp3/');
         }
     }
 
-    // 3. Tambahin Timestamp Anti-Cache & Error nyangkut
+    // 3. Cache Buster
     const finalSrc = rawUrl.includes('?') ? `${rawUrl}&cb=${Date.now()}` : `${rawUrl}?cb=${Date.now()}`;
 
-    console.log("🚀 URL Final Hasil Convert:", finalSrc);
+    console.log("🚀 Memutar Audio (Bypass Strict CORS):", finalSrc);
 
-    // 4. KUNCINYA DI SINI: Reset total audio element
-    audio.removeAttribute('src');
+    // 4. RESET TOTAL (Hapus crossOrigin yang bikin ribet)
+    audio.pause();
+    audio.removeAttribute('crossOrigin'); // Pastikan ini dihapus!
+    audio.src = "";
     audio.load();
     
-    // 5. Set properti penting buat Cloudinary
-    audio.crossOrigin = "anonymous";
+    // 5. Masukin Sumber Baru
     audio.src = finalSrc;
-    audio.type = "audio/mpeg"; // Browser pasti mikir ini MP3 asli
     
-    // Paksa muat ulang
-    audio.load();
-
-    // 6. Eksekusi Play dengan jeda
+    // 6. Eksekusi
     setTimeout(() => {
-      audio.play().then(() => {
-        console.log("✅ JRENG! Akhirnya bunyi bro!");
-        if (playBtn) playBtn.textContent = "pause";
-      }).catch(err => {
-        console.error("❌ Masih gagal:", err.name);
-        
-        if (err.name === 'NotSupportedError') {
-           window.showToast("Memperbaiki format...", "Mohon klik play sekali lagi bro.", "warning");
-           audio.src = finalSrc; 
-           audio.load();
-        }
-      });
-    }, 250);
+      let playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          console.log("✅ JRENG! Akhirnya bunyi di web!");
+          if (playBtn) playBtn.textContent = "pause";
+        }).catch(err => {
+          console.error("❌ Masih di-block browser:", err.name);
+          
+          // JURUS BLOB (Ultimate Bypass kalau Browser super ketat)
+          if (err.name === 'NotSupportedError') {
+             console.log("🔄 Mencoba ambil file via Data Mentah (Blob)...");
+             fetch(finalSrc)
+                .then(response => response.blob())
+                .then(blob => {
+                   audio.src = URL.createObjectURL(blob);
+                   audio.play();
+                   if (playBtn) playBtn.textContent = "pause";
+                })
+                .catch(e => console.error("Gagal total:", e));
+          }
+        });
+      }
+    }, 200);
   }
 
   // 3. UPDATE UI MINI PLAYER
