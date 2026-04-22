@@ -319,24 +319,23 @@ const musicHtml = post.audio_url ? `
           </div>
         </div>`;
       gallery.appendChild(card);
-    });
+    }); // Tutup loop forEach
 
     initGiftButtons(); 
     initLikeButtons(); 
     initComments(); 
     loadLikes(); 
 
-    // 🔥 TARUH DI SINI
     setTimeout(() => {
         initAutoPlayObserver();
     }, 500);
 
-  } catch (err) {
+  } catch (err) { // <--- Ini menutup blok try { yang ada di atas select query
     console.error(err);
   } finally {
     isFetchingPosts = false;
   }
-}
+} // <--- INI WAJIB ADA untuk menutup async function fetchPosts(category)
 
 // =======================
 // GIFT SYSTEM
