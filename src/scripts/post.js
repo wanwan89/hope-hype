@@ -662,7 +662,7 @@ function closeBigImage() {
 }
 
 // =======================
-// MUSIC PICKER SYSTEM (VERSI ANTI GAGAL)
+// MUSIC PICKER - ITUNES API (VERSI ANTI-BLOKIR)
 // =======================
 async function initMusicPicker() {
   const listContainer = document.getElementById("predefinedMusicList");
@@ -672,52 +672,44 @@ async function initMusicPicker() {
 
   if(!listContainer) return;
 
-  // Loading state
-  listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 10px;'>Menyelaraskan musik...</div>";
+  // Loading state yang estetik
+  listContainer.innerHTML = "<div style='font-size:12px; color:var(--text-muted); text-align:center; padding: 15px;'>Menyelaraskan musik hits...</div>";
 
   try {
+    // Kita cari lagu hits Indonesia biar relevan
     const keyword = "hits indonesia"; 
-    const targetUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(keyword)}&entity=song&limit=5&country=ID`;
+    const targetUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(keyword)}&entity=song&limit=6&country=ID`;
     
-    // 🔥 JALUR PROXY BARU (CORS-ANYWHERE DEMO)
-    // Jalur ini biasanya lebih stabil buat nerobos blokir localhost
-    const proxyUrl = `https://cors-anywhere.herokuapp.com/${targetUrl}`;
+    // 🔥 Pake Proxy AllOrigins versi GET biar aman dari CORS Failed to Fetch
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
     
-    // Coba tembak
-    const res = await fetch(proxyUrl, {
-        headers: { "X-Requested-With": "XMLHttpRequest" }
-    });
+    const response = await fetch(proxyUrl);
+    const result = await response.json();
     
-    // Kalau jalur heroku gagal, kita balik ke allorigins tapi versi 'get'
-    let data;
-    if (!res.ok) {
-        console.warn("Jalur 1 gagal, mencoba jalur cadangan...");
-        const resAlt = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
-        const jsonAlt = await resAlt.json();
-        data = JSON.parse(jsonAlt.contents);
-    } else {
-        data = await res.json();
-    }
+    // AllOrigins ngebungkus data di properti "contents" dalam bentuk String
+    const data = JSON.parse(result.contents);
     
-    listContainer.innerHTML = ""; 
-    
+    listContainer.innerHTML = ""; // Bersihin loading
+
     if(!data.results || data.results.length === 0) {
-      listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center;'>Musik tidak ditemukan</div>";
+      listContainer.innerHTML = "<div style='font-size:12px; color:red; text-align:center;'>Gagal mengambil list musik</div>";
       return;
     }
 
     data.results.forEach(song => {
       if(!song.previewUrl) return; 
-      
+
       const div = document.createElement("div");
-      div.style.cssText = "display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; cursor:pointer; background:var(--bg-secondary, #f8f9fa); border: 1px solid var(--border-color); transition:0.2s; margin-bottom:5px;";
+      // Style dibikin sleek ala fintech/clay yang lu suka
+      div.style.cssText = "display:flex; align-items:center; gap:12px; padding:10px; border-radius:10px; cursor:pointer; background:var(--bg-secondary); border: 1px solid var(--border-color); transition:0.2s; margin-bottom:8px;";
       
       div.innerHTML = `
-        <img src="${song.artworkUrl60}" style="width:32px; height:32px; border-radius:6px; object-fit:cover;">
+        <img src="${song.artworkUrl60}" style="width:35px; height:35px; border-radius:6px; object-fit:cover;">
         <div style="flex:1; overflow:hidden;">
-          <div style="font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-main);">${song.trackName}</div>
-          <div style="font-size:11px; color:gray; font-weight:500;">${song.artistName}</div>
+          <div style="font-size:13px; font-weight:700; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${song.trackName}</div>
+          <div style="font-size:11px; color:var(--text-muted);">${song.artistName}</div>
         </div>
+        <div class="play-indicator" style="font-size:10px; color:var(--primary-blue); font-weight:800;">PILIH</div>
       `;
       
       div.onclick = () => {
@@ -725,23 +717,33 @@ async function initMusicPicker() {
         selectedTitle.innerText = song.trackName;
         selectedBox.style.display = "flex";
         
-        document.querySelectorAll('#predefinedMusicList > div').forEach(el => el.style.borderColor = 'var(--border-color)');
-        div.style.borderColor = 'var(--primary-blue, #007bff)';
+        // Kasih feedback visual
+        document.querySelectorAll('#predefinedMusicList > div').forEach(el => {
+            el.style.borderColor = 'var(--border-color)';
+            el.style.background = 'var(--bg-secondary)';
+        });
+        div.style.borderColor = 'var(--primary-blue)';
+        div.style.background = 'var(--light-blue-bg)';
+        
+        showNotif("Musik berhasil ditempel!", "success");
       };
       
       listContainer.appendChild(div);
     });
 
   } catch (err) {
-    console.error("❌ Detail Error Musik:", err);
-    listContainer.innerHTML = "<div style='font-size:12px; color:#ef4444; text-align:center;'>Gagal koneksi. Cek internet bro!</div>";
+    console.error("iTunes Error:", err);
+    listContainer.innerHTML = "<div style='font-size:12px; color:red; text-align:center;'>Server musik sibuk, coba buka ulang modal.</div>";
   }
 
   if(removeBtn) {
     removeBtn.onclick = () => {
       selectedAudioUrl = null;
       selectedBox.style.display = "none";
-      document.querySelectorAll('#predefinedMusicList > div').forEach(el => el.style.borderColor = 'var(--border-color)');
+      document.querySelectorAll('#predefinedMusicList > div').forEach(el => {
+          el.style.borderColor = 'var(--border-color)';
+          el.style.background = 'var(--bg-secondary)';
+      });
     };
   }
 }
