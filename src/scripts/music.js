@@ -341,35 +341,29 @@ let playTimer = null;
 async function playSong(song) {
   if (!miniPlayer || !audio) return;
 
-  // 1. Reset Timer Reward
+  // 1. Reset Timer & Matikan Semua Suara
   if (playTimer) {
     clearTimeout(playTimer);
     playTimer = null;
   }
 
   miniPlayer.style.display = "flex";
-
-  // 2. 🔥 HARD RESET AUDIO ELEMENT (ANTI NOT SUPPORTED) 🔥
   audio.pause();
-  audio.src = ""; // Kosongkan src
-  audio.load();   // Paksa browser lepasin file lama
-  
-  // Matikan YouTube Player
+  audio.src = ""; // Kosongkan player global sementara
+
   if (isYTReady && ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
       ytPlayer.pauseVideo();
   }
 
-  // 3. LOGIKA PEMILIHAN PLAYER
+  // 2. LOGIKA PEMILIHAN PLAYER (HYBRID)
   if (song.source === 'api' || song.source === 'youtube') {
-      // --- LOGIKA YOUTUBE ---
+      // --- LOGIKA YOUTUBE (Tetap pake elemen lama) ---
       if (isYTReady && ytPlayer) {
           if (typeof ytPlayer.unMute === 'function') ytPlayer.unMute();
-          
           if (song.source === 'api') {
               if (miniTitle) miniTitle.textContent = "Mencari lagu...";
               const query = encodeURIComponent(`${song.title} ${song.artist} official audio`);
               const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&videoCategoryId=10&key=${YOUTUBE_API_KEY}&maxResults=1`;
-              
               try {
                   const res = await fetch(apiUrl);
                   const data = await res.json();
@@ -387,62 +381,67 @@ async function playSong(song) {
       }
   } 
   else {
+    // 🔥 FIX LAGU LOKAL - JURUS BARU (new Audio Object) 🔥
     if (!song.audio_src || song.audio_src === "null") return;
 
-    // 1. Bersihkan link & Paksa https (kecil)
     let rawUrl = song.audio_src.trim();
+    // Paksa HTTPS kecil biar browser nggak bingung protokol
     if (rawUrl.toLowerCase().startsWith("http")) {
        rawUrl = "https://" + rawUrl.split("://")[1];
     } else {
        rawUrl = window.location.origin + "/songs/" + rawUrl;
     }
 
-    // 🔥 TRIK ANTI-CORS & ANTI-CACHE 🔥
-    // Tambahin timestamp di ujung link biar browser nganggep ini permintaan baru
-    const finalSrc = rawUrl.includes('?') ? `${rawUrl}&t=${Date.now()}` : `${rawUrl}?t=${Date.now()}`;
+    // Tambahin Timestamp biar Cloudinary nggak ngasih file "bekas error" (Cache)
+    const finalSrc = rawUrl.includes('?') ? `${rawUrl}&cb=${Date.now()}` : `${rawUrl}?cb=${Date.now()}`;
 
-    console.log("🚀 Menyerang CORS dengan URL:", finalSrc);
+    console.log("🚀 Memulai Player Baru untuk:", finalSrc);
 
-    // 2. Hard Reset Player
-    audio.pause();
+    // KUNCINYA DI SINI: Kita reset total audio element
     audio.removeAttribute('src');
     audio.load();
-
-    // 3. Set Anonymous agar tidak bentrok sama cookies/session
+    
+    // Set properti penting buat Cloudinary
     audio.crossOrigin = "anonymous";
     audio.src = finalSrc;
+    audio.type = "audio/mpeg";
     
-    // 4. Eksekusi
-    audio.load(); 
+    // Paksa muat ulang
+    audio.load();
+
+    // Pake jeda dikit biar browser kelar "jabat tangan" sama server Cloudinary
     setTimeout(() => {
       audio.play().then(() => {
+        console.log("✅ JRENG! Berhasil bunyi lewat Audio Object.");
         if (playBtn) playBtn.textContent = "pause";
-        console.log("✅ JRENG! Berhasil tembus CORS!");
       }).catch(err => {
-        console.error("❌ Masih kena block:", err.name);
+        console.error("❌ Masih gagal:", err.name);
         
-        // JALAN TERAKHIR: Paksa buka di window baru buat "pancing" izin browser
+        // JALAN TERAKHIR: Buka link di tab baru buat "pancing" izin browser secara paksa
         if (err.name === 'NotSupportedError') {
-           window.showToast("Memperbaiki koneksi...", "Mohon tunggu sebentar bro.", "info");
-           // Kadang cuma perlu di-load ulang manual sekali
-           const retryAudio = new Audio();
-           retryAudio.src = finalSrc;
-           retryAudio.load();
+           window.showToast("Memperbaiki koneksi...", "Klik tombol play lagi setelah ini bro.", "info");
+           // Pancing pake link mentah
+           audio.src = rawUrl; 
+           audio.load();
         }
       });
-    }, 300);
+    }, 250);
   }
 
-  // 4. UPDATE UI MINI PLAYER
+  // 3. UPDATE UI MINI PLAYER
   if (miniCover) miniCover.src = song.cover_url;
   if (miniTitle) miniTitle.textContent = song.title;
   if (miniArtist) miniArtist.textContent = song.artist;
 
-  // 5. UPDATE BACKGROUND & BORDER
+  // 4. TIMER REWARD (3 Menit)
+  playTimer = setTimeout(async () => {
+    if (!audio.paused || (isYTReady && ytPlayer && ytPlayer.getPlayerState() === 1)) {
+       if (song.source === 'local') await updatePlayCount(song.id);
+       window.triggerAdReward(song.id);
+    }
+  }, 180000);
+
   updateDynamicBackground(song.cover_url);
-  document.querySelectorAll(".playlist-card").forEach((card, idx) => {
-    card.style.borderColor = idx === currentSongIndex ? "#1f3cff" : "#30363d";
-  });
 }
 
 window.skipNext = function() {
