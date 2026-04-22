@@ -387,40 +387,62 @@ async function playSong(song) {
       }
   } 
   else {
-    // 🔥 FIX LAGU LOKAL 🔥
+    // 🔥 FIX LAGU LOKAL (ANTI HURUF KAPITAL & DOUBLE PATH) 🔥
     if (!song.audio_src || song.audio_src === "null") {
-      window.showToast("Waduh!", "Link audio kosong bro!", "error");
+      if (typeof window.showToast === 'function') {
+        window.showToast("Waduh!", "Link audio kosong bro!", "error");
+      }
       return;
     }
 
-    // Bersihkan URL dari spasi ghaib
+    // 1. Bersihkan spasi ghaib
     const cleanUrl = song.audio_src.trim();
     
-    // Pastikan path-nya benar (Gunakan Absolute Path '/')
-    // Kalau di Cloudinary, ambil full link. Kalau lokal, pastiin folder /songs/ bener.
-    const finalSrc = cleanUrl.startsWith("http") ? cleanUrl : `/songs/${cleanUrl}`;
+    // 2. Cek apakah ini link internet (Https atau http)
+    // Kita pake .toLowerCase() supaya 'Https' tetep dianggap link luar
+    const isExternal = cleanUrl.toLowerCase().startsWith("http");
+    
+    // 3. Tentukan path final
+    const finalSrc = isExternal ? cleanUrl : `/songs/${cleanUrl}`;
 
-    console.log("Memutar URL:", finalSrc);
+    console.log("Memutar URL Final:", finalSrc); 
 
-    // Set sumber baru & paksa Load
+    // 4. Hard Reset element audio biar gak nyangkut error lama
+    audio.pause();
+    audio.removeAttribute('src'); 
+    audio.load();
+
+    // 5. Set sumber baru
     audio.src = finalSrc;
-    audio.preload = "auto"; 
+    audio.preload = "auto";
+    
+    // Paksa browser muat ulang sumber baru
     audio.load(); 
 
-    // Paksa Play setelah loading sebentar
+    // 6. Eksekusi Play dengan jeda sedikit agar load selesai
     setTimeout(() => {
         let playPromise = audio.play();
         if (playPromise !== undefined) {
           playPromise.then(() => {
+            console.log("✅ Audio Berhasil Diputar!");
             if (playBtn) playBtn.textContent = "pause";
           }).catch(err => {
-            console.warn("Autoplay block:", err);
-            if (err.name === 'NotAllowedError') {
+            console.warn("⚠️ Autoplay block:", err);
+            
+            // Jika masih error NotSupported, kita paksa pake URL mentah tanpa basa-basi
+            if (err.name === 'NotSupportedError' && isExternal) {
+                console.log("🔄 Retrying with raw URL...");
+                audio.src = cleanUrl;
+                audio.load();
+                audio.play().catch(e => console.error("❌ Final attempt failed:", e));
+            }
+
+            if (err.name === 'NotAllowedError' && typeof window.showToast === 'function') {
                  window.showToast("Klik Layar!", "Browser minta izin buat bunyiin suara.", "warning");
             }
           });
         }
-    }, 100);
+    }, 150); // Jeda 150ms biar browser gak kaget
   }
 
   // 4. UPDATE UI MINI PLAYER
