@@ -935,31 +935,57 @@ function confirmDeletePost(postId) {
     closePostOptions();
     setTimeout(() => deletePost(postId), 300); 
 }
+// ==========================================
+// AUTO PLAY POSTINGAN (ANTI BISU TIKTOK STYLE)
+// ==========================================
 function initAutoPlayObserver() {
+    // Variabel buat ngecek apakah user udah pernah tap layar
+    let userHasInteracted = false;
+    document.body.addEventListener('click', () => { userHasInteracted = true; }, { once: true });
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             const audio = entry.target.querySelector('.post-audio-element');
             if (!audio) return;
 
             if (entry.isIntersecting) {
-                // Matikan audio lain & mute mereka
+                // 1. Matikan semua audio di postingan lain
                 document.querySelectorAll('.post-audio-element').forEach(el => { 
-                    el.pause(); 
-                    el.muted = true; 
+                    if(el !== audio) {
+                        el.pause(); 
+                        el.muted = true; 
+                    }
                 });
 
-                // 🔥 Nyalakan suara audio ini lalu putar
-                audio.muted = false; 
-                audio.play().catch(err => {
-                    console.log("Autoplay ditunda sampai user klik layar");
-                });
+                // 2. Set volume ke MAX
+                audio.volume = 1.0;
+
+                // 3. Logika Unmute Pintar
+                // Kalau user udah klik layar, buka suaranya. Kalau belum, biarin bisu sementara biar tetep play.
+                if (userHasInteracted) {
+                    audio.muted = false; 
+                }
+
+                // 4. Putar Audio
+                let playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log("Postingan bunyi!");
+                    }).catch(err => {
+                        // Kalau browser tetep nolak, paksa MUTE dulu aja biar lagunya tetep jalan (nanti pas diklik baru nyala suaranya)
+                        audio.muted = true;
+                        audio.play().catch(e => console.log("Menunggu interaksi user..."));
+                    });
+                }
             } else {
+                // Kalau postingan di-scroll ke luar layar, matikan audionya
                 audio.pause();
                 audio.muted = true;
             }
         });
-    }, { threshold: 0.7 });
+    }, { threshold: 0.6 }); // Threshold 0.6 biar lebih responsif pas di-scroll
 
+    // Pantau semua card postingan
     document.querySelectorAll('.card').forEach(card => observer.observe(card));
 }
 
