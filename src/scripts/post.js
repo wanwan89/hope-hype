@@ -206,13 +206,13 @@ async function fetchPosts(category = "all") {
 
   gallery.innerHTML = `<div class="skeleton-wrapper" style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%;">${Array(6).fill(0).map(() => `<div class="skeleton-card"><div class="skeleton-shimmer"></div></div>`).join("")}</div>`;
 
-  try { // 🔥 TRY HARUS DI SINI
+    try { // 🔥 TRY HARUS DI SINI
     let query = supabaseClient
       .from("posts")
       .select(`
         id, 
         image_url, 
-        audio_url,
+        audio_src,  
         bio,
         created_at, 
         creator_id, 
@@ -221,6 +221,7 @@ async function fetchPosts(category = "all") {
       `) 
       .eq("status", "approved")
       .limit(10);
+
 
     if (category && category !== "all") {
       query = query.ilike("category", `%${category.trim()}%`);
@@ -260,14 +261,15 @@ async function fetchPosts(category = "all") {
       const isOwner = currentUser && currentUser.id === post.creator_id;
       const songInfo = post.songs; 
 // 2. Render HTML-nya
-const musicHtml = post.audio_url ? `
+const musicHtml = post.audio_src ? `
   <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 140px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
     <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
       ${songInfo?.title || 'Untitled'} — ${songInfo?.artist || 'Unknown Artist'}
     </div>
-    <audio class="post-audio-element" src="${post.audio_url}" loop preload="auto" muted></audio>
+    <audio class="post-audio-element" src="${post.audio_src}" loop preload="auto"></audio>
   </div>
 ` : '';
+
 
       card.innerHTML = `
         <div class="slider" style="position: relative;">
