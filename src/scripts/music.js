@@ -386,63 +386,63 @@ async function playSong(song) {
           if (playBtn) playBtn.textContent = "pause";
       }
   } 
-  else {
-    // 🔥 FIX LAGU LOKAL (ANTI HURUF KAPITAL & DOUBLE PATH) 🔥
+    else {
+    // 🔥 ULTIMATE FIX: ANTI KARAKTER GHAIB & PROTOKOL KAPITAL 🔥
     if (!song.audio_src || song.audio_src === "null") {
-      if (typeof window.showToast === 'function') {
-        window.showToast("Waduh!", "Link audio kosong bro!", "error");
-      }
+      if (typeof window.showToast === 'function') window.showToast("Waduh!", "Link kosong!", "error");
       return;
     }
 
-    // 1. Bersihkan spasi ghaib
-    const cleanUrl = song.audio_src.trim();
+    // 1. Ambil link dan bersihkan total
+    let rawUrl = song.audio_src.trim();
     
-    // 2. Cek apakah ini link internet (Https atau http)
-    // Kita pake .toLowerCase() supaya 'Https' tetep dianggap link luar
-    const isExternal = cleanUrl.toLowerCase().startsWith("http");
-    
-    // 3. Tentukan path final
-    const finalSrc = isExternal ? cleanUrl : `/songs/${cleanUrl}`;
+    // 2. PAKSA HTTPS KECIL (Kunci Utama)
+    // Link lu 'Https://' bikin browser bingung di beberapa engine
+    if (rawUrl.toLowerCase().startsWith("http")) {
+       rawUrl = "https://" + rawUrl.split("://")[1];
+    } else {
+       rawUrl = window.location.origin + "/songs/" + rawUrl;
+    }
 
-    console.log("Memutar URL Final:", finalSrc); 
+    console.log("🔗 URL yang dikirim ke Player:", rawUrl);
 
-    // 4. Hard Reset element audio biar gak nyangkut error lama
+    // 3. HARD RESET player (Wajib buat buang error lama)
     audio.pause();
-    audio.removeAttribute('src'); 
+    audio.src = "";
     audio.load();
 
-    // 5. Set sumber baru
-    audio.src = finalSrc;
+    // 4. PASANG SOURCE & PAKSA TYPE
+    // Kita kasih tau browser secara paksa kalau ini MP3
+    audio.src = rawUrl;
+    audio.type = "audio/mpeg"; 
     audio.preload = "auto";
     
-    // Paksa browser muat ulang sumber baru
+    // 5. EKSEKUSI
     audio.load(); 
 
-    // 6. Eksekusi Play dengan jeda sedikit agar load selesai
     setTimeout(() => {
-        let playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            console.log("✅ Audio Berhasil Diputar!");
-            if (playBtn) playBtn.textContent = "pause";
-          }).catch(err => {
-            console.warn("⚠️ Autoplay block:", err);
-            
-            // Jika masih error NotSupported, kita paksa pake URL mentah tanpa basa-basi
-            if (err.name === 'NotSupportedError' && isExternal) {
-                console.log("🔄 Retrying with raw URL...");
-                audio.src = cleanUrl;
-                audio.load();
-                audio.play().catch(e => console.error("❌ Final attempt failed:", e));
-            }
-
-            if (err.name === 'NotAllowedError' && typeof window.showToast === 'function') {
-                 window.showToast("Klik Layar!", "Browser minta izin buat bunyiin suara.", "warning");
-            }
-          });
-        }
-    }, 150); // Jeda 150ms biar browser gak kaget
+      let playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          if (playBtn) playBtn.textContent = "pause";
+          console.log("✅ JRENG! Musik lokal/Cloudinary berhasil bunyi.");
+        }).catch(err => {
+          console.error("❌ Masih gagal:", err.name, err.message);
+          
+          // JURUS TERAKHIR: Bikin element audio baru di memori
+          if (err.name === 'NotSupportedError') {
+              console.log("🔄 Mencoba jurus terakhir: New Audio Object");
+              const tempAudio = new Audio(rawUrl);
+              tempAudio.play()
+                .then(() => {
+                    // Kalau bunyi, kita pindahin kodenya ke sini
+                    window.showToast("Berhasil!", "Musik diputar via fallback.", "success");
+                })
+                .catch(e => console.error("Fix, Cloudinary lu di-block CORS atau link-nya invalid format."));
+          }
+        });
+      }
+    }, 200);
   }
 
   // 4. UPDATE UI MINI PLAYER
