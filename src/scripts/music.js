@@ -406,7 +406,7 @@ async function playSong(song) { // 🔥 Typo 'a' udah dibenerin
     }
   } 
   else {
-    // 🔥 LAGU LOKAL (DARI SUPABASE) - ANTI TABRAKAN 🔥
+    // 🔥 LAGU LOKAL (DARI SUPABASE) - ANTI TABRAKAN & ANTI NOT-SUPPORTED 🔥
     if (!song.audio_src || song.audio_src === "null") {
       console.error("Link audio kosong di database!");
       return;
@@ -416,7 +416,9 @@ async function playSong(song) { // 🔥 Typo 'a' udah dibenerin
     
     // Kalau link beda, kita load ulang
     if (audio.src !== finalSrc) {
+      audio.removeAttribute('src'); // 🔥 1. Kosongin dulu memorinya biar fresh
       audio.src = finalSrc;
+      audio.type = "audio/mpeg";    // 🔥 2. TEGASIN ke browser kalau ini murni MP3!
       audio.load();
       
       // KUNCI UTAMA: Nunggu sampai browser bilang "GUE SIAP!"
