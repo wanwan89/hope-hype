@@ -662,7 +662,7 @@ function closeBigImage() {
 }
 
 // =======================
-// MUSIC PICKER SYSTEM (OTOMATIS DARI ITUNES + FIX CORS)
+// MUSIC PICKER SYSTEM (VERSI ANTI GAGAL)
 // =======================
 async function initMusicPicker() {
   const listContainer = document.getElementById("predefinedMusicList");
@@ -672,33 +672,45 @@ async function initMusicPicker() {
 
   if(!listContainer) return;
 
-  // Kasih tulisan loading pas modal baru kebuka
-  listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 10px;'>Memuat daftar musik...</div>";
+  // Loading state
+  listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 10px;'>Menyelaraskan musik...</div>";
 
   try {
     const keyword = "hits indonesia"; 
-    
-    // 🔥 FIX: Pakai jalur Proxy biar gak kena blokir CORS di Localhost
     const targetUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(keyword)}&entity=song&limit=5&country=ID`;
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
     
-    // Tembak API lewat proxy
-    const res = await fetch(proxyUrl);
-    const data = await res.json();
+    // 🔥 JALUR PROXY BARU (CORS-ANYWHERE DEMO)
+    // Jalur ini biasanya lebih stabil buat nerobos blokir localhost
+    const proxyUrl = `https://cors-anywhere.herokuapp.com/${targetUrl}`;
     
-    listContainer.innerHTML = ""; // Bersihin loading
+    // Coba tembak
+    const res = await fetch(proxyUrl, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+    
+    // Kalau jalur heroku gagal, kita balik ke allorigins tapi versi 'get'
+    let data;
+    if (!res.ok) {
+        console.warn("Jalur 1 gagal, mencoba jalur cadangan...");
+        const resAlt = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
+        const jsonAlt = await resAlt.json();
+        data = JSON.parse(jsonAlt.contents);
+    } else {
+        data = await res.json();
+    }
+    
+    listContainer.innerHTML = ""; 
     
     if(!data.results || data.results.length === 0) {
-      listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center;'>Gagal memuat musik</div>";
+      listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center;'>Musik tidak ditemukan</div>";
       return;
     }
 
-    // Render daftar lagu dari iTunes ke UI
     data.results.forEach(song => {
       if(!song.previewUrl) return; 
       
       const div = document.createElement("div");
-      div.style.cssText = "display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; cursor:pointer; background:var(--bg-secondary, #f8f9fa); border: 1px solid var(--border-color); transition:0.2s;";
+      div.style.cssText = "display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; cursor:pointer; background:var(--bg-secondary, #f8f9fa); border: 1px solid var(--border-color); transition:0.2s; margin-bottom:5px;";
       
       div.innerHTML = `
         <img src="${song.artworkUrl60}" style="width:32px; height:32px; border-radius:6px; object-fit:cover;">
@@ -708,13 +720,11 @@ async function initMusicPicker() {
         </div>
       `;
       
-      // Pas lagu di-klik
       div.onclick = () => {
         selectedAudioUrl = song.previewUrl;
-        selectedTitle.innerText = `${song.trackName}`;
+        selectedTitle.innerText = song.trackName;
         selectedBox.style.display = "flex";
         
-        // Efek visual border biru pas diklik
         document.querySelectorAll('#predefinedMusicList > div').forEach(el => el.style.borderColor = 'var(--border-color)');
         div.style.borderColor = 'var(--primary-blue, #007bff)';
       };
@@ -723,16 +733,17 @@ async function initMusicPicker() {
     });
 
   } catch (err) {
-    console.error("Error Musik:", err); // Biar ketahuan kalau ada error di console
-    listContainer.innerHTML = "<div style='font-size:12px; color:#ef4444; text-align:center;'>Gagal koneksi ke server musik</div>";
+    console.error("❌ Detail Error Musik:", err);
+    listContainer.innerHTML = "<div style='font-size:12px; color:#ef4444; text-align:center;'>Gagal koneksi. Cek internet bro!</div>";
   }
 
-  // Pas tombol X (HAPUS) di klik
-  removeBtn.onclick = () => {
-    selectedAudioUrl = null;
-    selectedBox.style.display = "none";
-    document.querySelectorAll('#predefinedMusicList > div').forEach(el => el.style.borderColor = 'var(--border-color)');
-  };
+  if(removeBtn) {
+    removeBtn.onclick = () => {
+      selectedAudioUrl = null;
+      selectedBox.style.display = "none";
+      document.querySelectorAll('#predefinedMusicList > div').forEach(el => el.style.borderColor = 'var(--border-color)');
+    };
+  }
 }
 
 window.togglePostMusic = function(btn) {
