@@ -1794,3 +1794,13 @@ body{
   background: var(--light-blue-bg, #e7f3ff);
   color: var(--primary-blue, #007bff);
 }
+@keyframes marquee-play {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.music-marquee-container {
+  /* Memastikan container tetap rapi */
+  display: flex;
+  align-items: center;
+}

@@ -229,12 +229,14 @@ async function fetchPosts(category = "all") {
       const isOwner = currentUser && currentUser.id === post.creator_id;
 
       // 🔥 LOGIKA TOMBOL PLAY MUSIK (Muncul kalau ada lagu)
-      const musicHtml = post.audio_url ? `
-        <div class="music-player-btn" onclick="togglePostMusic(this)" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.65); color: white; border-radius: 6px; padding: 6px 10px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; cursor: pointer; z-index: 10; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2);">
-          <span style="letter-spacing: 0.5px;">PLAY AUDIO</span>
-          <audio class="post-audio-element" src="${post.audio_url}" loop></audio>
-        </div>
-      ` : '';
+const musicHtml = post.audio_url ? `
+  <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 130px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
+    <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite;">
+      ${post.profiles?.username || 'Hope Hype'} — Audio Track 
+    </div>
+    <audio class="post-audio-element" src="${post.audio_url}" loop preload="none"></audio>
+  </div>
+` : '';
 
       card.innerHTML = `
         <div class="slider" style="position: relative;">
@@ -273,7 +275,16 @@ async function fetchPosts(category = "all") {
       gallery.appendChild(card);
     });
 
-    initGiftButtons(); initLikeButtons(); initComments(); loadLikes(); 
+    initGiftButtons(); 
+    initLikeButtons(); 
+    initComments(); 
+    loadLikes(); 
+
+    // 🔥 TARUH DI SINI
+    setTimeout(() => {
+        initAutoPlayObserver();
+    }, 500);
+
   } catch (err) {
     console.error(err);
   } finally {
@@ -862,6 +873,24 @@ function sharePost(postId) {
 function confirmDeletePost(postId) {
     closePostOptions();
     setTimeout(() => deletePost(postId), 300); 
+}
+function initAutoPlayObserver() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const audio = entry.target.querySelector('.post-audio-element');
+            if (!audio) return;
+
+            if (entry.isIntersecting) {
+                // Matikan audio lain, nyalakan yang ini
+                document.querySelectorAll('.post-audio-element').forEach(el => { el.pause(); });
+                audio.play().catch(() => console.log("Autoplay blocked, user must click once first"));
+            } else {
+                audio.pause();
+            }
+        });
+    }, { threshold: 0.7 }); // 70% postingan harus kelihatan di layar
+
+    document.querySelectorAll('.card').forEach(card => observer.observe(card));
 }
 
 // --- DAFTARKAN FUNGSI KE WINDOW BIAR BISA DIBACA HTML ---
