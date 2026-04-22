@@ -406,30 +406,35 @@ async function playSong(song) { // 🔥 Typo 'a' udah dibenerin
     }
   } 
   else {
-    // LAGU LOKAL (DARI SUPABASE)
+    // 🔥 LAGU LOKAL (DARI SUPABASE) - ANTI TABRAKAN 🔥
     if (!song.audio_src || song.audio_src === "null") {
       console.error("Link audio kosong di database!");
       return;
     }
     
-    // Bikin link final
     const finalSrc = song.audio_src.startsWith("http") ? song.audio_src : `/songs/${song.audio_src}`;
     
-    // 🔥 INTIP LINK-NYA DI SINI 🔥
-    console.log("Mencoba play lagu:", song.title);
-    console.log("URL Audio yang mau diputar:", finalSrc);
-    
+    // Kalau link beda, kita load ulang
     if (audio.src !== finalSrc) {
       audio.src = finalSrc;
       audio.load();
-    }
-
-    setTimeout(() => {
+      
+      // KUNCI UTAMA: Nunggu sampai browser bilang "GUE SIAP!"
+      audio.oncanplay = () => {
+        audio.play().catch(err => {
+          console.warn("Autoplay ditahan browser:", err);
+          if (err.name === 'NotAllowedError' && typeof showNotif === 'function') {
+             showNotif("Klik layar sekali untuk memutar audio!", "warning");
+          }
+        });
+        audio.oncanplay = null; // Hapus listener biar gak looping
+      };
+    } else {
+      // Kalau lagunya masih yang sama (user pencet play/pause)
       audio.play().catch(err => {
-        console.warn("Autoplay ditahan browser:", err);
-        console.error("Browser menolak URL ini ->", finalSrc); // Tunjukin URL yang ditolak
+         console.warn("Autoplay ditahan browser:", err);
       });
-    }, 50);
+    }
   }
 
   // TAMBAHAN: TIMER 60 DETIK TRIGGER IKLAN & VIEWS
