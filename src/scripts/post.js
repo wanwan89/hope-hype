@@ -259,10 +259,6 @@ async function fetchPosts(category = "all") {
       const formattedDate = new Date(post.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
       const isOwner = currentUser && currentUser.id === post.creator_id;
       const songInfo = post.songs; 
-
-// 1. Ambil data hasil join dari tabel songs
-const songInfo = post.songs; 
-
 // 2. Render HTML-nya
 const musicHtml = post.audio_url ? `
   <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 140px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
