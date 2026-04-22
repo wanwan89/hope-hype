@@ -336,33 +336,31 @@ window.handleLike = async function (songId, event) {
 // ================= 2. PLAYER LOGIC =================
 let playTimer = null;
 
-async function playSong(song) { // 🔥 Typo 'a' udah dibenerin
+async function playSong(song) { 
   if (!miniPlayer || !audio) return;
 
-  // Reset timer hitung putar lagu lama
   if (playTimer) {
     clearTimeout(playTimer);
     playTimer = null;
   }
 
-  // Munculin bar kontrol di bawah
   miniPlayer.style.display = "flex";
 
-  // 1. MATIKAN AUDIO LOKAL (BIAR GAK TABRAKAN)
+  // 1. MATIKAN AUDIO LOKAL & YOUTUBE BIAR NETRAL
   audio.pause();
-
-  // 🔥 [PENTING] UNLOCK MESIN YOUTUBE DI MOBILE 🔥
-  if (isYTReady && ytPlayer) {
-    ytPlayer.playVideo();
-    ytPlayer.pauseVideo();
-    if (typeof ytPlayer.unMute === 'function') ytPlayer.unMute();
-    if (typeof ytPlayer.setVolume === 'function') ytPlayer.setVolume(100);
+  if (isYTReady && ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
+      ytPlayer.pauseVideo();
   }
 
   // 2. LOGIKA PEMILIHAN PLAYER (HYBRID)
   if (song.source === 'api') {
+    // 🔥 UNLOCK YOUTUBE CUMA PAS BUTUH YOUTUBE 🔥
+    if (isYTReady && ytPlayer) {
+      if (typeof ytPlayer.unMute === 'function') ytPlayer.unMute();
+      if (typeof ytPlayer.setVolume === 'function') ytPlayer.setVolume(100);
+    }
+
     if (miniTitle) miniTitle.textContent = "Mencari lagu...";
-    
     const query = encodeURIComponent(`${song.title} ${song.artist} official audio`);
     const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&videoCategoryId=10&key=${YOUTUBE_API_KEY}&maxResults=1`;
 
@@ -373,11 +371,7 @@ async function playSong(song) { // 🔥 Typo 'a' udah dibenerin
       if (data.items && data.items.length > 0) {
         const videoId = data.items[0].id.videoId;
         if (isYTReady && ytPlayer) {
-          ytPlayer.loadVideoById({
-            videoId: videoId,
-            startSeconds: 0
-          });
-          
+          ytPlayer.loadVideoById({ videoId: videoId, startSeconds: 0 });
           setTimeout(() => {
             ytPlayer.playVideo();
             if (playBtn) playBtn.textContent = "pause";
@@ -387,18 +381,16 @@ async function playSong(song) { // 🔥 Typo 'a' udah dibenerin
         throw new Error("Video Gak Ketemu");
       }
     } catch (e) {
-      console.error("YouTube API Gagal, balik ke audio lokal:", e.message);
-      if(song.audio_src) {
-         const finalSrc = song.audio_src.startsWith("http") ? song.audio_src : `songs/${song.audio_src}`;
-         if (audio.src !== finalSrc) {
-             audio.src = finalSrc;
-             audio.load();
-         }
-         setTimeout(() => audio.play().catch(err => console.log(err)), 50);
-      }
+      console.error("YouTube API Gagal:", e.message);
     }
   } 
   else if (song.source === 'youtube') {
+    // 🔥 UNLOCK YOUTUBE 🔥
+    if (isYTReady && ytPlayer) {
+      if (typeof ytPlayer.unMute === 'function') ytPlayer.unMute();
+      if (typeof ytPlayer.setVolume === 'function') ytPlayer.setVolume(100);
+    }
+
     const ytId = String(song.id).replace('yt-', '');
     if (isYTReady && ytPlayer) { 
       ytPlayer.loadVideoById(ytId); 
@@ -406,35 +398,36 @@ async function playSong(song) { // 🔥 Typo 'a' udah dibenerin
     }
   } 
   else {
-    // 🔥 LAGU LOKAL (DARI SUPABASE) - ANTI TABRAKAN & ANTI NOT-SUPPORTED 🔥
+    // 🔥 LAGU LOKAL (ANTI BISU & ANTI SPASI GHAIB) 🔥
     if (!song.audio_src || song.audio_src === "null") {
       console.error("Link audio kosong di database!");
       return;
     }
     
-    const finalSrc = song.audio_src.startsWith("http") ? song.audio_src : `/songs/${song.audio_src}`;
+    // BERSIHIN SPASI GHAIB DARI LINK! (Ini yang bikin NotSupportedError)
+    const cleanUrl = song.audio_src.trim();
+    const finalSrc = cleanUrl.startsWith("http") ? cleanUrl : `/songs/${cleanUrl}`;
     
-    // Kalau link beda, kita load ulang
     if (audio.src !== finalSrc) {
-      audio.removeAttribute('src'); // 🔥 1. Kosongin dulu memorinya biar fresh
+      audio.removeAttribute('src'); 
       audio.src = finalSrc;
-      audio.type = "audio/mpeg";    // 🔥 2. TEGASIN ke browser kalau ini murni MP3!
       audio.load();
-      
-      // KUNCI UTAMA: Nunggu sampai browser bilang "GUE SIAP!"
-      audio.oncanplay = () => {
-        audio.play().catch(err => {
-          console.warn("Autoplay ditahan browser:", err);
-          if (err.name === 'NotAllowedError' && typeof showNotif === 'function') {
+    }
+
+    // PAKSA VOLUME FULL DAN UNMUTE BIAR GAK BISU
+    audio.muted = false;
+    audio.volume = 1.0;
+
+    let playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        console.log("Audio Lokal Berhasil Diputar!");
+        if (playBtn) playBtn.textContent = "pause";
+      }).catch(err => {
+        console.warn("Autoplay ditahan browser:", err);
+        if (err.name === 'NotAllowedError' && typeof showNotif === 'function') {
              showNotif("Klik layar sekali untuk memutar audio!", "warning");
-          }
-        });
-        audio.oncanplay = null; // Hapus listener biar gak looping
-      };
-    } else {
-      // Kalau lagunya masih yang sama (user pencet play/pause)
-      audio.play().catch(err => {
-         console.warn("Autoplay ditahan browser:", err);
+        }
       });
     }
   }
@@ -452,21 +445,17 @@ async function playSong(song) { // 🔥 Typo 'a' udah dibenerin
     }
   }, 180000);
 
-
   // 4. UPDATE TAMPILAN MINI PLAYER & TOMBOL
   if (miniCover) miniCover.src = song.cover_url;
   if (miniTitle) miniTitle.textContent = song.title;
   if (miniArtist) miniArtist.textContent = song.artist;
-  if (playBtn) playBtn.textContent = "pause"; 
 
   // 5. MEDIA SESSION (BIAR BISA DIKONTROL DARI NOTIFIKASI HP)
   if ('mediaSession' in navigator) {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: song.title,
       artist: song.artist,
-      artwork: [
-        { src: song.cover_url, sizes: '512x512', type: 'image/png' }
-      ]
+      artwork: [ { src: song.cover_url, sizes: '512x512', type: 'image/png' } ]
     });
 
     navigator.mediaSession.setActionHandler('play', () => {
