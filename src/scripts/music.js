@@ -353,41 +353,58 @@ async function playSong(song) {
       ytPlayer.pauseVideo();
       ytPlayer.mute(); // Mute YouTube biar gak bocor suaranya
   }
+if (song.source === 'local') {
+  if (!song.audio_src || song.audio_src === "null") {
+    console.error("❌ Link audio kosong!");
+    return;
+  }
 
-  // 2. LOGIKA PEMILIHAN PLAYER (DIPERBAIKI: LOKAL JADI PRIORITAS)
-  
-  if (song.source === 'local') {
-    // 🔥 BAGIAN LAGU LOKAL (DARI SUPABASE) 🔥
-    if (!song.audio_src || song.audio_src === "null") {
-      console.error("Link audio kosong di database!");
-      return;
-    }
-    
-    const cleanUrl = song.audio_src.trim();
-    const finalSrc = cleanUrl.startsWith("http") ? cleanUrl : `/songs/${cleanUrl}`;
-    
-    // Set sumber audio baru
-    audio.src = finalSrc;
-    audio.load();
+  let cleanUrl = song.audio_src.trim();
 
-    // Paksa Volume & Unmute
-    audio.muted = false;
-    audio.volume = 1.0;
+  // 🔥 FIX CLOUDINARY
+  if (cleanUrl.includes('/video/upload/')) {
+    cleanUrl = cleanUrl.replace('/video/upload/', '/video/upload/f_mp3/');
+  }
 
-    let playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.then(() => {
-        console.log("✅ Audio Lokal Berhasil!");
-        if (playBtn) playBtn.textContent = "pause";
-      }).catch(err => {
-        console.warn("⚠️ Browser nahan suara:", err);
-        // Kalau kena NotAllowedError, munculin toast suruh user klik
-        if (typeof window.showToast === 'function') {
-          window.showToast("Klik Layar!", "Browser nahan suara, klik apa aja biar musik bunyi.", "warning");
-        }
-      });
-    }
-  } 
+  const finalSrc = cleanUrl.startsWith("http")
+    ? cleanUrl
+    : `/songs/${cleanUrl}`;
+
+  console.log("🎵 FINAL AUDIO:", finalSrc);
+
+  // 🔥 RESET TOTAL
+  audio.pause();
+  audio.removeAttribute("src");
+  audio.load();
+
+  // 🔥 SET SOURCE
+  audio.src = finalSrc;
+  audio.muted = false;
+  audio.volume = 1;
+
+  // 🔥 HANDLE ERROR
+  audio.onerror = (e) => {
+    console.error("❌ AUDIO ERROR:", e);
+  };
+
+  // 🔥 PLAY
+  audio.play()
+    .then(() => {
+      console.log("✅ Audio Lokal Berhasil!");
+      if (playBtn) playBtn.textContent = "pause";
+    })
+    .catch(err => {
+      console.warn("⚠️ Gagal play:", err);
+
+      if (typeof window.showToast === 'function') {
+        window.showToast(
+          "Klik dulu bro!",
+          "Browser nahan suara, tap layar dulu biar musik bunyi 🎧",
+          "warning"
+        );
+      }
+    });
+}
   else if (song.source === 'youtube') {
     // 📺 BAGIAN YOUTUBE PLAYLIST
     if (isYTReady && ytPlayer) {
