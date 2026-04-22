@@ -1,5 +1,4 @@
 ---
-// 🔥 Panggil CSS lu di sini bro! Sesuaikan nama filenya kalau beda ya
 import '../styles/login.css'; 
 
 import Layout from '../layouts/Layout.astro';
@@ -12,14 +11,25 @@ import SocialLogin from '../components/auth/SocialLoginlog.astro';
 <Layout title="Welcome to HopeHype - Login">
   <link rel="stylesheet" href="/css/toast.css" />
   <script is:inline src="/js/toast.js"></script>
-  <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  
+  <script is:inline>
+    window.onloadTurnstileCallback = function () {
+        if (document.getElementById('my-captcha-box')) {
+            turnstile.render('#my-captcha-box', {
+                sitekey: '0x4AAAAAADBAjYsZNqc5wQAI',
+                theme: 'light' // Biar warnanya nyatu sama tema web lu
+            });
+        }
+    };
+  </script>
+  <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback&render=explicit" async defer></script>
 
   <div class="login-wrapper">
     <form class="form" id="mainForm">
       <Header />
       <FormInputs />
       
-      <div class="cf-turnstile" data-sitekey="0x4AAAAAADBAjYsZNqc5wQAI" style="display: flex; justify-content: center; margin-bottom: 15px;"></div>
+      <div id="my-captcha-box" style="display: flex; justify-content: center; margin-bottom: 15px; min-height: 65px;"></div>
 
       <FormActions />
       <SocialLogin />
