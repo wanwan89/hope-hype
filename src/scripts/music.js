@@ -386,63 +386,51 @@ async function playSong(song) {
           if (playBtn) playBtn.textContent = "pause";
       }
   } 
-    else {
-    // 🔥 ULTIMATE FIX: ANTI KARAKTER GHAIB & PROTOKOL KAPITAL 🔥
-    if (!song.audio_src || song.audio_src === "null") {
-      if (typeof window.showToast === 'function') window.showToast("Waduh!", "Link kosong!", "error");
-      return;
-    }
+  else {
+    if (!song.audio_src || song.audio_src === "null") return;
 
-    // 1. Ambil link dan bersihkan total
+    // 1. Bersihkan link & Paksa https (kecil)
     let rawUrl = song.audio_src.trim();
-    
-    // 2. PAKSA HTTPS KECIL (Kunci Utama)
-    // Link lu 'Https://' bikin browser bingung di beberapa engine
     if (rawUrl.toLowerCase().startsWith("http")) {
        rawUrl = "https://" + rawUrl.split("://")[1];
     } else {
        rawUrl = window.location.origin + "/songs/" + rawUrl;
     }
 
-    console.log("🔗 URL yang dikirim ke Player:", rawUrl);
+    // 🔥 TRIK ANTI-CORS & ANTI-CACHE 🔥
+    // Tambahin timestamp di ujung link biar browser nganggep ini permintaan baru
+    const finalSrc = rawUrl.includes('?') ? `${rawUrl}&t=${Date.now()}` : `${rawUrl}?t=${Date.now()}`;
 
-    // 3. HARD RESET player (Wajib buat buang error lama)
+    console.log("🚀 Menyerang CORS dengan URL:", finalSrc);
+
+    // 2. Hard Reset Player
     audio.pause();
-    audio.src = "";
+    audio.removeAttribute('src');
     audio.load();
 
-    // 4. PASANG SOURCE & PAKSA TYPE
-    // Kita kasih tau browser secara paksa kalau ini MP3
-    audio.src = rawUrl;
-    audio.type = "audio/mpeg"; 
-    audio.preload = "auto";
+    // 3. Set Anonymous agar tidak bentrok sama cookies/session
+    audio.crossOrigin = "anonymous";
+    audio.src = finalSrc;
     
-    // 5. EKSEKUSI
+    // 4. Eksekusi
     audio.load(); 
-
     setTimeout(() => {
-      let playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          if (playBtn) playBtn.textContent = "pause";
-          console.log("✅ JRENG! Musik lokal/Cloudinary berhasil bunyi.");
-        }).catch(err => {
-          console.error("❌ Masih gagal:", err.name, err.message);
-          
-          // JURUS TERAKHIR: Bikin element audio baru di memori
-          if (err.name === 'NotSupportedError') {
-              console.log("🔄 Mencoba jurus terakhir: New Audio Object");
-              const tempAudio = new Audio(rawUrl);
-              tempAudio.play()
-                .then(() => {
-                    // Kalau bunyi, kita pindahin kodenya ke sini
-                    window.showToast("Berhasil!", "Musik diputar via fallback.", "success");
-                })
-                .catch(e => console.error("Fix, Cloudinary lu di-block CORS atau link-nya invalid format."));
-          }
-        });
-      }
-    }, 200);
+      audio.play().then(() => {
+        if (playBtn) playBtn.textContent = "pause";
+        console.log("✅ JRENG! Berhasil tembus CORS!");
+      }).catch(err => {
+        console.error("❌ Masih kena block:", err.name);
+        
+        // JALAN TERAKHIR: Paksa buka di window baru buat "pancing" izin browser
+        if (err.name === 'NotSupportedError') {
+           window.showToast("Memperbaiki koneksi...", "Mohon tunggu sebentar bro.", "info");
+           // Kadang cuma perlu di-load ulang manual sekali
+           const retryAudio = new Audio();
+           retryAudio.src = finalSrc;
+           retryAudio.load();
+        }
+      });
+    }, 300);
   }
 
   // 4. UPDATE UI MINI PLAYER
