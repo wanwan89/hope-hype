@@ -206,7 +206,7 @@ async function fetchPosts(category = "all") {
 
   gallery.innerHTML = `<div class="skeleton-wrapper" style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%;">${Array(6).fill(0).map(() => `<div class="skeleton-card"><div class="skeleton-shimmer"></div></div>`).join("")}</div>`;
 
-      try { // 🔥 TRY HARUS DI SINI
+try { 
     let query = supabaseClient
       .from("posts")
       .select(`
@@ -218,9 +218,14 @@ async function fetchPosts(category = "all") {
         bio,
         created_at, 
         creator_id, 
-        profiles (username, role, avatar_url)
+        profiles:creator_id (
+          username, 
+          role, 
+          avatar_url
+        )
       `) 
       .eq("status", "approved")
+      .order("created_at", { ascending: false }) // Biar postingan terbaru di atas
       .limit(10);
 
 
@@ -273,6 +278,7 @@ posts.forEach((post) => {
   const musicArtist = post.artist || 'Unknown Artist';
 
   // 3. Logika Render Music Marquee (SMART AUDIO FIX)
+  // 3. Logika Render Music Marquee (ULTIMATE FIX - NO DOWNLOAD)
   const musicHtml = post.audio_src ? (() => {
     let cleanAudio = (post.audio_src || "").trim();
 
@@ -283,26 +289,30 @@ posts.forEach((post) => {
       }
     }
 
-    // Support link iTunes (M4A) atau link lokal
     const finalAudio = cleanAudio.startsWith("http")
       ? cleanAudio
       : `/songs/${cleanAudio}`;
 
-    // Tentukan MIME type: iTunes pake .m4a (audio/mp4), sisanya (Cloudinary) mp3
-    const mimeType = finalAudio.includes('.m4a') ? 'audio/mp4' : 'audio/mpeg';
+    // Tentukan MIME type yang lebih spesifik buat Chrome HP
+    const isM4A = finalAudio.includes('.m4a');
+    const mimeType = isM4A ? 'audio/mp4' : 'audio/mpeg';
 
     return `
       <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 140px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
         <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
           ${musicTitle} — ${musicArtist}
         </div>
+        
         <audio 
           class="post-audio-element" 
-          src="${finalAudio}" 
-          type="${mimeType}" 
           loop 
-          preload="auto"
-          style="display:none;">
+          preload="metadata" 
+          playsinline 
+          webkit-playsinline
+          style="display:none;"
+        >
+          <source src="${finalAudio}" type="${mimeType}">
+          Your browser does not support audio.
         </audio>
       </div>
     `;
