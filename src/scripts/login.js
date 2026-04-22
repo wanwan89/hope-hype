@@ -37,8 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
         
         document.getElementById("switchMode").onclick = window.toggleAuthMode;
         if (typeof window.handleRoleChange === 'function') window.handleRoleChange();
-
-        if (typeof window.turnstile !== 'undefined') window.turnstile.reset();
     };
     
     if (switchModeBtn) switchModeBtn.onclick = window.toggleAuthMode;
@@ -60,20 +58,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const captchaToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
             const submitBtn = document.getElementById("submitBtn");
             submitBtn.textContent = "Mengirim link...";
             
-            // 🔥 FIXED: client -> supabase
+            // 🔥 CAPTCHA DINONAKTIFKAN DI SINI
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                captchaToken: captchaToken,
                 redirectTo: window.location.origin + "/reset-password"
             });
 
             submitBtn.textContent = "Masuk Sekarang";
             if (error) {
                 alert("Gagal: " + error.message);
-                if (typeof window.turnstile !== 'undefined') window.turnstile.reset();
             } else {
                 alert("Berhasil! Cek email buat reset password.");
             }
@@ -86,26 +81,21 @@ document.addEventListener("DOMContentLoaded", () => {
         const email = document.getElementById("email").value;
         const password = passInput.value;
         const submitBtn = document.getElementById("submitBtn");
-        const captchaToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
 
-        if (!captchaToken) {
-            alert("Selesaikan verifikasi CAPTCHA dulu!");
-            return;
-        }
+        // 🔥 CEK CAPTCHA DIHAPUS BIAR LANGSUNG TEMBUS
 
         if (!isSignUpMode) {
             submitBtn.textContent = "Loading...";
             
-            // 🔥 FIXED: client -> supabase
+            // 🔥 OPTIONS CAPTCHA DIHAPUS
             const { error } = await supabase.auth.signInWithPassword({ 
-                email, password, options: { captchaToken }
+                email, password
             });
             
             submitBtn.textContent = "Masuk Sekarang";
             
             if (error) {
                 alert("Gagal Login: " + error.message);
-                if (typeof window.turnstile !== 'undefined') window.turnstile.reset();
             } else {
                 window.location.href = "/";
             }
@@ -124,11 +114,10 @@ document.addEventListener("DOMContentLoaded", () => {
             let finalRole = (role === 'creator') ? `creator_${type}` : 'user';
             const avatar = `https://api.dicebear.com/7.x/initials/svg?seed=${username}`;
 
-            // 🔥 FIXED: client -> supabase
+            // 🔥 OPTIONS CAPTCHA DIHAPUS
             const { error } = await supabase.auth.signUp({
                 email, password,
                 options: { 
-                    captchaToken, 
                     data: { username, avatar_url: avatar, role: finalRole } 
                 }
             });
@@ -137,11 +126,9 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if (error) {
                 alert("Gagal Daftar: " + error.message);
-                if (typeof window.turnstile !== 'undefined') window.turnstile.reset();
             } else {
                 alert("Berhasil daftar! Cek email kamu untuk aktivasi.");
                 mainForm.reset();
-                if (typeof window.turnstile !== 'undefined') window.turnstile.reset();
             }
         }
     };
@@ -149,24 +136,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Google Login
     if (googleBtn) {
         googleBtn.onclick = async () => {
-            // 🔥 FIXED: client -> supabase
             await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: { redirectTo: window.location.origin + "/" }
             });
         };
     }
-
-    // 🔥 JURUS PEMAKSA CAPTCHA 🔥
-    // Sengaja kita panggil ini buat maksa render kalau Astro telat nge-load
-    setTimeout(() => {
-        if (typeof window.turnstile !== 'undefined') {
-            const captchaBox = document.querySelector('.cf-turnstile');
-            if (captchaBox && !captchaBox.hasChildNodes()) {
-                window.turnstile.render(captchaBox, {
-                    sitekey: captchaBox.getAttribute('data-sitekey')
-                });
-            }
-        }
-    }, 500);
 });
