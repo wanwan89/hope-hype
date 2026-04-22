@@ -341,7 +341,7 @@ let playTimer = null;
 async function playSong(song) {
   if (!miniPlayer || !audio) return;
 
-  // 1. Bersihkan Timer Reward Sebelumnya
+  // 1. Reset Timer Reward
   if (playTimer) {
     clearTimeout(playTimer);
     playTimer = null;
@@ -349,92 +349,91 @@ async function playSong(song) {
 
   miniPlayer.style.display = "flex";
 
-  // 2. RESET PLAYER TOTAL (Kunci anti NotSupportedError)
+  // 2. 🔥 HARD RESET AUDIO ELEMENT (ANTI NOT SUPPORTED) 🔥
   audio.pause();
-  audio.removeAttribute('src'); // Buang sisa-sisa lagu lama yang error
-  audio.load(); // Kosongkan buffer
-
-  // Matikan YouTube Player jika sedang jalan
+  audio.src = ""; // Kosongkan src
+  audio.load();   // Paksa browser lepasin file lama
+  
+  // Matikan YouTube Player
   if (isYTReady && ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
       ytPlayer.pauseVideo();
-      if (typeof ytPlayer.unMute === 'function') ytPlayer.unMute();
   }
 
   // 3. LOGIKA PEMILIHAN PLAYER
   if (song.source === 'api' || song.source === 'youtube') {
-      // --- LOGIKA YOUTUBE (Tetap pakai kode lu yang udah oke) ---
-      const videoId = song.source === 'youtube' ? String(song.id).replace('yt-', '') : null;
-      
-      if (song.source === 'api') {
-          if (miniTitle) miniTitle.textContent = "Mencari lagu...";
-          const query = encodeURIComponent(`${song.title} ${song.artist} official audio`);
-          const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&videoCategoryId=10&key=${YOUTUBE_API_KEY}&maxResults=1`;
+      // --- LOGIKA YOUTUBE ---
+      if (isYTReady && ytPlayer) {
+          if (typeof ytPlayer.unMute === 'function') ytPlayer.unMute();
           
-          try {
-              const res = await fetch(apiUrl);
-              const data = await res.json();
-              if (data.items && data.items.length > 0) {
-                  ytPlayer.loadVideoById({ videoId: data.items[0].id.videoId });
-                  setTimeout(() => ytPlayer.playVideo(), 600);
-              }
-          } catch (e) { console.error("YT API Error", e); }
-      } else {
-          ytPlayer.loadVideoById(videoId);
-          setTimeout(() => ytPlayer.playVideo(), 300);
+          if (song.source === 'api') {
+              if (miniTitle) miniTitle.textContent = "Mencari lagu...";
+              const query = encodeURIComponent(`${song.title} ${song.artist} official audio`);
+              const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&videoCategoryId=10&key=${YOUTUBE_API_KEY}&maxResults=1`;
+              
+              try {
+                  const res = await fetch(apiUrl);
+                  const data = await res.json();
+                  if (data.items && data.items.length > 0) {
+                      ytPlayer.loadVideoById({ videoId: data.items[0].id.videoId });
+                      setTimeout(() => ytPlayer.playVideo(), 600);
+                  }
+              } catch (e) { console.error("YT API Gagal", e); }
+          } else {
+              const ytId = String(song.id).replace('yt-', '');
+              ytPlayer.loadVideoById(ytId);
+              setTimeout(() => ytPlayer.playVideo(), 300);
+          }
+          if (playBtn) playBtn.textContent = "pause";
       }
-      if (playBtn) playBtn.textContent = "pause";
   } 
   else {
-    // 🔥 FIX LAGU LOKAL (ANTI ERROR SUMBER) 🔥
+    // 🔥 FIX LAGU LOKAL 🔥
     if (!song.audio_src || song.audio_src === "null") {
-      window.showToast("Waduh!", "File musik rusak atau kosong.", "error");
+      window.showToast("Waduh!", "Link audio kosong bro!", "error");
       return;
     }
 
-    // Bersihkan spasi ghaib dari database dan pastikan path benar
+    // Bersihkan URL dari spasi ghaib
     const cleanUrl = song.audio_src.trim();
+    
+    // Pastikan path-nya benar (Gunakan Absolute Path '/')
+    // Kalau di Cloudinary, ambil full link. Kalau lokal, pastiin folder /songs/ bener.
     const finalSrc = cleanUrl.startsWith("http") ? cleanUrl : `/songs/${cleanUrl}`;
 
-    // Pasang sumber baru
-    audio.src = finalSrc;
-    audio.muted = false;
-    audio.volume = 1.0;
-    
-    // Wajib Load ulang biar browser sadar ada file baru
-    audio.load();
+    console.log("Memutar URL:", finalSrc);
 
-    let playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.then(() => {
-        console.log("✅ Berhasil putar:", finalSrc);
-        if (playBtn) playBtn.textContent = "pause";
-      }).catch(err => {
-        console.warn("⚠️ Autoplay block:", err);
-        if (err.name === 'NotAllowedError') {
-             window.showToast("Butuh Izin", "Klik layar sekali biar musiknya bunyi!", "warning");
+    // Set sumber baru & paksa Load
+    audio.src = finalSrc;
+    audio.preload = "auto"; 
+    audio.load(); 
+
+    // Paksa Play setelah loading sebentar
+    setTimeout(() => {
+        let playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            if (playBtn) playBtn.textContent = "pause";
+          }).catch(err => {
+            console.warn("Autoplay block:", err);
+            if (err.name === 'NotAllowedError') {
+                 window.showToast("Klik Layar!", "Browser minta izin buat bunyiin suara.", "warning");
+            }
+          });
         }
-      });
-    }
+    }, 100);
   }
 
-  // 4. UPDATE UI & TIMER
+  // 4. UPDATE UI MINI PLAYER
   if (miniCover) miniCover.src = song.cover_url;
   if (miniTitle) miniTitle.textContent = song.title;
   if (miniArtist) miniArtist.textContent = song.artist;
 
-  playTimer = setTimeout(async () => {
-    if ((!audio.paused || (ytPlayer && ytPlayer.getPlayerState() === 1)) && currentSongsList[currentSongIndex]?.id === song.id) {
-      if (song.source === 'local') await updatePlayCount(song.id);
-      window.triggerAdReward(song.id);
-    }
-  }, 180000);
-
+  // 5. UPDATE BACKGROUND & BORDER
   updateDynamicBackground(song.cover_url);
   document.querySelectorAll(".playlist-card").forEach((card, idx) => {
     card.style.borderColor = idx === currentSongIndex ? "#1f3cff" : "#30363d";
   });
 }
-
 
 window.skipNext = function() {
   currentSongIndex++;
