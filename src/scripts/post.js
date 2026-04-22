@@ -219,7 +219,7 @@ try {
         created_at, 
         creator_id, 
         profiles:creator_id (
-          name, 
+          username, 
           role, 
           avatar_url
         )
@@ -750,18 +750,22 @@ async function handlePostSubmit(e) {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) return openLogin();
 
+    // 🔥 LANGKAH 1.5: Ambil Nama Pengunggah dari Profil
+    // Supaya di tabel 'posts' kolom 'name' ada isinya buat Admin Review
+    const userProf = await getMyProfile(session.user.id);
+    const uploaderName = userProf?.name || "User"; 
+
     // 1. Upload Gambar ke Cloudinary
     const cData = await uploadImageToCloudinary(selectedPostFile);
     
-    // 2. Olah Logika Musik (iTunes / Cloudinary)
+    // 2. Olah Logika Musik
     let finalTitle = null;
     let finalArtist = null;
-    let finalAudioSrc = null; // Ganti nama variabel biar sinkron
+    let finalAudioSrc = null;
 
     if (selectedAudioUrl) {
       finalAudioSrc = selectedAudioUrl;
       const fullMusicText = selectedTitle ? selectedTitle.innerText : "";
-      // Pecah teks "Judul — Artis"
       const musicParts = fullMusicText.split(" — ");
       finalTitle = musicParts[0]?.trim() || "Untitled";
       finalArtist = musicParts[1]?.trim() || "Unknown Artist";
@@ -770,10 +774,11 @@ async function handlePostSubmit(e) {
     // 3. Simpan ke Tabel 'posts'
     const { error } = await supabaseClient.from("posts").insert({ 
         creator_id: session.user.id, 
+        name: uploaderName,       // 🔥 SEKARANG NAMA MASUK KE DATABASE (Tabel Posts)
         bio: document.getElementById("postCaption").value || "", 
         category: document.getElementById("postCategory").value || "Umum", 
         image_url: cData.secure_url, 
-        audio_src: finalAudioSrc, // 🔥 FIX: Pakai audio_src sesuai database
+        audio_src: finalAudioSrc, 
         title: finalTitle,        
         artist: finalArtist,      
         status: "pending" 
@@ -781,7 +786,7 @@ async function handlePostSubmit(e) {
 
     if (error) throw error;
 
-    showNotif("Karya dikirim! Menunggu review admin 🔥", "success");
+    showNotif("Karya dikirim! Admin bakal liat nama lu di review 🔥", "success");
     
     // 4. Tutup Modal & Reset Form
     document.getElementById("postModal").classList.remove("active");
