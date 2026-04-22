@@ -220,7 +220,7 @@ async function loadMusicLibrary() {
   }
 }
 
-function renderPlaylist(songs) {
+function renderPlaylist(songs) { // Pakai 'f' kecil
   if (!playlistGrid) return;
   playlistGrid.innerHTML = "";
   currentSongsList = songs;
@@ -229,10 +229,9 @@ function renderPlaylist(songs) {
     const card = document.createElement("div");
     const isActive = index === currentSongIndex ? "active-card" : "";
     card.className = `playlist-card ${isActive}`;
-    card.dataset.songId = song.id; // Untuk referensi gampang
+    card.dataset.songId = song.id; 
 
-    // --- LOGIKA HYBRID BADGE ---
-    const isApi = String(song.id).startsWith("api-") || song.source === 'youtube';
+    const isApi = String(song.id).startsWith("yt-") || song.source === 'youtube';
     const badgeHtml = isApi 
       ? `<span style="position:absolute; top:8px; left:8px; background:rgba(0, 210, 255, 0.9); color:white; font-size:9px; padding:2px 6px; border-radius:4px; font-weight:bold; z-index:10; backdrop-filter:blur(4px);">HITS</span>`
       : `<span style="position:absolute; top:8px; left:8px; background:rgba(255, 71, 87, 0.9); color:white; font-size:9px; padding:2px 6px; border-radius:4px; font-weight:bold; z-index:10; backdrop-filter:blur(4px);">HYPE</span>`;
@@ -249,35 +248,34 @@ function renderPlaylist(songs) {
       ? `<div style="font-size:10px; color:#666; font-style:italic; margin-left:auto;">Official Music</div>`
       : `
         <div class="stat-group">
-            <div class="stat-item interactive ${activeClass}" onclick="event.stopPropagation(); window.handleLike(${song.id}, event)">
+            <div class="stat-item interactive ${activeClass}" onclick="event.stopPropagation(); window.handleLike('${song.id}', event)">
                 <span class="material-icons">${heartIcon}</span>
                 <span class="like-count-num">${likes}</span>
             </div>
-            <div class="stat-item interactive" onclick="event.stopPropagation(); window.openComments(${song.id})">
+            <div class="stat-item interactive" onclick="event.stopPropagation(); window.openComments('${song.id}')">
                 <span class="material-icons">chat_bubble_outline</span>
                 <span id="comment-count-${song.id}">${comments}</span>
             </div>
         </div>
       `;
 
-    // 2. Pasang Lazy Loading di Tag IMG
-card.innerHTML = `
+    card.innerHTML = `
     <div class="card-cover-wrapper" style="position:relative;">
         ${badgeHtml}
         <img src="${song.cover_url}" alt="${song.title}" loading="lazy"> 
     </div>
-            <div class="card-text-info">
-                <h3 class="song-title">${song.title}</h3>
-                <p class="artist-name">${song.artist}</p>
-            </div>
-            <div class="card-stats-footer">
-                <div class="stat-item play-stat">
-                    <span class="material-icons">headphones</span>
-                    <span class="play-count-num">${plays}</span>
-                </div>
-                ${interactionHtml}
-            </div>
-        `;
+    <div class="card-text-info">
+        <h3 class="song-title">${song.title}</h3>
+        <p class="artist-name">${song.artist}</p>
+    </div>
+    <div class="card-stats-footer">
+        <div class="stat-item play-stat">
+            <span class="material-icons">headphones</span>
+            <span class="play-count-num">${plays}</span>
+        </div>
+        ${interactionHtml}
+    </div>
+    `;
 
     card.addEventListener("click", () => {
       currentSongIndex = index;
@@ -589,38 +587,46 @@ if (progressContainer) {
  
 
 // ================= UPDATE PLAY COUNT (FIX EGRESS) =================
-async function updatePlayCount(songId) {
+async function updatePlayCount(songId) { // Pakai 'a' kecil
   try {
-    const { data: songData } = await _supabase
+    // 1. Ambil data count saat ini
+    const { data: songData, error: fetchError } = await _supabase
       .from("songs")
       .select("play_count")
       .eq("id", songId)
       .single();
 
-    const currentCount = songData?.play_count || 0;
-    const newCount = currentCount + 1;
+    if (fetchError) throw fetchError;
 
-    const { error } = await _supabase
+    const newCount = (songData?.play_count || 0) + 1;
+
+    // 2. Update ke database
+    const { error: updateError } = await _supabase
       .from("songs")
       .update({ play_count: newCount })
       .eq("id", songId);
 
-    if (error) throw error;
+    if (updateError) throw updateError;
 
-    // Update Array Lokal (Biar gak ilang pas search)
-    const songObj = allSongs.find(s => s.id === songId);
-    if(songObj) songObj.play_count = newCount;
-
-    // Update DOM Langsung tanpa me-refresh seluruh halaman
-    const cardEl = document.querySelector(`.playlist-card[data-song-id="${songId}"]`);
-    if(cardEl) {
-      const countEl = cardEl.querySelector('.play-count-num');
-      if(countEl) countEl.textContent = newCount.toLocaleString("id-ID");
+    // 3. Update Array Lokal (Biar kalau di-search angkanya tetep bener)
+    const songIndex = allSongs.findIndex(s => String(s.id) === String(songId));
+    if (songIndex !== -1) {
+      allSongs[songIndex].play_count = newCount;
     }
 
-    console.log("Play count updated! +1");
+    // 4. Update DOM (Tampilan Layar) Tanpa Refresh
+    // Kita cari card yang ID-nya pas
+    const cardEl = document.querySelector(`.playlist-card[data-song-id="${songId}"]`);
+    if (cardEl) {
+      const countEl = cardEl.querySelector('.play-count-num');
+      if (countEl) {
+        countEl.textContent = newCount.toLocaleString("id-ID");
+      }
+    }
+
+    console.log(`✅ Play count lagu ${songId} berhasil diupdate jadi ${newCount}`);
   } catch (err) {
-    console.error("Gagal update play count:", err.message);
+    console.error("❌ Gagal update play count:", err.message);
   }
 }
 
