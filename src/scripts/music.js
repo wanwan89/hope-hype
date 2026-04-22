@@ -381,47 +381,57 @@ async function playSong(song) {
       }
   } 
   else {
-    // 🔥 FIX LAGU LOKAL - JURUS BARU (new Audio Object) 🔥
+    // 🔥 FIX LAGU LOKAL - JURUS BARU + SIHIR CONVERT MP3 🔥
     if (!song.audio_src || song.audio_src === "null") return;
 
     let rawUrl = song.audio_src.trim();
-    // Paksa HTTPS kecil biar browser nggak bingung protokol
+    
+    // 1. Paksa HTTPS kecil biar browser nggak bingung protokol
     if (rawUrl.toLowerCase().startsWith("http")) {
        rawUrl = "https://" + rawUrl.split("://")[1];
     } else {
        rawUrl = window.location.origin + "/songs/" + rawUrl;
     }
 
-    // Tambahin Timestamp biar Cloudinary nggak ngasih file "bekas error" (Cache)
+    // 2. 🔥 JURUS SIHIR CLOUDINARY: OTOMATIS CONVERT WEBM/OGG KE MP3 🔥
+    if (rawUrl.includes('res.cloudinary.com')) {
+        // Ubah tulisan ekstensinya ke .mp3
+        rawUrl = rawUrl.replace(/\.webm$/i, '.mp3').replace(/\.ogg$/i, '.mp3');
+        
+        // Pasang filter 'f_mp3' biar Cloudinary ngerender ulang filenya
+        if (!rawUrl.includes('/f_mp3/')) {
+            rawUrl = rawUrl.replace('/video/upload/', '/video/upload/f_mp3/');
+        }
+    }
+
+    // 3. Tambahin Timestamp Anti-Cache & Error nyangkut
     const finalSrc = rawUrl.includes('?') ? `${rawUrl}&cb=${Date.now()}` : `${rawUrl}?cb=${Date.now()}`;
 
-    console.log("🚀 Memulai Player Baru untuk:", finalSrc);
+    console.log("🚀 URL Final Hasil Convert:", finalSrc);
 
-    // KUNCINYA DI SINI: Kita reset total audio element
+    // 4. KUNCINYA DI SINI: Reset total audio element
     audio.removeAttribute('src');
     audio.load();
     
-    // Set properti penting buat Cloudinary
+    // 5. Set properti penting buat Cloudinary
     audio.crossOrigin = "anonymous";
     audio.src = finalSrc;
-    audio.type = "audio/mpeg";
+    audio.type = "audio/mpeg"; // Browser pasti mikir ini MP3 asli
     
     // Paksa muat ulang
     audio.load();
 
-    // Pake jeda dikit biar browser kelar "jabat tangan" sama server Cloudinary
+    // 6. Eksekusi Play dengan jeda
     setTimeout(() => {
       audio.play().then(() => {
-        console.log("✅ JRENG! Berhasil bunyi lewat Audio Object.");
+        console.log("✅ JRENG! Akhirnya bunyi bro!");
         if (playBtn) playBtn.textContent = "pause";
       }).catch(err => {
         console.error("❌ Masih gagal:", err.name);
         
-        // JALAN TERAKHIR: Buka link di tab baru buat "pancing" izin browser secara paksa
         if (err.name === 'NotSupportedError') {
-           window.showToast("Memperbaiki koneksi...", "Klik tombol play lagi setelah ini bro.", "info");
-           // Pancing pake link mentah
-           audio.src = rawUrl; 
+           window.showToast("Memperbaiki format...", "Mohon klik play sekali lagi bro.", "warning");
+           audio.src = finalSrc; 
            audio.load();
         }
       });
