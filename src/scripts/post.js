@@ -662,68 +662,72 @@ function closeBigImage() {
 }
 
 // =======================
-// MUSIC SEARCH & PLAY SYSTEM (BARU)
+// MUSIC PICKER SYSTEM (OTOMATIS DARI ITUNES)
 // =======================
-function initMusicSearch() {
-  const searchInput = document.getElementById("musicSearchInput");
-  const resultsBox = document.getElementById("musicSearchResults");
+async function initMusicPicker() {
+  const listContainer = document.getElementById("predefinedMusicList");
   const selectedBox = document.getElementById("selectedMusicBox");
   const selectedTitle = document.getElementById("selectedMusicTitle");
   const removeBtn = document.getElementById("removeMusicBtn");
 
-  if(!searchInput) return;
+  if(!listContainer) return;
 
-  let typingTimer;
-  searchInput.addEventListener("input", () => {
-    clearTimeout(typingTimer);
-    resultsBox.innerHTML = "<div style='font-size:12px; color:gray; text-align:center;'>Mencari musik...</div>";
+  // Kasih tulisan loading pas modal baru kebuka
+  listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center; padding: 10px;'>Memuat daftar musik...</div>";
+
+  try {
+    // 🔥 KATA KUNCI PENCARIAN DEFAULT (Bebas lu ganti apa aja!)
+    const keyword = "hits indonesia"; 
     
-    typingTimer = setTimeout(async () => {
-      const query = searchInput.value.trim();
-      if(query.length < 2) { resultsBox.innerHTML = ""; return; }
+    // Tembak API iTunes langsung pas modal kebuka (Limit 5 lagu)
+    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(keyword)}&entity=song&limit=5`);
+    const data = await res.json();
+    
+    listContainer.innerHTML = ""; // Bersihin loading
+    
+    if(!data.results || data.results.length === 0) {
+      listContainer.innerHTML = "<div style='font-size:12px; color:gray; text-align:center;'>Gagal memuat musik</div>";
+      return;
+    }
+
+    // Render daftar lagu dari iTunes ke UI
+    data.results.forEach(song => {
+      if(!song.previewUrl) return; 
       
-      try {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=4`);
-        const data = await res.json();
+      const div = document.createElement("div");
+      div.style.cssText = "display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; cursor:pointer; background:var(--bg-secondary, #f8f9fa); border: 1px solid var(--border-color); transition:0.2s;";
+      
+      div.innerHTML = `
+        <img src="${song.artworkUrl60}" style="width:32px; height:32px; border-radius:6px; object-fit:cover;">
+        <div style="flex:1; overflow:hidden;">
+          <div style="font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-main);">${song.trackName}</div>
+          <div style="font-size:11px; color:gray; font-weight:500;">${song.artistName}</div>
+        </div>
+      `;
+      
+      // Pas lagu di-klik
+      div.onclick = () => {
+        selectedAudioUrl = song.previewUrl;
+        selectedTitle.innerText = `${song.trackName}`;
+        selectedBox.style.display = "flex";
         
-        resultsBox.innerHTML = "";
-        if(data.results.length === 0) {
-          resultsBox.innerHTML = "<div style='font-size:12px; color:gray; text-align:center;'>Lagu tidak ditemukan</div>";
-          return;
-        }
+        // Efek visual border biru pas diklik
+        document.querySelectorAll('#predefinedMusicList > div').forEach(el => el.style.borderColor = 'var(--border-color)');
+        div.style.borderColor = 'var(--primary-blue, #007bff)';
+      };
+      
+      listContainer.appendChild(div);
+    });
 
-        data.results.forEach(song => {
-          if(!song.previewUrl) return; 
-          
-          const div = document.createElement("div");
-          div.style.cssText = "display:flex; align-items:center; gap:10px; padding:8px; border-radius:6px; cursor:pointer; background:var(--bg-secondary); transition:0.2s;";
-          div.innerHTML = `
-            <img src="${song.artworkUrl60}" style="width:40px; height:40px; border-radius:4px; object-fit:cover;">
-            <div style="flex:1; overflow:hidden;">
-              <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-main);">${song.trackName}</div>
-              <div style="font-size:11px; color:gray;">${song.artistName}</div>
-            </div>
-          `;
-          
-          div.onclick = () => {
-            selectedAudioUrl = song.previewUrl;
-            selectedTitle.innerText = `${song.trackName} - ${song.artistName}`;
-            selectedBox.style.display = "flex";
-            resultsBox.innerHTML = "";
-            searchInput.value = "";
-          };
-          
-          resultsBox.appendChild(div);
-        });
-      } catch (err) {
-        resultsBox.innerHTML = "<div style='font-size:12px; color:red; text-align:center;'>Gagal memuat musik</div>";
-      }
-    }, 500); 
-  });
+  } catch (err) {
+    listContainer.innerHTML = "<div style='font-size:12px; color:#ef4444; text-align:center;'>Gagal koneksi ke server musik</div>";
+  }
 
+  // Pas tombol X (HAPUS) di klik
   removeBtn.onclick = () => {
     selectedAudioUrl = null;
     selectedBox.style.display = "none";
+    document.querySelectorAll('#predefinedMusicList > div').forEach(el => el.style.borderColor = 'var(--border-color)');
   };
 }
 

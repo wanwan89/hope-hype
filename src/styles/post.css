@@ -1725,3 +1725,72 @@ body{
 
 .skeleton-name { width: 60%; height: 18px; }
 .skeleton-bio { width: 40%; height: 12px; }
+/* =========================================
+   CSS DROPDOWN KATEGORI
+========================================= */
+.category-dropdown {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.select-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: var(--bg-secondary, #f8f9fa);
+  border: 1px solid var(--border-color, #e4e6eb);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* KONDISI AWAL: SEMBUNYI */
+.options-container {
+  display: none; 
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: var(--bg-main, #ffffff);
+  border: 1px solid var(--border-color, #e4e6eb);
+  border-radius: 8px;
+  margin-top: 5px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+/* KONDISI SAAT DIKLIK: MUNCUL */
+.category-dropdown.active .options-container {
+  display: block; 
+}
+
+/* ANIMASI PANAH MUTAR */
+.arrow-icon {
+  transition: transform 0.3s ease;
+  font-style: normal;
+  font-size: 10px;
+}
+
+.category-dropdown.active .arrow-icon {
+  transform: rotate(180deg); 
+}
+
+/* STYLING ISI KATEGORI */
+.option-item {
+  padding: 10px 15px;
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color, #e4e6eb);
+  transition: background 0.2s;
+}
+
+.option-item:last-child {
+  border-bottom: none;
+}
+
+.option-item:hover {
+  background: var(--light-blue-bg, #e7f3ff);
+  color: var(--primary-blue, #007bff);
+}
