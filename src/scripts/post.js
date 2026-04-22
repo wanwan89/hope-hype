@@ -195,7 +195,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-
+ 
+let isFetchingPosts = false;
 async function fetchPosts(category = "all") {
   if (isFetchingPosts) return;
   isFetchingPosts = true;
