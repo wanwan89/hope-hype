@@ -224,17 +224,25 @@ async function fetchPosts(category = "all") {
       const dateObj = new Date(post.created_at);
       const formattedDate = dateObj.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
 
-      // POSISI DIUBAH: Name -> Bio -> Date -> Actions
+      // 🔥 LOGIKA CEK KEPEMILIKAN POSTINGAN
+      const isOwner = currentUser && currentUser.id === post.creator_id;
+
+      // POSISI DIUBAH: Header (Nama mentok kiri, Titik Tiga mentok kanan)
       card.innerHTML = `
         <div class="slider">
           <img src="${post.image_url || "/asets/png/karya.png"}" class="active" loading="lazy">
           <div class="watermark-overlay"><img src="/asets/svg/watermark.svg"></div>
         </div>
         <div class="overlay">
-          <h2 class="name" onclick="window.location.href='/data?id=${post.creator_id}'" style="cursor:pointer; display:flex; align-items:center; margin-bottom: 6px;">
-            ${post.profiles?.username || "User"} ${badge} 
-          </h2>
-
+          
+          <div style="display: flex; align-items: center; margin-bottom: 6px; width: 100%;">
+            <h2 class="name" onclick="window.location.href='/data?id=${post.creator_id}'" style="cursor:pointer; display:flex; align-items:center; margin: 0;">
+              ${post.profiles?.username || "User"} ${badge} 
+            </h2>
+            <button class="options-btn" onclick="openPostOptions('${post.id}', ${isOwner}, '${post.creator_id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px 0 4px 10px; margin-left: auto; display: flex; align-items: center;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            </button>
+          </div>
           <p class="post-bio" style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 400;">
             ${post.bio || ""}
           </p>
@@ -254,6 +262,7 @@ async function fetchPosts(category = "all") {
         </div>`;
       gallery.appendChild(card);
     });
+
 
     initGiftButtons(); initLikeButtons(); initComments(); loadLikes(); 
   } catch (err) {
@@ -672,9 +681,132 @@ function closeBigImage() {
   const container = document.getElementById("bigImageContainer");
   if (container) container.style.display = "none";
 }
+// =======================
+// DELETE POST SYSTEM
+// =======================
+async function deletePost(postId) {
+  // Peringatan sebelum menghapus
+  if (!confirm("Yakin ingin menghapus karya ini secara permanen?")) return;
+
+  showNotif("Sedang menghapus karya...", "info");
+  
+  try {
+    // Eksekusi hapus di Supabase
+    const { error } = await supabaseClient
+      .from("posts")
+      .delete()
+      .eq("id", postId);
+
+    if (error) throw error;
+
+    showNotif("Karya berhasil dihapus!", "success");
+    
+    // Refresh otomatis galeri setelah dihapus
+    fetchPosts("all"); 
+
+  } catch (err) {
+    showNotif("Gagal menghapus: " + err.message, "error");
+  }
+}
+// =======================
+// POST OPTIONS (BOTTOM SHEET)
+// =======================
+function openPostOptions(postId, isOwner, creatorId) {
+    let sheet = document.getElementById('postOptionsSheet');
+    
+    // Kalau belum ada, kita bikin elemen dan CSS-nya secara dinamis
+    if (!sheet) {
+        sheet = document.createElement('div');
+        sheet.id = 'postOptionsSheet';
+        sheet.className = 'action-sheet-overlay';
+        sheet.innerHTML = `
+            <div class="action-sheet">
+                <div class="sheet-handle"></div>
+                <div class="sheet-content" id="sheetOptionsContent"></div>
+                <button class="sheet-cancel" onclick="closePostOptions()">Batal</button>
+            </div>
+        `;
+        document.body.appendChild(sheet);
+
+        // Inject CSS animasi ke head
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .action-sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 99999; display: flex; flex-direction: column; justify-content: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+            .action-sheet-overlay.active { opacity: 1; pointer-events: auto; }
+            .action-sheet { background: var(--bg-card, #fff); width: 100%; max-width: 500px; margin: 0 auto; border-radius: 20px 20px 0 0; padding: 20px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+            .action-sheet-overlay.active .action-sheet { transform: translateY(0); }
+            .sheet-handle { width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; margin: 0 auto 20px; }
+            .sheet-btn { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 12px; background: none; border: none; font-size: 15px; font-weight: 600; color: var(--text-main, #0f172a); text-align: left; cursor: pointer; border-radius: 12px; transition: 0.2s; }
+            .sheet-btn:hover { background: rgba(0,0,0,0.05); }
+            .sheet-btn.danger { color: #ef4444; }
+            .sheet-btn.danger:hover { background: rgba(239, 68, 68, 0.1); }
+            .sheet-cancel { width: 100%; padding: 16px; margin-top: 10px; border: none; border-radius: 12px; background: var(--bg-main, #f1f5f9); font-weight: 700; cursor: pointer; font-size: 15px; color: var(--text-muted, #475569);}
+        `;
+        document.head.appendChild(style);
+
+        // Tutup kalau klik area gelap di luar sheet
+        sheet.addEventListener('click', (e) => {
+            if (e.target === sheet) closePostOptions();
+        });
+    }
+
+    const content = document.getElementById('sheetOptionsContent');
+    
+    // Isi tombolnya beda antara owner sama user biasa
+    content.innerHTML = `
+        <button class="sheet-btn" onclick="sharePost('${postId}')">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+            Bagikan Karya
+        </button>
+        <button class="sheet-btn" onclick="window.location.href='/data?id=${creatorId}'">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg>
+            Lihat Profil
+        </button>
+        ${isOwner ? `
+        <button class="sheet-btn danger" onclick="confirmDeletePost('${postId}')">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Hapus Karya
+        </button>
+        ` : `
+        <button class="sheet-btn" onclick="showNotif('Karya ini telah dilaporkan ke Admin.', 'success'); closePostOptions();">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+            Laporkan
+        </button>
+        `}
+    `;
+
+    // Timeout dikit biar animasi CSS slide-up nya jalan mulus
+    setTimeout(() => sheet.classList.add('active'), 10);
+}
+
+function closePostOptions() {
+    const sheet = document.getElementById('postOptionsSheet');
+    if (sheet) sheet.classList.remove('active');
+}
+
+function sharePost(postId) {
+    const url = window.location.origin + '/post?id=' + postId;
+    if (navigator.share) {
+        navigator.share({ title: 'Hope Hype', text: 'Cek karya keren ini di Hope Hype!', url: url });
+    } else {
+        navigator.clipboard.writeText(url);
+        showNotif('Link disalin ke clipboard!', 'success');
+    }
+    closePostOptions();
+}
+
+function confirmDeletePost(postId) {
+    closePostOptions();
+    // Tunggu modal turun dulu, baru panggil fungsi hapus
+    setTimeout(() => deletePost(postId), 300); 
+}
 
 // --- DAFTARKAN FUNGSI KE WINDOW BIAR BISA DIBACA HTML ---
 window.selectGift = selectGift;
 window.processGiftTransaction = processGiftTransaction;
 window.closeGiftSheet = closeGiftSheet;
 window.closeBigImage = closeBigImage;
+window.openPostOptions = openPostOptions;
+window.closePostOptions = closePostOptions;
+window.sharePost = sharePost;
+window.confirmDeletePost = confirmDeletePost;
