@@ -1920,4 +1920,31 @@ body{
     height: 20px;
   }
 }
+.add-post-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%; /* Bulat biar kontras sama search bar yang lonjong */
+  border: none;
+  background-color: #000; /* Hitam solid biar match sama logo Hope */
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0; /* Biar tombol nggak gepeng di layar kecil */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.add-post-btn:active {
+  transform: scale(0.9);
+  background-color: #333;
+}
+
+/* Kalau mau kasih warna aksen biru/hijau pas di-hover */
+.add-post-btn:hover {
+  background-color: #007bff; 
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
  
