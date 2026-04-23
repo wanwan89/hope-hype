@@ -871,10 +871,8 @@ async function handlePostSubmit(e) {
   const selectedTitle = document.getElementById("selectedMusicTitle");
   const captionValue = document.getElementById("postCaption").value.trim();
   
-  // Ambil pilihan tujuan: 'feed' atau 'story'
   const destination = document.querySelector('input[name="postDestination"]:checked')?.value || 'feed';
 
-  // Validasi: Harus ada foto atau teks
   if (!selectedPostFile && !captionValue) {
     return showNotif("Isi konten atau pilih foto dulu bro!", "warning");
   }
@@ -894,33 +892,37 @@ async function handlePostSubmit(e) {
 
     const uploaderName = profileData?.username || "User"; 
 
-    // 1. UPLOAD KE CLOUDINARY (Jika ada file)
+    // 1. UPLOAD KE CLOUDINARY
     let imageUrl = null;
     if (selectedPostFile) {
       const cData = await uploadImageToCloudinary(selectedPostFile);
       imageUrl = cData.secure_url;
     }
     
-    // 2. TENTUKAN TABEL TUJUAN
+    // 🔥 2. OLAH LOGIKA MUSIK DI LUAR (Biar bisa dipake Feed & Story)
+    let finalTitle = null, finalArtist = null, finalAudioSrc = null;
+    if (selectedAudioUrl) {
+      finalAudioSrc = selectedAudioUrl;
+      const musicParts = selectedTitle ? selectedTitle.innerText.split(" — ") : [];
+      finalTitle = musicParts[0]?.trim() || "Untitled";
+      finalArtist = musicParts[1]?.trim() || "Unknown Artist";
+    }
+
+    // 3. EKSEKUSI BERDASARKAN TUJUAN
     if (destination === "story") {
-      // Masuk ke tabel stories (Langsung tayang)
+      // INSERT KE TABEL STORIES (Sekarang dapet data musik)
       const { error } = await supabaseClient.from("stories").insert({
         creator_id: session.user.id,
         image_url: imageUrl,
-        content: captionValue 
+        content: captionValue,
+        audio_src: finalAudioSrc, // 🔥 Masukin ini
+        title: finalTitle,        // 🔥 Dan ini
+        artist: finalArtist       // 🔥 Dan ini
       });
       if (error) throw error;
       showNotif("Cerita berhasil dibagikan! 🔥", "success");
     } else {
-      // Masuk ke tabel posts (Review Admin)
-      let finalTitle = null, finalArtist = null, finalAudioSrc = null;
-      if (selectedAudioUrl) {
-        finalAudioSrc = selectedAudioUrl;
-        const musicParts = selectedTitle ? selectedTitle.innerText.split(" — ") : [];
-        finalTitle = musicParts[0]?.trim() || "Untitled";
-        finalArtist = musicParts[1]?.trim() || "Unknown Artist";
-      }
-
+      // INSERT KE TABEL POSTS
       const { error } = await supabaseClient.from("posts").insert({ 
           creator_id: session.user.id, 
           name: uploaderName,       
@@ -938,19 +940,17 @@ async function handlePostSubmit(e) {
 
     // --- RESET UI & STATE ---
     document.getElementById("postModal").classList.remove("active");
-    e.target.reset(); // Reset form HTML
+    e.target.reset();
     
     selectedAudioUrl = null; 
     selectedPostFile = null;
     if (selectedTitle) selectedTitle.innerText = "Pilih Musik (Opsional)...";
 
-    // Reset Preview Image secara manual agar tidak nyangkut
     const previewImg = document.getElementById("postPreviewImage");
     const placeholder = document.getElementById("postUploadPlaceholder");
     if (previewImg) previewImg.style.display = "none";
     if (placeholder) placeholder.style.display = "flex";
 
-    // Refresh halaman agar story terbaru muncul di lingkaran atas
     setTimeout(() => location.reload(), 1000);
 
   } catch (err) { 
@@ -958,7 +958,6 @@ async function handlePostSubmit(e) {
     showNotif("Gagal: " + err.message, "error"); 
   } finally { 
     btn.disabled = false; 
-    // Kembalikan teks tombol sesuai pilihan terakhir
     btn.textContent = destination === "story" ? "Bagikan ke Cerita" : "Kirim ke Review"; 
   }
 }
