@@ -6,6 +6,12 @@ const { id } = Astro.params;
 
 <Layout title="Hype Story">
   <div class="story-full-viewer" id="viewerContainer">
+    
+    <div class="tap-area">
+      <div class="tap-left" id="btnBack" title="Kembali"></div>
+      <div class="tap-right" id="btnSkip" title="Lanjut"></div>
+    </div>
+
     <div class="story-progress-container">
       <div class="story-progress-bar" id="progressBar"></div>
     </div>
@@ -13,79 +19,142 @@ const { id } = Astro.params;
     <div class="story-top-info">
       <div class="story-user">
         <img id="storyAvatar" src="https://ui-avatars.com/api/?name=..." class="s-avatar" />
-        <span id="storyUser">Memuat...</span>
+        <div class="user-meta">
+          <span id="storyUser">Memuat...</span>
+          <span id="storyTime" class="story-time"></span>
+        </div>
       </div>
       <button class="close-story" onclick="history.back()">×</button>
     </div>
 
     <div class="story-display">
       <div id="loader" class="loader"></div>
-      
-      <img id="storyImage" src="" class="s-img" style="display:none;" />
+      <img id="storyImage" src="" class="s-img" style="display:none;" draggable="false" />
       <div id="storyTextOnly" class="s-text" style="display:none;"></div>
     </div>
 
     <div class="story-bottom-info">
-      <p id="storyCaption"></p>
+      <p id="storyCaption" class="story-caption"></p>
+      
+      <div class="story-actions">
+        <button id="likeStoryBtn" class="story-like-btn">
+          <svg viewBox="0 0 24 24" id="heartIcon" class="heart-svg">
+            <path d="M12.1 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 9.24 3 10.91 3.81 12 5.09 13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 22 12.28 18.6 15.36 13.55 20.04z"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 
   <script>
     import { supabase } from '../../lib/supabase.js';
 
-    // Ambil ID dari URL secara manual karena is:inline dihapus
     const storyId = window.location.pathname.split('/').pop();
+    let currentUserId = null;
 
-    async function loadDetailStory() {
+    // Logika Navigasi (Skip/Back)
+    // Karena saat ini kita satu story per halaman, keduanya diarahkan ke history.back()
+    document.getElementById('btnSkip').addEventListener('click', () => history.back());
+    document.getElementById('btnBack').addEventListener('click', () => history.back());
+
+    async function initStory() {
+      // 1. Cek Session User
+      const { data: { session } } = await supabase.auth.getSession();
+      currentUserId = session?.user?.id;
+
+      // 2. Tarik Data Story
       const { data, error } = await supabase
         .from('stories')
         .select('*, profiles(username, avatar_url)')
         .eq('id', storyId)
         .single();
 
-      if (error) {
+      if (error || !data) {
         console.error("Error:", error);
-        alert("Cerita tidak ditemukan atau sudah dihapus.");
+        alert("Cerita sudah hilang atau tidak ditemukan.");
         history.back();
         return;
       }
 
-      if (data) {
-        // Sembunyikan loader
-        document.getElementById('loader').style.display = 'none';
+      // 3. Render Data ke UI
+      renderStory(data);
 
-        // Set Data User
-        document.getElementById('storyUser').innerText = data.profiles.username;
-        if(data.profiles.avatar_url) {
-          document.getElementById('storyAvatar').src = data.profiles.avatar_url;
-        }
-        
-        // Cek Foto atau Teks
-        if (data.image_url) {
-          const img = document.getElementById('storyImage');
-          img.src = data.image_url;
-          img.style.display = 'block';
-        } else {
-          const txt = document.getElementById('storyTextOnly');
-          txt.innerText = data.content;
-          txt.style.display = 'flex';
-          // Kalau teks doang, kasih background warna dikit biar keren
-          document.getElementById('viewerContainer').style.background = 'linear-gradient(45deg, #121212, #333)';
-        }
-        
-        document.getElementById('storyCaption').innerText = data.content || "";
-        
-        // Timer otomatis balik setelah 5 detik
-        setTimeout(() => {
-          // Cek kalau masih di halaman story, baru balik
-          if(window.location.pathname.includes('/story/')) {
-            history.back();
-          }
-        }, 30000);
+      // 4. Cek Status Like jika user login
+      if (currentUserId) {
+        checkIfLiked();
       }
     }
 
-    loadDetailStory();
+    function renderStory(data) {
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('storyUser').innerText = data.profiles.username;
+      
+      if(data.profiles.avatar_url) {
+        document.getElementById('storyAvatar').src = data.profiles.avatar_url;
+      }
+
+      // Format Waktu
+      const createdDate = new Date(data.created_at);
+      document.getElementById('storyTime').innerText = createdDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+      if (data.image_url) {
+        const img = document.getElementById('storyImage');
+        img.src = data.image_url;
+        img.style.display = 'block';
+      } else {
+        const txt = document.getElementById('storyTextOnly');
+        txt.innerText = data.content;
+        txt.style.display = 'flex';
+        document.getElementById('viewerContainer').style.background = 'linear-gradient(135deg, #1e1e2f, #111)';
+      }
+
+      document.getElementById('storyCaption').innerText = data.content || "";
+
+      // Jalankan Timer 30 Detik
+      setTimeout(() => {
+        if(window.location.pathname.includes('/story/')) {
+          history.back();
+        }
+      }, 30000);
+    }
+
+    async function checkIfLiked() {
+      const { data } = await supabase
+        .from('story_likes')
+        .select('id')
+        .match({ story_id: storyId, user_id: currentUserId })
+        .single();
+
+      if (data) {
+        document.getElementById('heartIcon').classList.add('liked');
+      }
+    }
+
+    // Event Listener Tombol Like
+    document.getElementById('likeStoryBtn').addEventListener('click', async () => {
+      if (!currentUserId) {
+        alert("Login dulu bro untuk menyukai cerita!");
+        return;
+      }
+
+      const heart = document.getElementById('heartIcon');
+      const isLiked = heart.classList.contains('liked');
+
+      if (isLiked) {
+        // UNLIKE
+        heart.classList.remove('liked');
+        await supabase.from('story_likes').delete().match({ story_id: storyId, user_id: currentUserId });
+      } else {
+        // LIKE
+        heart.classList.add('liked');
+        // Efek getar dikit (Haptic)
+        if (navigator.vibrate) navigator.vibrate(50);
+        
+        await supabase.from('story_likes').insert({ story_id: storyId, user_id: currentUserId });
+      }
+    });
+
+    initStory();
   </script>
 </Layout>
 
@@ -99,11 +168,26 @@ const { id } = Astro.params;
     z-index: 10000;
     color: white;
     font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+    user-select: none;
   }
 
+  /* AREA KETUK TRANSPARAN */
+  .tap-area {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    z-index: 10001;
+  }
+  .tap-left { width: 30%; height: 100%; }
+  .tap-right { width: 70%; height: 100%; }
+
+  /* PROGRESS BAR (30 DETIK) */
   .story-progress-container {
+    position: relative;
     padding: 15px 10px 5px;
     display: flex;
+    z-index: 10005;
   }
 
   .story-progress-bar {
@@ -113,7 +197,7 @@ const { id } = Astro.params;
     border-radius: 10px;
     animation: progressLinear 30s linear forwards;
     transform-origin: left;
-    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    box-shadow: 0 0 8px rgba(255,255,255,0.3);
   }
 
   @keyframes progressLinear {
@@ -126,6 +210,7 @@ const { id } = Astro.params;
     justify-content: space-between;
     align-items: center;
     padding: 10px 15px;
+    z-index: 10005;
   }
 
   .story-user {
@@ -135,26 +220,23 @@ const { id } = Astro.params;
   }
 
   .s-avatar {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: 2px solid #fff;
     object-fit: cover;
   }
 
-  #storyUser {
-    font-weight: 700;
-    font-size: 15px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-  }
+  .user-meta { display: flex; flex-direction: column; }
+  #storyUser { font-weight: 700; font-size: 14px; }
+  .story-time { font-size: 11px; opacity: 0.6; }
 
   .close-story {
     background: none;
     border: none;
     color: white;
-    font-size: 32px;
+    font-size: 35px;
     cursor: pointer;
-    line-height: 1;
     opacity: 0.8;
   }
 
@@ -163,7 +245,6 @@ const { id } = Astro.params;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
     position: relative;
   }
 
@@ -171,15 +252,12 @@ const { id } = Astro.params;
     border: 3px solid rgba(255,255,255,0.1);
     border-top: 3px solid #fff;
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
+    width: 35px;
+    height: 35px;
     animation: spin 1s linear infinite;
   }
 
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   .s-img {
     width: 100%;
@@ -199,12 +277,39 @@ const { id } = Astro.params;
     padding: 40px 20px;
     background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
     text-align: center;
+    z-index: 10005;
   }
 
-  #storyCaption {
+  .story-caption {
     font-size: 14px;
-    opacity: 0.9;
-    max-width: 80%;
-    margin: 0 auto;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .story-actions {
+    display: flex;
+    justify-content: center;
+  }
+
+  .story-like-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .heart-svg {
+    width: 38px;
+    height: 38px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .heart-svg.liked {
+    fill: #ff2d55;
+    stroke: #ff2d55;
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 10px rgba(255, 45, 85, 0.5));
   }
 </style>
