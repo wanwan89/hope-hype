@@ -1,6 +1,5 @@
 /* === TAMBAHAN: CSS VARIABLES LIGHT & DARK MODE === */
 :root {
-  /* Variabel Mode Terang (Light Mode Default) */
   --bg-main: #f0f2f5;
   --text-main: #1c1e21;
   --bg-card: #ffffff;
@@ -9,10 +8,11 @@
   --bg-modal: #ffffff;
   --bg-input: #f0f2f5;
   --icon-fill: #1c1e21;
+  /* 👇 TAMBAHIN INI 👇 */
+  --bg-secondary: #e4e6eb; 
 }
 
 html.dark {
-  /* Variabel Mode Gelap (Override saat class 'dark' aktif) */
   --bg-main: #121212;
   --text-main: #e0e0e0;
   --bg-card: #1e1e1e;
@@ -21,7 +21,10 @@ html.dark {
   --bg-modal: #111111;
   --bg-input: #1d1d1d;
   --icon-fill: #e0e0e0;
+  /* 👇 TAMBAHIN INI 👇 */
+  --bg-secondary: #242526; 
 }
+
 /* === AKHIR TAMBAHAN CSS VARIABLES === */
 
 
@@ -40,7 +43,7 @@ body{
 }
 
 /* =========================================
-   HEADER / SEARCH WRAPPER
+   HEADER / SEARCH WRAPPER (MODERN)
    ========================================= */
 .search-wrapper {
   position: sticky;
@@ -48,85 +51,43 @@ body{
   z-index: 999;
   padding: 15px 20px;
   display: flex;
-  align-items: center; /* KUNCI: Biar tombol dan search bar sejajar rata tengah */
-  justify-content: center;
-  gap: 18px; /* KUNCI: Ngasih jarak biar garis 3 gak numpuk sama search bar */
-  
-  /* Opsional: Aku tambahin background ngikutin tema biar kalau di-scroll, 
-     postingan di bawahnya gak tembus/nabrak tulisan header */
+  align-items: center; 
+  gap: 15px; 
   background: var(--bg-main); 
 }
 
-.brutal-input-container{
-  position:relative;
-  width:100%;
-  max-width:270px;
+.brutal-input-container {
+  position: relative;
+  flex: 1; /* Biar menuhin sisa ruang dengan pas */
+  max-width: 250px;
 }
 
-.brutal-input{
-  width:100%;
-  height:60px;
-  padding:12px;
-  font-size:18px;
-  font-family:"Courier New", monospace;
-  color:#000;
-  background:#fff;
-  border:4px solid #000;
-  outline:none;
-  transition:0.3s ease;
-  box-shadow:8px 8px 0 #000;
+.brutal-input {
+  width: 100%;
+  height: 38px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-main);
+  background: var(--bg-secondary, #e4e6eb);
+  border: 1px solid var(--border-card);
+  border-radius: 20px; /* Bentuk kapsul elegan */
+  outline: none;
+  transition: all 0.3s ease;
 }
 
-/* Hover */
-.brutal-input:hover{
-  transform:translate(-4px,-4px);
-  box-shadow:12px 12px 0 #000;
+/* Hover Effect Kalem */
+.brutal-input:hover {
+  border-color: #1DA1F2;
 }
 
-/* Focus */
-.brutal-input:focus{
-  background:#000;
-  color:#fff;
-  border-color:#fff;
-  animation:shake 0.5s ease-in-out;
+/* Focus Effect Elegan (Pas lagi ngetik) */
+.brutal-input:focus {
+  border-color: #1DA1F2;
+  background: var(--bg-card); /* Warnanya jadi lebih terang pas diklik */
+  box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.15); /* Efek glow biru tipis */
 }
 
-/* Typing glitch */
-.brutal-input:not(:placeholder-shown){
-  animation:glitch 0.7s linear infinite;
-  font-weight:bold;
-  letter-spacing:1px;
-}
-
-/* Cursor line */
-.brutal-input-container::after{
-  content:"|";
-  position:absolute;
-  right:10px;
-  top:50%;
-  transform:translateY(-50%);
-  animation:blink 0.7s step-end infinite;
-}
-
-/* Animations */
-@keyframes blink{
-  50%{opacity:0;}
-}
-
-@keyframes shake{
-  0%,100%{transform:translateX(0);}
-  25%{transform:translateX(-5px);}
-  75%{transform:translateX(5px);}
-}
-
-@keyframes glitch{
-  0%{transform:none;}
-  20%{transform:skew(-1deg);}
-  40%{transform:skew(1deg);}
-  60%{transform:skew(-0.5deg);}
-  80%{transform:skew(0.5deg);}
-  100%{transform:none;}
-}
 /* =========================================
    TOMBOL SIDEBAR (MENU TOGGLE)
    ========================================= */

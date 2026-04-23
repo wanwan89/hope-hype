@@ -9,6 +9,16 @@
     <p class="post-modal-subtitle">Karya kamu akan dikirim untuk direview dulu ya</p>
 
     <form id="postForm" class="post-form">
+      
+      <div class="post-type-toggle" style="display: flex; gap: 10px; margin-bottom: 20px; background: var(--bg-secondary, #f1f5f9); padding: 5px; border-radius: 12px;">
+        <button type="button" id="btnTypeImage" class="type-btn active" style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.3s; background: #1DA1F2; color: white;">
+          Foto
+        </button>
+        <button type="button" id="btnTypeText" class="type-btn" style="flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.3s; background: transparent; color: var(--text-muted, #64748b);">
+          Teks Saja
+        </button>
+      </div>
+
       <div class="post-upload-area" id="postUploadArea" style="cursor: pointer;">
         <input type="file" id="postImageInput" accept="image/*" hidden />
         
