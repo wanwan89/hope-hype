@@ -450,17 +450,19 @@ async function fetchStories() {
         <span>${story.profiles?.username || 'User'}</span>
       `;
       
-      // Klik story buat liat isinya (Bisa pake Modal lagi atau alert dulu)
-      item.onclick = () => {
-        if (story.image_url) {
-           // Contoh simpel: buka gambar di tab baru
-           window.open(story.image_url, '_blank');
-        } else {
-           showNotif(story.content, "info");
-        }
-      };
+      // GANTI BAGIAN INI
+item.onclick = () => {
+  // Tambahin class seen biar user tau mereka udah klik yang ini
+  item.querySelector('.story-circle').classList.remove('unseen');
+  item.querySelector('.story-circle').classList.add('seen');
+  
+  // Baru pindah halaman
+  window.location.href = `/story/${story.id}`;
+};
+
       
       container.appendChild(item);
+
     });
   } catch (err) {
     console.error("Fetch Story Error:", err);
@@ -868,10 +870,10 @@ async function handlePostSubmit(e) {
   const selectedTitle = document.getElementById("selectedMusicTitle");
   const captionValue = document.getElementById("postCaption").value.trim();
   
-  // 🔥 AMBIL VALUE TUJUAN: 'feed' atau 'story'
+  // Ambil pilihan tujuan: 'feed' atau 'story'
   const destination = document.querySelector('input[name="postDestination"]:checked')?.value || 'feed';
 
-  // VALIDASI
+  // Validasi: Harus ada foto atau teks
   if (!selectedPostFile && !captionValue) {
     return showNotif("Isi konten atau pilih foto dulu bro!", "warning");
   }
@@ -891,28 +893,26 @@ async function handlePostSubmit(e) {
 
     const uploaderName = profileData?.username || "User"; 
 
-    // UPLOAD GAMBAR (Jika ada)
+    // 1. UPLOAD KE CLOUDINARY (Jika ada file)
     let imageUrl = null;
     if (selectedPostFile) {
       const cData = await uploadImageToCloudinary(selectedPostFile);
       imageUrl = cData.secure_url;
     }
     
-    // TENTUKAN TABEL & DATA
+    // 2. TENTUKAN TABEL TUJUAN
     if (destination === "story") {
-      // --- LOGIKA SIMPAN KE STORY ---
+      // Masuk ke tabel stories (Langsung tayang)
       const { error } = await supabaseClient.from("stories").insert({
         creator_id: session.user.id,
         image_url: imageUrl,
-        content: captionValue // Story biasanya pake kolom 'content'
+        content: captionValue 
       });
       if (error) throw error;
       showNotif("Cerita berhasil dibagikan! 🔥", "success");
-
     } else {
-      // --- LOGIKA SIMPAN KE POST UTAMA (FEED) ---
+      // Masuk ke tabel posts (Review Admin)
       let finalTitle = null, finalArtist = null, finalAudioSrc = null;
-
       if (selectedAudioUrl) {
         finalAudioSrc = selectedAudioUrl;
         const musicParts = selectedTitle ? selectedTitle.innerText.split(" — ") : [];
@@ -935,18 +935,21 @@ async function handlePostSubmit(e) {
       showNotif("Karya dikirim ke review admin! 🔥", "success");
     }
 
-    // RESET FORM & UI
+    // --- RESET UI & STATE ---
     document.getElementById("postModal").classList.remove("active");
-    e.target.reset();
+    e.target.reset(); // Reset form HTML
     
-    // Reset State Global
     selectedAudioUrl = null; 
     selectedPostFile = null;
     if (selectedTitle) selectedTitle.innerText = "Pilih Musik (Opsional)...";
-    document.getElementById("postPreviewImage").style.display = "none";
-    document.getElementById("postUploadPlaceholder").style.display = "flex";
 
-    // Refresh halaman atau fetch ulang data agar story/post baru muncul
+    // Reset Preview Image secara manual agar tidak nyangkut
+    const previewImg = document.getElementById("postPreviewImage");
+    const placeholder = document.getElementById("postUploadPlaceholder");
+    if (previewImg) previewImg.style.display = "none";
+    if (placeholder) placeholder.style.display = "flex";
+
+    // Refresh halaman agar story terbaru muncul di lingkaran atas
     setTimeout(() => location.reload(), 1000);
 
   } catch (err) { 
@@ -954,6 +957,7 @@ async function handlePostSubmit(e) {
     showNotif("Gagal: " + err.message, "error"); 
   } finally { 
     btn.disabled = false; 
+    // Kembalikan teks tombol sesuai pilihan terakhir
     btn.textContent = destination === "story" ? "Bagikan ke Cerita" : "Kirim ke Review"; 
   }
 }

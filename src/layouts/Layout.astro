@@ -1,16 +1,17 @@
 ---
+import { ViewTransitions } from 'astro:transitions'; // 🔥 Tambahin ini
+
 interface Props {
   title: string;
-  // Tambahin prop description, opsional (?)
   description?: string; 
 }
 
-// Tangkap props-nya, dan kasih default teks kalau pas dipanggil gak diisi
 const { 
   title, 
-  description = "Hope Hype - Platform Komunitas Kreatif, Chat Global, dan Voice Room" 
+  description = "Hope Hype - Platform Komunitas Kreatif" 
 } = Astro.props;
 ---
+
 <!doctype html>
 <html lang="id">
 <head>
@@ -75,6 +76,7 @@ const {
       }
     });
   </script>
+ <ViewTransitions /> 
 </head>
 <body>
   <slot/>

@@ -1,0 +1,152 @@
+---
+// src/pages/story/[id].astro
+import Layout from '../../layouts/Layout.astro';
+const { id } = Astro.params;
+---
+
+<Layout title="Hype Story">
+  <div class="story-full-viewer">
+    <div class="story-progress-container">
+      <div class="story-progress-bar"></div>
+    </div>
+
+    <div class="story-top-info">
+      <div class="story-user">
+        <img id="storyAvatar" src="" class="s-avatar" />
+        <span id="storyUser">Loading...</span>
+      </div>
+      <button class="close-story" onclick="history.back()">×</button>
+    </div>
+
+    <div class="story-display">
+      <img id="storyImage" src="" class="s-img" />
+      <div id="storyTextOnly" class="s-text" style="display:none;"></div>
+    </div>
+
+    <div class="story-bottom-info">
+      <p id="storyCaption"></p>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ storyId: id }}>
+    // Kita panggil supabase lagi di sini buat ambil data story tunggal
+    import { supabase } from '../../lib/supabase.js';
+
+    async function loadDetailStory() {
+      const { data, error } = await supabase
+        .from('stories')
+        .select('*, profiles(username, avatar_url)')
+        .eq('id', storyId)
+        .single();
+
+      if (data) {
+        document.getElementById('storyUser').innerText = data.profiles.username;
+        document.getElementById('storyAvatar').src = data.profiles.avatar_url;
+        
+        if (data.image_url) {
+          document.getElementById('storyImage').src = data.image_url;
+          document.getElementById('storyImage').style.display = 'block';
+        } else {
+          document.getElementById('storyTextOnly').innerText = data.content;
+          document.getElementById('storyTextOnly').style.display = 'flex';
+        }
+        
+        document.getElementById('storyCaption').innerText = data.content || "";
+        
+        // Timer otomatis balik setelah 5 detik
+        setTimeout(() => {
+          history.back();
+        }, 5000);
+      }
+    }
+
+    loadDetailStory();
+  </script>
+</Layout>
+
+<style>
+  .story-full-viewer {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    z-index: 10000;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .story-progress-container {
+    padding: 10px 10px 5px;
+    display: flex;
+  }
+
+  .story-progress-bar {
+    height: 2px;
+    background: #fff;
+    flex: 1;
+    border-radius: 10px;
+    animation: progressLinear 5s linear forwards;
+    transform-origin: left;
+  }
+
+  @keyframes progressLinear {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+
+  .story-top-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+  }
+
+  .story-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .s-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 1px solid #fff;
+  }
+
+  .close-story {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 30px;
+    cursor: pointer;
+  }
+
+  .story-display {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .s-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .s-text {
+    padding: 40px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  .story-bottom-info {
+    padding: 30px 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    text-align: center;
+  }
+</style>
