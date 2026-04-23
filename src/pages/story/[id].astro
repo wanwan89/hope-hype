@@ -5,21 +5,23 @@ const { id } = Astro.params;
 ---
 
 <Layout title="Hype Story">
-  <div class="story-full-viewer">
+  <div class="story-full-viewer" id="viewerContainer">
     <div class="story-progress-container">
-      <div class="story-progress-bar"></div>
+      <div class="story-progress-bar" id="progressBar"></div>
     </div>
 
     <div class="story-top-info">
       <div class="story-user">
-        <img id="storyAvatar" src="" class="s-avatar" />
-        <span id="storyUser">Loading...</span>
+        <img id="storyAvatar" src="https://ui-avatars.com/api/?name=..." class="s-avatar" />
+        <span id="storyUser">Memuat...</span>
       </div>
       <button class="close-story" onclick="history.back()">×</button>
     </div>
 
     <div class="story-display">
-      <img id="storyImage" src="" class="s-img" />
+      <div id="loader" class="loader"></div>
+      
+      <img id="storyImage" src="" class="s-img" style="display:none;" />
       <div id="storyTextOnly" class="s-text" style="display:none;"></div>
     </div>
 
@@ -28,9 +30,11 @@ const { id } = Astro.params;
     </div>
   </div>
 
-  <script is:inline define:vars={{ storyId: id }}>
-    // Kita panggil supabase lagi di sini buat ambil data story tunggal
+  <script>
     import { supabase } from '../../lib/supabase.js';
+
+    // Ambil ID dari URL secara manual karena is:inline dihapus
+    const storyId = window.location.pathname.split('/').pop();
 
     async function loadDetailStory() {
       const { data, error } = await supabase
@@ -39,23 +43,44 @@ const { id } = Astro.params;
         .eq('id', storyId)
         .single();
 
+      if (error) {
+        console.error("Error:", error);
+        alert("Cerita tidak ditemukan atau sudah dihapus.");
+        history.back();
+        return;
+      }
+
       if (data) {
+        // Sembunyikan loader
+        document.getElementById('loader').style.display = 'none';
+
+        // Set Data User
         document.getElementById('storyUser').innerText = data.profiles.username;
-        document.getElementById('storyAvatar').src = data.profiles.avatar_url;
+        if(data.profiles.avatar_url) {
+          document.getElementById('storyAvatar').src = data.profiles.avatar_url;
+        }
         
+        // Cek Foto atau Teks
         if (data.image_url) {
-          document.getElementById('storyImage').src = data.image_url;
-          document.getElementById('storyImage').style.display = 'block';
+          const img = document.getElementById('storyImage');
+          img.src = data.image_url;
+          img.style.display = 'block';
         } else {
-          document.getElementById('storyTextOnly').innerText = data.content;
-          document.getElementById('storyTextOnly').style.display = 'flex';
+          const txt = document.getElementById('storyTextOnly');
+          txt.innerText = data.content;
+          txt.style.display = 'flex';
+          // Kalau teks doang, kasih background warna dikit biar keren
+          document.getElementById('viewerContainer').style.background = 'linear-gradient(45deg, #121212, #333)';
         }
         
         document.getElementById('storyCaption').innerText = data.content || "";
         
         // Timer otomatis balik setelah 5 detik
         setTimeout(() => {
-          history.back();
+          // Cek kalau masih di halaman story, baru balik
+          if(window.location.pathname.includes('/story/')) {
+            history.back();
+          }
         }, 5000);
       }
     }
@@ -77,17 +102,18 @@ const { id } = Astro.params;
   }
 
   .story-progress-container {
-    padding: 10px 10px 5px;
+    padding: 15px 10px 5px;
     display: flex;
   }
 
   .story-progress-bar {
-    height: 2px;
+    height: 3px;
     background: #fff;
     flex: 1;
     border-radius: 10px;
     animation: progressLinear 5s linear forwards;
     transform-origin: left;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
   }
 
   @keyframes progressLinear {
@@ -105,22 +131,31 @@ const { id } = Astro.params;
   .story-user {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
   }
 
   .s-avatar {
-    width: 35px;
-    height: 35px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    border: 1px solid #fff;
+    border: 2px solid #fff;
+    object-fit: cover;
+  }
+
+  #storyUser {
+    font-weight: 700;
+    font-size: 15px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
   }
 
   .close-story {
     background: none;
     border: none;
     color: white;
-    font-size: 30px;
+    font-size: 32px;
     cursor: pointer;
+    line-height: 1;
+    opacity: 0.8;
   }
 
   .story-display {
@@ -129,6 +164,21 @@ const { id } = Astro.params;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    position: relative;
+  }
+
+  .loader {
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top: 3px solid #fff;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 
   .s-img {
@@ -140,13 +190,21 @@ const { id } = Astro.params;
   .s-text {
     padding: 40px;
     text-align: center;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 700;
+    line-height: 1.4;
   }
 
   .story-bottom-info {
-    padding: 30px 20px;
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    padding: 40px 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
     text-align: center;
+  }
+
+  #storyCaption {
+    font-size: 14px;
+    opacity: 0.9;
+    max-width: 80%;
+    margin: 0 auto;
   }
 </style>
