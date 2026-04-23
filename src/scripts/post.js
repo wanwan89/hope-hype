@@ -258,13 +258,13 @@ try {
     if (commentsRes.data) commentsRes.data.forEach(c => { if(commentCounts[c.post_id] !== undefined) commentCounts[c.post_id]++; });
 
 // ==========================================
-// RENDER POSTS KE GALLERY (ULTIMATE THREAD STYLE)
+// RENDER POSTS KE GALLERY (ULTIMATE THREAD STYLE - FIXED SPASI & ICON)
 // ==========================================
 posts.forEach((post) => {
   const card = document.createElement("div");
   card.className = "card post-fade-in";
   
-  // 1. Ambil State User & Badge & Avatar (Tambahan buat Thread)
+  // 1. Ambil State User & Badge & Avatar
   const userRole = (post.profiles?.role || "user").toLowerCase().trim();
   const badge = getUserBadge(userRole);
   const avatarUrl = post.profiles?.avatar_url || "https://via.placeholder.com/40";
@@ -278,7 +278,7 @@ posts.forEach((post) => {
   const musicTitle = post.title || 'Untitled';
   const musicArtist = post.artist || 'Unknown Artist';
 
-  // 3. Logika Render Music Marquee
+  // 3. Logika Render Music Marquee (NO ICON 🎵)
   const musicHtml = post.audio_src ? (() => {
     let cleanAudio = (post.audio_src || "").trim();
     if (cleanAudio.includes('res.cloudinary.com') && cleanAudio.includes('/video/upload/')) {
@@ -290,7 +290,7 @@ posts.forEach((post) => {
     return `
       <div class="music-marquee-container" style="background: rgba(0,0,0,0.5); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; max-width: 150px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none; margin-bottom: 10px;">
         <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
-          🎵 ${musicTitle} — ${musicArtist}
+          ${musicTitle} — ${musicArtist}
         </div>
         <audio class="post-audio-element" loop preload="metadata" playsinline webkit-playsinline style="display:none;">
           <source src="${finalAudio}" type="${mimeType}">
@@ -299,7 +299,7 @@ posts.forEach((post) => {
     `;
   })() : '';
 
-  // 🔥 4. KUMPULAN TOMBOL AKSI (Disimpan dalam variabel biar gampang dipake 2x)
+  // 4. KUMPULAN TOMBOL AKSI
   const engagementButtons = `
     <button class="icon-btn gift-btn" data-post="${post.id}" data-creator="${post.creator_id}" data-name="${post.profiles?.username}">
       <svg viewBox="0 0 24 24" class="icon" width="20" height="20" fill="currentColor"><path d="M20 7h-2.18A3 3 0 0 0 12 3a3 3 0 0 0-5.82 4H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1Zm-8-2a1 1 0 0 1 1 1v1h-2V6a1 1 0 0 1 1-1Zm-4 1a1 1 0 0 1 2 0v1H8a1 1 0 0 1 0-2Zm9 13h-4v-7h4Zm-6 0H7v-7h4Zm8-9H5V9h14Z"/></svg>
@@ -314,12 +314,12 @@ posts.forEach((post) => {
     </button>
   `;
 
-  // 🔥 5. DETEKSI & RENDER DESAIN
+  // 5. DETEKSI & RENDER DESAIN
   const hasImage = post.image_url && post.image_url.trim() !== "";
 
   if (hasImage) {
       // ==========================================
-      // DESAIN 1: KARYA GAMBAR (STYLE IG LAMA LU)
+      // DESAIN 1: KARYA GAMBAR (STYLE IG)
       // ==========================================
       card.innerHTML = `
         <div class="slider" style="position: relative;">
@@ -338,9 +338,7 @@ posts.forEach((post) => {
             </button>
           </div>
 
-          <p class="post-bio" style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-            ${post.bio || ""}
-          </p>
+          <p class="post-bio" style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${(post.bio || "").trim()}</p>
 
           <div class="post-date-wrapper" style="margin-bottom: 12px;">
             <span style="font-size: 10px; color: var(--text-muted); opacity: 0.8;">Diunggah ${formattedDate}</span>
@@ -355,9 +353,9 @@ posts.forEach((post) => {
         </div>`;
   } else {
       // ==========================================
-      // DESAIN 2: THREADS MURNI (STYLE TWITTER/THREADS)
+      // DESAIN 2: THREADS MURNI (FIXED SPACING)
       // ==========================================
-      card.style.padding = "16px"; // Bikin card lebih enak dilihat
+      card.style.padding = "16px"; 
       
       card.innerHTML = `
         <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
@@ -375,9 +373,7 @@ posts.forEach((post) => {
           </button>
         </div>
 
-        <div style="font-size: 15px; color: var(--text-main); line-height: 1.5; white-space: pre-wrap; margin-bottom: 12px; padding-left: 2px;">
-          ${post.bio || ""}
-        </div>
+        <div style="font-size: 15px; color: var(--text-main); line-height: 1.5; white-space: pre-wrap; margin-bottom: 12px; padding-left: 2px;">${(post.bio || "").trim()}</div>
 
         ${post.audio_src ? `<div style="margin-top: 10px;">${musicHtml}</div>` : ''}
 
