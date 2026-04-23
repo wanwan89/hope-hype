@@ -5,6 +5,8 @@ const { id } = Astro.params;
 ---
 
 <Layout title="Hype Story">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
   <div class="story-full-viewer" id="viewerContainer">
     
     <div class="tap-area">
@@ -13,8 +15,7 @@ const { id } = Astro.params;
     </div>
 
     <div class="story-progress-container" id="progContainer">
-      <div class="story-progress-bar" id="progressBar"></div>
-    </div>
+      </div>
 
     <div class="story-top-info">
       <div class="story-user">
@@ -24,14 +25,14 @@ const { id } = Astro.params;
           <span id="storyTime" class="story-time"></span>
         </div>
       </div>
-      <button class="close-story" onclick="history.back()" style="z-index: 10006;">×</button>
+      <button class="close-story" onclick="history.back()">×</button>
     </div>
 
     <div class="story-display">
       <div id="loader" class="loader"></div>
       
-      <div id="musicTag" class="music-tag" style="display:none; z-index: 10006;">
-        <span class="material-icons" style="font-size:14px;">music_note</span>
+      <div id="musicTag" class="music-tag" style="display:none;">
+        <span class="material-icons" style="font-size:14px; color: white;">music_note</span>
         <marquee id="musicTitle" scrollamount="3"></marquee>
       </div>
 
@@ -41,7 +42,7 @@ const { id } = Astro.params;
 
     <div class="story-bottom-info">
       <div class="footer-layout">
-        <div class="story-actions-left" style="z-index: 10006;">
+        <div class="story-actions-left">
           <button id="likeStoryBtn" class="story-like-btn">
             <svg viewBox="0 0 24 24" id="heartIcon" class="heart-svg">
               <path d="M12.1 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 9.24 3 10.91 3.81 12 5.09 13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 22 12.28 18.6 15.36 13.55 20.04z"/>
@@ -61,7 +62,6 @@ const { id } = Astro.params;
   <script>
     import { supabase } from '../../lib/supabase.js';
 
-    // Ambil ID dari URL dengan cara yang lebih aman
     const pathParts = window.location.pathname.split('/');
     const storyId = pathParts[pathParts.length - 1];
     
@@ -69,17 +69,15 @@ const { id } = Astro.params;
     let currentIndex = 0;
     let timer = null;
     let currentUserId = null;
-    const STORY_DURATION = 7000; // Kita set 7 detik biar pas sama progress bar
+    const STORY_DURATION = 7000; // 7 Detik per story
 
     async function initMultiStory() {
       const { data: { session } } = await supabase.auth.getSession();
       currentUserId = session?.user?.id;
 
-      // 1. Ambil info creator
       const { data: initStory } = await supabase.from('stories').select('creator_id').eq('id', storyId).single();
       if (!initStory) return history.back();
 
-      // 2. Ambil story 24 jam terakhir dari creator tersebut
       const timeLimit = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { data: stories } = await supabase
         .from('stories')
@@ -92,10 +90,40 @@ const { id } = Astro.params;
         allUserStories = stories;
         currentIndex = allUserStories.findIndex(s => s.id == storyId);
         if (currentIndex === -1) currentIndex = 0;
+        
+        createProgressBars(); // Buat bar sesuai jumlah story
         renderCurrentStory();
-      } else {
-        history.back();
       }
+    }
+
+    function createProgressBars() {
+      const container = document.getElementById('progContainer');
+      container.innerHTML = '';
+      allUserStories.forEach((_, index) => {
+        const barWrap = document.createElement('div');
+        barWrap.className = 'bar-wrap';
+        const barInner = document.createElement('div');
+        barInner.className = 'bar-inner';
+        barInner.id = `bar-${index}`;
+        barWrap.appendChild(barInner);
+        container.appendChild(barWrap);
+      });
+    }
+
+    function updateProgressBars() {
+      allUserStories.forEach((_, index) => {
+        const bar = document.getElementById(`bar-${index}`);
+        bar.style.animation = 'none';
+        if (index < currentIndex) {
+          bar.style.transform = 'scaleX(1)';
+        } else if (index === currentIndex) {
+          bar.style.transform = 'scaleX(0)';
+          void bar.offsetWidth; // Trigger reflow
+          bar.style.animation = `progressLinear ${STORY_DURATION/1000}s linear forwards`;
+        } else {
+          bar.style.transform = 'scaleX(0)';
+        }
+      });
     }
 
     function renderCurrentStory() {
@@ -110,7 +138,6 @@ const { id } = Astro.params;
       imgEl.style.display = 'none';
       txtEl.style.display = 'none';
 
-      // Info User
       document.getElementById('storyUser').innerText = story.profiles.username;
       document.getElementById('storyAvatar').src = story.profiles.avatar_url || `https://ui-avatars.com/api/?name=${story.profiles.username}`;
       
@@ -118,7 +145,6 @@ const { id } = Astro.params;
       document.getElementById('storyTime').innerText = createdDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
       document.getElementById('storyCaption').innerText = story.content || "";
 
-      // Konten (Gambar atau Teks)
       if (story.image_url) {
         imgEl.src = story.image_url;
         imgEl.style.display = 'block';
@@ -129,13 +155,22 @@ const { id } = Astro.params;
         txtEl.style.display = 'flex';
       }
 
-      // Handler Musik
+      // Logic Audio Fix
       if (story.audio_src) {
         audio.src = story.audio_src;
         audio.load();
-        audio.play().catch(() => console.log("User must interact first"));
-        musicTag.style.display = 'flex';
-        document.getElementById('musicTitle').innerText = `${story.title || 'Unknown'} - ${story.artist || 'Unknown'}`;
+        // Coba play, kalau gagal (karena autoplay policy) biarkan user klik area skip sekali untuk aktifkan suara
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.then(_ => {
+            musicTag.style.display = 'flex';
+            document.getElementById('musicTitle').innerText = `${story.title || 'Unknown'} - ${story.artist || 'Unknown'}`;
+          }).catch(error => {
+            console.log("Autoplay ditolak, nunggu interaksi user.");
+            musicTag.style.display = 'flex';
+            document.getElementById('musicTitle').innerText = "Klik layar untuk suara";
+          });
+        }
       } else {
         audio.pause();
         audio.src = "";
@@ -143,18 +178,12 @@ const { id } = Astro.params;
       }
 
       checkIfLiked(story.id);
+      updateProgressBars();
       resetTimer();
     }
 
     function resetTimer() {
       clearTimeout(timer);
-      const bar = document.getElementById('progressBar');
-      
-      // Reset animasi CSS
-      bar.style.animation = 'none';
-      void bar.offsetWidth; // trigger reflow
-      bar.style.animation = `progressLinear ${STORY_DURATION/1000}s linear forwards`;
-      
       timer = setTimeout(nextStory, STORY_DURATION);
     }
 
@@ -163,7 +192,7 @@ const { id } = Astro.params;
         currentIndex++;
         renderCurrentStory();
       } else {
-        history.back(); // Tutup jika sudah habis
+        history.back();
       }
     }
 
@@ -181,12 +210,10 @@ const { id } = Astro.params;
       const heart = document.getElementById('heartIcon');
       heart.classList.remove('liked');
       if (!currentUserId) return;
-
       const { data } = await supabase.from('story_likes').select('id').match({ story_id: sId, user_id: currentUserId }).single();
       if (data) heart.classList.add('liked');
     }
 
-    // Event Listeners
     document.getElementById('btnSkip').onclick = (e) => {
       e.stopPropagation();
       nextStory();
@@ -199,11 +226,9 @@ const { id } = Astro.params;
 
     document.getElementById('likeStoryBtn').onclick = async (e) => {
       e.stopPropagation();
-      if (!currentUserId) return alert("Silakan login terlebih dahulu");
-      
+      if (!currentUserId) return alert("Silakan login!");
       const sId = allUserStories[currentIndex].id;
       const heart = document.getElementById('heartIcon');
-      
       if (heart.classList.contains('liked')) {
         heart.classList.remove('liked');
         await supabase.from('story_likes').delete().match({ story_id: sId, user_id: currentUserId });
@@ -214,85 +239,107 @@ const { id } = Astro.params;
       }
     };
 
-    // Jalankan Init
     initMultiStory();
   </script>
 </Layout>
 
 <style>
-  /* CSS Tetap Sama Sesuai Request (Hanya fix minor di Z-Index) */
+  /* CSS FIX */
   .story-full-viewer {
     position: fixed; inset: 0; background: #000;
     display: flex; flex-direction: column; z-index: 10000;
     color: white; font-family: 'Poppins', sans-serif; overflow: hidden;
+    /* FIX BUG 2: Ilangin warna biru pas klik area di mobile */
+    -webkit-tap-highlight-color: transparent;
   }
 
   .tap-area { position: absolute; inset: 0; display: flex; z-index: 10001; }
-  .tap-left { width: 35%; height: 100%; cursor: pointer; }
-  .tap-right { width: 65%; height: 100%; cursor: pointer; }
+  .tap-left { width: 35%; height: 100%; }
+  .tap-right { width: 65%; height: 100%; }
 
+  /* FIX BUG 4: Progres bar tersegmentasi */
   .story-progress-container { 
     padding: 15px 10px 5px; 
     display: flex; 
+    gap: 5px; /* Jarak antar bar */
     z-index: 10005; 
-    position: relative;
   }
-  .story-progress-bar {
-    height: 3px; background: #fff; flex: 1; border-radius: 10px;
+  .bar-wrap {
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .bar-inner {
+    height: 100%;
+    width: 100%;
+    background: #fff;
+    transform: scaleX(0);
     transform-origin: left;
   }
   @keyframes progressLinear { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
-  .story-top-info { 
-    display: flex; justify-content: space-between; align-items: center; 
-    padding: 10px 15px; z-index: 10005; position: relative;
-  }
+  .story-top-info { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; z-index: 10005; }
   .story-user { display: flex; align-items: center; gap: 12px; }
   .s-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; object-fit: cover; }
   .user-meta { display: flex; flex-direction: column; }
-  #storyUser { font-weight: 700; font-size: 14px; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
-  .story-time { font-size: 11px; opacity: 0.8; }
-  .close-story { background: none; border: none; color: white; font-size: 35px; cursor: pointer; line-height: 1; }
+  #storyUser { font-weight: 700; font-size: 14px; }
+  .story-time { font-size: 11px; opacity: 0.6; }
+  .close-story { background: none; border: none; color: white; font-size: 35px; cursor: pointer; z-index: 10010; }
 
-  .story-display { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
-  .s-img { width: 100%; height: 100%; object-fit: contain; }
-  .s-text { padding: 40px; text-align: center; font-size: 24px; font-weight: 700; width: 100%; }
-  
-  .loader { 
-    position: absolute;
-    border: 3px solid rgba(255,255,255,0.1); 
-    border-top: 3px solid #fff; 
-    border-radius: 50%; width: 35px; height: 35px; 
-    animation: spin 1s linear infinite; 
+  /* CONTENT */
+  .story-display { 
+    flex: 1; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    position: relative; 
+    /* FIX BUG 5: Jangan biarkan gambar besar ngerusak layout */
+    overflow: hidden; 
   }
+  .s-img { 
+    max-width: 100%; 
+    max-height: 100%; 
+    object-fit: contain; /* Foto tetap proporsional dan gak kepotong */
+  }
+  /* FIX BUG 1: Teks Center Vertikal & Horizontal */
+  .s-text { 
+    width: 100%;
+    height: 100%;
+    padding: 40px; 
+    text-align: center; 
+    font-size: 24px; 
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #fff; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .music-tag {
     position: absolute; bottom: 20px; left: 20px;
-    background: rgba(0,0,0,0.6); padding: 6px 14px;
+    background: rgba(0,0,0,0.6); padding: 5px 12px;
     border-radius: 20px; display: flex; align-items: center; gap: 8px;
-    max-width: 220px; border: 1px solid rgba(255,255,255,0.2);
-    backdrop-filter: blur(5px);
+    max-width: 200px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2);
+    z-index: 10006;
   }
-  #musicTitle { font-size: 11px; font-weight: 600; color: #fff; overflow: hidden; }
+  #musicTitle { font-size: 11px; font-weight: 600; width: 150px; color: white; }
 
   .story-bottom-info {
     padding: 30px 20px; 
-    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
     z-index: 10005;
-    position: relative;
   }
   .footer-layout { display: flex; align-items: center; gap: 15px; }
-  .caption-container { flex: 1; }
-  .story-caption { 
-    font-size: 14px; color: #fff; margin: 0; 
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
+  .story-caption { font-size: 14px; text-align: left; opacity: 0.9; margin: 0; }
 
-  .story-like-btn { background: none; border: none; cursor: pointer; padding: 5px; outline: none; }
+  .story-like-btn { background: none; border: none; cursor: pointer; padding: 5px; z-index: 10010; }
   .heart-svg {
     width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 2;
     transition: all 0.2s ease;
   }
-  .heart-svg.liked { fill: #ff2d55; stroke: #ff2d55; transform: scale(1.2); }
+  .heart-svg.liked { fill: #ff2d55; stroke: #ff2d55; transform: scale(1.1); }
 </style>
