@@ -225,16 +225,24 @@ try {
         )
       `) 
       .eq("status", "approved")
-      .order("created_at", { ascending: false }) // Biar postingan terbaru di atas
-      .limit(10);
-
+      .order("created_at", { ascending: false }) 
+      .limit(100); // 🔥 Tarik 100 data biar acakannya lebih seru
 
     if (category && category !== "all") {
       query = query.ilike("category", `%${category.trim()}%`);
     }
 
-    const { data: posts, error } = await query.order("created_at", { ascending: false });
+    // 1. Simpan hasil tarikan ke variabel sementara (rawPosts)
+    const { data: rawPosts, error } = await query;
     if (error) throw error;
+
+    // 🔥 2. LOGIKA FYP (ACAK POSTINGAN) 🔥
+    let posts = rawPosts;
+    
+    // Kalau buka tab "Semua" (FYP), kita acak urutannya!
+    if (category === "all" || !category) {
+      posts = rawPosts.sort(() => Math.random() - 0.5); 
+    }
 
     gallery.innerHTML = "";
 
@@ -733,9 +741,50 @@ function initPostModal() {
     const f = e.target.files[0];
     if (f) { selectedPostFile = f; const r = new FileReader(); r.onload = (ev) => { document.getElementById("postPreviewImage").src = ev.target.result; document.getElementById("postPreviewImage").style.display = "block"; document.getElementById("postUploadPlaceholder").style.display = "none"; }; r.readAsDataURL(f); }
   });
+
+  // 🔥 LOGIKA BARU: KLIK TOGGLE FOTO vs TEKS SAJA 🔥
+  const btnTypeImage = document.getElementById("btnTypeImage");
+  const btnTypeText = document.getElementById("btnTypeText");
+  const uploadArea = document.getElementById("postUploadArea");
+  const captionInput = document.getElementById("postCaption");
+
+  if (btnTypeImage && btnTypeText && uploadArea) {
+    // 1. Kalau milih FOTO
+    btnTypeImage.addEventListener("click", () => {
+      // Ubah warna tombol
+      btnTypeImage.style.background = "#1DA1F2";
+      btnTypeImage.style.color = "white";
+      btnTypeText.style.background = "transparent";
+      btnTypeText.style.color = "var(--text-muted, #64748b)";
+      
+      // Munculin kotak foto
+      uploadArea.style.display = "flex"; 
+      if(captionInput) captionInput.placeholder = "Tulis caption menarik di sini....";
+    });
+
+    // 2. Kalau milih TEKS SAJA (Thread)
+    btnTypeText.addEventListener("click", () => {
+      // Ubah warna tombol
+      btnTypeText.style.background = "#1DA1F2";
+      btnTypeText.style.color = "white";
+      btnTypeImage.style.background = "transparent";
+      btnTypeImage.style.color = "var(--text-muted, #64748b)";
+      
+      // Sembunyiin kotak foto
+      uploadArea.style.display = "none"; 
+      if(captionInput) captionInput.placeholder = "Tulis apa yang sedang kamu pikirkan...";
+      
+      // Reset pilihan foto (biar ga sengaja ke-upload)
+      selectedPostFile = null;
+      document.getElementById("postPreviewImage").style.display = "none";
+      document.getElementById("postUploadPlaceholder").style.display = "flex";
+      document.getElementById("postImageInput").value = "";
+    });
+  }
+
   document.getElementById("postForm")?.addEventListener("submit", handlePostSubmit);
   setupCustomCategory();
-  initMusicPicker(); // 🔥 PANGGIL PENCARIAN MUSIK DI SINI
+  initMusicPicker(); 
 }
 
 function setupCustomCategory() {

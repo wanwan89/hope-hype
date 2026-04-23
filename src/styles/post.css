@@ -1914,3 +1914,46 @@ body{
     height: 20px;
   }
 }
+/* =========================================
+   🔥 SUPER FYP MODE (TIKTOK / REELS STYLE) 🔥
+   ========================================= */
+html {
+  /* Bikin scroll otomatis nge-rem/jepret di tiap postingan */
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+.card {
+  /* Titik jepretnya ada di atas kartu */
+  scroll-snap-align: start;
+  
+  /* Maksa kartu jadi 1 layar penuh */
+  min-height: 100vh;
+  margin-bottom: 0 !important;
+  border-radius: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  
+  /* Ngasih jarak aman biar nggak ketabrak Header Search lu */
+  padding-top: 80px; 
+  padding-bottom: 20px;
+}
+
+/* Biar gambar yang diposting bisa nyesuain layar */
+.slider {
+  flex: 1;
+  display: flex;
+  height: 100%;
+  max-height: 60vh; /* Batasin tinggi gambar biar deskripsi tetep keliatan */
+}
+
+.slider img.active {
+  height: 100%;
+  width: 100%;
+  object-fit: cover; 
+  border-radius: 12px;
+}
