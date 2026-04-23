@@ -260,6 +260,9 @@ try {
 // ==========================================
 // RENDER POSTS KE GALLERY (FIXED VERSION)
 // ==========================================
+// ==========================================
+// RENDER POSTS KE GALLERY (WITH THREAD STYLE)
+// ==========================================
 posts.forEach((post) => {
   const card = document.createElement("div");
   card.className = "card post-fade-in";
@@ -273,16 +276,14 @@ posts.forEach((post) => {
   });
   const isOwner = currentUser && currentUser.id === post.creator_id;
 
-  // 2. Ambil Metadata Musik (Langsung dari baris Post)
+  // 2. Ambil Metadata Musik
   const musicTitle = post.title || 'Untitled';
   const musicArtist = post.artist || 'Unknown Artist';
 
-  // 3. Logika Render Music Marquee (SMART AUDIO FIX)
-  // 3. Logika Render Music Marquee (ULTIMATE FIX - NO DOWNLOAD)
+  // 3. Logika Render Music Marquee
   const musicHtml = post.audio_src ? (() => {
     let cleanAudio = (post.audio_src || "").trim();
 
-    // 🔥 JURUS PILIH KASIH: Cuma Cloudinary yang diproses f_mp3
     if (cleanAudio.includes('res.cloudinary.com')) {
       if (cleanAudio.includes('/video/upload/')) {
         cleanAudio = cleanAudio.replace('/video/upload/', '/video/upload/f_mp3/');
@@ -293,7 +294,6 @@ posts.forEach((post) => {
       ? cleanAudio
       : `/songs/${cleanAudio}`;
 
-    // Tentukan MIME type yang lebih spesifik buat Chrome HP
     const isM4A = finalAudio.includes('.m4a');
     const mimeType = isM4A ? 'audio/mp4' : 'audio/mpeg';
 
@@ -302,15 +302,7 @@ posts.forEach((post) => {
         <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
           ${musicTitle} — ${musicArtist}
         </div>
-        
-        <audio 
-          class="post-audio-element" 
-          loop 
-          preload="metadata" 
-          playsinline 
-          webkit-playsinline
-          style="display:none;"
-        >
+        <audio class="post-audio-element" loop preload="metadata" playsinline webkit-playsinline style="display:none;">
           <source src="${finalAudio}" type="${mimeType}">
           Your browser does not support audio.
         </audio>
@@ -318,16 +310,39 @@ posts.forEach((post) => {
     `;
   })() : '';
 
-  // 4. Masukkan ke dalam DOM Card
+  // 🔥 4. DETEKSI POSTINGAN: Punya gambar atau Teks doang (Thread)?
+  const hasImage = post.image_url && post.image_url.trim() !== "";
+
+  let mediaSection = '';
+  if (hasImage) {
+      // MODE 1: Ada Fotonya (Kaya IG)
+      mediaSection = `
+        <div class="slider" style="position: relative;">
+          ${musicHtml}
+          <img src="${post.image_url}" class="active" loading="lazy" alt="${post.title || 'Post Image'}">
+          <div class="watermark-overlay"><img src="/asets/svg/watermark.svg"></div>
+        </div>
+      `;
+  } else if (post.audio_src) {
+      // MODE 2: Teks doang TAPI pake lagu (Bikinin wadah header kecil buat lagunya)
+      mediaSection = `
+        <div style="position: relative; height: 45px; background: var(--bg-main); border-bottom: 1px solid var(--border-card);">
+           ${musicHtml}
+        </div>
+      `;
+  }
+
+  // 🔥 5. STYLING CAPTION (Beda mode beda ukuran)
+  const textDisplay = hasImage
+      ? `<p class="post-bio" style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${post.bio || ""}</p>`
+      : `<p class="post-bio" style="font-size: 15px; color: var(--text-main); margin-bottom: 15px; line-height: 1.6; white-space: pre-wrap;">${post.bio || ""}</p>`;
+
+  // 6. Masukkan ke dalam DOM Card
   card.innerHTML = `
-    <div class="slider" style="position: relative;">
-      ${musicHtml}
-      <img src="${post.image_url || "/asets/png/karya.png"}" class="active" loading="lazy" alt="${post.title}">
-      <div class="watermark-overlay"><img src="/asets/svg/watermark.svg"></div>
-    </div>
+    ${mediaSection}
     
-    <div class="overlay">
-      <div style="display: flex; align-items: center; margin-bottom: 6px; width: 100%;">
+    <div class="overlay" style="${!hasImage ? 'padding-top: 20px;' : ''}">
+      <div style="display: flex; align-items: center; margin-bottom: 10px; width: 100%;">
         <h2 class="name" onclick="window.location.href='/data?id=${post.creator_id}'" style="cursor:pointer; display:flex; align-items:center; margin: 0; font-size: 14px;">
           ${post.profiles?.username || "User"} ${badge} 
         </h2>
@@ -336,9 +351,7 @@ posts.forEach((post) => {
         </button>
       </div>
 
-      <p class="post-bio" style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-        ${post.bio || ""}
-      </p>
+      ${textDisplay}
 
       <div class="post-date-wrapper" style="margin-bottom: 12px;">
         <span style="font-size: 10px; color: var(--text-muted); opacity: 0.8;">Diunggah ${formattedDate}</span>
@@ -740,8 +753,14 @@ async function handlePostSubmit(e) {
   e.preventDefault();
   const btn = document.getElementById("submitPostBtn");
   const selectedTitle = document.getElementById("selectedMusicTitle"); 
+  
+  // 🔥 AMBIL ISI TEKS CAPTION
+  const captionValue = document.getElementById("postCaption").value.trim();
 
-  if (!selectedPostFile) return showNotif("Pilih foto dulu", "warning");
+  // 🔥 VALIDASI BARU: Bisa teks doang, gambar doang, atau dua-duanya!
+  if (!selectedPostFile && !captionValue) {
+    return showNotif("Tulis sesuatu atau pilih foto dulu bro!", "warning");
+  }
   
   btn.disabled = true; 
   btn.textContent = "Mengirim...";
@@ -750,21 +769,22 @@ async function handlePostSubmit(e) {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) return openLogin();
 
-    // 1. AMBIL USERNAME LANGSUNG DARI TABEL PROFILES
-    // Kita tembak kolom 'username' karena itu nama kolom di DB lu
     const { data: profileData } = await supabaseClient
       .from("profiles")
       .select("username") 
       .eq("id", session.user.id)
       .single();
 
-    // Simpan ke variabel, kalau ga ketemu baru User
     const uploaderName = profileData?.username || "User"; 
 
-    // 2. Upload Gambar ke Cloudinary
-    const cData = await uploadImageToCloudinary(selectedPostFile);
+    // 🔥 LOGIKA GAMBAR BARU: Upload hanya kalau user milih gambar
+    let imageUrl = null;
+    if (selectedPostFile) {
+      const cData = await uploadImageToCloudinary(selectedPostFile);
+      imageUrl = cData.secure_url;
+    }
     
-    // 3. Olah Logika Musik
+    // Olah Logika Musik
     let finalTitle = null;
     let finalArtist = null;
     let finalAudioSrc = null;
@@ -777,14 +797,13 @@ async function handlePostSubmit(e) {
       finalArtist = musicParts[1]?.trim() || "Unknown Artist";
     }
 
-    // 4. Simpan ke Tabel 'posts'
-    // Kolom 'name' di tabel posts akan terisi dengan 'uploaderName' (Username asli)
+    // Simpan ke Tabel 'posts'
     const { error } = await supabaseClient.from("posts").insert({ 
         creator_id: session.user.id, 
-        name: uploaderName,       // 🔥 FIX: Sekarang data username masuk ke sini
-        bio: document.getElementById("postCaption").value || "", 
+        name: uploaderName,       
+        bio: captionValue, // Pakai value yang udah di-trim
         category: document.getElementById("postCategory").value || "Umum", 
-        image_url: cData.secure_url, 
+        image_url: imageUrl, // 🔥 Bisa berisi link, bisa null kalau teks doang
         audio_src: finalAudioSrc, 
         title: finalTitle,        
         artist: finalArtist,      
@@ -795,7 +814,7 @@ async function handlePostSubmit(e) {
 
     showNotif("Karya dikirim! Admin bisa liat nama lu sekarang 🔥", "success");
     
-    // 5. Tutup Modal & Reset Form
+    // Tutup Modal & Reset Form
     document.getElementById("postModal").classList.remove("active");
     e.target.reset();
     
