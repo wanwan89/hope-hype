@@ -258,18 +258,16 @@ try {
     if (commentsRes.data) commentsRes.data.forEach(c => { if(commentCounts[c.post_id] !== undefined) commentCounts[c.post_id]++; });
 
 // ==========================================
-// RENDER POSTS KE GALLERY (FIXED VERSION)
-// ==========================================
-// ==========================================
-// RENDER POSTS KE GALLERY (WITH THREAD STYLE)
+// RENDER POSTS KE GALLERY (ULTIMATE THREAD STYLE)
 // ==========================================
 posts.forEach((post) => {
   const card = document.createElement("div");
   card.className = "card post-fade-in";
   
-  // 1. Ambil State User & Badge
+  // 1. Ambil State User & Badge & Avatar (Tambahan buat Thread)
   const userRole = (post.profiles?.role || "user").toLowerCase().trim();
   const badge = getUserBadge(userRole);
+  const avatarUrl = post.profiles?.avatar_url || "https://via.placeholder.com/40";
   const formattedDate = new Date(post.created_at).toLocaleDateString("id-ID", { 
     day: "numeric", 
     month: "short" 
@@ -283,99 +281,114 @@ posts.forEach((post) => {
   // 3. Logika Render Music Marquee
   const musicHtml = post.audio_src ? (() => {
     let cleanAudio = (post.audio_src || "").trim();
-
-    if (cleanAudio.includes('res.cloudinary.com')) {
-      if (cleanAudio.includes('/video/upload/')) {
+    if (cleanAudio.includes('res.cloudinary.com') && cleanAudio.includes('/video/upload/')) {
         cleanAudio = cleanAudio.replace('/video/upload/', '/video/upload/f_mp3/');
-      }
     }
-
-    const finalAudio = cleanAudio.startsWith("http")
-      ? cleanAudio
-      : `/songs/${cleanAudio}`;
-
-    const isM4A = finalAudio.includes('.m4a');
-    const mimeType = isM4A ? 'audio/mp4' : 'audio/mpeg';
+    const finalAudio = cleanAudio.startsWith("http") ? cleanAudio : `/songs/${cleanAudio}`;
+    const mimeType = finalAudio.includes('.m4a') ? 'audio/mp4' : 'audio/mpeg';
 
     return `
-      <div class="music-marquee-container" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; backdrop-filter: blur(5px); max-width: 140px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none;">
+      <div class="music-marquee-container" style="background: rgba(0,0,0,0.5); color: white; border-radius: 20px; padding: 5px 15px; z-index: 10; max-width: 150px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); pointer-events: none; margin-bottom: 10px;">
         <div class="marquee-text" style="font-size: 10px; font-weight: 700; white-space: nowrap; display: inline-block; animation: marquee-play 8s linear infinite; letter-spacing: 0.3px;">
-          ${musicTitle} — ${musicArtist}
+          🎵 ${musicTitle} — ${musicArtist}
         </div>
         <audio class="post-audio-element" loop preload="metadata" playsinline webkit-playsinline style="display:none;">
           <source src="${finalAudio}" type="${mimeType}">
-          Your browser does not support audio.
         </audio>
       </div>
     `;
   })() : '';
 
-  // 🔥 4. DETEKSI POSTINGAN: Punya gambar atau Teks doang (Thread)?
+  // 🔥 4. KUMPULAN TOMBOL AKSI (Disimpan dalam variabel biar gampang dipake 2x)
+  const engagementButtons = `
+    <button class="icon-btn gift-btn" data-post="${post.id}" data-creator="${post.creator_id}" data-name="${post.profiles?.username}">
+      <svg viewBox="0 0 24 24" class="icon" width="20" height="20" fill="currentColor"><path d="M20 7h-2.18A3 3 0 0 0 12 3a3 3 0 0 0-5.82 4H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1Zm-8-2a1 1 0 0 1 1 1v1h-2V6a1 1 0 0 1 1-1Zm-4 1a1 1 0 0 1 2 0v1H8a1 1 0 0 1 0-2Zm9 13h-4v-7h4Zm-6 0H7v-7h4Zm8-9H5V9h14Z"/></svg>
+    </button>
+    <button class="icon-btn like-btn" data-post="${post.id}" data-creator="${post.creator_id}">
+      <svg viewBox="0 0 24 24" class="icon heart" width="20" height="20" fill="currentColor"><path d="M12.1 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 9.24 3 10.91 3.81 12 5.09 13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 22 12.28 18.6 15.36 13.55 20.04z"/></svg>
+      <span class="like-count" style="font-size:12px; margin-left:4px;">${likeCounts[post.id] || 0}</span>
+    </button>
+    <button class="icon-btn comment-toggle" data-post="${post.id}" data-creator="${post.creator_id}">
+      <svg viewBox="0 0 24 24" class="icon" width="20" height="20" fill="currentColor"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+      <span class="comment-count" style="font-size:12px; margin-left:4px;">${commentCounts[post.id] || 0}</span>
+    </button>
+  `;
+
+  // 🔥 5. DETEKSI & RENDER DESAIN
   const hasImage = post.image_url && post.image_url.trim() !== "";
 
-  let mediaSection = '';
   if (hasImage) {
-      // MODE 1: Ada Fotonya (Kaya IG)
-      mediaSection = `
+      // ==========================================
+      // DESAIN 1: KARYA GAMBAR (STYLE IG LAMA LU)
+      // ==========================================
+      card.innerHTML = `
         <div class="slider" style="position: relative;">
-          ${musicHtml}
-          <img src="${post.image_url}" class="active" loading="lazy" alt="${post.title || 'Post Image'}">
+          <div style="position: absolute; top: 12px; right: 12px;">${musicHtml}</div>
+          <img src="${post.image_url}" class="active" loading="lazy" alt="${post.title}">
           <div class="watermark-overlay"><img src="/asets/svg/watermark.svg"></div>
         </div>
-      `;
-  } else if (post.audio_src) {
-      // MODE 2: Teks doang TAPI pake lagu (Bikinin wadah header kecil buat lagunya)
-      mediaSection = `
-        <div style="position: relative; height: 45px; background: var(--bg-main); border-bottom: 1px solid var(--border-card);">
-           ${musicHtml}
+        
+        <div class="overlay">
+          <div style="display: flex; align-items: center; margin-bottom: 6px; width: 100%;">
+            <h2 class="name" onclick="window.location.href='/data?id=${post.creator_id}'" style="cursor:pointer; display:flex; align-items:center; margin: 0; font-size: 14px;">
+              ${post.profiles?.username || "User"} ${badge} 
+            </h2>
+            <button class="options-btn" onclick="openPostOptions('${post.id}', ${isOwner}, '${post.creator_id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px 0 4px 10px; margin-left: auto;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            </button>
+          </div>
+
+          <p class="post-bio" style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+            ${post.bio || ""}
+          </p>
+
+          <div class="post-date-wrapper" style="margin-bottom: 12px;">
+            <span style="font-size: 10px; color: var(--text-muted); opacity: 0.8;">Diunggah ${formattedDate}</span>
+          </div>
+
+          <div class="actions">
+            <a href="/data?id=${post.creator_id}" class="primary">Detail</a>
+            <div class="engagement-group" style="display: flex; gap: 10px; align-items: center;">
+               ${engagementButtons}
+            </div>
+          </div>
+        </div>`;
+  } else {
+      // ==========================================
+      // DESAIN 2: THREADS MURNI (STYLE TWITTER/THREADS)
+      // ==========================================
+      card.style.padding = "16px"; // Bikin card lebih enak dilihat
+      
+      card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+          <div style="display: flex; gap: 12px; cursor: pointer;" onclick="window.location.href='/data?id=${post.creator_id}'">
+            <img src="${avatarUrl}" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; flex-direction: column; justify-content: center;">
+              <div style="display: flex; align-items: center; gap: 4px; font-weight: 700; font-size: 15px; color: var(--text-main);">
+                ${post.profiles?.username || "User"} ${badge}
+              </div>
+              <span style="font-size: 11px; color: var(--text-muted);">${formattedDate}</span>
+            </div>
+          </div>
+          <button onclick="openPostOptions('${post.id}', ${isOwner}, '${post.creator_id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; height: fit-content; padding: 4px;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          </button>
+        </div>
+
+        <div style="font-size: 15px; color: var(--text-main); line-height: 1.5; white-space: pre-wrap; margin-bottom: 12px; padding-left: 2px;">
+          ${post.bio || ""}
+        </div>
+
+        ${post.audio_src ? `<div style="margin-top: 10px;">${musicHtml}</div>` : ''}
+
+        <div style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 16px; padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <a href="/data?id=${post.creator_id}" style="font-size: 13px; color: var(--text-muted); text-decoration: none; font-weight: 600;">Lihat Profil</a>
+          <div class="engagement-group" style="display: flex; gap: 15px; align-items: center; color: var(--text-muted);">
+            ${engagementButtons}
+          </div>
         </div>
       `;
   }
-
-  // 🔥 5. STYLING CAPTION (Beda mode beda ukuran)
-  const textDisplay = hasImage
-      ? `<p class="post-bio" style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${post.bio || ""}</p>`
-      : `<p class="post-bio" style="font-size: 15px; color: var(--text-main); margin-bottom: 15px; line-height: 1.6; white-space: pre-wrap;">${post.bio || ""}</p>`;
-
-  // 6. Masukkan ke dalam DOM Card
-  card.innerHTML = `
-    ${mediaSection}
-    
-    <div class="overlay" style="${!hasImage ? 'padding-top: 20px;' : ''}">
-      <div style="display: flex; align-items: center; margin-bottom: 10px; width: 100%;">
-        <h2 class="name" onclick="window.location.href='/data?id=${post.creator_id}'" style="cursor:pointer; display:flex; align-items:center; margin: 0; font-size: 14px;">
-          ${post.profiles?.username || "User"} ${badge} 
-        </h2>
-        <button class="options-btn" onclick="openPostOptions('${post.id}', ${isOwner}, '${post.creator_id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px 0 4px 10px; margin-left: auto; display: flex; align-items: center;">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-        </button>
-      </div>
-
-      ${textDisplay}
-
-      <div class="post-date-wrapper" style="margin-bottom: 12px;">
-        <span style="font-size: 10px; color: var(--text-muted); opacity: 0.8;">Diunggah ${formattedDate}</span>
-      </div>
-
-      <div class="actions">
-        <a href="/data?id=${post.creator_id}" class="primary">Detail</a>
-        <div class="engagement-group" style="display: flex; gap: 10px; align-items: center;">
-           <button class="icon-btn gift-btn" data-post="${post.id}" data-creator="${post.creator_id}" data-name="${post.profiles?.username}">
-             <svg viewBox="0 0 24 24" class="icon"><path d="M20 7h-2.18A3 3 0 0 0 12 3a3 3 0 0 0-5.82 4H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1Zm-8-2a1 1 0 0 1 1 1v1h-2V6a1 1 0 0 1 1-1Zm-4 1a1 1 0 0 1 2 0v1H8a1 1 0 0 1 0-2Zm9 13h-4v-7h4Zm-6 0H7v-7h4Zm8-9H5V9h14Z"/></svg>
-           </button>
-           
-           <button class="icon-btn like-btn" data-post="${post.id}" data-creator="${post.creator_id}">
-             <svg viewBox="0 0 24 24" class="icon heart"><path d="M12.1 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 9.24 3 10.91 3.81 12 5.09 13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 22 12.28 18.6 15.36 13.55 20.04z"/></svg>
-             <span class="like-count">${likeCounts[post.id] || 0}</span>
-           </button>
-           
-           <button class="icon-btn comment-toggle" data-post="${post.id}" data-creator="${post.creator_id}">
-             <svg viewBox="0 0 24 24" class="icon"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
-             <span class="comment-count">${commentCounts[post.id] || 0}</span>
-           </button>
-        </div>
-      </div>
-    </div>`;
 
   gallery.appendChild(card);
 });
