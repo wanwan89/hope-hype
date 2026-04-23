@@ -21,8 +21,14 @@ const { id } = Astro.params;
       <div class="story-user">
         <img id="storyAvatar" src="https://ui-avatars.com/api/?name=..." class="s-avatar" />
         <div class="user-meta">
-          <span id="storyUser">Memuat...</span>
-          <span id="storyTime" class="story-time"></span>
+          <div class="user-meta-top">
+            <span id="storyUser">Memuat...</span>
+            <span id="storyTime" class="story-time"></span>
+          </div>
+          <div id="musicTag" class="music-tag" style="display:none;">
+            <span class="material-icons" style="font-size:12px; color: white;">music_note</span>
+            <marquee id="musicTitle" scrollamount="3" class="marquee-text"></marquee>
+          </div>
         </div>
       </div>
       <button class="close-story" onclick="history.back()">×</button>
@@ -30,28 +36,22 @@ const { id } = Astro.params;
 
     <div class="story-display">
       <div id="loader" class="loader"></div>
-      
-      <div id="musicTag" class="music-tag" style="display:none;">
-        <span class="material-icons" style="font-size:14px; color: white;">music_note</span>
-        <marquee id="musicTitle" scrollamount="3" class="marquee-text"></marquee>
-      </div>
-
       <img id="storyImage" src="" class="s-img" style="display:none;" draggable="false" />
       <div id="storyTextOnly" class="s-text" style="display:none;"></div>
     </div>
 
     <div class="story-bottom-info">
       <div class="footer-layout">
-        <div class="story-actions-left">
+        <div class="caption-container">
+          <p id="storyCaption" class="story-caption"></p>
+        </div>
+        
+        <div class="story-actions-right">
           <button id="likeStoryBtn" class="story-like-btn">
             <svg viewBox="0 0 24 24" id="heartIcon" class="heart-svg">
               <path d="M12.1 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 9.24 3 10.91 3.81 12 5.09 13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 22 12.28 18.6 15.36 13.55 20.04z"/>
             </svg>
           </button>
-        </div>
-
-        <div class="caption-container">
-          <p id="storyCaption" class="story-caption"></p>
         </div>
       </div>
     </div>
@@ -69,17 +69,15 @@ const { id } = Astro.params;
     let currentIndex = 0;
     let timer = null;
     let currentUserId = null;
-    const STORY_DURATION = 7000; // 7 Detik
+    const STORY_DURATION = 7000; 
 
     async function initMultiStory() {
       const { data: { session } } = await supabase.auth.getSession();
       currentUserId = session?.user?.id;
 
-      // Ambil creator dari ID story awal
       const { data: initStory } = await supabase.from('stories').select('creator_id').eq('id', storyId).single();
       if (!initStory) return history.back();
 
-      // Ambil semua story user tersebut (24 jam terakhir)
       const timeLimit = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { data: stories } = await supabase
         .from('stories')
@@ -109,22 +107,27 @@ const { id } = Astro.params;
       });
     }
 
+    // 🔥 FIX 2: LOGIKA PROGRESS BAR SUPER STABIL
     function updateProgressBars() {
       allUserStories.forEach((_, index) => {
         const bar = document.getElementById(`bar-${index}`);
         if (!bar) return;
 
-        // Reset total
-        bar.style.animation = 'none';
+        // Bersihkan style inline biar balik ke CSS bawaan
+        bar.style.transition = 'none'; 
         bar.style.transform = 'scaleX(0)';
-        
+
         if (index < currentIndex) {
-          // Sudah lewat: penuh
+          // Bar yang udah lewat langsung full
           bar.style.transform = 'scaleX(1)';
         } else if (index === currentIndex) {
-          // Sedang jalan: animasikan
-          void bar.offsetWidth; // Force Reflow (PENTING BIAR ANIMASI JALAN)
-          bar.style.animation = `progressLinear ${STORY_DURATION/1000}s linear forwards`;
+          // Bar yang lagi jalan, pake trik requestAnimationFrame
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              bar.style.transition = `transform ${STORY_DURATION}ms linear`;
+              bar.style.transform = 'scaleX(1)';
+            });
+          });
         }
       });
     }
@@ -146,7 +149,9 @@ const { id } = Astro.params;
       
       const createdDate = new Date(story.created_at);
       document.getElementById('storyTime').innerText = createdDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-      document.getElementById('storyCaption').innerText = story.content || "";
+      
+      const captionText = story.content ? story.content.trim() : "";
+      document.getElementById('storyCaption').innerText = captionText;
 
       if (story.image_url) {
         imgEl.src = story.image_url;
@@ -154,11 +159,10 @@ const { id } = Astro.params;
         imgEl.onload = () => loader.style.display = 'none';
       } else {
         loader.style.display = 'none';
-        txtEl.innerText = story.content;
+        txtEl.innerText = captionText;
         txtEl.style.display = 'flex';
       }
 
-      // Logic Audio & Music Tag
       if (story.audio_src) {
         audio.src = story.audio_src;
         audio.load();
@@ -168,7 +172,6 @@ const { id } = Astro.params;
             document.getElementById('musicTitle').innerText = `${story.title || 'Untitled'} - ${story.artist || 'Unknown'}`;
           })
           .catch(() => {
-            // Jika autoplay diblokir browser, tampilkan tag tapi minta klik
             musicTag.style.display = 'flex';
             document.getElementById('musicTitle').innerText = "Ketuk untuk suara...";
           });
@@ -215,11 +218,9 @@ const { id } = Astro.params;
       if (data) heart.classList.add('liked');
     }
 
-    // Listener Ketuk Layar
     document.getElementById('btnSkip').onclick = () => nextStory();
     document.getElementById('btnBack').onclick = () => prevStory();
 
-    // Listener Like
     document.getElementById('likeStoryBtn').onclick = async (e) => {
       e.stopPropagation();
       if (!currentUserId) return alert("Login dulu bro!");
@@ -245,7 +246,6 @@ const { id } = Astro.params;
     position: fixed; inset: 0; background: #000;
     display: flex; flex-direction: column; z-index: 10000;
     color: white; font-family: 'Poppins', sans-serif; overflow: hidden;
-    /* FIX BUG 2: Ilangin warna biru pas klik area di HP */
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -253,11 +253,10 @@ const { id } = Astro.params;
   .tap-left { width: 35%; height: 100%; }
   .tap-right { width: 65%; height: 100%; }
 
-  /* FIX BUG 4: Progress Bar Tersegmentasi (Kayak IG) */
   .story-progress-container { 
     padding: 15px 10px 5px; 
     display: flex; 
-    gap: 4px; /* Jarak antar bar */
+    gap: 4px; 
     z-index: 10005; 
   }
   .bar-wrap {
@@ -267,6 +266,7 @@ const { id } = Astro.params;
     border-radius: 10px;
     overflow: hidden;
   }
+  /* 🔥 FIX 2: Animasi Pake CSS Transition (Lebih mulus dari Keyframes) */
   .bar-inner {
     height: 100%;
     width: 100%;
@@ -274,35 +274,38 @@ const { id } = Astro.params;
     transform: scaleX(0);
     transform-origin: left;
   }
-  @keyframes progressLinear { 
-    from { transform: scaleX(0); } 
-    to { transform: scaleX(1); } 
+
+  .story-top-info { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 15px; z-index: 10005; }
+  .story-user { display: flex; align-items: flex-start; gap: 12px; }
+  .s-avatar { width: 42px; height: 42px; border-radius: 50%; border: 2px solid #fff; object-fit: cover; }
+  .user-meta { display: flex; flex-direction: column; gap: 4px; }
+  .user-meta-top { display: flex; align-items: center; gap: 8px;}
+  #storyUser { font-weight: 700; font-size: 14px; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+  .story-time { font-size: 11px; opacity: 0.8; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+  .close-story { background: none; border: none; color: white; font-size: 35px; cursor: pointer; z-index: 10008; line-height: 1; margin-top: -5px;}
+
+  /* 🔥 FIX 1: Tag Musik Makin Ramping Ala IG */
+  .music-tag {
+    background: rgba(0,0,0,0.4); padding: 4px 10px;
+    border-radius: 20px; display: flex; align-items: center; gap: 6px;
+    max-width: 180px; overflow: hidden; backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.1);
   }
+  #musicTitle { font-size: 11px; font-weight: 600; width: 100%; color: white; }
 
-  /* TOP INFO */
-  .story-top-info { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; z-index: 10005; }
-  .story-user { display: flex; align-items: center; gap: 12px; }
-  .s-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; object-fit: cover; }
-  .user-meta { display: flex; flex-direction: column; }
-  #storyUser { font-weight: 700; font-size: 14px; }
-  .story-time { font-size: 11px; opacity: 0.6; }
-  .close-story { background: none; border: none; color: white; font-size: 35px; cursor: pointer; z-index: 10008; }
-
-  /* CONTENT DISPLAY */
   .story-display { 
     flex: 1; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
     position: relative; 
-    overflow: hidden; /* FIX BUG 5: Cegah gambar tinggi nembus layout */
+    overflow: hidden; 
   }
   .s-img { 
     max-width: 100%; 
     max-height: 100%; 
-    object-fit: contain; /* Biar foto asli tetep utuh */
+    object-fit: contain; 
   }
-  /* FIX BUG 1: Teks Center Vertikal & Horizontal */
   .s-text { 
     width: 100%; height: 100%;
     padding: 40px; 
@@ -314,28 +317,41 @@ const { id } = Astro.params;
     justify-content: center;
   }
 
-  .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #fff; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; }
+  .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #fff; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; position: absolute; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* FIX BUG 3: Icon musik Material Design */
-  .music-tag {
-    position: absolute; bottom: 20px; left: 20px;
-    background: rgba(0,0,0,0.6); padding: 6px 12px;
-    border-radius: 20px; display: flex; align-items: center; gap: 8px;
-    max-width: 220px; border: 1px solid rgba(255,255,255,0.2);
-    z-index: 10006;
-  }
-  #musicTitle { font-size: 11px; font-weight: 600; width: 160px; color: white; }
-
-  /* FOOTER */
   .story-bottom-info {
-    padding: 30px 20px; 
-    background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+    padding: 30px 20px 20px; 
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
     z-index: 10005;
   }
-  .footer-layout { display: flex; align-items: center; gap: 15px; }
-  .story-caption { font-size: 14px; text-align: left; opacity: 0.9; margin: 0; }
+  
+  /* 🔥 FIX 3: Layout Footer (Caption di Tengah, Tombol di Kanan) */
+  .footer-layout { 
+    display: flex; 
+    align-items: flex-end; 
+    justify-content: space-between; 
+    gap: 15px; 
+    width: 100%;
+  }
+  
+  .caption-container { 
+    flex: 1; 
+    display: flex;
+    justify-content: center; /* Nengahin porsi area caption */
+  }
+  
+  .story-caption { 
+    font-size: 14px; 
+    text-align: center; /* Nengahin teksnya beneran */
+    opacity: 0.95; 
+    margin: 0; 
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    font-weight: 500;
+  }
 
+  .story-actions-right { flex-shrink: 0; }
+  
   .story-like-btn { background: none; border: none; cursor: pointer; padding: 5px; z-index: 10008; }
   .heart-svg {
     width: 32px; height: 32px; fill: none; stroke: #fff; stroke-width: 2;
