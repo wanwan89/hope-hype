@@ -420,7 +420,6 @@ async function fetchStories() {
   const container = document.querySelector(".stories-container");
   if (!container) return;
 
-  // Cuma ambil story yang umurnya kurang dari 24 jam
   const timeLimit = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   try {
@@ -432,7 +431,6 @@ async function fetchStories() {
 
     if (error) throw error;
 
-    // Bersihkan container dari dummy
     container.innerHTML = "";
 
     if (!stories || stories.length === 0) {
@@ -440,35 +438,38 @@ async function fetchStories() {
       return;
     }
 
+    // 🔥 LOGIKA ANTI-DOUBLE: Satu User Satu Lingkaran 🔥
+    const seenUsers = new Set();
+
     stories.forEach(story => {
+      // Jika creator_id sudah ada di Set, kita skip (gak bakal didouble)
+      if (seenUsers.has(story.creator_id)) return;
+      seenUsers.add(story.creator_id);
+
       const item = document.createElement("div");
       item.className = "story-item";
       item.innerHTML = `
         <div class="story-circle unseen">
-          <img src="${story.profiles?.avatar_url || 'https://via.placeholder.com/60'}" alt="user">
+          <img src="${story.profiles?.avatar_url || 'https://ui-avatars.com/api/?name=' + story.profiles?.username}" alt="user">
         </div>
         <span>${story.profiles?.username || 'User'}</span>
       `;
       
-      // GANTI BAGIAN INI
-item.onclick = () => {
-  // Tambahin class seen biar user tau mereka udah klik yang ini
-  item.querySelector('.story-circle').classList.remove('unseen');
-  item.querySelector('.story-circle').classList.add('seen');
-  
-  // Baru pindah halaman
-  window.location.href = `/story/${story.id}`;
-};
-
+      item.onclick = () => {
+        // Efek visual biar kerasa udah diklik
+        item.querySelector('.story-circle').classList.remove('unseen');
+        item.querySelector('.story-circle').classList.add('seen');
+        
+        // Navigasi ke halaman viewer khusus
+        window.location.href = `/story/${story.id}`;
+      };
       
       container.appendChild(item);
-
     });
   } catch (err) {
     console.error("Fetch Story Error:", err);
   }
 }
-
 
 // =======================
 // GIFT SYSTEM

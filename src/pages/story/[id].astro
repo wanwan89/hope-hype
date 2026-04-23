@@ -81,7 +81,7 @@ const { id } = Astro.params;
           if(window.location.pathname.includes('/story/')) {
             history.back();
           }
-        }, 5000);
+        }, 30000);
       }
     }
 
@@ -111,7 +111,7 @@ const { id } = Astro.params;
     background: #fff;
     flex: 1;
     border-radius: 10px;
-    animation: progressLinear 5s linear forwards;
+    animation: progressLinear 30s linear forwards;
     transform-origin: left;
     box-shadow: 0 0 10px rgba(255,255,255,0.5);
   }
