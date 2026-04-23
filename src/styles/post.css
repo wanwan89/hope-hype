@@ -1416,8 +1416,9 @@ body{
 .post-preview-image {
   width: 100%;
   height: 100%;
-  max-height: 300px;
-  object-fit: cover;
+  max-height: 200px; /* Bikin mentok di 200px aja biar modal gak kepanjangan */
+  object-fit: contain; /* Biar foto utuh, gak kepotong */
+  background: #000; /* Kasih background item biar elegan kalau fotonya beda rasio */
   display: block;
 }
 
@@ -1496,10 +1497,15 @@ body{
     width: 100%;
     border-radius: 18px 18px 0 0;
     padding: 20px 16px;
+    
+    /* 🔥 TAMBAHAN BARU: Biar modalnya bisa di-scroll dan gak kepotong layar */
+    max-height: 90vh;
+    overflow-y: auto;
   }
 
   .post-upload-area {
-    min-height: 170px;
+    /* 🔥 FIX: Tadinya 170px, sekarang 100px biar cebol dan pas */
+    min-height: 100px; 
   }
 }
 
@@ -1914,38 +1920,4 @@ body{
     height: 20px;
   }
 }
-/* =========================================
-   🔥 SUPER FYP MODE (TIKTOK / REELS STYLE) 🔥
-   ========================================= */
-html {
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
-}
-
-.card {
-  scroll-snap-align: start;
-  min-height: 100vh;
-  margin-bottom: 0 !important;
-  border-radius: 0 !important;
-  border-left: none !important;
-  border-right: none !important;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-top: 80px; 
-  padding-bottom: 20px;
-}
-
-.slider {
-  flex: 1;
-  display: flex;
-  height: 100%;
-  max-height: 60vh; 
-}
-
-.slider img.active {
-  height: 100%;
-  width: 100%;
-  object-fit: cover; 
-  border-radius: 12px;
-}
+ 
