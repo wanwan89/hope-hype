@@ -1,27 +1,40 @@
 ---
+// Anggap saja 'stories' adalah data yang kamu tarik dari Supabase
+// const { data: stories } = await supabase.from('stories').select('*, profiles(username, avatar_url)');
+const stories = []; // Nanti variabel ini yang menampung data asli
 ---
-<div class="search-wrapper" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px;">
+
+<div class="search-wrapper">
   <div class="menu-toggle" id="mobileMenuBtn">
-    <span></span>
-    <span></span>
-    <span></span>
+    <span></span><span></span><span></span>
   </div>
 
-  <div class="brutal-input-container" style="flex: 1;">
+  <div class="brutal-input-container">
     <input
       type="text"
       id="searchCreator"
       placeholder="Cari kreator..."
       class="brutal-input"
-      style="width: 100%; padding: 8px 16px; border-radius: 20px; font-size: 13px; height: 38px; box-sizing: border-box; outline: none; border: none; background: #ececec;"
-      required
     />
   </div>
 
   <button id="openPostModalBtn" class="add-post-btn">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
   </button>
+</div>
+
+<div class="stories-container">
+  {stories.length > 0 ? (
+    stories.map((story) => (
+      <div class="story-item" data-id={story.id}>
+        <div class={`story-circle ${story.is_seen ? 'seen' : 'unseen'}`}>
+          <img src={story.profiles.avatar_url} alt={story.profiles.username} />
+        </div>
+        <span>{story.profiles.username}</span>
+      </div>
+    ))
+  ) : (
+    /* Tampilan kalau belum ada story sama sekali */
+    <p class="no-story">Belum ada cerita terbaru</p>
+  )}
 </div>

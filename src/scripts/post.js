@@ -140,9 +140,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const startApp = async () => {
     try {
       await getUser();
+      // 🔥 TAMBAHKAN INI: Biar story muncul duluan di atas feed
+      await fetchStories(); 
       await fetchPosts("all");
     } catch (err) {
-      fetchPosts("all");
+      await fetchStories(); 
+      await fetchPosts("all");
     }
 
     const safeInit = (name, fn) => {
@@ -412,6 +415,58 @@ posts.forEach((post) => {
     isFetchingPosts = false;
   }
 }
+
+async function fetchStories() {
+  const container = document.querySelector(".stories-container");
+  if (!container) return;
+
+  // Cuma ambil story yang umurnya kurang dari 24 jam
+  const timeLimit = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  try {
+    const { data: stories, error } = await supabaseClient
+      .from("stories")
+      .select("*, profiles(username, avatar_url)")
+      .gte("created_at", timeLimit)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    // Bersihkan container dari dummy
+    container.innerHTML = "";
+
+    if (!stories || stories.length === 0) {
+      container.innerHTML = '<p style="font-size:11px; color:var(--text-muted); padding:10px;">Belum ada cerita</p>';
+      return;
+    }
+
+    stories.forEach(story => {
+      const item = document.createElement("div");
+      item.className = "story-item";
+      item.innerHTML = `
+        <div class="story-circle unseen">
+          <img src="${story.profiles?.avatar_url || 'https://via.placeholder.com/60'}" alt="user">
+        </div>
+        <span>${story.profiles?.username || 'User'}</span>
+      `;
+      
+      // Klik story buat liat isinya (Bisa pake Modal lagi atau alert dulu)
+      item.onclick = () => {
+        if (story.image_url) {
+           // Contoh simpel: buka gambar di tab baru
+           window.open(story.image_url, '_blank');
+        } else {
+           showNotif(story.content, "info");
+        }
+      };
+      
+      container.appendChild(item);
+    });
+  } catch (err) {
+    console.error("Fetch Story Error:", err);
+  }
+}
+
 
 // =======================
 // GIFT SYSTEM
@@ -810,14 +865,15 @@ function setupCustomCategory() {
 async function handlePostSubmit(e) {
   e.preventDefault();
   const btn = document.getElementById("submitPostBtn");
-  const selectedTitle = document.getElementById("selectedMusicTitle"); 
-  
-  // 🔥 AMBIL ISI TEKS CAPTION
+  const selectedTitle = document.getElementById("selectedMusicTitle");
   const captionValue = document.getElementById("postCaption").value.trim();
+  
+  // 🔥 AMBIL VALUE TUJUAN: 'feed' atau 'story'
+  const destination = document.querySelector('input[name="postDestination"]:checked')?.value || 'feed';
 
-  // 🔥 VALIDASI BARU: Bisa teks doang, gambar doang, atau dua-duanya!
+  // VALIDASI
   if (!selectedPostFile && !captionValue) {
-    return showNotif("Tulis sesuatu atau pilih foto dulu bro!", "warning");
+    return showNotif("Isi konten atau pilih foto dulu bro!", "warning");
   }
   
   btn.disabled = true; 
@@ -835,44 +891,51 @@ async function handlePostSubmit(e) {
 
     const uploaderName = profileData?.username || "User"; 
 
-    // 🔥 LOGIKA GAMBAR BARU: Upload hanya kalau user milih gambar
+    // UPLOAD GAMBAR (Jika ada)
     let imageUrl = null;
     if (selectedPostFile) {
       const cData = await uploadImageToCloudinary(selectedPostFile);
       imageUrl = cData.secure_url;
     }
     
-    // Olah Logika Musik
-    let finalTitle = null;
-    let finalArtist = null;
-    let finalAudioSrc = null;
+    // TENTUKAN TABEL & DATA
+    if (destination === "story") {
+      // --- LOGIKA SIMPAN KE STORY ---
+      const { error } = await supabaseClient.from("stories").insert({
+        creator_id: session.user.id,
+        image_url: imageUrl,
+        content: captionValue // Story biasanya pake kolom 'content'
+      });
+      if (error) throw error;
+      showNotif("Cerita berhasil dibagikan! 🔥", "success");
 
-    if (selectedAudioUrl) {
-      finalAudioSrc = selectedAudioUrl;
-      const fullMusicText = selectedTitle ? selectedTitle.innerText : "";
-      const musicParts = fullMusicText.split(" — ");
-      finalTitle = musicParts[0]?.trim() || "Untitled";
-      finalArtist = musicParts[1]?.trim() || "Unknown Artist";
+    } else {
+      // --- LOGIKA SIMPAN KE POST UTAMA (FEED) ---
+      let finalTitle = null, finalArtist = null, finalAudioSrc = null;
+
+      if (selectedAudioUrl) {
+        finalAudioSrc = selectedAudioUrl;
+        const musicParts = selectedTitle ? selectedTitle.innerText.split(" — ") : [];
+        finalTitle = musicParts[0]?.trim() || "Untitled";
+        finalArtist = musicParts[1]?.trim() || "Unknown Artist";
+      }
+
+      const { error } = await supabaseClient.from("posts").insert({ 
+          creator_id: session.user.id, 
+          name: uploaderName,       
+          bio: captionValue, 
+          category: document.getElementById("postCategory").value || "Umum", 
+          image_url: imageUrl, 
+          audio_src: finalAudioSrc, 
+          title: finalTitle,        
+          artist: finalArtist,      
+          status: "pending" 
+      });
+      if (error) throw error;
+      showNotif("Karya dikirim ke review admin! 🔥", "success");
     }
 
-    // Simpan ke Tabel 'posts'
-    const { error } = await supabaseClient.from("posts").insert({ 
-        creator_id: session.user.id, 
-        name: uploaderName,       
-        bio: captionValue, // Pakai value yang udah di-trim
-        category: document.getElementById("postCategory").value || "Umum", 
-        image_url: imageUrl, // 🔥 Bisa berisi link, bisa null kalau teks doang
-        audio_src: finalAudioSrc, 
-        title: finalTitle,        
-        artist: finalArtist,      
-        status: "pending" 
-    });
-
-    if (error) throw error;
-
-    showNotif("Karya dikirim! Admin bisa liat nama lu sekarang 🔥", "success");
-    
-    // Tutup Modal & Reset Form
+    // RESET FORM & UI
     document.getElementById("postModal").classList.remove("active");
     e.target.reset();
     
@@ -881,14 +944,17 @@ async function handlePostSubmit(e) {
     selectedPostFile = null;
     if (selectedTitle) selectedTitle.innerText = "Pilih Musik (Opsional)...";
     document.getElementById("postPreviewImage").style.display = "none";
-    document.getElementById("postUploadPlaceholder").style.display = "block";
+    document.getElementById("postUploadPlaceholder").style.display = "flex";
+
+    // Refresh halaman atau fetch ulang data agar story/post baru muncul
+    setTimeout(() => location.reload(), 1000);
 
   } catch (err) { 
-    console.error("Post Error:", err);
-    showNotif("Gagal mengirim postingan: " + err.message, "error"); 
+    console.error("Submit Error:", err);
+    showNotif("Gagal: " + err.message, "error"); 
   } finally { 
     btn.disabled = false; 
-    btn.textContent = "Kirim ke Review"; 
+    btn.textContent = destination === "story" ? "Bagikan ke Cerita" : "Kirim ke Review"; 
   }
 }
 
