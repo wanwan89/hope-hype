@@ -1,5 +1,6 @@
 ---
-import { ViewTransitions } from 'astro:transitions'; // 🔥 Tambahin ini
+// FIX: Mengubah ViewTransitions menjadi ClientRouter sesuai standar Astro terbaru
+import { ClientRouter } from 'astro:transitions'; 
 
 interface Props {
   title: string;
@@ -8,10 +9,9 @@ interface Props {
 
 const { 
   title, 
-  description = "Hope Hype - Platform Komunitas Kreatif" 
+  description = "Hope Hype - Platform Komunitas Kreatif, Chat Global, dan Voice Room" 
 } = Astro.props;
 ---
-
 <!doctype html>
 <html lang="id">
 <head>
@@ -21,7 +21,7 @@ const {
   <title>{title}</title>
   <meta name="description" content={description} />
   
-<meta http-equiv="Content-Security-Policy" content="
+  <meta http-equiv="Content-Security-Policy" content="
     default-src 'self'; 
     script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://app.sandbox.midtrans.com https://www.gstatic.com https://www.youtube.com https://s.ytimg.com; 
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
@@ -31,7 +31,6 @@ const {
     frame-src 'self' https://www.youtube.com https://app.sandbox.midtrans.com;
     media-src 'self' blob: https://res.cloudinary.com https://audio-ssl.itunes.apple.com https://itunes.apple.com;
   ">
-
 
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/assets/png/book.png" />
@@ -69,14 +68,15 @@ const {
       });
     }
 
-    // 🔥 JURUS BARU: Blokir pop-up gambar (context menu) di Android Chrome 🔥
     document.addEventListener('contextmenu', function(e) {
       if (e.target.tagName === 'IMG') {
-        e.preventDefault(); // Batalkan menu bawaan browser!
+        e.preventDefault();
       }
     });
   </script>
- <ViewTransitions /> 
+
+  {/* Panggil komponen ClientRouter untuk transisi halaman yang smooth */}
+  <ClientRouter /> 
 </head>
 <body>
   <slot/>
