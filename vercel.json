@@ -1,7 +1,7 @@
 {
   "headers": [
     {
-      "source": "/(assets|asets|fonts|icons)/(.*)",
+      "source": "/(assets|asets|fonts|icons|png|webp|svg)/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -10,7 +10,7 @@
       ]
     },
     {
-      "source": "/manifest.json",
+      "source": "/(service-worker.js|firebase-messaging-sw.js|manifest.json)",
       "headers": [
         {
           "key": "Cache-Control",
