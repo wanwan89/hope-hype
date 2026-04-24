@@ -21,6 +21,13 @@ const {
   <title>{title}</title>
   <meta name="description" content={description} />
   
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://app.sandbox.midtrans.com" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap" rel="stylesheet" />
+  
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self'; 
     script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://app.sandbox.midtrans.com https://www.gstatic.com https://www.youtube.com https://s.ytimg.com; 
@@ -36,38 +43,27 @@ const {
   <link rel="apple-touch-icon" href="/assets/png/book.png" />
   <link rel="icon" type="image/png" href="/assets/png/book.png" />
   
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" />
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-  
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" media="print" onload="this.media='all'" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" media="print" onload="this.media='all'" />
-  
-  <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-  </noscript>
-  
-  <script defer is:inline src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-G2wOVrrTwcffYhkC"></script>
   <script defer is:inline src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script defer is:inline src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+  
   <script defer is:inline src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
   <script is:inline>
+    // Inisialisasi PWA Prompt
     window.pwaPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       window.pwaPrompt = e;
     });
     
+    // Daftarin Service Worker (Satpam Background)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js').catch(err => console.error(err));
       });
     }
 
+    // Matiin klik kanan di gambar (anti-copas)
     document.addEventListener('contextmenu', function(e) {
       if (e.target.tagName === 'IMG') {
         e.preventDefault();
