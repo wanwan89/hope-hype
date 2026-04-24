@@ -3,17 +3,41 @@
 ---
 <div class="contact-wrapper">
   <input type="checkbox" id="contact-toggle" style="display: none;">
-<label for="contact-toggle" class="contact-text" aria-label="Buka Hubungi Kami">Contact us</label>
+  <label for="contact-toggle" class="contact-text" aria-label="Buka Hubungi Kami">Contact us</label>
 
   <div class="social-icons-container">
-    <a href="https://www.tiktok.com/@hopehypeoffcial" target="_blank" rel="noopener noreferrer">
-      <img src="/asets/png/tiktok.webp" width="24" height="24" class="social-icon" alt="TikTok">
+    <a href="https://www.tiktok.com/@hopehypeoffcial" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+      <img 
+        src="/asets/png/tiktok.webp" 
+        width="24" 
+        height="24" 
+        class="social-icon" 
+        alt="TikTok" 
+        decoding="async" 
+        loading="lazy"
+      >
     </a>
-    <a href="https://www.instagram.com/hopehypeofficial" target="_blank" rel="noopener noreferrer">
-      <img src="/asets/png/instagram.webp" width="24" height="24" alt="Instagram" class="social-icon">
+    <a href="https://www.instagram.com/hopehypeofficial" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+      <img 
+        src="/asets/png/instagram.webp" 
+        width="24" 
+        height="24" 
+        alt="Instagram" 
+        class="social-icon" 
+        decoding="async" 
+        loading="lazy"
+      >
     </a>
-    <a href="mailto:hopeofficial2811@gmail.com">
-      <img src="/asets/png/mail.webp" width="24" height="24" alt="Email" class="social-icon">
+    <a href="mailto:hopeofficial2811@gmail.com" aria-label="Email">
+      <img 
+        src="/asets/png/mail.webp" 
+        width="24" 
+        height="24" 
+        alt="Email" 
+        class="social-icon" 
+        decoding="async" 
+        loading="lazy"
+      >
     </a>
   </div>
 </div>
@@ -42,6 +66,8 @@
   cursor: pointer; 
   box-shadow: 2px 4px 6px var(--shadow-color); 
   transition: all 0.3s ease; 
+  /* Tambahan dikit biar UX mobile mantap */
+  -webkit-tap-highlight-color: transparent;
 }
 
 :root.dark .contact-text { 
@@ -61,6 +87,8 @@
 
 .social-icon {
   transition: transform 0.2s ease;
+  /* Tambahan biar rendering gambar kecil tetep tajem */
+  image-rendering: -webkit-optimize-contrast;
 }
 
 .social-icon:hover {
