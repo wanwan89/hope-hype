@@ -1,9 +1,6 @@
 ---
-// Anggap saja 'stories' adalah data yang kamu tarik dari Supabase
-// const { data: stories } = await supabase.from('stories').select('*, profiles(username, avatar_url)');
-const stories = []; // Nanti variabel ini yang menampung data asli
+// SearchWrapperpost.astro
 ---
-
 <div class="search-wrapper">
   <div class="menu-toggle" id="mobileMenuBtn">
     <span></span><span></span><span></span>
@@ -15,26 +12,274 @@ const stories = []; // Nanti variabel ini yang menampung data asli
       id="searchCreator"
       placeholder="Cari kreator..."
       class="brutal-input"
+      autocomplete="off"
     />
   </div>
 
-  <button id="openPostModalBtn" class="add-post-btn">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+  <button id="openPostModalBtn" class="add-post-btn" aria-label="Tambah Postingan">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
   </button>
 </div>
 
-<div class="stories-container">
-  {stories.length > 0 ? (
-    stories.map((story) => (
-      <div class="story-item" data-id={story.id}>
-        <div class={`story-circle ${story.is_seen ? 'seen' : 'unseen'}`}>
-          <img src={story.profiles.avatar_url} alt={story.profiles.username} />
-        </div>
-        <span>{story.profiles.username}</span>
-      </div>
-    ))
-  ) : (
-    /* Tampilan kalau belum ada story sama sekali */
-    <p class="no-story">Belum ada cerita terbaru</p>
-  )}
+<div class="stories-container" id="storiesContainer">
+  <p class="no-story" style="font-size: 11px; color: var(--text-muted);">Memuat cerita...</p>
 </div>
+
+
+<style>
+  /* =========================================
+     CSS SCOPED: KHUSUS HEADER & SEARCH
+     ========================================= */
+  .search-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center; 
+    gap: 15px; 
+    background: var(--bg-main); 
+  }
+
+  .brutal-input-container {
+    position: relative;
+    flex: 1; 
+    max-width: 250px;
+  }
+
+  .brutal-input {
+    width: 100%;
+    height: 38px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-main);
+    background: var(--bg-secondary, #e4e6eb);
+    border: 1px solid var(--border-card);
+    border-radius: 20px; 
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  .brutal-input:hover {
+    border-color: #1DA1F2;
+  }
+
+  .brutal-input:focus {
+    border-color: #1DA1F2;
+    background: var(--bg-card); 
+    box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.15); 
+  }
+
+  .menu-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    flex-shrink: 0; 
+  }
+
+  .menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 2.5px;
+    background-color: var(--text-main); 
+    border-radius: 2px;
+    transition: background-color 0.3s ease;
+  }
+
+  .add-post-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--text-main); 
+    color: var(--bg-main); 
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .add-post-btn:active {
+    transform: scale(0.9);
+    background-color: #333;
+  }
+
+  .add-post-btn:hover {
+    background-color: #007bff; 
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+  }
+
+  /* =========================================
+     CSS SCOPED: KHUSUS STORY
+     ========================================= */
+  .stories-container {
+    display: flex;
+    gap: 15px;
+    padding: 10px 15px;
+    overflow-x: auto;
+    scrollbar-width: none; 
+    -ms-overflow-style: none; 
+  }
+
+  .stories-container::-webkit-scrollbar {
+    display: none; 
+  }
+
+  /* Pake :global karena elemen ini di-render JS */
+  :global(.story-item) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  :global(.story-item span) {
+    font-size: 11px;
+    color: var(--text-muted); 
+    max-width: 65px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 4px;
+  }
+
+  :global(.story-circle) {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5px; 
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  :global(.story-circle:active) {
+    transform: scale(0.92);
+  }
+
+  :global(.story-circle img) {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--bg-secondary);
+    border: 2px solid var(--bg-main); 
+  }
+
+  :global(.story-circle.unseen) {
+    background: linear-gradient(45deg, #00ffa3, #03e1ff);
+  }
+
+  :global(.story-circle.seen) {
+    background: var(--border-card);
+  }
+</style>
+
+<script>
+  // Lazy Load DB
+  const getDB = () => import('../../lib/supabase.js').then(m => m.supabase);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    
+    // 1. LOGIKA TOMBOL MENU SIDEBAR
+    const menuBtn = document.getElementById("mobileMenuBtn");
+    const sidebar = document.querySelector(".sidebar");
+    
+    if (menuBtn && sidebar) {
+      menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        sidebar.classList.toggle("active");
+      });
+      document.addEventListener("click", (e) => {
+        if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+          sidebar.classList.remove("active");
+        }
+      });
+    }
+
+    // 2. LOGIKA SEARCH FILTER POSTINGAN
+    const searchInput = document.getElementById("searchCreator");
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        const val = e.target.value.toLowerCase();
+        document.querySelectorAll(".card").forEach((c) => {
+          // Cari teks di dalam card
+          c.style.display = c.innerText.toLowerCase().includes(val) ? "flex" : "none";
+        });
+      });
+    }
+
+    // 3. FETCH STORIES KE SUPABASE
+    fetchStoriesDynamic();
+  });
+
+  async function fetchStoriesDynamic() {
+    const container = document.getElementById("storiesContainer");
+    if (!container) return;
+
+    try {
+      const db = await getDB();
+      // Ambil 24 jam terakhir
+      const timeLimit = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+      const { data: stories, error } = await db
+        .from("stories")
+        .select("*, profiles(username, avatar_url)")
+        .gte("created_at", timeLimit)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      container.innerHTML = ""; // Bersihkan teks "Memuat..."
+
+      if (!stories || stories.length === 0) {
+        container.innerHTML = '<p class="no-story" style="font-size: 11px; color: var(--text-muted);">Belum ada cerita terbaru</p>';
+        return;
+      }
+
+      // Logika Set biar 1 user = 1 lingkaran (ngga numpuk kalau dia post banyak)
+      const seenUsers = new Set();
+
+      stories.forEach(story => {
+        if (seenUsers.has(story.creator_id)) return;
+        seenUsers.add(story.creator_id);
+
+        const item = document.createElement("div");
+        item.className = "story-item";
+        item.innerHTML = `
+          <div class="story-circle unseen">
+            <img src="${story.profiles?.avatar_url || 'https://ui-avatars.com/api/?name=' + story.profiles?.username}" alt="user" loading="lazy">
+          </div>
+          <span>${story.profiles?.username || 'User'}</span>
+        `;
+        
+        item.onclick = () => {
+          // Ganti warna ring ke abu-abu pas diklik
+          item.querySelector('.story-circle').classList.remove('unseen');
+          item.querySelector('.story-circle').classList.add('seen');
+          // Arahkan ke halaman viewer story
+          window.location.href = `/story/${story.id}`;
+        };
+        
+        container.appendChild(item);
+      });
+    } catch (err) {
+      console.error("Fetch Story Error:", err);
+      container.innerHTML = '<p style="font-size: 11px; color: #ff4757;">Gagal memuat cerita.</p>';
+    }
+  }
+</script>

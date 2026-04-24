@@ -1,4 +1,5 @@
 ---
+// Sidebarpost.astro
 ---
 <div class="sidebar">
   <div class="sidebar-header">
@@ -12,6 +13,104 @@
     <a href="#" class="nav-item" data-category="photography">Photography</a>
     <a href="#" class="nav-item" data-category="mountain">Mountain</a>
     <a href="#" class="nav-item" data-category="thread">Thread</a>
-    
-    </nav>
+  </nav>
 </div>
+
+<style>
+  /* =========================================
+     CSS SCOPED: KHUSUS SIDEBAR
+     ========================================= */
+  /* --- Sidebar Premium --- */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--bg-card); /* Supaya sidebar menyesuaikan mode */
+    border-right: 1px solid var(--border-card);
+    z-index: 2000;
+    transform: translateX(-100%);
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    padding: 60px 30px;
+    box-sizing: border-box;
+  }
+
+  .sidebar.active {
+    transform: translateX(0);
+  }
+
+  .sidebar-logo {
+    color: var(--text-main);
+    font-size: 1rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 5px; 
+    margin-bottom: 60px;
+    opacity: 0.8;
+  }
+
+  /* --- Nav Item --- */
+  .nav-item {
+    display: block;
+    padding: 12px 0;
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 300; 
+    margin-bottom: 20px;
+    transition: 0.4s;
+    opacity: 0.6; 
+  }
+
+  .nav-item:hover {
+    opacity: 1;
+    color: #00a2ff;
+    letter-spacing: 2px; 
+  }
+
+  .nav-item.active {
+    opacity: 1;
+    color: var(--text-main);
+    font-weight: 600;
+  }
+
+  .nav-item.active::after {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: #00a2ff;
+    border-radius: 50%;
+    margin-left: 10px;
+    box-shadow: 0 0 10px #00a2ff; 
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const sidebar = document.querySelector(".sidebar");
+    const navItems = document.querySelectorAll(".nav-item");
+
+    navItems.forEach((item) => {
+      item.addEventListener("click", (e) => {
+        e.preventDefault();
+        
+        // 1. Hapus class 'active' dari semua menu, pindahin ke yang diklik
+        navItems.forEach((n) => n.classList.remove("active"));
+        item.classList.add("active");
+
+        // 2. Ambil nilai kategori (contoh: "karya", "prestasi")
+        const category = item.getAttribute("data-category");
+
+        // 3. Kirim Custom Event biar didengerin sama Gallerypost.astro
+        window.dispatchEvent(new CustomEvent('changeCategory', { 
+          detail: { category: category } 
+        }));
+
+        // 4. Kalau lagi di mobile, otomatis tutup sidebar abis milih menu
+        if (sidebar) sidebar.classList.remove("active");
+      });
+    });
+  });
+</script>

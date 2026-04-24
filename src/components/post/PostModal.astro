@@ -1,5 +1,5 @@
 ---
-// Jika ada logic Astro ditaruh di sini
+// PostModal.astro
 ---
 <div id="postModal" class="post-modal">
   <div class="post-modal-content">
@@ -94,3 +94,381 @@
     </form>
   </div>
 </div>
+
+<style>
+  /* =========================================
+     CSS SCOPED: KHUSUS MODAL POST & FORM
+     ========================================= */
+  .post-modal {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55);
+    display: none; align-items: center; justify-content: center;
+    z-index: 999999; padding: 20px; backdrop-filter: blur(4px);
+  }
+  .post-modal.active { display: flex; animation: fadeInModal 0.2s ease; }
+  
+  @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+
+  .post-modal-content {
+    width: 100%; max-width: 480px; background: var(--bg-modal);
+    border-radius: 20px; padding: 25px; position: relative;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  }
+
+  .post-close-btn {
+    position: absolute; top: 15px; right: 15px; width: 34px; height: 34px;
+    border-radius: 50%; background: var(--bg-input); border: none;
+    color: var(--text-main); font-size: 22px; cursor: pointer; transition: 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .post-close-btn:hover { background: #ff4757; color: white; }
+
+  .post-modal-title { font-size: 22px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+  .post-modal-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4; }
+
+  .post-form { display: flex; flex-direction: column; gap: 15px; }
+  .section-label, .section-label-bold { font-size: 12px; font-weight: 800; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* --- Destination Toggle (Feed vs Story) --- */
+  .dest-toggle-group { display: flex; flex-direction: column; gap: 10px; }
+  .dest-option { cursor: pointer; }
+  .dest-option input { display: none; }
+  .dest-content {
+    display: flex; align-items: center; padding: 12px 15px;
+    background: var(--bg-secondary); border: 1.5px solid var(--border-card);
+    border-radius: 14px; transition: 0.3s ease;
+  }
+  .dest-icon-box {
+    width: 38px; height: 38px; background: var(--bg-card); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; margin-right: 12px; color: var(--text-muted);
+  }
+  .dest-icon-box svg { width: 18px; height: 18px; }
+  .dest-text { flex: 1; display: flex; flex-direction: column; }
+  .dest-title { font-size: 14px; font-weight: 700; color: var(--text-main); }
+  .dest-desc { font-size: 11px; color: var(--text-muted); }
+  .dest-check { width: 18px; height: 18px; border: 2px solid var(--border-card); border-radius: 50%; transition: 0.3s; }
+  
+  .dest-option input:checked + .dest-content { border-color: #1DA1F2; background: rgba(29, 161, 242, 0.05); }
+  .dest-option input:checked + .dest-content .dest-icon-box { background: #1DA1F2; color: white; }
+  .dest-option input:checked + .dest-content .dest-check { background: #1DA1F2; border-color: #1DA1F2; border-width: 4px; }
+
+  /* --- Type Toggle (Image vs Text) --- */
+  .post-type-toggle { display: flex; gap: 8px; background: var(--bg-secondary); padding: 5px; border-radius: 12px; }
+  .type-btn { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; background: transparent; color: var(--text-muted); transition: 0.3s; }
+  .type-btn.active { background: #1DA1F2; color: white; }
+
+  /* --- Upload Area --- */
+  .post-upload-area {
+    min-height: 150px; border: 2px dashed var(--border-card); border-radius: 14px;
+    background: var(--bg-input); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; overflow: hidden; position: relative; transition: 0.2s;
+  }
+  .post-upload-area:hover { border-color: #1DA1F2; }
+  .post-upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-muted); }
+  .post-upload-text { font-size: 14px; font-weight: 700; color: var(--text-main); }
+  .post-preview-image { width: 100%; max-height: 250px; object-fit: contain; background: #000; }
+
+  /* --- Textarea --- */
+  .post-textarea {
+    width: 100%; min-height: 100px; padding: 14px; border: 1px solid var(--border-card);
+    border-radius: 14px; background: var(--bg-input); color: var(--text-main);
+    font-family: inherit; font-size: 14px; resize: none; transition: 0.2s; outline: none;
+  }
+  .post-textarea:focus { border-color: #1DA1F2; box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.15); }
+
+  /* --- Category Dropdown --- */
+  .category-dropdown { position: relative; margin-bottom: 5px; }
+  .select-trigger {
+    display: flex; justify-content: space-between; align-items: center; padding: 12px 16px;
+    background: var(--bg-input); border: 1px solid var(--border-card); border-radius: 12px;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-main);
+  }
+  .category-dropdown.active .select-trigger { border-color: #1DA1F2; }
+  .arrow-icon { font-style: normal; font-size: 10px; transition: transform 0.3s; color: var(--text-muted); }
+  .category-dropdown.active .arrow-icon { transform: rotate(180deg); }
+  
+  .options-container {
+    display: none; position: absolute; top: 100%; left: 0; width: 100%; margin-top: 5px;
+    background: var(--bg-modal); border: 1px solid var(--border-card); border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 10; overflow: hidden;
+  }
+  .category-dropdown.active .options-container { display: block; animation: dropDown 0.2s ease; }
+  @keyframes dropDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .option-item { padding: 12px 16px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border-card); color: var(--text-main); }
+  .option-item:last-child { border-bottom: none; }
+  .option-item:hover { background: rgba(29, 161, 242, 0.1); color: #1DA1F2; font-weight: 600; }
+
+  /* --- Music Picker --- */
+  .music-search-input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border-card); background: var(--bg-input); color: var(--text-main); font-size: 13px; outline: none; margin-bottom: 10px; transition: 0.2s; }
+  .music-search-input:focus { border-color: #1DA1F2; }
+  .music-list-scroll { max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .music-list-scroll::-webkit-scrollbar { width: 4px; }
+  .music-list-scroll::-webkit-scrollbar-thumb { background: var(--border-card); border-radius: 10px; }
+  
+  .selected-music-badge {
+    display: flex; align-items: center; justify-content: space-between; padding: 10px 14px;
+    background: rgba(29, 161, 242, 0.1); border: 1px solid #1DA1F2; border-radius: 12px; margin-top: 5px;
+  }
+  .music-info-mini { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+  .audio-tag { font-size: 9px; font-weight: 900; background: #1DA1F2; color: white; padding: 3px 6px; border-radius: 4px; }
+  .music-title-text { font-size: 13px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .remove-music-link { background: none; border: none; color: #ff4757; font-weight: 800; font-size: 11px; cursor: pointer; }
+
+  /* --- Submit Button --- */
+  .post-submit-btn {
+    width: 100%; padding: 15px; background: #2d79f3; color: white;
+    border: none; border-radius: 14px; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: 0.2s; margin-top: 10px;
+  }
+  .post-submit-btn:hover { background: #1f63cf; transform: translateY(-2px); }
+  .post-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* Responsif Mobile */
+  @media (max-width: 600px) {
+    .post-modal { align-items: flex-end; padding: 0; }
+    .post-modal-content { border-radius: 20px 20px 0 0; padding: 20px; }
+  }
+</style>
+
+<script>
+  // ==========================================
+  // JAVASCRIPT SCOPED: LOGIKA POST & API
+  // ==========================================
+  
+  // Lazy load Supabase
+  const getDB = () => import('../../lib/supabase.js').then(m => m.supabase);
+  
+  // Config Cloudinary
+  const CLOUDINARY_CLOUD_NAME = "dhhmkb8kl";
+  const CLOUDINARY_UPLOAD_PRESET = "post_hope";
+
+  // State
+  let selectedFile = null;
+  let selectedAudioUrl = null;
+  let selectedMusicTrack = null;
+  let selectedMusicArtist = null;
+  let searchTimer;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("postModal");
+    const closeBtn = document.getElementById("closePostModalBtn");
+    
+    // 1. GLOBAL LISTENER BUKA MODAL
+    document.body.addEventListener("click", (e) => {
+      if(e.target.closest('#openPostModalBtn')) {
+        modal.classList.add("active");
+        document.body.style.overflow = "hidden"; // Kunci scroll background
+      }
+    });
+
+    closeBtn.onclick = () => {
+      modal.classList.remove("active");
+      document.body.style.overflow = "";
+    };
+
+    // 2. TOGGLE FOTO VS TEKS
+    const btnTypeImage = document.getElementById("btnTypeImage");
+    const btnTypeText = document.getElementById("btnTypeText");
+    const uploadArea = document.getElementById("postUploadArea");
+    const extraFeatures = document.getElementById("extraFeatures");
+    const captionInput = document.getElementById("postCaption");
+
+    btnTypeImage.onclick = () => {
+      btnTypeImage.classList.add("active");
+      btnTypeText.classList.remove("active");
+      uploadArea.style.display = "flex";
+      captionInput.placeholder = "Tulis caption menarik di sini....";
+    };
+
+    btnTypeText.onclick = () => {
+      btnTypeText.classList.add("active");
+      btnTypeImage.classList.remove("active");
+      uploadArea.style.display = "none";
+      captionInput.placeholder = "Tulis apa yang sedang kamu pikirkan...";
+      
+      // Reset input foto
+      selectedFile = null;
+      document.getElementById("postPreviewImage").style.display = "none";
+      document.getElementById("postUploadPlaceholder").style.display = "flex";
+      document.getElementById("postImageInput").value = "";
+    };
+
+    // 3. IMAGE PREVIEW
+    const fileInput = document.getElementById("postImageInput");
+    uploadArea.onclick = (e) => { if(e.target.tagName !== "IMG") fileInput.click(); };
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        selectedFile = file;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          document.getElementById("postPreviewImage").src = ev.target.result;
+          document.getElementById("postPreviewImage").style.display = "block";
+          document.getElementById("postUploadPlaceholder").style.display = "none";
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    // 4. DROPDOWN KATEGORI
+    const dropdown = document.getElementById("categoryDropdown");
+    document.getElementById("selectTrigger").onclick = (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle("active");
+    };
+    document.querySelectorAll(".option-item").forEach(opt => {
+      opt.onclick = () => {
+        document.getElementById("selectedCategoryText").innerText = opt.innerText;
+        document.getElementById("postCategory").value = opt.dataset.value;
+        dropdown.classList.remove("active");
+      };
+    });
+    document.addEventListener("click", () => dropdown.classList.remove("active"));
+
+    // 5. ITUNES MUSIC PICKER
+    const searchInput = document.getElementById("searchMusicInput");
+    const musicList = document.getElementById("predefinedMusicList");
+    
+    searchInput.oninput = (e) => {
+      clearTimeout(searchTimer);
+      const query = e.target.value.trim();
+      searchTimer = setTimeout(() => searchITunes(query, musicList), 600);
+    };
+
+    document.getElementById("removeMusicBtn").onclick = () => {
+      selectedAudioUrl = null; selectedMusicTrack = null; selectedMusicArtist = null;
+      document.getElementById("selectedMusicBox").style.display = "none";
+      searchInput.value = ""; musicList.innerHTML = "";
+    };
+
+    // 6. FORM SUBMIT
+    document.getElementById("postForm").onsubmit = handlePostSubmit;
+  });
+
+  // FUNGSI ITUNES API
+  async function searchITunes(query, container) {
+    if (!query) { container.innerHTML = ""; return; }
+    container.innerHTML = "<div style='text-align:center; padding:15px; font-size:12px; color:var(--text-muted);'>Mencari di iTunes...</div>";
+    
+    try {
+      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=10`);
+      const data = await res.json();
+      container.innerHTML = "";
+
+      if(data.results.length === 0) {
+        container.innerHTML = "<div style='text-align:center; font-size:12px; color:var(--text-muted);'>Lagu tidak ditemukan.</div>"; return;
+      }
+
+      data.results.forEach(song => {
+        const div = document.createElement("div");
+        div.className = "dest-content"; // Reuse style dari destinasi biar keren
+        div.style.padding = "8px 12px"; div.style.marginBottom = "0";
+        div.innerHTML = `
+          <img src="${song.artworkUrl100}" style="width:38px; height:38px; border-radius:8px; margin-right:12px; object-fit:cover;">
+          <div style="flex:1; overflow:hidden;">
+            <div style="font-size:13px; font-weight:700; color:var(--text-main); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${song.trackName}</div>
+            <div style="font-size:11px; color:var(--text-muted);">${song.artistName}</div>
+          </div>
+        `;
+        div.onclick = () => {
+          selectedAudioUrl = song.previewUrl;
+          selectedMusicTrack = song.trackName;
+          selectedMusicArtist = song.artistName;
+          document.getElementById("selectedMusicTitle").innerText = `${song.trackName} — ${song.artistName}`;
+          document.getElementById("selectedMusicBox").style.display = "flex";
+          container.innerHTML = "";
+          document.getElementById("searchMusicInput").value = "";
+        };
+        container.appendChild(div);
+      });
+    } catch(e) {
+      container.innerHTML = "<div style='text-align:center; color:#ff4757; font-size:12px;'>Gagal nyambung ke iTunes.</div>";
+    }
+  }
+
+  // FUNGSI UPLOAD CLOUDINARY
+  async function uploadImageToCloudinary(file) {
+    const fd = new FormData(); 
+    fd.append("file", file); 
+    fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: "POST", body: fd });
+    return await res.json();
+  }
+
+  // FUNGSI SUBMIT FORM UTAMA
+  async function handlePostSubmit(e) {
+    e.preventDefault();
+    const db = await getDB();
+    
+    const btn = document.getElementById("submitPostBtn");
+    const caption = document.getElementById("postCaption").value.trim();
+    const dest = document.querySelector('input[name="postDestination"]:checked').value;
+    const category = document.getElementById("postCategory").value;
+
+    if (!selectedFile && !caption) {
+      return window.showNotif ? window.showNotif("Isi konten atau pilih foto dulu bro!", "warning") : alert("Isi konten dulu!");
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Mengunggah...";
+
+    try {
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) {
+          window.dispatchEvent(new CustomEvent('openLogin'));
+          throw new Error("Silakan login terlebih dahulu.");
+      }
+
+      let imageUrl = null;
+
+      // 1. Upload Cloudinary (Jika ada file)
+      if (selectedFile) {
+        if(window.showNotif) window.showNotif("Mengamankan gambar...", "info");
+        const cData = await uploadImageToCloudinary(selectedFile);
+        imageUrl = cData.secure_url;
+      }
+
+      // 2. Insert ke Database
+      if (dest === "story") {
+        const { error } = await db.from("stories").insert({
+          creator_id: session.user.id,
+          image_url: imageUrl,
+          content: caption,
+          audio_src: selectedAudioUrl,
+          title: selectedMusicTrack,
+          artist: selectedMusicArtist
+        });
+        if(error) throw error;
+        if(window.showNotif) window.showNotif("Cerita berhasil dibagikan! 🔥", "success");
+      } else {
+        const { data: prof } = await db.from("profiles").select("username").eq("id", session.user.id).single();
+        const { error } = await db.from("posts").insert({
+          creator_id: session.user.id,
+          name: prof?.username || "User",
+          bio: caption,
+          category: category,
+          image_url: imageUrl,
+          audio_src: selectedAudioUrl,
+          title: selectedMusicTrack,
+          artist: selectedMusicArtist,
+          status: "pending" 
+        });
+        if(error) throw error;
+        if(window.showNotif) window.showNotif("Karya dikirim ke review admin! 🔥", "success");
+      }
+
+      // Reset dan Tutup Modal
+      document.getElementById("postModal").classList.remove("active");
+      document.body.style.overflow = "";
+      e.target.reset();
+      
+      setTimeout(() => location.reload(), 1500);
+
+    } catch (err) {
+      if(window.showNotif) window.showNotif(err.message, "error");
+      btn.disabled = false;
+      btn.innerText = "Kirim ke Review";
+    }
+  }
+</script>

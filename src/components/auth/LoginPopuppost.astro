@@ -1,28 +1,145 @@
 ---
+// LoginPopuppost.astro
 ---
 <div id="loginPopup" class="popup-overlay">
   <div class="popup-content">
-    <span class="close-login">X</span>
-    <h2 style="text-align: center; margin-bottom: 20px;">LOGIN DULU BRO</h2>
+    <button class="close-login" id="closeLoginBtn">&times;</button>
+    <h2 style="text-align: center; margin-bottom: 20px; color: var(--text-main); font-weight: 800;">LOGIN DULU BRO</h2>
 
-    <form class="form">
+    <form class="form" id="loginForm">
       <div class="flex-column"><label>Email</label></div>
       <div class="inputForm">
         <svg height="20" viewBox="0 0 32 32" width="20">
           <path d="m30.853 13.87a15 15 0 0 0 -29.729 4.082 15.1 15.1 0 0 0 12.876 12.918 15.6 15.6 0 0 0 2.016.13 14.85 14.85 0 0 0 7.715-2.145 1 1 0 1 0 -1.031-1.711 13.007 13.007 0 1 1 5.458-6.529 2.149 2.149 0 0 1 -4.158-.759v-10.856a1 1 0 0 0 -2 0v1.726a8 8 0 1 0 .2 10.325 4.135 4.135 0 0 0 7.83.274 15.2 15.2 0 0 0 .823-7.455zm-14.853 8.13a6 6 0 1 1 6-6 6.006 6.006 0 0 1 -6 6z"></path>
         </svg>
-        <input type="email" class="input" placeholder="Enter your Email" required />
+        <input type="email" id="loginEmail" class="input" placeholder="Enter your Email" required />
       </div>
 
-      <div class="flex-column"><label>Password</label></div>
+      <div class="flex-column" style="margin-top: 15px;"><label>Password</label></div>
       <div class="inputForm">
         <svg height="20" viewBox="0 0 24 24" width="20">
           <path d="M12.1 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 9.24 3 10.91 3.81 12 5.09 13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 22 12.28 18.6 15.36 13.55 20.04z"/>
         </svg>
-        <input type="password" class="input" placeholder="Enter your Password" required />
+        <input type="password" id="loginPassword" class="input" placeholder="Enter your Password" required />
       </div>
 
       <button class="button-submit" type="submit">Sign In</button>
+      <p style="text-align: center; margin-top: 15px; font-size: 13px; color: var(--text-muted);">Belum punya akun? <a href="/register" style="color: #2d79f3; font-weight: bold; text-decoration: none;">Daftar</a></p>
     </form>
   </div>
 </div>
+
+<style>
+  /* =========================================
+     CSS SCOPED: LOGIN POPUP FIX
+     ========================================= */
+  .popup-overlay {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
+    display: none; justify-content: center; align-items: center; z-index: 1000001;
+    backdrop-filter: blur(5px);
+  }
+  .popup-overlay.active { display: flex; animation: popupFade 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  
+  .popup-content {
+    background: var(--bg-modal); width: 90%; max-width: 360px;
+    padding: 30px 25px; border-radius: 20px; position: relative;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+  }
+  
+  @keyframes popupFade {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .close-login {
+    position: absolute; top: 15px; right: 15px; width: 30px; height: 30px;
+    border-radius: 50%; font-size: 20px; cursor: pointer; border: none;
+    background: var(--bg-input); color: var(--text-main);
+    display: flex; align-items: center; justify-content: center; transition: 0.2s;
+  }
+  .close-login:hover { background: #ff4757; color: white; }
+
+  .form { display: flex; flex-direction: column; width: 100%; }
+  
+  .flex-column > label {
+    color: var(--text-main); font-weight: 700; font-size: 13px; margin-bottom: 5px; display: block;
+  }
+
+  .inputForm {
+    border: 1.5px solid var(--border-card); border-radius: 12px; height: 50px;
+    display: flex; align-items: center; padding-left: 15px; transition: 0.2s ease-in-out;
+    background: var(--bg-input);
+  }
+  .inputForm:focus-within { border-color: #2d79f3; box-shadow: 0 0 0 3px rgba(45, 121, 243, 0.15); }
+  
+  .inputForm svg { fill: var(--text-muted); flex-shrink: 0; }
+  
+  .input {
+    margin-left: 10px; border: none; width: 100%; height: 100%; background: transparent;
+    color: var(--text-main); outline: none; font-family: inherit; font-size: 14px;
+  }
+  .input::placeholder { color: var(--text-muted); }
+
+  .button-submit {
+    margin-top: 25px; background-color: #2d79f3; border: none; color: white;
+    font-size: 15px; font-weight: 700; border-radius: 12px; height: 50px;
+    width: 100%; cursor: pointer; transition: 0.2s ease;
+  }
+  .button-submit:hover { background-color: #1f63cf; transform: translateY(-2px); }
+  .button-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+  
+  html.dark .button-submit { background-color: white; color: black; }
+  html.dark .button-submit:hover { background-color: #e0e0e0; }
+</style>
+
+<script>
+  // Lazy load Supabase
+  const getDB = () => import('../../lib/supabase.js').then(m => m.supabase);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const popup = document.getElementById("loginPopup");
+    const form = document.getElementById("loginForm");
+    const closeBtn = document.getElementById("closeLoginBtn");
+
+    // 1. Dengerin sinyal buka login (Dipanggil dari tombol Like / Gift kalo user blm login)
+    window.addEventListener('openLogin', () => {
+      popup.classList.add("active");
+      document.body.style.overflow = "hidden"; // Kunci scroll layar belakang
+    });
+
+    // 2. Logika nutup popup
+    const closePopup = () => {
+      popup.classList.remove("active");
+      document.body.style.overflow = "";
+    };
+    closeBtn.onclick = closePopup;
+    popup.onclick = (e) => { if(e.target === popup) closePopup(); };
+
+    // 3. Logika Submit (Panggil Supabase)
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+      const btn = form.querySelector(".button-submit");
+
+      btn.disabled = true;
+      btn.innerText = "Memeriksa...";
+
+      try {
+        const db = await getDB();
+        const { error } = await db.auth.signInWithPassword({ email, password });
+        
+        if (error) throw error;
+
+        if (window.showNotif) window.showNotif("Masuk Pak Eko! 🔥", "success");
+        setTimeout(() => location.reload(), 1000); // Refresh biar session kebaca
+
+      } catch (err) {
+        if (window.showNotif) window.showNotif(err.message, "error");
+        btn.disabled = false;
+        btn.innerText = "Sign In";
+      }
+    };
+  });
+</script>

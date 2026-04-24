@@ -9,9 +9,6 @@ import LoginPopup from '../components/auth/LoginPopuppost.astro';
 import PostModal from '../components/post/PostModal.astro';
 import GiftSheet from '../components/post/GiftSheetpost.astro';
 import Overlays from '../components/ui/Overlayspost.astro';
-
-// 2. IMPORT CSS GLOBAL POST
-import '../styles/post.css';
 ---
 
 <Layout title="Creator Gallery - Hope POST">
@@ -40,6 +37,7 @@ import '../styles/post.css';
       } catch (e) {}
     })();
   </script>
+
   <Sidebar />
   <SearchWrapper />
   <Gallery />
@@ -49,5 +47,55 @@ import '../styles/post.css';
   <GiftSheet />
   <Overlays />
 
-  <script src="../scripts/post.js"></script>
 </Layout>
+
+<style is:global>
+/* === CSS VARIABLES LIGHT & DARK MODE === */
+:root {
+  --bg-main: #f0f2f5;
+  --text-main: #1c1e21;
+  --bg-card: #ffffff;
+  --border-card: #dddfe2;
+  --text-muted: #606770;
+  --bg-modal: #ffffff;
+  --bg-input: #f0f2f5;
+  --icon-fill: #1c1e21;
+  --bg-secondary: #e4e6eb; 
+  --accent-story: linear-gradient(45deg, #00ffa3, #03e1ff); /* Warna ciri khas Hype */
+  --bg-story-seen: #dddfe2;
+}
+
+html.dark {
+  --bg-main: #121212;
+  --text-main: #e0e0e0;
+  --bg-card: #1e1e1e;
+  --border-card: #2c2c2c;
+  --text-muted: #888888;
+  --bg-modal: #111111;
+  --bg-input: #1d1d1d;
+  --icon-fill: #e0e0e0;
+  --bg-secondary: #242526;
+  --bg-story-seen: #2c2c2c;
+}
+
+/* === RESET GLOBAL === */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+body { 
+  font-family: 'Poppins', sans-serif; 
+  background: var(--bg-main); 
+  color: var(--text-main); 
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.menu-item-tiktok, .btn, .tab, button {
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  user-select: none; 
+}
+</style>

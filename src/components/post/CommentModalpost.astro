@@ -1,14 +1,312 @@
 ---
+// CommentModalpost.astro
 ---
 <div id="commentModal">
   <div class="comment-box">
     <div class="comment-header">
       Komentar
-      <button class="comment-close">×</button>
+      <button class="comment-close" id="closeCommentBtn">&times;</button>
     </div>
-    <div class="comment-list"></div>
+    <div class="comment-list" id="commentListContainer">
+      </div>
     <div class="comment-input-wrap">
-      <input type="text" class="comment-input" placeholder="Tulis komentar..." />
+      <input type="text" id="commentInput" class="comment-input" placeholder="Tulis komentar..." autocomplete="off" />
     </div>
   </div>
 </div>
+
+<style>
+  /* =========================================
+     CSS SCOPED: KHUSUS MODAL KOMENTAR
+     ========================================= */
+  #commentModal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: flex; align-items: flex-end; justify-content: center;
+    z-index: 99999; opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    backdrop-filter: blur(4px);
+  }
+  #commentModal.active {
+    opacity: 1; visibility: visible; pointer-events: auto;
+  }
+
+  .comment-box {
+    width: 100%; max-width: 500px; height: 78vh;
+    background: var(--bg-modal); border-radius: 24px 24px 0 0;
+    overflow: hidden; display: flex; flex-direction: column;
+    transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 -15px 40px rgba(0,0,0,0.3);
+  }
+  #commentModal.active .comment-box { transform: translateY(0); }
+
+  /* Garis tarik di atas modal */
+  .comment-box::before {
+    content: ""; width: 40px; height: 5px; background: var(--border-card);
+    border-radius: 10px; margin: 12px auto 8px; display: block;
+  }
+
+  .comment-header {
+    color: var(--text-main); text-align: center; font-weight: 800;
+    padding: 5px 16px 15px; border-bottom: 1px solid var(--border-card); position: relative;
+  }
+  .comment-close {
+    position: absolute; right: 15px; top: 0; background: var(--bg-input);
+    border: none; color: var(--text-main); width: 30px; height: 30px; border-radius: 50%;
+    font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
+  }
+  .comment-close:hover { background: #ff4757; color: white; }
+
+  .comment-list {
+    flex: 1; overflow-y: auto; padding: 15px 20px;
+  }
+
+  /* --- STYLE DINAMIS (Pake :global karena dirender JS) --- */
+  :global(.comment-thread) { margin-bottom: 20px; }
+  :global(.comment-item) { display: flex; gap: 12px; margin-bottom: 10px; align-items: flex-start; }
+  :global(.comment-item.reply) { margin-left: 48px; margin-top: -5px; }
+  
+  :global(.comment-left) { flex-shrink: 0; }
+  :global(.comment-avatar) { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; cursor: pointer; background: var(--bg-secondary); border: 1px solid var(--border-card); }
+  :global(.comment-item.reply .comment-avatar) { width: 28px; height: 28px; }
+  
+  :global(.comment-right) { flex: 1; min-width: 0; }
+  :global(.comment-topline) { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px; }
+  :global(.comment-username) { color: var(--text-main); font-weight: 700; font-size: 13px; cursor: pointer; }
+  :global(.comment-username:hover) { text-decoration: underline; color: #1DA1F2; }
+  
+  :global(.comment-text) { color: var(--text-main); font-size: 14px; line-height: 1.45; word-break: break-word; }
+  :global(.reply-tag) { color: #1DA1F2; font-weight: 700; margin-right: 4px; }
+  
+  :global(.comment-actions) { margin-top: 6px; }
+  :global(.reply-btn) { color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+  :global(.reply-btn:hover) { color: var(--text-main); }
+  
+  :global(.view-replies-btn) {
+    margin-left: 48px; margin-bottom: 10px; color: #1DA1F2;
+    font-size: 12px; font-weight: 700; cursor: pointer; user-select: none;
+    display: inline-block; padding: 4px 8px; background: rgba(29, 161, 242, 0.1); border-radius: 8px;
+  }
+  :global(.reply-group) { margin-top: 8px; }
+
+  /* Input Area Bawah */
+  .comment-input-wrap {
+    display: flex; align-items: center; padding: 15px;
+    border-top: 1px solid var(--border-card); background: var(--bg-modal);
+    padding-bottom: calc(15px + env(safe-area-inset-bottom));
+  }
+  .comment-input {
+    flex: 1; border: 1px solid var(--border-card); outline: none;
+    background: var(--bg-input); color: var(--text-main); padding: 12px 18px;
+    border-radius: 25px; font-size: 14px; transition: 0.2s; font-family: inherit;
+  }
+  .comment-input:focus { border-color: #1DA1F2; box-shadow: 0 0 0 3px rgba(29, 161, 242, 0.15); }
+</style>
+
+<script>
+  // Lazy Load Supabase
+  const getDB = () => import('../../lib/supabase.js').then(m => m.supabase);
+
+  // State Global buat Komen
+  let currentPostId = null;
+  let currentCreatorId = null;
+  let replyToId = null;
+  let replyToUsername = null;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("commentModal");
+    const closeBtn = document.getElementById("closeCommentBtn");
+    const list = document.getElementById("commentListContainer");
+    const input = document.getElementById("commentInput");
+
+    // 1. OPEN MODAL (Event Delegation dari Icon Comment di Gallery)
+    document.body.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".comment-toggle");
+      if (btn) {
+        const db = await getDB();
+        const { data: { session } } = await db.auth.getSession();
+        
+        // Harus login dulu
+        if (!session) return window.dispatchEvent(new CustomEvent('openLogin'));
+
+        currentPostId = btn.dataset.post;
+        currentCreatorId = btn.dataset.creator;
+        
+        modal.classList.add("active");
+        document.body.style.overflow = "hidden"; // Kunci scroll belakang
+        
+        list.innerHTML = "<div style='text-align:center; padding:30px; color:var(--text-muted); font-size:13px;'>Memuat komentar...</div>";
+        await loadCommentsStructured(db, list);
+      }
+    });
+
+    // 2. CLOSE MODAL
+    closeBtn.onclick = () => {
+      modal.classList.remove("active");
+      document.body.style.overflow = "";
+      replyToId = null;
+      replyToUsername = null;
+      input.value = "";
+      input.placeholder = "Tulis komentar...";
+    };
+
+    // 3. EVENT DELEGATION UNTUK TOMBOL "BALAS" & "LIHAT BALASAN"
+    list.addEventListener("click", (e) => {
+      // Klik tombol Balas
+      if (e.target.classList.contains("reply-btn")) {
+        replyToId = e.target.dataset.id;
+        replyToUsername = e.target.dataset.username;
+        input.placeholder = `Membalas @${replyToUsername}...`;
+        input.focus();
+      }
+
+      // Klik tombol Lihat Balasan
+      if (e.target.classList.contains("view-replies-btn")) {
+        const replyWrap = e.target.nextElementSibling;
+        const isHidden = replyWrap.style.display === "none";
+        replyWrap.style.display = isHidden ? "block" : "none";
+        // Ubah teks
+        const count = e.target.dataset.count;
+        e.target.innerHTML = isHidden ? `Sembunyikan balasan` : `Lihat ${count} balasan`;
+      }
+    });
+
+    // 4. SUBMIT KOMENTAR
+    input.onkeydown = async (e) => {
+      if (e.key === "Enter" && input.value.trim()) {
+        e.preventDefault();
+        const content = input.value.trim();
+        const parentId = replyToId;
+        const targetUser = replyToUsername;
+
+        input.value = "";
+        input.placeholder = "Mengirim...";
+        input.disabled = true;
+
+        try {
+          const db = await getDB();
+          const { data: { session } } = await db.auth.getSession();
+
+          // Insert ke DB
+          await db.from("comments").insert({
+            post_id: parseInt(currentPostId),
+            user_id: session.user.id,
+            content: content,
+            parent_id: parentId ? parseInt(parentId) : null,
+            reply_to_username: targetUser || null
+          });
+
+          // Kirim Notifikasi ke Creator
+          if (currentCreatorId !== session.user.id) {
+            const { data: prof } = await db.from("profiles").select("username").eq("id", session.user.id).single();
+            await db.from("notifications").insert({
+              user_id: currentCreatorId,
+              actor_id: session.user.id,
+              post_id: parseInt(currentPostId),
+              type: "comment",
+              message: `<b>${prof?.username}</b> mengomentari karyamu.`
+            });
+          }
+
+          // Update Angka Komentar di UI Depan
+          const { count } = await db.from("comments").select("id", { count: "exact", head: true }).eq("post_id", currentPostId);
+          const countBadge = document.querySelector(`.comment-toggle[data-post="${currentPostId}"] .comment-count`);
+          if (countBadge) countBadge.textContent = count || 0;
+
+          // Reset Input & Refresh List
+          replyToId = null;
+          replyToUsername = null;
+          input.placeholder = "Tulis komentar...";
+          input.disabled = false;
+          input.focus();
+
+          await loadCommentsStructured(db, list);
+
+        } catch (err) {
+          if (window.showNotif) window.showNotif("Gagal mengirim komentar", "error");
+          input.placeholder = "Tulis komentar...";
+          input.disabled = false;
+        }
+      }
+    };
+  });
+
+  // FUNGSI RENDER HTML KOMENTAR BERTINGKAT (THREAD)
+  async function loadCommentsStructured(db, list) {
+    const { data } = await db.from("comments")
+      .select("id, content, created_at, user_id, parent_id, reply_to_username, profiles(id, username, avatar_url, role)")
+      .eq("post_id", currentPostId)
+      .order("created_at", { ascending: true });
+
+    if (!data || data.length === 0) {
+      list.innerHTML = "<div style='text-align:center; padding:30px; color:var(--text-muted); font-size:13px;'>Belum ada komentar. Jadilah yang pertama!</div>";
+      return;
+    }
+
+    list.innerHTML = "";
+    const parents = data.filter(c => !c.parent_id);
+
+    parents.forEach(p => {
+      // Bikin wrapper Thread
+      const thread = document.createElement("div");
+      thread.className = "comment-thread";
+      
+      // Render Parent (Komentar Utama)
+      thread.innerHTML = createCommentHTML(p, false);
+
+      // Cek apakah ada balasan buat komentar ini
+      const childs = data.filter(r => String(r.parent_id) === String(p.id));
+      if (childs.length > 0) {
+        // Tombol Lihat Balasan
+        const toggleBtn = document.createElement("div");
+        toggleBtn.className = "view-replies-btn";
+        toggleBtn.dataset.count = childs.length;
+        toggleBtn.innerHTML = `Lihat ${childs.length} balasan`;
+
+        // Bungkus Anak-anak Komentar
+        const replyWrap = document.createElement("div");
+        replyWrap.className = "reply-group";
+        replyWrap.style.display = "none"; // Default disembunyikan
+        
+        childs.forEach(c => {
+          const replyDiv = document.createElement("div");
+          replyDiv.className = "comment-item reply";
+          replyDiv.innerHTML = createCommentHTML(c, true);
+          replyWrap.appendChild(replyDiv);
+        });
+
+        thread.appendChild(toggleBtn);
+        thread.appendChild(replyWrap);
+      }
+      
+      list.appendChild(thread);
+    });
+  }
+
+  // FUNGSI CETAK HTML (MENGHINDARI KODE BERULANG)
+  function createCommentHTML(comment, isReply) {
+    const isPostOwner = comment.user_id === currentCreatorId;
+    const creatorBadge = isPostOwner ? `<span style="background:#1DA1F2; color:white; padding:2px 6px; border-radius:4px; font-size:9px; margin-left:4px; font-weight:800;">CREATOR</span>` : "";
+    const p = comment.profiles;
+    const avatar = p?.avatar_url || `https://ui-avatars.com/api/?name=${p?.username}`;
+
+    return `
+      ${!isReply ? '<div class="comment-item">' : ''}
+        <div class="comment-left">
+          <img class="comment-avatar" src="${avatar}" onclick="window.location.href='/data?id=${p?.id}'">
+        </div>
+        <div class="comment-right">
+          <div class="comment-topline">
+            <span class="comment-username" onclick="window.location.href='/data?id=${p?.id}'">${p?.username} ${creatorBadge}</span>
+          </div>
+          <div class="comment-text">
+            ${comment.reply_to_username ? `<span class="reply-tag">@${comment.reply_to_username}</span> ` : ""}
+            ${comment.content}
+          </div>
+          <div class="comment-actions">
+            <span class="reply-btn" data-id="${isReply ? comment.parent_id : comment.id}" data-username="${p?.username}">Balas</span>
+          </div>
+        </div>
+      ${!isReply ? '</div>' : ''}
+    `;
+  }
+</script>
