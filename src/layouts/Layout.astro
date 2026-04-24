@@ -27,7 +27,10 @@ const {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://hqetnqnvmdxdgfnnluew.supabase.co" />
   <link rel="preconnect" href="https://res.cloudinary.com" />
-  <link rel="preconnect" href="https://app.sandbox.midtrans.com" />
+
+  <link rel="dns-prefetch" href="https://app.sandbox.midtrans.com" />
+  <link rel="dns-prefetch" href="https://www.gstatic.com" />
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
 
   <link 
     rel="stylesheet" 
@@ -80,7 +83,7 @@ const {
       });
     }
 
-    // Matiin klik kanan di gambar
+    // Matiin klik kanan di gambar (Anti-Copas)
     document.addEventListener('contextmenu', function(e) {
       if (e.target.tagName === 'IMG') {
         e.preventDefault();
