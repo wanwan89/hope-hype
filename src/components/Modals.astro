@@ -365,7 +365,7 @@
              if(window.snap) break;
              await new Promise(r => setTimeout(r, 100)); 
           }
-          if (!window.snap) throw new Error("Gagal memuat Midtrans. Refresh browser lu bro.");
+          if (!window.snap) throw new Error("Gagal memuat Midtrans. Refresh browser .");
         }
 
         const response = await fetch(endpoint, {
@@ -389,9 +389,9 @@
             window.showNotif("Pembayaran Sukses! Akun diupgrade.", "success"); 
             setTimeout(() => location.reload(), 1200); 
           },
-          onPending: () => window.showNotif("Selesaikan transaksi lu ya", "warning"),
+          onPending: () => window.showNotif("Selesaikan transaksi dulu", "warning"),
           onError: () => window.showNotif("Pembayaran gagal", "error"),
-          onClose: () => window.showNotif("Lu nutup popup sebelum bayar", "info")
+          onClose: () => window.showNotif("kamu nutup popup sebelum bayar", "info")
         });
 
       } catch (err) {
@@ -415,7 +415,7 @@
         try {
           const db = await getDB();
           const { data: { user } } = await db.auth.getUser();
-          if(!user) throw new Error("Login dulu sebelum beli bro.");
+          if(!user) throw new Error("Login dulu sebelum beli .");
 
           // 🔥 FIX PENTING: Bersihin spasi dan buang SVG biar nggak eror pas bikin item_name
           const itemName = card.querySelector(".p-name")?.childNodes[0]?.textContent.trim() || "Premium VIP";
