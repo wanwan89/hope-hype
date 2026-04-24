@@ -81,25 +81,22 @@ body.dark .notification-icon { color: #fff; }
 #notifCount { pointer-events: none !important; z-index: 100000 !important; }
 </style>
 <script>
-  import { supabase as db } from '../lib/supabase.js';
-  import { showToast } from '../lib/ui-utils.js';
+  // 🔥 FIX PERFORMA: Import statis Supabase dihapus dari sini!
 
   // =======================
   // CARDS & THEME (DARK MODE)
   // =======================
   const toggleBtn = document.querySelector(".toggle-dark");
-  const karyaCard = document.querySelector(".job-card.karya-card"); // Pastiin class ini ada di HTML lu
+  const karyaCard = document.querySelector(".job-card.karya-card"); 
   const musicCard = document.querySelector(".job-card.music-card");
 
   function CardImages(isDark) {
     if (!karyaCard || !musicCard) return;
 
-    // Pastikan folder asets/png/ dan nama file huruf KECIL SEMUA
     if (isDark) {
       karyaCard.style.setProperty("background-image", "url('/asets/png/job1-dark.webp')", "important");
       musicCard.style.setProperty("background-image", "url('/asets/png/job-dark.webp')", "important");
     } else {
-      // Ini gambar mode terangnya
       karyaCard.style.setProperty("background-image", "url('/asets/png/art.webp')", "important");
       musicCard.style.setProperty("background-image", "url('/asets/png/song.webp')", "important");
     }
@@ -118,7 +115,6 @@ body.dark .notification-icon { color: #fff; }
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }
 
-  // Cek tema saat web pertama kali diload
   if (toggleBtn) {
     const savedTheme = localStorage.getItem("theme");
     const isAutoDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -126,7 +122,6 @@ body.dark .notification-icon { color: #fff; }
     
     applyTheme(isDark);
 
-    // Event listener pas tombol di-klik
     toggleBtn.addEventListener("change", () => {
       document.body.classList.add("theme-transition");
       applyTheme(toggleBtn.checked);
@@ -142,13 +137,11 @@ body.dark .notification-icon { color: #fff; }
   const avatarMenu = document.getElementById("avatarMenu");
   
   if (avatar && avatarMenu) {
-    // Buka/tutup menu pas avatar diklik
     avatar.addEventListener("click", (e) => {
       e.stopPropagation();
       avatarMenu.style.display = avatarMenu.style.display === "flex" ? "none" : "flex";
     });
     
-    // Tutup menu kalau user klik di luar kotak menu
     document.addEventListener("click", (e) => {
       if (!avatarMenu.contains(e.target) && e.target !== avatar) {
         avatarMenu.style.display = "none";
@@ -157,9 +150,13 @@ body.dark .notification-icon { color: #fff; }
   }
 
   // =======================
-  // LOGOUT LOGIC
+  // LOGOUT LOGIC (LAZY LOAD DB)
   // =======================
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+    // 🔥 FIX: Supabase & Toast baru di-download SAAT tombol diklik!
+    const { supabase: db } = await import('../lib/supabase.js');
+    const { showToast } = await import('../lib/ui-utils.js');
+
     try {
       const { data: { session } } = await db.auth.getSession();
       if (session) {
@@ -180,3 +177,4 @@ body.dark .notification-icon { color: #fff; }
     }
   });
 </script>
+

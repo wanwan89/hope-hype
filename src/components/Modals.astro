@@ -1,5 +1,4 @@
 ---
-// Modals.astro
 ---
 <div id="settingsModal" class="modal">
   <div class="modal-content">
@@ -169,8 +168,9 @@
 </div>
 
 <script>
-  import { supabase as db } from '../lib/supabase.js';
-  import { showToast, createParticles, loadMidtrans } from '../lib/ui-utils.js';
+  // 🔥 FIX PERFORMA: Dynamic Imports. Gak dipanggil di awal!
+  const getDB = () => import('../lib/supabase.js').then(m => m.supabase);
+  const getUtils = () => import('../lib/ui-utils.js');
 
   // ==========================================
   // 1. INFO PRODUK VIP & MODAL LOGIC
@@ -294,7 +294,7 @@
     });
   }
 
-  const settingsBtn = document.getElementById("settingsBtn"); // Tombol di Header
+  const settingsBtn = document.getElementById("settingsBtn"); 
   const settingsModal = document.getElementById("settingsModal");
   const closeSettings = document.getElementById("closeSettings");
 
@@ -359,6 +359,10 @@
 
   if (saveSettings) {
     saveSettings.addEventListener("click", async () => {
+      // 🔥 Panggil DB dan Utils cuma pas diklik!
+      const db = await getDB();
+      const { showToast } = await getUtils();
+
       const originalText = saveSettings.innerText;
       saveSettings.innerText = "Menyimpan...";
       saveSettings.disabled = true;
@@ -422,6 +426,10 @@
   // Beli Premium
   document.querySelectorAll(".buy-now-btn").forEach((button) => {
     button.addEventListener("click", async (e) => {
+      // 🔥 Panggil DB dan Utils cuma pas diklik!
+      const db = await getDB();
+      const { showToast, createParticles, loadMidtrans } = await getUtils();
+
       const btn = e.currentTarget;
       createParticles(e.clientX, e.clientY);
       btn.classList.add("btn-loading");
@@ -464,6 +472,10 @@
   // Beli Paket Koin
   document.querySelectorAll(".buy-coin-btn").forEach((button) => {
     button.addEventListener("click", async (e) => {
+      // 🔥 Panggil DB dan Utils cuma pas diklik!
+      const db = await getDB();
+      const { showToast, loadMidtrans } = await getUtils();
+
       const btn = e.currentTarget; btn.classList.add("btn-loading");
       const card = btn.closest(".coin-product-card");
       if (!card) return btn.classList.remove("btn-loading");
@@ -518,6 +530,10 @@
     });
 
     customBtn.addEventListener("click", async () => {
+      // 🔥 Panggil DB dan Utils cuma pas diklik!
+      const db = await getDB();
+      const { showToast, createParticles, loadMidtrans } = await getUtils();
+
       const coins = parseInt(customInput.value); const price = coins * COIN_PRICE;
       if (!coins || coins <= 0) return showToast("Masukkan jumlah koin!", "", "warning");
       if (price < MIN_TRANSACTION) return showToast("Minimal Rp 10.000", `Butuh minimal ${MIN_TRANSACTION / COIN_PRICE} koin untuk lanjut.`, "warning");
