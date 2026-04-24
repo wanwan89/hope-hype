@@ -1,4 +1,5 @@
 ---
+// Modals.astro
 ---
 <div id="settingsModal" class="modal">
   <div class="modal-content">
@@ -168,10 +169,16 @@
 </div>
 
 <script>
-  // 1. KITA TARUH FUNGSI TOAST DI LUAR BIAR LANGSUNG AKTIF (GLOBAL)
+  // 🔥 FUNGSI TOAST GLOBAL ANTI-BUG
+  // Dibikin di paling atas biar nggak ada acara "fungsi undefined"
   window.showNotif = function(msg, type = "info") {
-    const container = document.getElementById("toast");
-    if (!container) return alert(msg);
+    // Pastikan container ada, kalau ga ada BIKIN PAKSA
+    let container = document.getElementById("toast");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toast";
+      document.body.appendChild(container);
+    }
 
     const config = {
       success: { title: "Berhasil", icon: "✓" },
@@ -196,7 +203,6 @@
     `;
 
     container.appendChild(toastCard);
-    
     setTimeout(() => toastCard.classList.add("show"), 10);
     
     setTimeout(() => {
@@ -207,8 +213,10 @@
     }, 4000);
   };
 
+
   document.addEventListener("DOMContentLoaded", () => {
     
+    // Dynamic import Supabase & Utils
     const getDB = () => import('../lib/supabase.js').then(m => m.supabase);
     const getUtils = () => import('../lib/ui-utils.js');
 
@@ -235,7 +243,7 @@
         const card = icon.closest('.product-card');
         if (!card) return;
         const role = card.getAttribute('data-role');
-        const title = icon.getAttribute('data-title') || card.querySelector('.p-name').textContent.trim();
+        const title = icon.getAttribute('data-title') || card.querySelector('.p-name').childNodes[0].textContent.trim();
         const productIconContainer = card.querySelector('.product-icon');
         const showcase = document.getElementById('infoModalIconShowcase');
         
@@ -328,7 +336,7 @@
           const { error } = await db.from("profiles").update(updatePayload).eq("id", user.id);
           if (error) throw error;
           
-          window.showNotif("Profil diupdate!", "success");
+          window.showNotif("Profil berhasil diupdate!", "success");
           setTimeout(() => location.reload(), 1000);
         } catch(err) {
           window.showNotif(err.message, "error");
@@ -339,7 +347,7 @@
     }
 
     // ==========================================
-    // 4. PAYMENTS (MIDTRANS) LOGIC
+    // 4. PAYMENTS (MIDTRANS) LOGIC - EVENT DELEGATION
     // ==========================================
     const processPayment = async (btn, endpoint, payloadBody) => {
       try {
@@ -352,11 +360,12 @@
 
         if (!window.snap) {
           if (utils.loadMidtrans) utils.loadMidtrans();
+          window.showNotif("Menyiapkan pembayaran...", "info");
           for(let i=0; i<30; i++) {
              if(window.snap) break;
              await new Promise(r => setTimeout(r, 100)); 
           }
-          if (!window.snap) throw new Error("Gagal memuat Midtrans. Coba refresh web-nya.");
+          if (!window.snap) throw new Error("Gagal memuat Midtrans. Refresh browser lu bro.");
         }
 
         const response = await fetch(endpoint, {
@@ -367,21 +376,21 @@
 
         if (!response.ok) {
            const errText = await response.text();
-           throw new Error(errText || "Gagal ngehubungin server.");
+           throw new Error(errText || "Gagal menghubungi server pembayaran.");
         }
         
         const result = await response.json(); 
         const token = result?.token;
-        if (!token) throw new Error("Token pembayaran nggak dapet nih.");
+        if (!token) throw new Error("Token dari midtrans nggak muncul bro.");
 
         window.snap.pay(token, {
           onSuccess: () => { 
             sessionStorage.removeItem(`hh_profile_${payloadBody.userId}`); 
-            window.showNotif("Akun lu udah di-upgrade.", "success"); 
+            window.showNotif("Pembayaran Sukses! Akun diupgrade.", "success"); 
             setTimeout(() => location.reload(), 1200); 
           },
           onPending: () => window.showNotif("Selesaikan transaksi lu ya", "warning"),
-          onError: () => window.showNotif("Ada masalah pas transaksi", "error"),
+          onError: () => window.showNotif("Pembayaran gagal", "error"),
           onClose: () => window.showNotif("Lu nutup popup sebelum bayar", "info")
         });
 
@@ -406,13 +415,16 @@
         try {
           const db = await getDB();
           const { data: { user } } = await db.auth.getUser();
-          if(!user) throw new Error("Login dulu sebelum beli.");
+          if(!user) throw new Error("Login dulu sebelum beli bro.");
+
+          // 🔥 FIX PENTING: Bersihin spasi dan buang SVG biar nggak eror pas bikin item_name
+          const itemName = card.querySelector(".p-name")?.childNodes[0]?.textContent.trim() || "Premium VIP";
 
           const payload = {
             userId: user.id, 
             email: user.email, 
             amount: parseInt(card.getAttribute("data-price"), 10), 
-            item_name: card.querySelector(".p-name")?.textContent.trim() || "Premium VIP", 
+            item_name: itemName, 
             role_target: card.getAttribute("data-role")
           };
 
@@ -439,7 +451,7 @@
         try {
           const db = await getDB();
           const { data: { user } } = await db.auth.getUser();
-          if(!user) throw new Error("Login dulu sebelum beli.");
+          if(!user) throw new Error("Login dulu sebelum beli bro.");
 
           const payload = {
             userId: user.id, 
@@ -479,7 +491,7 @@
         try {
           const db = await getDB();
           const { data: { user } } = await db.auth.getUser();
-          if(!user) throw new Error("Login dulu sebelum beli.");
+          if(!user) throw new Error("Login dulu sebelum beli bro.");
 
           const payload = {
             userId: user.id, 
@@ -501,7 +513,6 @@
 
   });
 </script>
-
 
 
 <style is:global>
@@ -596,8 +607,8 @@ h3 { color: white; margin-bottom: 20px; font-size: 18px; }
 #buy-custom-coin-btn:hover { opacity: 0.92; }
 #custom-price-display { color: #bdbdbd; font-size: 12px; font-weight: 500; }
 
-/* TOAST / NOTIF LIST */
-#toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 99999; width: calc(100% - 24px); max-width: 420px; pointer-events: none; }
+/* 🔥 TOAST / NOTIF LIST DENGAN Z-INDEX DEWA 🔥 */
+#toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 9999999 !important; width: calc(100% - 24px); max-width: 420px; pointer-events: none; }
 .toast-card { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.96); color: #1f2937; border-radius: 20px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); opacity: 0; transform: translateY(-20px) scale(0.96); transition: all 0.28s ease; pointer-events: auto; min-height: 64px; border: 1px solid rgba(255, 255, 255, 0.6); }
 .toast-card.show { opacity: 1; transform: translateY(0) scale(1); }
 .toast-icon-wrap { flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
