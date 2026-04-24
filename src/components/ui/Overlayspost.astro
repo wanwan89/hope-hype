@@ -24,27 +24,118 @@
      CSS SCOPED: SEMUA OVERLAYS
      ========================================= */
   
-  /* --- TOAST NOTIF --- */
+  /* =========================
+     TOAST COMPACT MOBILE FIX
+  ========================= */
   #toast {
-    position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
-    z-index: 1000000; width: calc(100% - 24px); max-width: 420px; pointer-events: none;
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000000;
+    width: calc(100% - 24px);
+    max-width: 420px;
+    pointer-events: none;
   }
+
   :global(.toast-card) {
-    display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.96);
-    color: #1f2937; border-radius: 20px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-    backdrop-filter: blur(14px); opacity: 0; transform: translateY(-20px) scale(0.96);
-    transition: all 0.28s ease; pointer-events: auto; min-height: 64px; border: 1px solid rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.96);
+    color: #1f2937;
+    border-radius: 20px;
+    padding: 12px 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    opacity: 0;
+    transform: translateY(-20px) scale(0.96);
+    transition: all 0.28s ease;
+    pointer-events: auto;
+    min-height: 64px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
   }
+  
+  /* Support Dark Mode Biar Ga Silau */
   html.dark :global(.toast-card) { background: rgba(30, 30, 30, 0.96); color: #fff; border-color: rgba(255, 255, 255, 0.1); }
-  :global(.toast-card.show) { opacity: 1; transform: translateY(0) scale(1); }
-  :global(.toast-icon-wrap) { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;}
+  html.dark :global(.toast-title) { color: #f9fafb; }
+  html.dark :global(.toast-subtitle) { color: #d1d5db; }
+
+  :global(.toast-card.show) {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  :global(.toast-icon-wrap) {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+
   :global(.toast-icon-wrap.success) { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  :global(.toast-icon-wrap.warning) { background: linear-gradient(135deg, #f59e0b, #d97706); }
   :global(.toast-icon-wrap.error) { background: linear-gradient(135deg, #ef4444, #dc2626); }
   :global(.toast-icon-wrap.info) { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-  :global(.toast-icon) { font-size: 22px; font-weight: 800; }
-  :global(.toast-content) { flex: 1; min-width: 0; }
-  :global(.toast-title) { font-size: 14px; font-weight: 800; color: var(--text-main); margin-bottom: 2px; }
-  :global(.toast-subtitle) { font-size: 12px; color: var(--text-muted); line-height: 1.3; }
+
+  :global(.toast-icon) {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  :global(.toast-content) {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  :global(.toast-title) {
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    color: #111827;
+  }
+
+  :global(.toast-subtitle) {
+    font-size: 12px;
+    line-height: 1.3;
+    color: #6b7280;
+    word-break: break-word;
+  }
+
+  :global(.toast-close) {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Mobile super compact */
+  @media (max-width: 480px) {
+    #toast { top: 10px; width: calc(100% - 16px); }
+    :global(.toast-card) { border-radius: 18px; padding: 10px 12px; gap: 8px; min-height: 56px; }
+    :global(.toast-icon-wrap) { width: 38px; height: 38px; }
+    :global(.toast-icon) { font-size: 18px; }
+    :global(.toast-title) { font-size: 13px; margin-bottom: 1px; }
+    :global(.toast-subtitle) { font-size: 11px; line-height: 1.25; }
+    :global(.toast-close) { font-size: 18px; width: 20px; height: 20px; }
+  }
 
   /* --- BIG IMAGE --- */
   .overlay-container {
@@ -95,7 +186,7 @@
   // JAVASCRIPT GLOBAL (Bisa dipanggil komponen lain)
   // ==========================================
 
-  // 1. FUNGSI TOAST NOTIF
+  // 1. FUNGSI TOAST NOTIF (Dengan tombol close baru)
   window.showNotif = function(msg, type = "info") {
     const container = document.getElementById("toast");
     if (!container) return;
@@ -103,25 +194,36 @@
     const config = {
       success: { title: "Berhasil", icon: "✓" },
       error: { title: "Gagal", icon: "✕" },
+      warning: { title: "Peringatan", icon: "!" },
       info: { title: "Info", icon: "i" }
     };
     const { title, icon } = config[type] || config.info;
 
     const toastCard = document.createElement("div");
     toastCard.className = "toast-card";
+    
+    // HTML diperbarui biar tombol x (close) jalan sesuai CSS baru lu
     toastCard.innerHTML = `
-      <div class="toast-icon-wrap ${type}"><span class="toast-icon">${icon}</span></div>
+      <div class="toast-icon-wrap ${type}">
+        <span class="toast-icon">${icon}</span>
+      </div>
       <div class="toast-content">
         <div class="toast-title">${title}</div>
         <div class="toast-subtitle">${msg}</div>
       </div>
+      <button class="toast-close" onclick="this.parentElement.classList.remove('show'); setTimeout(()=>this.parentElement.remove(), 300)">×</button>
     `;
 
     container.appendChild(toastCard);
+    
     setTimeout(() => toastCard.classList.add("show"), 10);
+    
+    // Auto-hapus setelah 4 detik
     setTimeout(() => {
-      toastCard.classList.remove("show");
-      setTimeout(() => toastCard.remove(), 300);
+      if(toastCard && toastCard.parentElement) {
+        toastCard.classList.remove("show");
+        setTimeout(() => toastCard.remove(), 300);
+      }
     }, 4000);
   };
 

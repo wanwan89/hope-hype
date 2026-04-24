@@ -95,6 +95,9 @@
   .skeleton-card { background: var(--bg-card); border-radius: 20px; height: 400px; position: relative; overflow: hidden; border: 1px solid var(--border-card); }
   .skeleton-shimmer { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform: translateX(-100%); background-image: linear-gradient(90deg, transparent 0, rgba(255, 255, 255, 0.05) 20%, rgba(255, 255, 255, 0.1) 60%, transparent); animation: shimmer 1.5s infinite; }
   @keyframes shimmer { 100% { transform: translateX(100%); } }
+  :global(.icon-btn.reposted .icon) { fill: #1DA1F2; } 
+  :global(.icon-btn.reposted .repost-count) { color: #1DA1F2; font-weight: bold; }
+
 </style>
 
 <script>
@@ -219,11 +222,8 @@
           </button>
           
           <button class="icon-btn repost-btn ${isRepostedClass}" data-post="${post.id}" data-creator="${post.creator_id}">
-            <svg viewBox="0 0 24 24" class="icon" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="17 1 21 5 17 9"></polyline>
-              <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-              <polyline points="7 23 3 19 7 15"></polyline>
-              <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+            <svg viewBox="0 0 24 24" class="icon" fill="currentColor">
+              <path d="M23.77 15.67c-.292-.293-.767-.293-1.06 0l-2.22 2.22V7.65c0-2.068-1.683-3.75-3.75-3.75h-5.85c-.414 0-.75.336-.75.75s.336.75.75.75h5.85c1.24 0 2.25 1.01 2.25 2.25v10.24l-2.22-2.22c-.293-.292-.768-.292-1.06 0s-.294.768 0 1.06l3.5 3.5c.145.147.337.22.53.22s.383-.072.53-.22l3.5-3.5c.294-.292.294-.767 0-1.06zm-10.66 3.28H7.26c-1.24 0-2.25-1.01-2.25-2.25V6.46l2.22 2.22c.148.147.34.22.532.22s.384-.073.53-.22c.293-.293.293-.768 0-1.06l-3.5-3.5c-.293-.294-.768-.294-1.06 0l-3.5 3.5c-.294.292-.294.767 0 1.06s.767.293 1.06 0l2.22-2.22V16.7c0 2.068 1.683 3.75 3.75 3.75h5.85c.414 0 .75-.336.75-.75s-.337-.75-.75-.75z"></path>
             </svg>
             <span class="repost-count" style="margin-left:4px;">${repostCounts[post.id] || 0}</span>
           </button>
