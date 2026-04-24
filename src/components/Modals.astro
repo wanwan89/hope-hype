@@ -1,4 +1,5 @@
 ---
+// Modals.astro
 ---
 <div id="settingsModal" class="modal">
   <div class="modal-content">
@@ -167,409 +168,6 @@
   </div>
 </div>
 
-<script>
-  // 🔥 FIX PERFORMA: Dynamic Imports. Gak dipanggil di awal!
-  const getDB = () => import('../lib/supabase.js').then(m => m.supabase);
-  const getUtils = () => import('../lib/ui-utils.js');
-
-  // ==========================================
-  // 1. INFO PRODUK VIP & MODAL LOGIC
-  // ==========================================
-  const infoIcons = document.querySelectorAll('.info-icon');
-  const infoModal = document.getElementById('infoModal');
-  const infoModalTitle = document.getElementById('infoModalTitle');
-  const infoModalBenefits = document.getElementById('infoModalBenefits');
-  const closeInfoModal = document.getElementById('closeInfoModal');
-  const closeInfoBtn = document.getElementById('closeInfoBtn');
-
-  const vipBenefitsData = {
-    'verified': `
-      <div class="b-item">
-        <div class="b-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg></div>
-        <div class="b-text"><b>Centang Biru Eksklusif:</b> Tanda resmi bahwa akun kamu asli dan terverifikasi.</div>
-      </div>
-      <div class="b-item">
-        <div class="b-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg></div>
-        <div class="b-text"><b>Prioritas Pencarian:</b> Akunmu lebih mudah ditemukan oleh pengguna lain.</div>
-      </div>
-      <div class="b-item">
-        <div class="b-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg></div>
-        <div class="b-text"><b>Profil Terpercaya:</b> Bikin kamu terlihat profesional dan meyakinkan.</div>
-      </div>
-    `,
-    'crown1': `
-      <div class="b-item">
-        <div class="b-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></div>
-        <div class="b-text"><b>Badge Perunggu:</b> Tampil beda dengan badge VIP pemula di profilmu.</div>
-      </div>
-      <div class="b-item">
-        <div class="b-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
-        <div class="b-text"><b>Highlight Komentar:</b> Warna khusus pada komentarmu agar tidak tenggelam.</div>
-      </div>
-      <div class="b-item">
-        <div class="b-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg></div>
-        <div class="b-text"><b>Stiker VIP Dasar:</b> Buka akses ke koleksi stiker eksklusif member VIP.</div>
-      </div>
-    `,
-    'crown2': `
-      <div class="b-item">
-        <div class="b-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></div>
-        <div class="b-text"><b>Badge Perak:</b> Badge yang lebih elegan dan bergengsi di obrolan.</div>
-      </div>
-      <div class="b-item">
-        <div class="b-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>
-        <div class="b-text"><b>Efek Masuk Ruangan:</b> Ada notifikasi khusus saat kamu masuk room.</div>
-      </div>
-      <div class="b-item">
-        <div class="b-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></div>
-        <div class="b-text"><b>Limit Ekstra:</b> Batas kirim pesan dan follow teman jadi lebih banyak.</div>
-      </div>
-      <div class="b-item b-highlight">
-        <div class="b-icon" style="color: #4ade80;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></div>
-        <div class="b-text"><b>Plus:</b> Mendapatkan SEMUA keuntungan dari <b>Crown Bronze</b>!</div>
-      </div>
-    `,
-    'crown3': `
-      <div class="b-item">
-        <div class="b-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path></svg></div>
-        <div class="b-text"><b>Badge Emas (Sultan):</b> Kasta tertinggi dengan bingkai profil bercahaya.</div>
-      </div>
-      <div class="b-item">
-        <div class="b-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div>
-        <div class="b-text"><b>Animasi Masuk Mewah:</b> Efek visual super mencolok saat masuk obrolan.</div>
-      </div>
-      <div class="b-item">
-        <div class="b-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg></div>
-        <div class="b-text"><b>Bebas Iklan 100%:</b> Nikmati aplikasi tanpa gangguan iklan sama sekali.</div>
-      </div>
-      <div class="b-item b-highlight b-gold">
-        <div class="b-icon" style="color: #ffd700;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></div>
-        <div class="b-text"><b>Super Plus:</b> Mendapatkan SEMUA keuntungan <b>Bronze</b> & <b>Silver</b>!</div>
-      </div>
-    `
-  };
-
-  infoIcons.forEach(icon => {
-    icon.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation(); 
-      
-      const card = icon.closest('.product-card');
-      const role = card.getAttribute('data-role');
-      const title = icon.getAttribute('data-title') || card.querySelector('.p-name').childNodes[0].textContent.trim();
-      const productIconContainer = card.querySelector('.product-icon');
-      const showcase = document.getElementById('infoModalIconShowcase');
-      
-      if(showcase && productIconContainer) { showcase.innerHTML = productIconContainer.innerHTML; }
-      if(infoModalTitle) infoModalTitle.textContent = title;
-      if(infoModalBenefits) infoModalBenefits.innerHTML = vipBenefitsData[role] || '<p style="text-align:center; color:#ccc;">Belum ada info.</p>';
-      
-      if(infoModal) infoModal.classList.add('active');
-    });
-  });
-
-  const closeInfo = () => { if(infoModal) infoModal.classList.remove('active'); };
-  if (closeInfoModal) closeInfoModal.addEventListener('click', closeInfo);
-  if (closeInfoBtn) closeInfoBtn.addEventListener('click', closeInfo);
-  if (infoModal) { infoModal.addEventListener('click', (e) => { if (e.target === infoModal) closeInfo(); }); }
-
-  // ==========================================
-  // 2. BOTTOM SHEETS & SETTINGS MODAL TOGGLE
-  // ==========================================
-  const bOverlay = document.querySelector(".sheet-overlay:not(.coin-sheet-overlay)");
-  const bSheet = document.getElementById("vip-bottom-sheet");
-  if (bOverlay && bSheet) {
-    bOverlay.addEventListener("click", () => {
-      bSheet.classList.remove("active");
-      setTimeout(() => bSheet.style.display = "none", 400);
-    });
-  }
-
-  const coinOverlay = document.querySelector(".coin-sheet-overlay");
-  const coinSheet = document.getElementById("coin-bottom-sheet");
-  if (coinOverlay && coinSheet) {
-    coinOverlay.addEventListener("click", () => {
-      coinSheet.classList.remove("active");
-      setTimeout(() => coinSheet.style.display = "none", 400);
-    });
-  }
-
-  const settingsBtn = document.getElementById("settingsBtn"); 
-  const settingsModal = document.getElementById("settingsModal");
-  const closeSettings = document.getElementById("closeSettings");
-
-  if (settingsBtn && settingsModal) {
-    settingsBtn.addEventListener("click", (e) => {
-      e.preventDefault(); e.stopPropagation();
-      settingsModal.classList.add("active");
-      const avatarMenu = document.getElementById("avatarMenu");
-      if (avatarMenu) avatarMenu.style.display = "none";
-      
-      const usernameEl = document.getElementById("username");
-      const newUsernameInput = document.getElementById("newUsername");
-      if (usernameEl && newUsernameInput) {
-        const clone = usernameEl.cloneNode(true);
-        clone.querySelectorAll(".admin-badge, .verified-badge, img").forEach((el) => el.remove());
-        newUsernameInput.value = clone.textContent.trim();
-      }
-    });
-  }
-
-  if (closeSettings && settingsModal) {
-    closeSettings.addEventListener("click", () => settingsModal.classList.remove("active"));
-  }
-  if (settingsModal) {
-    settingsModal.addEventListener("click", (e) => { 
-      if (e.target === settingsModal) settingsModal.classList.remove("active"); 
-    });
-  }
-
-  // ==========================================
-  // 3. UPLOAD AVATAR & SAVE PROFILE LOGIC
-  // ==========================================
-  const saveSettings = document.getElementById("saveSettings");
-  const newUsernameInput = document.getElementById("newUsername");
-  const avatarPreview = document.getElementById("avatarPreview");
-  const avatarUpload = document.getElementById("avatarUpload");
-  const avatarOptions = document.querySelectorAll("#avatarOptions .avatar-choice");
-
-  let selectedAvatar = null;
-  let uploadedAvatarFile = null;
-
-  avatarOptions.forEach((img) => {
-    img.addEventListener("click", () => {
-      selectedAvatar = img.getAttribute("src");
-      uploadedAvatarFile = null;
-      if (avatarPreview) avatarPreview.src = selectedAvatar;
-      avatarOptions.forEach((i) => i.classList.remove("selected"));
-      img.classList.add("selected");
-    });
-  });
-
-  if (avatarUpload && avatarPreview) {
-    avatarUpload.addEventListener("change", (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      uploadedAvatarFile = file;
-      selectedAvatar = null;
-      avatarPreview.src = URL.createObjectURL(file);
-      avatarOptions.forEach((i) => i.classList.remove("selected"));
-    });
-  }
-
-  if (saveSettings) {
-    saveSettings.addEventListener("click", async () => {
-      // 🔥 Panggil DB dan Utils cuma pas diklik!
-      const db = await getDB();
-      const { showToast } = await getUtils();
-
-      const originalText = saveSettings.innerText;
-      saveSettings.innerText = "Menyimpan...";
-      saveSettings.disabled = true;
-
-      try {
-        const { data: { user }, error: userError } = await db.auth.getUser();
-        if (userError || !user) { showToast("Belum login", "Silakan login dulu", "warning"); return; }
-
-        const newUsername = newUsernameInput?.value?.trim();
-        if (!newUsername) { showToast("Username kosong", "Isi username terlebih dahulu", "warning"); return; }
-
-        let finalAvatarUrl = selectedAvatar;
-
-        if (uploadedAvatarFile) {
-          showToast("Sedang mengunggah foto...", "Mohon tunggu", "info");
-          const fd = new FormData();
-          fd.append("file", uploadedAvatarFile);
-          fd.append("upload_preset", "post_hope"); 
-
-          const res = await fetch("https://api.cloudinary.com/v1_1/dhhmkb8kl/image/upload", { 
-            method: "POST", body: fd 
-          });
-          
-          if (!res.ok) throw new Error("Gagal mengunggah gambar ke server");
-          const cData = await res.json();
-          finalAvatarUrl = cData.secure_url; 
-        }
-
-        const updatePayload = { username: newUsername };
-        if (finalAvatarUrl) updatePayload.avatar_url = finalAvatarUrl;
-
-        const { data: updatedProfile, error } = await db
-          .from("profiles")
-          .update(updatePayload)
-          .eq("id", user.id)
-          .select("username, role, avatar_url") 
-          .single();
-
-        if (error) {
-          if (error.code === "23505" || error.message.includes("unique")) { showToast("Gagal Update", "Username sudah terpakai!", "error"); return; }
-          throw error;
-        }
-
-        sessionStorage.setItem(`hh_profile_${user.id}`, JSON.stringify(updatedProfile));
-        showToast("Profil diperbarui", "Foto berhasil diubah!", "success");
-        setTimeout(() => location.reload(), 1200); 
-        
-      } catch (err) {
-        showToast("Gagal update profil", err.message, "error");
-      } finally {
-        saveSettings.innerText = originalText;
-        saveSettings.disabled = false;
-      }
-    });
-  }
-
-  // ==========================================
-  // 4. PAYMENTS (MIDTRANS) LOGIC
-  // ==========================================
-  
-  // Beli Premium
-  document.querySelectorAll(".buy-now-btn").forEach((button) => {
-    button.addEventListener("click", async (e) => {
-      // 🔥 Panggil DB dan Utils cuma pas diklik!
-      const db = await getDB();
-      const { showToast, createParticles, loadMidtrans } = await getUtils();
-
-      const btn = e.currentTarget;
-      createParticles(e.clientX, e.clientY);
-      btn.classList.add("btn-loading");
-
-      const card = btn.closest(".product-card");
-      if (!card) return btn.classList.remove("btn-loading");
-
-      const price = card.getAttribute("data-price");
-      const role = card.getAttribute("data-role");
-      const name = card.querySelector(".p-name")?.innerText || "Premium";
-
-      try {
-        const { data: { user }, error: userError } = await db.auth.getUser();
-        if (userError || !user) throw new Error("Silakan login dulu!");
-        const { data: { session }, error: sessionError } = await db.auth.getSession();
-        if (sessionError || !session) throw new Error("Silakan login ulang.");
-
-        if (!window.snap) { loadMidtrans(); btn.classList.remove("btn-loading"); return showToast("Menyiapkan koneksi", "Silakan klik lagi", "info"); }
-
-        const response = await fetch("https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/pay-premium", {
-          method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-          body: JSON.stringify({ userId: user.id, email: user.email, amount: parseInt(price, 10), item_name: name, role_target: role }),
-        });
-
-        if (!response.ok) throw new Error("Gagal menghubungi server");
-        const result = await response.json(); const token = result?.token;
-        btn.classList.remove("btn-loading");
-        if (!token) throw new Error("Token tidak ditemukan");
-
-        window.snap.pay(token, {
-          onSuccess: () => { sessionStorage.removeItem(`hh_profile_${user.id}`); showToast("Pembayaran berhasil", "Status akun akan diperbarui", "success"); setTimeout(() => location.reload(), 1200); },
-          onPending: () => showToast("Menunggu pembayaran", "Selesaikan transaksi terlebih dahulu", "warning"),
-          onError: () => showToast("Pembayaran gagal", "Silakan coba lagi", "error"),
-          onClose: async () => { try { await db.from("notifications").insert({ user_id: user.id, type: "payment_pending", message: `Transaksi ${name} tertunda. Lanjutkan?`, token: token, is_read: false }); showToast("Tersimpan!", "Cek lonceng notifikasi", "success"); window.dispatchEvent(new Event('loadUnreadNotifications')); } catch (err) {} }
-        });
-      } catch (err) { btn.classList.remove("btn-loading"); showToast("Koneksi gagal", err.message, "error"); }
-    });
-  });
-
-  // Beli Paket Koin
-  document.querySelectorAll(".buy-coin-btn").forEach((button) => {
-    button.addEventListener("click", async (e) => {
-      // 🔥 Panggil DB dan Utils cuma pas diklik!
-      const db = await getDB();
-      const { showToast, loadMidtrans } = await getUtils();
-
-      const btn = e.currentTarget; btn.classList.add("btn-loading");
-      const card = btn.closest(".coin-product-card");
-      if (!card) return btn.classList.remove("btn-loading");
-
-      const price = parseInt(card.getAttribute("data-price") || "0", 10);
-      const coins = parseInt(card.getAttribute("data-coins") || "0", 10);
-      const name = card.querySelector(".p-name")?.innerText || "Top Up Koin";
-
-      try {
-        const { data: { user }, error: userError } = await db.auth.getUser();
-        if (userError || !user) throw new Error("Silakan login dulu!");
-        const { data: { session }, error: sessionError } = await db.auth.getSession();
-        if (sessionError || !session) throw new Error("Silakan login ulang");
-
-        if (!window.snap) { loadMidtrans(); btn.classList.remove("btn-loading"); return showToast("Menyiapkan pembayaran", "Silakan klik beli lagi", "info"); }
-
-        const response = await fetch("https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/pay-coins", {
-          method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-          body: JSON.stringify({ userId: user.id, email: user.email, amount: price, coins: coins, item_name: name }),
-        });
-
-        const rawText = await response.text();
-        if (!response.ok) throw new Error(`HTTP ${response.status} - ${rawText}`);
-        let result; try { result = JSON.parse(rawText); } catch (jsonErr) { throw new Error("Response bukan JSON valid"); }
-
-        const token = result?.token; btn.classList.remove("btn-loading");
-        if (!token) throw new Error("Token pembayaran tidak ditemukan");
-
-        window.snap.pay(token, {
-          onSuccess: function () { sessionStorage.removeItem(`hh_profile_${user.id}`); showToast("Pembayaran berhasil", "Koin akan masuk", "success"); setTimeout(() => location.reload(), 1200); },
-          onPending: function () { showToast("Menunggu pembayaran", "Selesaikan transaksi terlebih dahulu", "warning"); },
-          onError: function () { showToast("Pembayaran gagal", "Terjadi kesalahan", "error"); },
-          onClose: async function () { try { await db.from("notifications").insert({ user_id: user.id, type: "payment_pending", message: `Transaksi ${name} tertunda. Lanjutkan?`, token: token, is_read: false }); showToast("Tersimpan!", "Cek lonceng notifikasi", "success"); window.dispatchEvent(new Event('loadUnreadNotifications')); } catch (err) {} }
-        });
-      } catch (err) { btn.classList.remove("btn-loading"); showToast("Gagal", err.message, "error"); }
-    });
-  });
-
-  // Beli Koin Custom
-  (() => {
-    const COIN_PRICE = 100; const MIN_TRANSACTION = 10000; const MAX_COINS = 5000;
-    const customInput = document.getElementById("custom-coins");
-    const customBtn = document.getElementById("buy-custom-coin-btn");
-    const priceDisplay = document.getElementById("custom-price-display");
-
-    if (!customInput || !customBtn || !priceDisplay) return;
-
-    customInput.addEventListener("input", () => {
-      const coins = parseInt(customInput.value) || 0; const price = coins * COIN_PRICE;
-      if (coins > 0) { priceDisplay.textContent = `Total: Rp ${price.toLocaleString("id-ID")}`; priceDisplay.style.color = price < MIN_TRANSACTION ? "#ff4757" : "#4ade80"; } 
-      else { priceDisplay.textContent = ""; }
-    });
-
-    customBtn.addEventListener("click", async () => {
-      // 🔥 Panggil DB dan Utils cuma pas diklik!
-      const db = await getDB();
-      const { showToast, createParticles, loadMidtrans } = await getUtils();
-
-      const coins = parseInt(customInput.value); const price = coins * COIN_PRICE;
-      if (!coins || coins <= 0) return showToast("Masukkan jumlah koin!", "", "warning");
-      if (price < MIN_TRANSACTION) return showToast("Minimal Rp 10.000", `Butuh minimal ${MIN_TRANSACTION / COIN_PRICE} koin untuk lanjut.`, "warning");
-      if (coins > MAX_COINS) return showToast(`Maksimal ${MAX_COINS} koin`, "", "warning");
-
-      createParticles(window.innerWidth / 2, window.innerHeight / 2);
-      customBtn.classList.add("btn-loading");
-
-      try {
-        const { data: { user }, error: userError } = await db.auth.getUser();
-        if (userError || !user) throw new Error("Silakan login terlebih dahulu!");
-        const { data: { session }, error: sessionError } = await db.auth.getSession();
-        if (sessionError || !session) throw new Error("Sesi habis, silakan login ulang.");
-
-        if (!window.snap) { showToast("Menyiapkan sistem...", "Tunggu sebentar", "info"); loadMidtrans(); return; }
-
-        const response = await fetch("https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/pay-coins", {
-          method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-          body: JSON.stringify({ userId: user.id, email: user.email, amount: price, coins: coins, item_name: `${coins} Koin (Custom)` }),
-        });
-
-        if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.message || "Gagal membuat transaksi"); }
-        const result = await response.json(); const token = result?.token;
-        if (!token) throw new Error("Token pembayaran tidak ditemukan.");
-
-        window.snap.pay(token, {
-          onSuccess: () => { sessionStorage.removeItem(`hh_profile_${user.id}`); showToast("Berhasil!", "Koin segera ditambahkan", "success"); setTimeout(() => location.reload(), 1500); },
-          onPending: () => showToast("Menunggu pembayaran", "", "warning"),
-          onError: () => showToast("Pembayaran gagal", "", "error"),
-          onClose: async () => { try { await db.from("notifications").insert({ user_id: user.id, type: "payment_pending", message: `Transaksi ${coins} Koin tertunda. Lanjutkan?`, token: token, is_read: false }); showToast("Tersimpan!", "Cek lonceng notifikasi", "success"); window.dispatchEvent(new Event('loadUnreadNotifications')); } catch (err) {} }
-        });
-      } catch (err) { showToast("Gagal", err.message, "error"); } finally { customBtn.classList.remove("btn-loading"); }
-    });
-  })();
-</script>
-
 <style is:global>
 /* MODAL SETTINGS */
 .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); justify-content: center; align-items: center; z-index: 1000000; animation: fadeIn 0.4s ease forwards; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
@@ -585,37 +183,11 @@
 .modal-content button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 118, 118, 0.5); }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-#avatarOptions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.avatar-choice { 
-  cursor: pointer; 
-  width: 50px; 
-  height: 50px; 
-  border-radius: 50%; 
-  border: 2px solid transparent; 
-  object-fit: cover; 
-}
-
-.avatar-choice.selected { 
-  border-color: blue; 
-}
-
-.upload-avatar-label { 
-  display: inline-block; 
-  cursor: pointer; 
-}
-
-#avatarPreview { 
-  width: 40px; 
-  height: 40px; 
-  border-radius: 50%; 
-  object-fit: cover; 
-  border: 2px solid #fff; 
-}
+#avatarOptions { display: flex; gap: 10px; flex-wrap: wrap; }
+.avatar-choice { cursor: pointer; width: 50px; height: 50px; border-radius: 50%; border: 2px solid transparent; object-fit: cover; }
+.avatar-choice.selected { border-color: blue; }
+.upload-avatar-label { display: inline-block; cursor: pointer; }
+#avatarPreview { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
 
 /* BOTTOM SHEETS (PRO & KOIN) */
 .bottom-sheet { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; justify-content: flex-end; z-index: 10000; }
@@ -630,13 +202,11 @@ h3 { color: white; margin-bottom: 20px; font-size: 18px; }
 .product-info-wrapper { display: flex; align-items: center; gap: 15px; }
 .product-icon { font-size: 24px; display: flex; align-items: center; justify-content: center; min-width: 40px; }
 .product-text { display: flex; flex-direction: column; }
-.p-name { color: white; font-weight: 700; font-size: 14px; }
+.p-name { color: white; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 10px; line-height: 1; }
 .p-price { color: #4ade80; font-size: 12px; font-weight: 600; }
-.buy-now-btn { background: #3a7bd5; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: bold; font-size: 12px; }
+.buy-now-btn { background: #3a7bd5; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; }
+.buy-now-btn.btn-loading { opacity: 0.7; pointer-events: none; }
 .crown-img { width: 30px; height: 30px; object-fit: contain; display: block; }
-.product-card:active { transform: translateY(2px) scale(0.98); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2); background-color: #f7df1e; color: black; border-color: #f7df1e; }
-.product-card:active .p-name, .product-card:active .p-price, .product-card:active .product-icon { color: black; }
-.buy-now-btn:active { animation: button-push 0.3s ease; }
 
 /* COIN BOTTOM SHEET */
 .coin-sheet-content { background: #1b1b1f; border-top-left-radius: 22px; border-top-right-radius: 22px; padding: 18px 16px 20px; }
@@ -653,206 +223,282 @@ h3 { color: white; margin-bottom: 20px; font-size: 18px; }
 .buy-coin-btn { min-width: 64px; height: 30px; padding: 0 12px; border: none; border-radius: 999px; background: #f7b500; color: #1a1a1a; font-size: 11px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
 .buy-coin-btn:hover { opacity: 0.92; }
 .buy-coin-btn.btn-loading { opacity: 0.7; pointer-events: none; }
-.coin-product-card:active { transform: translateY(2px) scale(0.98); background-color: #f7df1e; color: black; border-color: #f7df1e; }
 .custom-topup { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
 .custom-topup h4 { color: #fff; font-size: 14px; font-weight: 600; }
 .custom-topup input { padding: 10px 12px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.1); background: #2d2d33; color: #fff; font-size: 14px; outline: none; }
-.custom-topup input::placeholder { color: rgba(255, 255, 255, 0.4); }
 #buy-custom-coin-btn { min-width: 64px; height: 34px; padding: 0 12px; border: none; border-radius: 999px; background: #f7b500; color: #1a1a1a; font-size: 12px; font-weight: 700; cursor: pointer; align-self: flex-start; transition: opacity 0.2s; }
-#buy-custom-coin-btn:hover { opacity: 0.92; }
 #custom-price-display { color: #bdbdbd; font-size: 12px; font-weight: 500; }
 
-/* TOAST / NOTIF LIST */
-#toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 99999; width: calc(100% - 24px); max-width: 420px; pointer-events: none; }
-.toast-card { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.96); color: #1f2937; border-radius: 20px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); opacity: 0; transform: translateY(-20px) scale(0.96); transition: all 0.28s ease; pointer-events: auto; min-height: 64px; border: 1px solid rgba(255, 255, 255, 0.6); }
-.toast-card.show { opacity: 1; transform: translateY(0) scale(1); }
-.toast-icon-wrap { flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
-.toast-icon-wrap.success { background: linear-gradient(135deg, #22c55e, #16a34a); }
-.toast-icon-wrap.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.toast-icon-wrap.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
-.toast-icon-wrap.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.toast-icon { font-size: 22px; font-weight: 800; line-height: 1; }
-.toast-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-.toast-title { font-size: 14px; font-weight: 800; line-height: 1.2; margin-bottom: 2px; color: #111827; }
-.toast-subtitle { font-size: 12px; line-height: 1.3; color: #6b7280; word-break: break-word; }
-.toast-close { background: transparent; border: none; color: #9ca3af; font-size: 22px; cursor: pointer; padding: 0; margin-left: 4px; line-height: 1; flex-shrink: 0; width: 24px; height: 24px; }
-
-@media (max-width: 480px) {
-  #toast { top: 10px; width: calc(100% - 16px); }
-  .toast-card { border-radius: 18px; padding: 10px 12px; gap: 8px; min-height: 56px; }
-  .toast-icon-wrap { width: 38px; height: 38px; }
-  .toast-icon { font-size: 18px; }
-  .toast-title { font-size: 13px; margin-bottom: 1px; }
-  .toast-subtitle { font-size: 11px; line-height: 1.25; }
-  .toast-close { font-size: 18px; width: 20px; height: 20px; }
-}
-
-#notificationList { display: none; flex-direction: column; position: fixed; z-index: 10001; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 380px; }
-/* =========================================
-   1. PENSEJAJARAN TEKS & IKON INFO DI CARD
-   ========================================= */
-.p-name { 
-  color: white; 
-  font-weight: 700; 
-  font-size: 14px; 
-  display: flex; 
-  align-items: center; 
-  gap: 10px; 
-  line-height: 1; 
-}
-
-.info-icon {
-  color: #9ca3af; 
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  display: block; 
-  transform: translateY(-1px); 
-}
-
-.info-icon:hover {
-  color: #4ade80; 
-  transform: scale(1.1) translateY(-1px);
-}
-
-.product-card:active .info-icon {
-  color: black;
-}
-
-/* =========================================
-   2. DESAIN MODAL INFO (VERSI PREMIUM CLEAN)
-   ========================================= */
-.info-modal-content {
-  text-align: center;
-  padding: 30px 24px 24px;
-  background: linear-gradient(145deg, #2a2d31, #1c1e22);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  position: relative;
-  width: 320px; 
-  border-radius: 16px; 
-}
-
-.close-icon {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  font-size: 26px;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  line-height: 1;
-}
-
-.close-icon:hover { 
-  color: #ff6b6b; 
-  transform: scale(1.1) rotate(90deg); 
-}
-
-.info-icon-showcase {
-  width: 70px;
-  height: 70px;
-  margin: 0 auto 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.info-icon-showcase img, .info-icon-showcase svg {
-  width: 40px !important;
-  height: 40px !important;
-  object-fit: contain;
-}
-
-.premium-title {
-  justify-content: center !important;
-  font-size: 20px !important;
-  font-weight: 800;
-  margin-bottom: 20px !important;
-  background: linear-gradient(to right, #ffffff, #d1d5db);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* =========================================
-   3. LIST KEUNTUNGAN (STACKING BENEFITS)
-   ========================================= */
-.premium-benefits-list {
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.b-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
-}
-
-.b-icon {
-  font-size: 18px;
-  line-height: 1;
-  margin-top: 1px;
-  flex-shrink: 0;
-}
-
-.b-text {
-  color: #d1d5db;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.b-text b {
-  color: #fff;
-  display: block;
-  margin-bottom: 2px;
-}
-
-.b-highlight {
-  background: linear-gradient(135deg, rgba(58, 123, 213, 0.15), rgba(58, 96, 115, 0.1));
-  border-color: rgba(58, 123, 213, 0.3);
-}
-
-.b-highlight.b-gold {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 165, 0, 0.1));
-  border-color: rgba(255, 215, 0, 0.3);
-}
-
-.b-highlight .b-text b {
-  color: #4ade80; 
-}
-.b-highlight.b-gold .b-text b {
-  color: #ffd700; 
-}
-
-/* =========================================
-   4. TOMBOL MENGERTI
-   ========================================= */
-.premium-btn {
-  background: linear-gradient(135deg, #4b90ff, #2b7af0) !important;
-  box-shadow: none !important; 
-  outline: none !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  padding: 12px !important;
-  color: white !important; 
-  border-radius: 8px !important; 
-  border: none !important; 
-  cursor: pointer !important; 
-  width: 100% !important; 
-  display: block !important; 
-}
-
-.premium-btn:hover {
-  box-shadow: none !important; 
-  opacity: 0.85 !important; 
-}
+/* MODAL INFO PREMIUM */
+.info-modal-content { text-align: center; padding: 30px 24px 24px; background: linear-gradient(145deg, #2a2d31, #1c1e22); border: 1px solid rgba(255, 255, 255, 0.08); position: relative; width: 320px; border-radius: 16px; }
+.close-icon { position: absolute; top: 12px; right: 16px; font-size: 26px; color: #6b7280; cursor: pointer; transition: all 0.2s ease; line-height: 1; }
+.close-icon:hover { color: #ff6b6b; transform: scale(1.1) rotate(90deg); }
+.info-icon-showcase { width: 70px; height: 70px; margin: 0 auto 12px; background: rgba(255, 255, 255, 0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.1); }
+.info-icon-showcase img, .info-icon-showcase svg { width: 40px !important; height: 40px !important; object-fit: contain; }
+.premium-title { justify-content: center !important; font-size: 20px !important; font-weight: 800; margin-bottom: 20px !important; background: linear-gradient(to right, #ffffff, #d1d5db); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.premium-benefits-list { text-align: left; display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.b-item { display: flex; align-items: flex-start; gap: 12px; background: rgba(0, 0, 0, 0.2); padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.03); }
+.b-icon { font-size: 18px; line-height: 1; margin-top: 1px; flex-shrink: 0; }
+.b-text { color: #d1d5db; font-size: 13px; line-height: 1.5; }
+.b-text b { color: #fff; display: block; margin-bottom: 2px; }
+.b-highlight { background: linear-gradient(135deg, rgba(58, 123, 213, 0.15), rgba(58, 96, 115, 0.1)); border-color: rgba(58, 123, 213, 0.3); }
+.b-highlight.b-gold { background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 165, 0, 0.1)); border-color: rgba(255, 215, 0, 0.3); }
+.b-highlight .b-text b { color: #4ade80; }
+.b-highlight.b-gold .b-text b { color: #ffd700; }
+.premium-btn { background: linear-gradient(135deg, #4b90ff, #2b7af0) !important; font-size: 14px !important; font-weight: 600 !important; padding: 12px !important; color: white !important; border-radius: 8px !important; border: none !important; cursor: pointer !important; width: 100% !important; display: block !important; }
+.info-icon { color: #9ca3af; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0; display: block; transform: translateY(-1px); }
+.info-icon:hover { color: #4ade80; transform: scale(1.1) translateY(-1px); }
 </style>
+
+<script>
+  // 🔥 FIX PERFORMA & BUG KLIK
+  // Kita bungkus semua logic dalem DOMContentLoaded biar HTML-nya keload sempurna dulu.
+  document.addEventListener("DOMContentLoaded", () => {
+    
+    const getDB = () => import('../lib/supabase.js').then(m => m.supabase);
+    const getUtils = () => import('../lib/ui-utils.js');
+
+    // Fungsi pintar buat nampilin Notif (fallback ke window.showNotif atau alert kalau utils gagal)
+    const showFallbackNotif = (title, msg, type) => {
+      if (window.showNotif) { window.showNotif(`${title}: ${msg}`, type); } 
+      else { alert(`${title}\n${msg}`); }
+    };
+
+    // ==========================================
+    // 1. INFO PRODUK VIP & MODAL LOGIC
+    // ==========================================
+    const infoIcons = document.querySelectorAll('.info-icon');
+    const infoModal = document.getElementById('infoModal');
+    const infoModalTitle = document.getElementById('infoModalTitle');
+    const infoModalBenefits = document.getElementById('infoModalBenefits');
+    const closeInfoModal = document.getElementById('closeInfoModal');
+    const closeInfoBtn = document.getElementById('closeInfoBtn');
+
+    const vipBenefitsData = {
+      'verified': `<div class="b-item"><div class="b-text"><b>Centang Biru Eksklusif:</b> Tanda resmi akun terverifikasi.</div></div><div class="b-item"><div class="b-text"><b>Prioritas Pencarian:</b> Akun lebih mudah ditemukan.</div></div><div class="b-item"><div class="b-text"><b>Profil Terpercaya:</b> Tampil profesional.</div></div>`,
+      'crown1': `<div class="b-item"><div class="b-text"><b>Badge Perunggu:</b> Tampil beda dengan badge VIP.</div></div><div class="b-item"><div class="b-text"><b>Highlight Komentar:</b> Warna khusus di komentar.</div></div><div class="b-item"><div class="b-text"><b>Stiker VIP:</b> Akses stiker eksklusif.</div></div>`,
+      'crown2': `<div class="b-item"><div class="b-text"><b>Badge Perak:</b> Badge lebih elegan.</div></div><div class="b-item"><div class="b-text"><b>Efek Masuk:</b> Notifikasi khusus saat masuk room.</div></div><div class="b-item"><div class="b-text"><b>Limit Ekstra:</b> Batas pesan lebih banyak.</div></div><div class="b-item b-highlight"><div class="b-text"><b>Plus:</b> Dapat SEMUA keuntungan Bronze.</div></div>`,
+      'crown3': `<div class="b-item"><div class="b-text"><b>Badge Emas:</b> Kasta tertinggi.</div></div><div class="b-item"><div class="b-text"><b>Animasi Mewah:</b> Efek visual super mencolok.</div></div><div class="b-item"><div class="b-text"><b>Bebas Iklan 100%:</b> Aplikasi tanpa iklan.</div></div><div class="b-item b-highlight b-gold"><div class="b-text"><b>Super Plus:</b> Dapat keuntungan Bronze & Silver.</div></div>`
+    };
+
+    infoIcons.forEach(icon => {
+      icon.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation(); 
+        const card = icon.closest('.product-card');
+        const role = card.getAttribute('data-role');
+        const title = icon.getAttribute('data-title') || card.querySelector('.p-name').childNodes[0].textContent.trim();
+        const productIconContainer = card.querySelector('.product-icon');
+        const showcase = document.getElementById('infoModalIconShowcase');
+        
+        if(showcase && productIconContainer) { showcase.innerHTML = productIconContainer.innerHTML; }
+        if(infoModalTitle) infoModalTitle.textContent = title;
+        if(infoModalBenefits) infoModalBenefits.innerHTML = vipBenefitsData[role] || '<p style="text-align:center;">Belum ada info.</p>';
+        if(infoModal) infoModal.classList.add('active');
+      });
+    });
+
+    const closeInfo = () => { if(infoModal) infoModal.classList.remove('active'); };
+    if (closeInfoModal) closeInfoModal.addEventListener('click', closeInfo);
+    if (closeInfoBtn) closeInfoBtn.addEventListener('click', closeInfo);
+
+    // ==========================================
+    // 2. BOTTOM SHEETS & SETTINGS MODAL TOGGLE
+    // ==========================================
+    document.querySelectorAll(".sheet-overlay").forEach(overlay => {
+      overlay.addEventListener("click", function() {
+        const sheet = this.closest(".bottom-sheet");
+        if(sheet) {
+          sheet.classList.remove("active");
+          setTimeout(() => sheet.style.display = "none", 400);
+        }
+      });
+    });
+
+    const settingsBtn = document.getElementById("settingsBtn"); 
+    const settingsModal = document.getElementById("settingsModal");
+    if (settingsBtn && settingsModal) {
+      settingsBtn.addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        settingsModal.classList.add("active");
+      });
+    }
+    document.getElementById("closeSettings")?.addEventListener("click", () => settingsModal?.classList.remove("active"));
+
+    // ==========================================
+    // 3. UPLOAD AVATAR LOGIC (Dipersingkat)
+    // ==========================================
+    const saveSettings = document.getElementById("saveSettings");
+    if (saveSettings) {
+      saveSettings.addEventListener("click", async () => {
+        const originalText = saveSettings.innerText;
+        saveSettings.innerText = "Menyimpan...";
+        saveSettings.disabled = true;
+        
+        try {
+          const db = await getDB();
+          const { data: { user }, error: userError } = await db.auth.getUser();
+          if (userError || !user) throw new Error("Silakan login dulu");
+          
+          const newUsername = document.getElementById("newUsername")?.value?.trim();
+          if (!newUsername) throw new Error("Isi username terlebih dahulu");
+
+          const { error } = await db.from("profiles").update({ username: newUsername }).eq("id", user.id);
+          if (error) throw error;
+          
+          showFallbackNotif("Berhasil", "Username diupdate!", "success");
+          setTimeout(() => location.reload(), 1000);
+        } catch(err) {
+          showFallbackNotif("Gagal", err.message, "error");
+        } finally {
+          saveSettings.innerText = originalText;
+          saveSettings.disabled = false;
+        }
+      });
+    }
+
+    // ==========================================
+    // 4. PAYMENTS (MIDTRANS) LOGIC - FIX TOTAL!
+    // ==========================================
+    
+    // 🔥 Fungsi Pembantu Buat Manggil Supabase & Midtrans
+    const processPayment = async (btn, endpoint, payloadBody) => {
+      btn.classList.add("btn-loading");
+      try {
+        const db = await getDB();
+        let utils = {};
+        try { utils = await getUtils(); } catch(e) {} // Tangkep error kalo utils gagal
+
+        const { data: { session }, error: sessionError } = await db.auth.getSession();
+        if (sessionError || !session) throw new Error("Silakan login ulang buat verifikasi.");
+
+        // OTOMATIS TUNGGU MIDTRANS (Anti klik 2 kali!)
+        if (!window.snap) {
+          if (utils.loadMidtrans) utils.loadMidtrans();
+          
+          // Nungguin script midtrans nyangkut di html (max 3 detik)
+          for(let i=0; i<30; i++) {
+             if(window.snap) break;
+             await new Promise(r => setTimeout(r, 100)); 
+          }
+          if (!window.snap) throw new Error("Gagal memuat sistem pembayaran (Midtrans). Coba refresh web-nya ya bro.");
+        }
+
+        // Request token ke Supabase Edge Functions
+        const response = await fetch(endpoint, {
+          method: "POST", 
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify(payloadBody),
+        });
+
+        if (!response.ok) {
+           const errText = await response.text();
+           throw new Error(errText || "Gagal ngehubungin server pembayaran.");
+        }
+        
+        const result = await response.json(); 
+        const token = result?.token;
+        if (!token) throw new Error("Waduh, Token pembayaran dari server nggak ada nih.");
+
+        // BUKA POPUP MIDTRANS
+        window.snap.pay(token, {
+          onSuccess: () => { 
+            sessionStorage.removeItem(`hh_profile_${payloadBody.userId}`); 
+            showFallbackNotif("Pembayaran Sukses!", "Akun lu udah di-upgrade/ditambahin koin.", "success"); 
+            setTimeout(() => location.reload(), 1200); 
+          },
+          onPending: () => showFallbackNotif("Menunggu Pembayaran", "Selesaikan transaksi lu ya", "warning"),
+          onError: () => showFallbackNotif("Pembayaran Gagal", "Ada masalah pas transaksi", "error"),
+          onClose: () => showFallbackNotif("Ditutup", "Lu nutup popup sebelum bayar", "info")
+        });
+
+      } catch (err) {
+        showFallbackNotif("Gagal", err.message, "error");
+      } finally {
+        btn.classList.remove("btn-loading");
+      }
+    };
+
+    // A. TOMBOL BELI VIP
+    document.querySelectorAll(".buy-now-btn").forEach((button) => {
+      button.addEventListener("click", async (e) => {
+        const card = e.currentTarget.closest(".product-card");
+        if (!card) return;
+        
+        const db = await getDB();
+        const { data: { user } } = await db.auth.getUser();
+        if(!user) return showFallbackNotif("Woi!", "Login dulu sebelum beli.", "warning");
+
+        const payload = {
+          userId: user.id, 
+          email: user.email, 
+          amount: parseInt(card.getAttribute("data-price"), 10), 
+          item_name: card.querySelector(".p-name")?.innerText || "Premium VIP", 
+          role_target: card.getAttribute("data-role")
+        };
+
+        processPayment(e.currentTarget, "https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/pay-premium", payload);
+      });
+    });
+
+    // B. TOMBOL BELI PAKET KOIN
+    document.querySelectorAll(".buy-coin-btn").forEach((button) => {
+      button.addEventListener("click", async (e) => {
+        const card = e.currentTarget.closest(".coin-product-card");
+        if (!card) return;
+
+        const db = await getDB();
+        const { data: { user } } = await db.auth.getUser();
+        if(!user) return showFallbackNotif("Woi!", "Login dulu sebelum beli.", "warning");
+
+        const payload = {
+          userId: user.id, 
+          email: user.email, 
+          amount: parseInt(card.getAttribute("data-price"), 10), 
+          coins: parseInt(card.getAttribute("data-coins"), 10), 
+          item_name: card.querySelector(".p-name")?.innerText || "Top Up Koin"
+        };
+
+        processPayment(e.currentTarget, "https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/pay-coins", payload);
+      });
+    });
+
+    // C. TOMBOL CUSTOM KOIN
+    const customInput = document.getElementById("custom-coins");
+    const customBtn = document.getElementById("buy-custom-coin-btn");
+    const priceDisplay = document.getElementById("custom-price-display");
+
+    if (customInput && customBtn && priceDisplay) {
+      customInput.addEventListener("input", () => {
+        const coins = parseInt(customInput.value) || 0; 
+        const price = coins * 100;
+        if (coins > 0) { 
+          priceDisplay.textContent = `Total: Rp ${price.toLocaleString("id-ID")}`; 
+          priceDisplay.style.color = price < 10000 ? "#ff4757" : "#4ade80"; 
+        } else { priceDisplay.textContent = ""; }
+      });
+
+      customBtn.addEventListener("click", async (e) => {
+        const coins = parseInt(customInput.value); 
+        const price = coins * 100;
+        if (!coins || coins <= 0) return showFallbackNotif("Gagal", "Masukin koinnya dong", "warning");
+        if (price < 10000) return showFallbackNotif("Gagal", "Minimal beli Rp 10.000 (100 Koin)", "warning");
+        if (coins > 5000) return showFallbackNotif("Gagal", "Maksimal beli 5000 koin", "warning");
+
+        const db = await getDB();
+        const { data: { user } } = await db.auth.getUser();
+        if(!user) return showFallbackNotif("Woi!", "Login dulu sebelum beli.", "warning");
+
+        const payload = {
+          userId: user.id, 
+          email: user.email, 
+          amount: price, 
+          coins: coins, 
+          item_name: `${coins} Koin (Custom)`
+        };
+
+        processPayment(e.currentTarget, "https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/pay-coins", payload);
+      });
+    }
+
+  });
+</script>
