@@ -61,39 +61,42 @@ const {
   ">
 
   <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" href="/assets/png/book.png" />
-  <link rel="icon" type="image/png" href="/assets/png/book.png" />
+  <link rel="apple-touch-icon" href="/asets/png/book.png" />
+  <link rel="icon" type="image/png" href="/asets/png/book.png" />
   
   <script is:inline defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script is:inline defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
-  <script is:inline defer src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
-
+  
   <script is:inline>
-    // Inisialisasi PWA Prompt
+    // PWA & Service Worker Logic
     window.pwaPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       window.pwaPrompt = e;
     });
     
-    // Daftarin Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js').catch(err => console.error(err));
       });
     }
 
-    // Matiin klik kanan di gambar (Anti-Copas)
+    // Anti-Copas Image UX
     document.addEventListener('contextmenu', function(e) {
-      if (e.target.tagName === 'IMG') {
-        e.preventDefault();
-      }
+      if (e.target.tagName === 'IMG') e.preventDefault();
     });
   </script>
 
   <ClientRouter /> 
 </head>
-<body>
+<body class="theme-transition">
   <slot/>
 </body>
 </html>
+
+<style is:global>
+  /* Menghilangkan kedip putih saat pindah halaman */
+  .theme-transition {
+    transition: background-color 0.4s ease;
+  }
+</style>

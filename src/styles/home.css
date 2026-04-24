@@ -2,7 +2,7 @@
 /* 0. DARK MODE VARIABLES (SINKRON CHAT)     */
 /* ========================================= */
 :root {
-  /* Mode Terang (Default) */
+  color-scheme: light;
   --bg-page: #0b84e3;
   --bg-container: #fdf9f1;
   --text-main: #1e223d;
@@ -12,13 +12,13 @@
 }
 
 :root.dark {
-  /* Mode Gelap (Otomatis) */
+  color-scheme: dark;
   --bg-page: #1f2335;
   --bg-container: #2b3050;
   --text-main: #ffffff;
   --text-stroke: #1f2335;
   --shadow-color: rgba(0,0,0,0.3);
-  --grid-circle: #0b84e3; /* Kebalikan warna buat animasi grid */
+  --grid-circle: #0b84e3;
 }
 
 /* ========================================= */
@@ -33,23 +33,22 @@
   outline: none;
 }
 
-img, video {
+/* Optimasi Image Rendering */
+img {
   max-width: 100%;
   height: auto;
   display: block;
+  font-style: italic; /* Alt text style */
+  shape-margin: 0.75rem;
 }
 
 html, body { 
-  margin: 0; 
-  padding: 0; 
   width: 100%;
   height: 100%;
   overflow-x: hidden;
-  overflow-y: auto;
   background: var(--bg-page);
-  touch-action: auto;
-  overscroll-behavior-y: auto;
-  transition: background-color 0.4s ease;
+  /* Gunakan transisi spesifik, jangan 'all' */
+  transition: background-color 0.4s steps(20, end); 
 }
 
 body { 
@@ -61,54 +60,15 @@ body {
   color: var(--text-main);
 }
 
-a { text-decoration: none; color: inherit; }
-button, .btn, .tab, .menu-item-tiktok { user-select: none; }
-
-.animated-text { 
-  font-size: 36px; 
-  font-weight: 700; 
-  position: relative; 
-  color: var(--text-main); 
-  letter-spacing: 2px; 
-  text-transform: uppercase; 
-  -webkit-text-stroke: 2px var(--text-stroke); 
-  text-shadow: 3px 3px 0 #000, 6px 6px 0 rgba(0,0,0,0.1); 
-  transition: transform 0.3s ease, color 0.4s ease; 
-}
-
-.animated-text:hover { transform: translate(-3px, -3px); text-shadow: 6px 6px 0 #000; }
+/* ========================================= */
+/* 2. CARD FIX (ANTI 404)                     */
+/* ========================================= */
+/* Pastikan path ini bener sesuai folder lu */
+.karya-card { background: url("/asets/png/art.webp") center/cover no-repeat !important; }
+.music-card { background: url("/asets/png/song.webp") center/cover no-repeat !important; }
 
 /* ========================================= */
-/* 2. BACKGROUND & GRID (DYNAMIC)            */
-/* ========================================= */
-.grid-bg { 
-  position: fixed; 
-  inset: 0; 
-  background-color: var(--bg-page); 
-  z-index: -1; 
-  overflow: hidden; 
-  pointer-events: none !important; 
-  transition: background-color 0.4s ease;
-}
-
-.grid-bg::before { 
-  content: ""; 
-  position: absolute; 
-  top: 50%; 
-  left: 50%; 
-  width: 0; 
-  height: 0; 
-  background-color: var(--grid-circle); 
-  border-radius: 50%; 
-  transform: translate(-50%, -50%); 
-  transition: width 0.7s cubic-bezier(0.25, 1, 0.5, 1), height 0.7s cubic-bezier(0.25, 1, 0.5, 1); 
-}
-
-/* Trigger Class Dark di HTML */
-:root.dark .grid-bg::before { width: 300vmax; height: 300vmax; }
-
-/* ========================================= */
-/* 3. CONTAINER FIX FINAL                    */
+/* 3. CONTAINER OPTIMIZATION                 */
 /* ========================================= */
 .container { 
   position: relative; 
@@ -120,45 +80,45 @@ button, .btn, .tab, .menu-item-tiktok { user-select: none; }
   padding: 24px; 
   box-shadow: 10px 10px 0px var(--shadow-color); 
   z-index: 2; 
-  animation: fadeUp 0.8s ease forwards; 
+  /* Pakai will-change biar GPU HP bantu render */
+  will-change: transform, opacity;
+  animation: fadeUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; 
   opacity: 0; 
   display: flex;
   flex-direction: column;
   gap: 18px;
   max-height: 85vh;
   overflow-y: auto;
-  overflow-x: hidden;
-  touch-action: pan-y;
-  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  /* Mencegah reflow saat transisi tema */
   transition: background-color 0.4s ease, box-shadow 0.4s ease;
 }
 
-.container::-webkit-scrollbar { width: 0; display: none; }
-
 @keyframes fadeUp { 
-  from { opacity: 0; transform: translateY(40px); } 
+  from { opacity: 0; transform: translateY(20px); } 
   to { opacity: 1; transform: translateY(0); } 
 }
 
 /* ========================================= */
-/* 4. WIDGETS, ANIMATIONS & UTILITIES        */
+/* 4. PERFORMANCE UTILITIES (CRITICAL)       */
 /* ========================================= */
-.btn-loading::after { 
-  content: ""; position: absolute; width: 16px; height: 16px; 
-  top: 50%; left: 50%; margin: -8px 0 0 -8px; 
-  border: 2px solid rgba(255, 255, 255, 0.3); 
-  border-radius: 50%; border-top-color: #fff; 
-  animation: spin 0.8s linear infinite; 
+
+/* 🔥 JANGAN PAKE 'ALL'. Pilih properti yang emang berubah aja */
+.theme-transition, .theme-transition * { 
+  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease !important; 
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.dev-banner { 
-  position: fixed; top: 0; left: 0; width: 100%; 
-  overflow: hidden; background: linear-gradient(90deg, #ff9f43, #feca57); 
-  z-index: 100000; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); 
+/* Biar animasi 3D kartu gak bikin lag di HP */
+.job-card, .recent-card {
+  will-change: transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
 }
 
-/* Utility transisi tema */
-.theme-transition, .theme-transition * { transition: all 0.4s ease !important; }
+.grid-bg { 
+  position: fixed; 
+  inset: 0; 
+  z-index: -1; 
+  pointer-events: none !important; 
+  background-color: var(--bg-page);
+}
