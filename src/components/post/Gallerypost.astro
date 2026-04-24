@@ -20,8 +20,6 @@
     padding: 10px 20px 80px; 
   }
 
-  /* PENTING: Semua class dari post.css lu gue bungkus :global() biar gak dihapus Astro */
-  
   :global(.card) { 
     background: var(--bg-card); 
     border-radius: 16px; 
@@ -56,7 +54,6 @@
   :global(.post-bio) { font-size: 14px; color: var(--text-muted); margin: 0; line-height: 1.4; width: 100%; word-break: break-word;}
   :global(.post-date-wrapper) { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
 
-  /* INI BIANG KEROKNYA KEMAREN! Sekarang udah aman */
   :global(.actions) { 
     display: flex; 
     align-items: center; 
@@ -84,15 +81,14 @@
   }
   :global(.icon) { width: 22px; height: 22px; fill: var(--icon-fill); transition: transform 0.2s, fill 0.3s; }
   :global(.icon-btn.liked .icon) { fill: #ff2e63; }
+  :global(.icon-btn.reposted .icon) { fill: #1DA1F2; } /* Warna biru buat tombol repost aktif */
   :global(.like-count), :global(.comment-count) { font-size: 13px; color: var(--text-main); }
   :global(.icon-btn:hover) { transform: scale(1.1); opacity: 0.8; }
   :global(.icon-btn:active .icon) { transform: scale(0.8); }
 
-  /* Animasi Teks Jalan Musik */
   @keyframes marquee-play { 0% { transform: translateX(100%); } 100% { transform: translateX(-150%); } }
   :global(.marquee-text) { display: inline-block; white-space: nowrap; will-change: transform; }
 
-  /* Skeleton loading */
   .skeleton-wrapper { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%; }
   .skeleton-card { background: var(--bg-card); border-radius: 20px; height: 400px; position: relative; overflow: hidden; border: 1px solid var(--border-card); }
   .skeleton-shimmer { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform: translateX(-100%); background-image: linear-gradient(90deg, transparent 0, rgba(255, 255, 255, 0.05) 20%, rgba(255, 255, 255, 0.1) 60%, transparent); animation: shimmer 1.5s infinite; }
@@ -101,7 +97,7 @@
 
 <script>
   const getDB = () => import('../../lib/supabase.js').then(m => m.supabase);
-  const getUtils = () => import('../../lib/ui-utils.js'); // 🔥 Tambahan baru
+  const getUtils = () => import('../../lib/ui-utils.js');
 
   let isFetchingPosts = false;
   let currentUser = null;
@@ -118,15 +114,11 @@
     await fetchPosts("all");
   }
 
-  // fungsi getUserBadge yang panjang tadi UDAH KITA HAPUS dari sini
-
   async function fetchPosts(category = "all") {
     if (isFetchingPosts) return;
     isFetchingPosts = true;
 
-    // 🔥 Kita panggil fungsinya dari ui-utils.js biar hemat tempat
     const { getUserBadge } = await getUtils();
-
     const gallery = document.getElementById("mainGallery");
     if (!gallery) { isFetchingPosts = false; return; }
 
@@ -206,14 +198,21 @@
           `;
         })() : '';
 
+        // 🔥 TAMBAHAN: Tombol Repost (Posting Ulang)
         const engagementButtons = `
           <button class="icon-btn gift-btn" data-post="${post.id}" data-creator="${post.creator_id}" data-name="${post.profiles?.username}">
             <svg viewBox="0 0 24 24" class="icon" fill="currentColor"><path d="M20 7h-2.18A3 3 0 0 0 12 3a3 3 0 0 0-5.82 4H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1Zm-8-2a1 1 0 0 1 1 1v1h-2V6a1 1 0 0 1 1-1Zm-4 1a1 1 0 0 1 2 0v1H8a1 1 0 0 1 0-2Zm9 13h-4v-7h4Zm-6 0H7v-7h4Zm8-9H5V9h14Z"/></svg>
           </button>
+          
+          <button class="icon-btn repost-btn" data-post="${post.id}" data-creator="${post.creator_id}" data-username="${post.profiles?.username}" data-bio="${encodeURIComponent(post.bio || '')}" data-img="${post.image_url || ''}" data-audio="${post.audio_src || ''}" data-title="${post.title || ''}" data-artist="${post.artist || ''}">
+            <svg viewBox="0 0 24 24" class="icon" fill="currentColor"><path d="M19 7a1 1 0 0 0-1-1h-8v2h7v5h-3l3.96 4L22 13h-3V8a2 2 0 0 0-1-1zM5 17a1 1 0 0 0 1 1h8v-2H7v-5h3L6.04 7 2 11h3v6a2 2 0 0 0 1 1z"/></svg>
+          </button>
+
           <button class="icon-btn like-btn ${isLikedClass}" data-post="${post.id}" data-creator="${post.creator_id}">
             <svg viewBox="0 0 24 24" class="icon heart" fill="currentColor"><path d="M12.1 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 9.24 3 10.91 3.81 12 5.09 13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 22 12.28 18.6 15.36 13.55 20.04z"/></svg>
             <span class="like-count">${likeCounts[post.id] || 0}</span>
           </button>
+          
           <button class="icon-btn comment-toggle" data-post="${post.id}" data-creator="${post.creator_id}">
             <svg viewBox="0 0 24 24" class="icon" fill="currentColor"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
             <span class="comment-count">${commentCounts[post.id] || 0}</span>
@@ -221,7 +220,7 @@
         `;
 
         if (post.image_url && post.image_url.trim() !== "") {
-            // DESAIN 1: GAMBAR (Persis kayak screenshot)
+            // DESAIN 1: GAMBAR
             card.innerHTML = `
               <div class="slider">
                 <div style="position: absolute; top: 12px; right: 12px; z-index: 20;">${musicHtml}</div>
@@ -284,7 +283,10 @@
       });
 
       setTimeout(() => initAutoPlayObserver(), 500);
+      
+      // Init Fitur Interaksi
       initLikeLogic(db);
+      initRepostLogic(db); // 🔥 Panggil logic Repost
 
     } catch (err) {
       console.error(err);
@@ -294,6 +296,83 @@
     }
   }
 
+  // ==============================
+  // LOGIKA REPOST (POSTING ULANG)
+  // ==============================
+  function initRepostLogic(db) {
+    document.querySelectorAll(".repost-btn").forEach(btn => {
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      
+      newBtn.addEventListener("click", async () => {
+        if (!currentUser) return window.dispatchEvent(new CustomEvent('openLogin'));
+        
+        const originalCreatorId = newBtn.dataset.creator;
+        if (originalCreatorId === currentUser.id) {
+          if (window.showNotif) window.showNotif("Masa posting ulang karya sendiri bro? 😂", "warning");
+          return;
+        }
+
+        const originalCreator = newBtn.dataset.username;
+        const isConfirm = confirm(`Posting ulang karya dari @${originalCreator}?`);
+        if (!isConfirm) return;
+
+        if (window.showNotif) window.showNotif("Sedang memposting ulang...", "info");
+
+        // Ambil data postingan aslinya
+        const originalBio = decodeURIComponent(newBtn.dataset.bio || '');
+const newBio = `Repost dari @${originalCreator}\n\n${originalBio}`;
+
+        const imgUrl = newBtn.dataset.img;
+        const audioUrl = newBtn.dataset.audio;
+        const title = newBtn.dataset.title;
+        const artist = newBtn.dataset.artist;
+
+        try {
+          const { data: prof } = await db.from("profiles").select("username").eq("id", currentUser.id).single();
+          
+          // 1. Bikin postingan baru di DB pake id user yg login
+          const { error } = await db.from("posts").insert({
+            creator_id: currentUser.id,
+            name: prof?.username || "User",
+            bio: newBio,
+            category: "Repost", // Lu bisa ganti sesuai kategori lu
+            image_url: imgUrl || null,
+            audio_src: audioUrl || null,
+            title: title || null,
+            artist: artist || null,
+            status: "approved" // Langsung approve aja biar tampil
+          });
+
+          if (error) throw error;
+          
+          // 2. Kirim Notif ke Creator Asli
+          await db.from("notifications").insert({
+            user_id: originalCreatorId, 
+            actor_id: currentUser.id, 
+            post_id: newBtn.dataset.post, 
+            type: "repost",
+            message: `<b>${prof?.username}</b> memposting ulang karyamu.`
+          });
+
+          if (window.showNotif) window.showNotif("Berhasil diposting ulang! 🔥", "success");
+          
+          // Refresh Feed biar postingan barunya keliatan
+          setTimeout(() => {
+            isFetchingPosts = false;
+            fetchPosts("all");
+          }, 1500);
+
+        } catch (err) {
+          if (window.showNotif) window.showNotif("Gagal memposting ulang: " + err.message, "error");
+        }
+      });
+    });
+  }
+
+  // ==============================
+  // LOGIKA LIKE
+  // ==============================
   function initLikeLogic(db) {
     document.querySelectorAll(".like-btn").forEach(btn => {
       const newBtn = btn.cloneNode(true);
@@ -329,6 +408,9 @@
     });
   }
 
+  // ==============================
+  // LOGIKA AUTOPLAY MUSIK
+  // ==============================
   function initAutoPlayObserver() {
     let userHasInteracted = false;
     document.body.addEventListener('click', () => { userHasInteracted = true; }, { once: true });
