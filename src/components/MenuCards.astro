@@ -3,7 +3,7 @@
 <div class="job-types">
   <div class="job-card karya-card">
     <div class="job-card-text">
-      <a href="/post" class="button" id="artButton">
+      <a href="/post" class="button" id="artButton" aria-label="Buka halaman Hope Post">
         <div class="bgContainer">
           <span>Hope</span>
           <span>POST</span>
@@ -19,7 +19,7 @@
 
   <div class="job-card music-card">
     <div class="job-card-text">
-      <a href="/music" class="button">
+      <a href="/music" class="button" aria-label="Buka halaman Hope Song">
         <div class="bgContainer">
           <span>Hope</span>
           <span>SONG</span>
@@ -35,16 +35,16 @@
 </div>
 
 <div class="section-header pro-section-header">
-  <button class="coin-mini-header-btn" id="topupKoinBtn">
+  <button class="coin-mini-header-btn" id="topupKoinBtn" aria-label="Buka menu Topup Koin">
     <div class="coin-mini-header-left">
-      <img src="/asets/svg/koin.svg" alt="Koin" class="coin-mini-header-icon" loading="lazy" />
+      <img src="/asets/svg/koin.svg" alt="Ikon Koin" class="coin-mini-header-icon" loading="lazy" width="16" height="16" />
       <span class="coin-mini-header-amount" id="coinAmount">0</span>
     </div>
     <span class="coin-mini-header-plus">+</span>
   </button>
 
-  <button class="button-pro section-pro-btn" id="buyVerified">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 24" style="width: 20px; fill: #f09f33;">
+  <button class="button-pro section-pro-btn" id="buyVerified" aria-label="Buka menu aktivasi akun PRO">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 24" style="width: 20px; fill: #f09f33;" aria-hidden="true">
       <path d="m18 0 8 12 10-8-4 20H4L0 4l10 8 8-12z"></path>
     </svg>
     <span style="color: white; font-weight: bold; font-size: 12px;">PRO</span>
@@ -56,7 +56,7 @@
     <img src="/asets/png/zodiac.webp" alt="Zodiac Logo" loading="lazy" decoding="async" style="width: 42px; height: 42px; border-radius: 10px; object-fit: cover; display: block;">
   </div>
   <div class="details">
-    <h4>Talkhype</h4>
+    <h2>Talkhype</h2>
   </div>
   <span id="hopeTalkBadge" class="chat-badge" style="display:none;">0</span>
 </a>
@@ -66,7 +66,7 @@
     <img src="/asets/png/saweria.webp" alt="Saweria" loading="lazy" decoding="async" style="width: 42px; height: 42px; border-radius: 10px; object-fit: cover; display: block;">
   </div>
   <div class="details">
-    <h4>Voicehype</h4>
+    <h2>Voicehype</h2>
   </div>
 </a>
 
@@ -152,7 +152,6 @@
   border: 2px solid #000; 
   box-shadow: 5px 5px 0px #00000030; 
   cursor: pointer; 
-  /* HAPUS transform-style: preserve-3d karena bikin konflik render shadow */
   transition: transform 0.2s ease, box-shadow 0.4s ease; 
   display: flex; 
   flex-direction: column; 
@@ -165,14 +164,12 @@
   min-height: 210px; 
   background-size: cover; 
   background-position: center; 
-  background-color: transparent !important; /* Paksa transparan dasar */
+  background-color: transparent !important; 
 }
 
 .job-card:hover { transform: translateY(-6px); }
 .job-card:active { transform: translateY(2px); box-shadow: 2px 2px 0px #00000030; }
 
-/* FIX EFEK BAYANGAN / OVERLAY HITAM */
-/* Kita hapus paksa pseudo elements (::before dan ::after) yang bikin gelap */
 .job-card::before, 
 .job-card::after,
 .karya-card::before, 
@@ -181,13 +178,8 @@
   content: none !important;
 }
 
-.karya-card { 
-  background: url("/asets/job1.webp") center/cover no-repeat !important; 
-}
-
-.music-card { 
-  background: url("/asets/job.webp") center/cover no-repeat !important; 
-}
+.karya-card { background: url("/asets/job1.webp") center/cover no-repeat !important; }
+.music-card { background: url("/asets/job.webp") center/cover no-repeat !important; }
 
 /* ========================================= */
 /* TOMBOL ANIMASI DALAM KARTU                */
@@ -221,8 +213,10 @@ body.dark .section-header h3 { color: #ffffff; }
 body.dark .recent-card { background: #3a3f63; border: 2px solid #000; box-shadow: 5px 5px 0px #00000030; }
 
 .logo { width: 42px; height: 42px; border-radius: 10px; }
-.details h4 { font-size: 15px; transition: color 0.4s ease; color: #1a1a1a; margin: 0; }
-body.dark .recent-card .details h4 { color: #ffffff !important; }
+
+/* FIX CSS: Ganti target dari h4 ke h2 biar style-nya tetep sama */
+.details h2 { font-size: 15px; transition: color 0.4s ease; color: #1a1a1a; margin: 0; }
+body.dark .recent-card .details h2 { color: #ffffff !important; }
 
 /* LOGO CUSTOM */
 .sawer-link, .zodiac-card { text-decoration: none; color: inherit; display: flex; }
