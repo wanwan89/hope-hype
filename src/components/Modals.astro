@@ -168,20 +168,52 @@
 </div>
 
 <script>
+  // 1. KITA TARUH FUNGSI TOAST DI LUAR BIAR LANGSUNG AKTIF (GLOBAL)
+  window.showNotif = function(msg, type = "info") {
+    const container = document.getElementById("toast");
+    if (!container) return alert(msg);
+
+    const config = {
+      success: { title: "Berhasil", icon: "✓" },
+      error: { title: "Gagal", icon: "✕" },
+      warning: { title: "Peringatan", icon: "!" },
+      info: { title: "Info", icon: "i" }
+    };
+    const { title, icon } = config[type] || config.info;
+
+    const toastCard = document.createElement("div");
+    toastCard.className = "toast-card";
+    
+    toastCard.innerHTML = `
+      <div class="toast-icon-wrap ${type}">
+        <span class="toast-icon">${icon}</span>
+      </div>
+      <div class="toast-content">
+        <div class="toast-title">${title}</div>
+        <div class="toast-subtitle">${msg}</div>
+      </div>
+      <button class="toast-close" onclick="this.parentElement.classList.remove('show'); setTimeout(()=>this.parentElement.remove(), 300)">×</button>
+    `;
+
+    container.appendChild(toastCard);
+    
+    setTimeout(() => toastCard.classList.add("show"), 10);
+    
+    setTimeout(() => {
+      if(toastCard && toastCard.parentElement) {
+        toastCard.classList.remove("show");
+        setTimeout(() => toastCard.remove(), 300);
+      }
+    }, 4000);
+  };
+
   document.addEventListener("DOMContentLoaded", () => {
     
-    // Dynamic import Supabase & Utils (gak ngeload di awal)
     const getDB = () => import('../lib/supabase.js').then(m => m.supabase);
     const getUtils = () => import('../lib/ui-utils.js');
 
-    // Fallback notif biar kalo utils error tetep ngasih tau lu
-    const showFallbackNotif = (title, msg, type) => {
-      if (window.showNotif) { window.showNotif(`${title}: ${msg}`, type); } 
-      else { alert(`${title}\n${msg}`); }
-    };
-
     // ==========================================
-    // 1. INFO PRODUK VIP & MODAL LOGIC (TETAP SAMA)
+    // 1. INFO PRODUK VIP & MODAL LOGIC
     // ==========================================
     const infoIcons = document.querySelectorAll('.info-icon');
     const infoModal = document.getElementById('infoModal');
@@ -219,7 +251,7 @@
     if (closeInfoBtn) closeInfoBtn.addEventListener('click', closeInfo);
 
     // ==========================================
-    // 2. BOTTOM SHEETS & SETTINGS MODAL TOGGLE (TETAP SAMA)
+    // 2. BOTTOM SHEETS & SETTINGS MODAL TOGGLE
     // ==========================================
     document.querySelectorAll(".sheet-overlay").forEach(overlay => {
       overlay.addEventListener("click", function() {
@@ -242,7 +274,7 @@
     document.getElementById("closeSettings")?.addEventListener("click", () => settingsModal?.classList.remove("active"));
 
     // ==========================================
-    // 3. UPLOAD AVATAR & SAVE PROFILE LOGIC (TETAP SAMA)
+    // 3. UPLOAD AVATAR & SAVE PROFILE LOGIC
     // ==========================================
     const avatarOptions = document.querySelectorAll("#avatarOptions .avatar-choice");
     const avatarPreview = document.getElementById("avatarPreview");
@@ -283,7 +315,7 @@
 
           let finalAvatarUrl = selectedAvatar;
           if (uploadedAvatarFile) {
-            showFallbackNotif("Info", "Sedang mengunggah foto...", "info");
+            window.showNotif("Sedang mengunggah foto...", "info");
             const fd = new FormData(); fd.append("file", uploadedAvatarFile); fd.append("upload_preset", "post_hope"); 
             const res = await fetch("https://api.cloudinary.com/v1_1/dhhmkb8kl/image/upload", { method: "POST", body: fd });
             if (!res.ok) throw new Error("Gagal mengunggah gambar ke server");
@@ -296,10 +328,10 @@
           const { error } = await db.from("profiles").update(updatePayload).eq("id", user.id);
           if (error) throw error;
           
-          showFallbackNotif("Berhasil", "Profil diupdate!", "success");
+          window.showNotif("Profil diupdate!", "success");
           setTimeout(() => location.reload(), 1000);
         } catch(err) {
-          showFallbackNotif("Gagal", err.message, "error");
+          window.showNotif(err.message, "error");
         } finally {
           saveSettings.innerText = originalText; saveSettings.disabled = false;
         }
@@ -307,10 +339,8 @@
     }
 
     // ==========================================
-    // 4. PAYMENTS (MIDTRANS) LOGIC - FULL FIX EVENT DELEGATION
+    // 4. PAYMENTS (MIDTRANS) LOGIC
     // ==========================================
-    
-    // Fungsi Core Midtrans
     const processPayment = async (btn, endpoint, payloadBody) => {
       try {
         const db = await getDB();
@@ -347,20 +377,19 @@
         window.snap.pay(token, {
           onSuccess: () => { 
             sessionStorage.removeItem(`hh_profile_${payloadBody.userId}`); 
-            showFallbackNotif("Pembayaran Sukses!", "Akun lu udah di-upgrade.", "success"); 
+            window.showNotif("Akun lu udah di-upgrade.", "success"); 
             setTimeout(() => location.reload(), 1200); 
           },
-          onPending: () => showFallbackNotif("Menunggu", "Selesaikan transaksi lu", "warning"),
-          onError: () => showFallbackNotif("Gagal", "Ada masalah pas transaksi", "error"),
-          onClose: () => showFallbackNotif("Ditutup", "Lu nutup popup sebelum bayar", "info")
+          onPending: () => window.showNotif("Selesaikan transaksi lu ya", "warning"),
+          onError: () => window.showNotif("Ada masalah pas transaksi", "error"),
+          onClose: () => window.showNotif("Lu nutup popup sebelum bayar", "info")
         });
 
       } catch (err) {
-        showFallbackNotif("Error", err.message, "error");
+        window.showNotif(err.message, "error");
       }
     };
 
-    // NANGKAP SEMUA KLIK TOMBOL BELI
     document.body.addEventListener("click", async (e) => {
       
       // A. KLIK TOMBOL BELI VIP
@@ -389,14 +418,14 @@
 
           await processPayment(buyVipBtn, "https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/pay-premium", payload);
         } catch (err) {
-          showFallbackNotif("Info", err.message, "warning");
+          window.showNotif(err.message, "warning");
         } finally {
           buyVipBtn.textContent = originalText;
           buyVipBtn.style.pointerEvents = "auto";
         }
       }
 
-      // B. KLIK TOMBOL BELI KOIN (PILIHAN)
+      // B. KLIK TOMBOL BELI KOIN
       const buyCoinBtn = e.target.closest(".buy-coin-btn");
       if (buyCoinBtn) {
         e.preventDefault();
@@ -422,7 +451,7 @@
 
           await processPayment(buyCoinBtn, "https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/pay-coins", payload);
         } catch (err) {
-          showFallbackNotif("Info", err.message, "warning");
+          window.showNotif(err.message, "warning");
         } finally {
           buyCoinBtn.textContent = originalText;
           buyCoinBtn.style.pointerEvents = "auto";
@@ -439,9 +468,9 @@
         const coins = parseInt(customInput.value); 
         const price = coins * 100;
         
-        if (!coins || coins <= 0) return showFallbackNotif("Gagal", "Masukin jumlah koinnya dong", "warning");
-        if (price < 10000) return showFallbackNotif("Gagal", "Minimal beli Rp 10.000 (100 Koin)", "warning");
-        if (coins > 5000) return showFallbackNotif("Gagal", "Maksimal beli 5000 koin", "warning");
+        if (!coins || coins <= 0) return window.showNotif("Masukin jumlah koinnya dong", "warning");
+        if (price < 10000) return window.showNotif("Minimal beli Rp 10.000 (100 Koin)", "warning");
+        if (coins > 5000) return window.showNotif("Maksimal beli 5000 koin", "warning");
 
         const originalText = buyCustomBtn.textContent;
         buyCustomBtn.textContent = "Tunggu...";
@@ -462,7 +491,7 @@
 
           await processPayment(buyCustomBtn, "https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/pay-coins", payload);
         } catch (err) {
-          showFallbackNotif("Info", err.message, "warning");
+          window.showNotif(err.message, "warning");
         } finally {
           buyCustomBtn.textContent = originalText;
           buyCustomBtn.style.pointerEvents = "auto";
@@ -472,6 +501,7 @@
 
   });
 </script>
+
 
 
 <style is:global>
