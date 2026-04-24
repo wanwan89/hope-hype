@@ -37,7 +37,7 @@
 <div class="section-header pro-section-header">
   <button class="coin-mini-header-btn" id="topupKoinBtn" aria-label="Buka menu Topup Koin">
     <div class="coin-mini-header-left">
-      <img src="/asets/svg/koin.webp" alt="Ikon Koin" class="coin-mini-header-icon" loading="lazy" width="16" height="16" />
+      <img src="/asets/svg/koin.webp" alt="Ikon Koin" class="coin-mini-header-icon" loading="eager" width="16" height="16" />
       <span class="coin-mini-header-amount" id="coinAmount">0</span>
     </div>
     <span class="coin-mini-header-plus">+</span>
@@ -152,6 +152,8 @@
   border: 2px solid #000; 
   box-shadow: 5px 5px 0px #00000030; 
   cursor: pointer; 
+  /* 1. Tambahin 'will-change' biar GPU HP fokus nge-render animasinya */
+  will-change: transform; 
   transition: transform 0.2s ease, box-shadow 0.4s ease; 
   display: flex; 
   flex-direction: column; 
@@ -162,9 +164,13 @@
   overflow: hidden; 
   height: 220px; 
   min-height: 210px; 
+  /* 2. Tambahin background-repeat biar makin aman pas render */
+  background-repeat: no-repeat;
   background-size: cover; 
   background-position: center; 
   background-color: transparent !important; 
+  /* 3. Ilangin highlight biru pas diklik di HP (UX Fix) */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .job-card:hover { transform: translateY(-6px); }
@@ -208,7 +214,28 @@
 .section-header h3 { color: #1a1a1a; transition: color 0.4s ease; }
 body.dark .section-header h3 { color: #ffffff; }
 
-.recent-card { display: flex; align-items: center; gap: 12px; background: #fff; padding: 14px; border-radius: 18px; border: 2px solid #000; box-shadow: 5px 5px 0px #00000030; cursor: pointer; transition: background-color 0.4s ease, transform 0.2s ease, box-shadow 0.4s ease !important; position: relative; overflow: hidden; margin-bottom: 14px; }
+.recent-card { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  background: #fff; 
+  padding: 14px; 
+  border-radius: 18px; 
+  border: 2px solid #000; 
+  box-shadow: 5px 5px 0px #00000030; 
+  cursor: pointer; 
+  /* 1. Tambahin 'will-change' buat akselerasi GPU saat hover/tilt */
+  will-change: transform, background-color; 
+  transition: background-color 0.4s ease, transform 0.2s ease, box-shadow 0.4s ease !important; 
+  position: relative; 
+  overflow: hidden; 
+  margin-bottom: 14px; 
+  /* 2. Ilangin highlight biru pas diketuk di HP */
+  -webkit-tap-highlight-color: transparent;
+  /* 3. Mencegah teks terpilih gak sengaja pas lagi asik ngetuk-ngetuk */
+  user-select: none;
+}
+
 .recent-card:hover { transform: translateY(-4px); }
 body.dark .recent-card { background: #3a3f63; border: 2px solid #000; box-shadow: 5px 5px 0px #00000030; }
 
