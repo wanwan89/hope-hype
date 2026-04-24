@@ -97,6 +97,18 @@
   @keyframes shimmer { 100% { transform: translateX(100%); } }
   :global(.icon-btn.reposted .icon) { fill: #1DA1F2; } 
   :global(.icon-btn.reposted .repost-count) { color: #1DA1F2; font-weight: bold; }
+  /* =========================================
+     ANIMASI TOMBOL REPOST (SPIN POP)
+     ========================================= */
+  @keyframes repostSpin {
+    0% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.3) rotate(180deg); }
+    100% { transform: scale(1) rotate(360deg); }
+  }
+
+  :global(.icon-btn.reposted.animating .icon) {
+    animation: repostSpin 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
 
 </style>
 
@@ -316,7 +328,7 @@
   }
 
   // ==============================
-  // LOGIKA REPOST (DATABASE CONNECTED)
+  // LOGIKA REPOST (DATABASE CONNECTED DENGAN ANIMASI)
   // ==============================
   function initRepostLogic(db) {
     document.querySelectorAll(".repost-btn").forEach(btn => {
@@ -334,16 +346,21 @@
         if (isReposted) {
           // Batal repost & Hapus dari DB
           newBtn.classList.remove("reposted");
+          // Hapus animasi biar bisa diputer lagi nanti
+          newBtn.classList.remove("animating"); 
           countEl.innerText = Math.max(0, currentCount - 1);
           await db.from("reposts").delete().match({ post_id: pId, user_id: currentUser.id });
         } else {
           // Tambah repost & Masukin ke DB
           newBtn.classList.add("reposted");
+          
+          // 🔥 JALANIN ANIMASI SPIN POP 🔥
+          newBtn.classList.remove("animating"); // Reset dulu
+          void newBtn.offsetWidth; // Trik trigger reflow biar animasi bisa diulang
+          newBtn.classList.add("animating");
+          
           countEl.innerText = currentCount + 1;
           
-          newBtn.style.transform = "scale(1.2)";
-          setTimeout(() => newBtn.style.transform = "scale(1)", 200);
-
           await db.from("reposts").insert({ post_id: pId, user_id: currentUser.id });
         }
       });

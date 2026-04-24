@@ -191,7 +191,7 @@
         if (!session) return window.dispatchEvent(new CustomEvent('openLogin'));
         
         if (session.user.id === btn.dataset.creator) {
-            if (window.showNotif) window.showNotif("Masa ngirim gift ke diri sendiri bro? 😂", "warning");
+            if (window.showNotif) window.showNotif("tidak bisa memberi ke diri sendiri", "warning");
             return;
         }
 
@@ -247,7 +247,7 @@
     sendBtn.onclick = async () => {
       if (giftState.selectedAmount <= 0) return;
       if (giftState.selectedAmount > giftState.userCoins) {
-        if (window.showNotif) window.showNotif("Koin kamu gak cukup bro! Top up dulu.", "error");
+        if (window.showNotif) window.showNotif("Koin kamu gak cukup,Top up dulu.", "error");
         return;
       }
 
