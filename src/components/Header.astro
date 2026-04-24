@@ -22,7 +22,8 @@
     </div>
     <label class="switch" for="dark-mode-checkbox">
       <span class="sr-only" style="display:none;">Dark mode</span>
-      <input type="checkbox" id="dark-mode-checkbox" class="toggle toggle-dark" />
+<input type="checkbox" id="dark-mode-checkbox" class="toggle toggle-dark" aria-label="Beralih Mode Gelap" />
+
       <span class="slider"></span>
     </label>
   </div>
@@ -92,10 +93,13 @@ body.dark .notification-icon { color: #fff; }
 
   function CardImages(isDark) {
     if (!karyaCard || !musicCard) return;
+
+    // Pastikan folder asets/png/ dan nama file huruf KECIL SEMUA
     if (isDark) {
-      karyaCard.style.setProperty("background-image", "url('/asets/png/job1.webp')", "important");
-      musicCard.style.setProperty("background-image", "url('/asets/png/job.webp')", "important");
+      karyaCard.style.setProperty("background-image", "url('/asets/png/job1-dark.webp')", "important");
+      musicCard.style.setProperty("background-image", "url('/asets/png/job-dark.webp')", "important");
     } else {
+      // Ini gambar mode terangnya
       karyaCard.style.setProperty("background-image", "url('/asets/png/art.webp')", "important");
       musicCard.style.setProperty("background-image", "url('/asets/png/song.webp')", "important");
     }
