@@ -20,13 +20,31 @@ const {
   
   <title>{title}</title>
   <meta name="description" content={description} />
+
+  <link rel="preload" as="image" href="/asets/png/art.webp" fetchpriority="high" />
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://hqetnqnvmdxdgfnnluew.supabase.co" />
+  <link rel="preconnect" href="https://res.cloudinary.com" />
   <link rel="preconnect" href="https://app.sandbox.midtrans.com" />
 
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap" rel="stylesheet" />
+  <link 
+    rel="stylesheet" 
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" 
+    media="print" 
+    onload="this.media='all'" 
+  />
+  <link 
+    rel="stylesheet" 
+    href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap" 
+    media="print" 
+    onload="this.media='all'" 
+  />
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap" rel="stylesheet" />
+  </noscript>
   
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self'; 
@@ -43,10 +61,9 @@ const {
   <link rel="apple-touch-icon" href="/assets/png/book.png" />
   <link rel="icon" type="image/png" href="/assets/png/book.png" />
   
-  <script defer is:inline src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script defer is:inline src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
-  
-  <script defer is:inline src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <script is:inline defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script is:inline defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+  <script is:inline defer src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
   <script is:inline>
     // Inisialisasi PWA Prompt
@@ -56,14 +73,14 @@ const {
       window.pwaPrompt = e;
     });
     
-    // Daftarin Service Worker (Satpam Background)
+    // Daftarin Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js').catch(err => console.error(err));
       });
     }
 
-    // Matiin klik kanan di gambar (anti-copas)
+    // Matiin klik kanan di gambar
     document.addEventListener('contextmenu', function(e) {
       if (e.target.tagName === 'IMG') {
         e.preventDefault();
@@ -71,7 +88,6 @@ const {
     });
   </script>
 
-  {/* Panggil komponen ClientRouter untuk transisi halaman yang smooth */}
   <ClientRouter /> 
 </head>
 <body>
