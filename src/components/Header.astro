@@ -16,17 +16,19 @@
   </h1>
   
   <div class="header-actions">
-    <div class="notif-wrapper top-notif" id="notifBell">
+    <div class="notif-wrapper top-notif" id="notifBell" role="button" aria-label="Buka Notifikasi">
       <span class="material-icons notification-icon">notifications</span>
       <span class="notif-dot" id="notifCount" style="display:none;">0</span>
     </div>
-    <label class="switch" for="dark-mode-checkbox">
+    
+    <label class="switch" for="dark-mode-checkbox" aria-label="Toggle Dark Mode">
       <span class="sr-only" style="display:none;">Dark mode</span>
       <input type="checkbox" id="dark-mode-checkbox" class="toggle toggle-dark" />
       <span class="slider"></span>
     </label>
   </div>
 </header>
+
 
 <style is:global>
 /* HEADER & SEARCH */

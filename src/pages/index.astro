@@ -1,6 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-// 1. Panggil CSS di area Frontmatter (Atas) biar stabil
 import '../styles/home.css'; 
 
 import SkeletonLoader from '../components/SkeletonLoader.astro';
@@ -9,398 +8,380 @@ import Header from '../components/Header.astro';
 import MenuCards from '../components/MenuCards.astro';
 import Modals from '../components/Modals.astro';
 import Contact from '../components/Contact.astro';
+
+// ==========================================
+// 1. SERVER-SIDE RENDERING (SSR) MURNI
+// ==========================================
+import { supabase } from '../lib/supabase.js';
+
+let isMaintenance = false;
+let popupServerData = null;
+
+try {
+  // Server Vercel yang kerja ngecek Supabase (Lebih cepat dari HP user)
+  const [{ data: maintenanceData }, { data: popupData }] = await Promise.all([
+    supabase.from('app_settings').select('value').eq('key', 'maintenance_mode').maybeSingle(),
+    supabase.from("site_settings").select("popup_active, popup_text, popup_image").eq("id", 1).single()
+  ]);
+
+  isMaintenance = maintenanceData && maintenanceData.value === 'true';
+  
+  if (popupData && popupData.popup_active) {
+    popupServerData = {
+      text: popupData.popup_text || "",
+      image: popupData.popup_image || null
+    };
+  }
+} catch (e) {
+  console.error("SSR Supabase Error:", e);
+}
+
+// Lempar data ke window via stringify biar bisa dibaca JS Client tanpa perlu loading
+const initialDataStr = JSON.stringify({ isMaintenance, popup: popupServerData });
 ---
 
 <Layout title="HelloHope-web">
-  <main>
-    <SkeletonLoader />
-    <AdBanner />
-
-    <div class="loader"></div>
-    <div class="grid-bg"></div>
-
-    <div class="container" style="display: none;">
-      <Header />
-      <MenuCards />
+  {isMaintenance ? (
+    <div style="height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #ffffff; color: #000000; position: fixed; top: 0; left: 0; z-index: 999999;">
+      <div style="max-width: 280px; width: 100%;">
+        <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; text-transform: uppercase;">HopeHype</h1>
+        <div style="height: 1px; width: 40px; background: #000; margin: 0 auto 24px;"></div>
+        <p style="font-size: 15px; font-weight: 600; margin-bottom: 8px;">Lagi rehat sebentar.</p>
+        <p style="color: #666; font-size: 13px; line-height: 1.6; margin-bottom: 40px;">Sistem lagi dirapiin biar makin asik dipake.</p>
+        <div style="width: 100%; height: 2px; background: #f0f0f0; position: relative; overflow: hidden;">
+          <div style="position: absolute; width: 40%; height: 100%; background: #000; animation: lineMove 1.5s infinite ease-in-out;"></div>
+        </div>
+      </div>
+      <style>@keyframes lineMove { 0% { left: -40%; } 100% { left: 100%; } } body { overflow: hidden !important; }</style>
     </div>
+  ) : (
+    <main>
+      <SkeletonLoader />
+      <AdBanner />
+      
+      <div class="loader"></div>
+      <div class="grid-bg"></div>
 
-    <Modals />
-    <Contact />
+      <div class="container" style="display: none;">
+        <Header />
+        <MenuCards />
+      </div>
 
-    <script>
-      import { supabase as db } from '../lib/supabase.js';
-      import { showToast, getUserBadge, loadMidtrans } from '../lib/ui-utils.js';
+      <Modals />
+      <Contact />
 
-      // =======================
-      // MAINTENANCE SYSTEM
-      // =======================
-      async function checkMaintenance() {
-        try {
-            const cachedMaint = sessionStorage.getItem('hh_maintenance');
-            let isMaintenance = false;
+      <script id="server-data" type="application/json" set:html={initialDataStr}></script>
 
-            if (cachedMaint !== null) {
-                isMaintenance = cachedMaint === 'true';
-            } else {
-                const { data, error } = await db.from('app_settings').select('value').eq('key', 'maintenance_mode').maybeSingle();
-                isMaintenance = data && data.value === 'true';
-                sessionStorage.setItem('hh_maintenance', isMaintenance);
-            }
+      <script>
+        import { supabase as db } from '../lib/supabase.js';
+        import { showToast, getUserBadge } from '../lib/ui-utils.js';
+
+        // ==========================================
+        // 2. CLIENT-SIDE LOGIC
+        // ==========================================
+        
+        // A. Baca data Popup dari Server (Instan!)
+        const dataEl = document.getElementById('server-data');
+        let serverData = { isMaintenance: false, popup: null };
+        if (dataEl) {
+          try { serverData = JSON.parse(dataEl.textContent); } catch(e){}
+        }
+
+        // Tampilkan Popup langsung tanpa nge-fetch Supabase lagi
+        if (serverData.popup) {
+          const popupEl = document.getElementById("ad-popup");
+          const desc = document.getElementById("popup-desc");
+          const img = document.getElementById("popup-img");
+          if (desc) desc.textContent = serverData.popup.text;
+          if (img) {
+            if (serverData.popup.image) { img.src = serverData.popup.image; img.style.display = "block"; } 
+            else { img.style.display = "none"; }
+          }
+          if (popupEl) popupEl.style.display = "flex";
+        }
+
+        // =======================
+        // AUTH SYSTEM & LOAD USER
+        // =======================
+        async function loadUser() {
+          try {
+            const { data: { session }, error: sessionError } = await db.auth.getSession();
+            if (sessionError || !session) return;
+
+            const user = session.user;
+            if(typeof aktifkanNotifikasi === 'function') aktifkanNotifikasi(user.id); 
+
+            const cacheKey = `hh_profile_${user.id}`;
+            let profile = null;
+            const cachedProfileStr = sessionStorage.getItem(cacheKey);
             
-            if (isMaintenance) {
-                const adBanner = document.querySelector('.ad-banner-container');
-                if (adBanner) adBanner.style.display = 'none';
-
-                document.body.innerHTML = `
-                    <div style="
-                        height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; align-items: center;
-                        text-align: center; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-                        background: #ffffff; color: #000000; position: fixed; top: 0; left: 0; z-index: 999999;
-                    ">
-                        <div style="max-width: 280px; width: 100%;">
-                            <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; text-transform: uppercase;">HopeHype</h1>
-                            <div style="height: 1px; width: 40px; background: #000; margin: 0 auto 24px;"></div>
-                            <p style="font-size: 15px; font-weight: 600; margin-bottom: 8px;">Lagi rehat sebentar.</p>
-                            <p style="color: #666; font-size: 13px; line-height: 1.6; margin-bottom: 40px;">Sistem lagi dirapiin biar makin asik dipake.</p>
-                            <div style="width: 100%; height: 2px; background: #f0f0f0; position: relative; overflow: hidden;">
-                                <div style="position: absolute; width: 40%; height: 100%; background: #000; animation: lineMove 1.5s infinite ease-in-out;"></div>
-                            </div>
-                        </div>
-                        <style>@keyframes lineMove { 0% { left: -40%; } 100% { left: 100%; } } body { overflow: hidden !important; }</style>
-                    </div>`;
-                return true; 
+            if (cachedProfileStr) {
+              profile = JSON.parse(cachedProfileStr);
+            } else {
+              const { data, error: profileError } = await db.from("profiles").select("username, role, avatar_url, coins").eq("id", user.id).single();
+              if (profileError) return;
+              profile = data;
+              if (profile) sessionStorage.setItem(cacheKey, JSON.stringify(profile));
             }
-        } catch (err) {
-            console.error("Gagal cek status maintenance:", err);
-        }
-        return false;
-      }
 
-      // =======================
-      // POPUP CHECK
-      // =======================
-      async function checkPopup() {
-        try {
-          const cachedPopup = sessionStorage.getItem('hh_popup');
-          let popupData = null;
-
-          if (cachedPopup) {
-            popupData = JSON.parse(cachedPopup);
-          } else {
-            const { data, error } = await db.from("site_settings").select("popup_active, popup_text, popup_image").eq("id", 1).single();
-            if (error || !data) return;
-            popupData = data;
-            sessionStorage.setItem('hh_popup', JSON.stringify(popupData));
-          }
-
-          if (popupData && popupData.popup_active) {
-              const popup = document.getElementById("ad-popup");
-              const desc = document.getElementById("popup-desc");
-              const img = document.getElementById("popup-img");
-
-              if (desc) desc.textContent = popupData.popup_text || "";
-              if (img) {
-                  if (popupData.popup_image) { img.src = popupData.popup_image; img.style.display = "block"; } 
-                  else { img.style.display = "none"; }
+            if (profile) {
+              if (profile.role === 'banned') {
+                showToast("Akun Anda telah ditangguhkan oleh Admin!", "", "error");
+                await db.auth.signOut(); window.location.href = "/login"; return; 
               }
-              if (popup) popup.style.display = "flex";
-          }
-        } catch (err) { console.error("checkPopup error:", err); }
-      }
 
-      // =======================
-      // AUTH SYSTEM & LOAD USER
-      // =======================
-      async function loadUser() {
-        try {
-          const { data: { session }, error: sessionError } = await db.auth.getSession();
-          if (sessionError || !session) return;
+              const usernameEl = document.getElementById("username");
+              const avatarEl = document.getElementById("avatar");
+              const coinEl = document.getElementById("coinAmount");
+              const avatarPreview = document.getElementById("avatarPreview"); 
 
-          const user = session.user;
-          aktifkanNotifikasi(user.id); 
-
-          const cacheKey = `hh_profile_${user.id}`;
-          let profile = null;
-          const cachedProfileStr = sessionStorage.getItem(cacheKey);
-          
-          if (cachedProfileStr) {
-            profile = JSON.parse(cachedProfileStr);
-          } else {
-            const { data, error: profileError } = await db.from("profiles").select("username, role, avatar_url, coins").eq("id", user.id).single();
-            if (profileError) return;
-            profile = data;
-            if (profile) sessionStorage.setItem(cacheKey, JSON.stringify(profile));
-          }
-
-          if (profile) {
-            if (profile.role === 'banned') {
-              showToast("Akun Anda telah ditangguhkan oleh Admin!");
-              await db.auth.signOut(); window.location.href = "/login"; return; 
-            }
-
-            const usernameEl = document.getElementById("username");
-            const avatarEl = document.getElementById("avatar");
-            const coinEl = document.getElementById("coinAmount");
-            const avatarPreview = document.getElementById("avatarPreview"); // Ada di Modals.astro
-
-            if (usernameEl) usernameEl.innerHTML = `${profile.username || user.email.split("@")[0]} ${getUserBadge(profile.role)}`;
-            if (avatarEl) {
-              if (profile.avatar_url) {
-                const avatarSrc = profile.avatar_url.startsWith("data:image") ? profile.avatar_url : profile.avatar_url + "?t=" + Date.now();
-                avatarEl.src = avatarSrc;
-                if (avatarPreview) avatarPreview.src = avatarSrc;
-              } else {
-                avatarEl.src = "default-avatar.png";
-                if (avatarPreview) avatarPreview.src = "default-avatar.png";
-              }
-            }
-            if (coinEl) coinEl.textContent = profile.coins ?? 0;
-          }
-        } catch (err) { console.error("loadUser error:", err); }
-      }
-
-      async function updateAuthMenu() {
-        try {
-          const logoutBtn = document.getElementById("logoutBtn");
-          if (!logoutBtn) return;
-          const { data: { session } } = await db.auth.getSession();
-          logoutBtn.textContent = session?.user ? "Logout" : "Login";
-        } catch (err) {
-          const logoutBtn = document.getElementById("logoutBtn");
-          if (logoutBtn) logoutBtn.textContent = "Login";
-        }
-      }
-
-      // =======================
-      // NOTIFICATION SYSTEM
-      // =======================
-      const notifBell = document.getElementById("notifBell");
-      const notifCountEl = document.getElementById("notifCount");
-      let notifList = document.getElementById("notificationList");
-      let notifChannel = null;
-      let currentUserId = null;
-      let notificationsPaused = false;
-
-      function updateHopeTalkBadge(count) {
-        const badge = document.getElementById('hopeTalkBadge');
-        if (!badge) return;
-        if (count > 0) { badge.textContent = count > 99 ? "99+" : String(count); badge.style.display = 'flex'; badge.animate([{ transform: "translateY(-50%) scale(1)" }, { transform: "translateY(-50%) scale(1.3)" }, { transform: "translateY(-50%) scale(1)" }], { duration: 300, easing: "ease-out" }); } 
-        else { badge.style.display = 'none'; }
-      }
-
-      function updateNotifBadge(count) {
-        if (!notifCountEl) return;
-        if (!count || count <= 0) { notifCountEl.style.display = "none"; notifCountEl.textContent = "0"; return; }
-        notifCountEl.style.display = "flex"; notifCountEl.textContent = count > 99 ? "99+" : String(count);
-        notifCountEl.animate([{ transform: "scale(1)" }, { transform: "scale(1.3)" }, { transform: "scale(1)" }], { duration: 300, easing: "ease-out" });
-      }
-
-      async function loadUnreadNotifications() {
-        try {
-          const { data: { user } } = await db.auth.getUser();
-          if (!user) return updateNotifBadge(0);
-          currentUserId = user.id;
-          const { count, error } = await db.from("notifications").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("is_read", false);
-          if (!error) updateNotifBadge(count || 0);
-        } catch (err) {}
-      }
-
-      // Supaya Modals.astro bisa trigger notif nambah pas checkout pending
-      window.addEventListener('loadUnreadNotifications', loadUnreadNotifications);
-
-      async function loadUnreadChats() {
-        try {
-          const { data: { user } } = await db.auth.getUser();
-          if (!user) return updateHopeTalkBadge(0);
-          const lastRead = localStorage.getItem("lastReadHypetalk");
-          let query = db.from("messages").select("*", { count: "exact", head: true }).neq("user_id", user.id);
-          if (lastRead) { query = query.gt("created_at", lastRead); } else { query = query.eq("status", "sent"); }
-          const { count, error } = await query;
-          if (!error) updateHopeTalkBadge(count || 0);
-        } catch (err) {}
-      }
-
-      const hopeTalkBoxElement = document.getElementById("hopeTalkBox");
-      if (hopeTalkBoxElement) {
-        hopeTalkBoxElement.addEventListener("click", () => {
-          localStorage.setItem("lastReadHypetalk", new Date().toISOString()); updateHopeTalkBadge(0);
-        });
-      }
-
-      async function loadNotificationList() {
-        if (!currentUserId) return;
-        if (!notifList) { notifList = document.createElement("div"); notifList.id = "notificationList"; document.body.appendChild(notifList); }
-
-        try {
-          const { data, error } = await db.from("notifications").select("id, type, message, created_at, is_read, post_id, token").eq("user_id", currentUserId).order("created_at", { ascending: false }).limit(20);
-          if (error) throw error;
-
-          const isDark = document.body.classList.contains("dark");
-          const headerBorder = isDark ? "#3f445e" : "#f0f0f0"; const titleColor = isDark ? "#ffffff" : "#1a1a1a";
-
-          notifList.innerHTML = `
-            <div style="padding:5px 5px 15px 5px; border-bottom:1px solid ${headerBorder}; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-              <h2 style="margin:0; font-size:18px; font-weight:800; color:${titleColor};">Notifikasi</h2>
-              <span style="background:#1DA1F2; color:white; padding:4px 10px; border-radius:20px; font-size:9px; font-weight:700;">HopeHype</span>
-            </div>
-            <ul id="notifItemsContainer" style="margin:0; padding:0; list-style:none;"></ul>
-          `;
-
-          const container = notifList.querySelector("#notifItemsContainer");
-          if (!data || data.length === 0) { container.innerHTML = `<div style="text-align:center; padding:40px 10px; color:#bbb; font-size:13px;">Belum ada kabar terbaru... </div>`; return; }
-
-          data.forEach((n) => {
-            const li = document.createElement("li");
-            const bgUnread = isDark ? "rgba(29,161,242,0.15)" : "rgba(29,161,242,0.05)"; const bgRead = isDark ? "#363b5e" : "#ffffff";
-            const borderColor = n.is_read ? (isDark ? "#444b75" : "#f0f0f0") : "rgba(29,161,242,0.2)"; const textColor = isDark ? "#eeeeee" : "#333333";
-            const type = n.type ? n.type.toLowerCase() : "";
-
-            let iconName = type === "like" ? "favorite" : type === "comment" ? "chat_bubble" : type === "follow" ? "person_add" : type === "withdraw" ? "payments" : type === "payment_pending" ? "account_balance_wallet" : "notifications";
-            let iconColor = type === "like" ? "#FF3040" : type === "comment" ? "#00D084" : type === "follow" ? "#9b59b6" : type === "withdraw" ? "#f09f33" : type === "payment_pending" ? "#e67e22" : "#1DA1F2";
-            const time = n.created_at ? new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-
-            Object.assign(li.style, { padding: "14px", marginBottom: "10px", borderRadius: "18px", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", background: n.is_read ? bgRead : bgUnread, border: "1px solid " + borderColor, transition: "all 0.2s ease" });
-
-            li.innerHTML = `<div style="background:${iconColor}20; width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><span class="material-icons" style="color:${iconColor}; font-size:18px;">${iconName}</span></div><div style="flex:1;"><p style="margin:0; font-size:12px; color:${textColor}; line-height:1.4; font-weight:500;">${n.message}</p><span style="font-size:10px; color:#888; margin-top:4px; display:block;">${time}</span></div>${!n.is_read ? '<div style="width:6px; height:6px; background:#1DA1F2; border-radius:50%;"></div>' : ""}`;
-
-            li.onclick = async () => {
-              try {
-                await db.from("notifications").update({ is_read: true }).eq("id", n.id);
-                switch (type) {
-                  case "payment_pending":
-                    if (n.token) { closeNotif(); if (!window.snap) { loadMidtrans(); showToast("Menyiapkan pembayaran...", "Tunggu", "info"); } setTimeout(() => { if (window.snap) { window.snap.pay(n.token, { onSuccess: () => { showToast("Berhasil!", "", "success"); setTimeout(() => location.reload(), 1200); }, onPending: () => showToast("Pending", "", "warning"), onError: () => showToast("Gagal", "", "error") }); } }, 800); }
-                    break;
-                  case "follow":
-                    const { data: prof } = await db.from("profiles").select("username").eq("id", n.post_id).single();
-                    if (prof?.username) window.location.href = `/data?id=${prof.username}`;
-                    break;
-                  case "withdraw": window.location.href = "/saldo"; break;
-                  default: if (n.post_id) { window.location.href = `/post?id=${n.post_id}`; } else { closeNotif(); } break;
+              if (usernameEl) usernameEl.innerHTML = `${profile.username || user.email.split("@")[0]} ${getUserBadge(profile.role)}`;
+              if (avatarEl) {
+                if (profile.avatar_url) {
+                  let avatarSrc = profile.avatar_url.startsWith("data:image") ? profile.avatar_url : profile.avatar_url + "?t=" + Date.now();
+                  // Cloudinary auto-crop hack buat performa web!
+                  if(avatarSrc.includes('cloudinary.com')) avatarSrc = avatarSrc.replace('/upload/', '/upload/w_100,h_100,c_fill,q_auto/');
+                  avatarEl.src = avatarSrc;
+                  if (avatarPreview) avatarPreview.src = avatarSrc;
+                } else {
+                  avatarEl.src = "default-avatar.png";
+                  if (avatarPreview) avatarPreview.src = "default-avatar.png";
                 }
-              } catch (e) {}
-            };
-            container.appendChild(li);
-          });
-        } catch (err) {}
-      }
-
-      async function subscribeNotifications() {
-        try {
-          const { data: { user } } = await db.auth.getUser();
-          if (!user) return; currentUserId = user.id;
-          if (notifChannel) db.removeChannel(notifChannel);
-          notifChannel = db.channel("user-notifications").on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-            async (payload) => { if (!notificationsPaused) { await loadUnreadNotifications(); const cleanMsg = payload.new.message.replace(/<[^>]*>/g, ""); showToast("Notifikasi Baru", cleanMsg, "info"); } }
-          ).subscribe();
-        } catch (err) {}
-      }
-
-      if (notifBell) {
-        notifBell.onclick = async (e) => {
-          e.stopPropagation(); notificationsPaused = true;
-          if (notifCountEl) { notifCountEl.style.display = "none"; notifCountEl.textContent = "0"; }
-          try { await db.from("notifications").update({ is_read: true }).eq("user_id", currentUserId).eq("is_read", false); } catch (err) {}
-          await loadNotificationList(); setTimeout(() => notificationsPaused = false, 2000);
-
-          let overlay = document.getElementById("notifOverlay");
-          if (!overlay) { overlay = document.createElement("div"); overlay.id = "notifOverlay"; document.body.appendChild(overlay); }
-          Object.assign(overlay.style, { display: "block", position: "fixed", top: "0", left: "0", width: "100vw", height: "100vh", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)", zIndex: "10000", opacity: "0", transition: "opacity 0.3s ease" });
-          overlay.onclick = closeNotif;
-
-          Object.assign(notifList.style, { display: "flex", flexDirection: "column", position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "88vw", maxWidth: "380px", maxHeight: "75vh", background: document.body.classList.contains("dark") ? "#2b3050" : "#ffffff", zIndex: "10001", borderRadius: "28px", boxShadow: "0 20px 60px rgba(0,0,0,0.4)", padding: "20px", overflowY: "auto", opacity: "0", transition: "opacity 0.3s" });
-          requestAnimationFrame(() => { overlay.style.opacity = "1"; notifList.style.opacity = "1"; });
-        };
-      }
-
-      function closeNotif() {
-        const overlay = document.getElementById("notifOverlay");
-        if (notifList) notifList.style.opacity = "0"; if (overlay) overlay.style.opacity = "0";
-        setTimeout(() => { if (notifList) notifList.style.display = "none"; if (overlay) overlay.remove(); }, 300);
-      }
-
-      // ==========================================
-      // PUSH NOTIFICATION SYSTEM (FIREBASE)
-      // ==========================================
-      async function aktifkanNotifikasi(userId) {
-        if (typeof firebase === 'undefined') { setTimeout(() => aktifkanNotifikasi(userId), 1000); return; }
-
-        const firebaseConfig = { apiKey: "AIzaSyCRnwkcydQK2LkdQj7H3WmIKdEyZ9giD9I", authDomain: "hopecreate-b21d8.firebaseapp.com", projectId: "hopecreate-b21d8", storageBucket: "hopecreate-b21d8.firebasestorage.app", messagingSenderId: "313569930727", appId: "1:313569930727:web:afd1e2757cd0fe0867a142" };
-
-        try {
-          if (firebase.apps.length === 0) { firebase.initializeApp(firebaseConfig); console.log("Firebase HopeCreate Siap! 🚀"); }
-          const messaging = firebase.messaging();
-          
-          console.log("Mendaftarkan Satpam (SW)...");
-          const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-          await navigator.serviceWorker.ready;
-          console.log("Satpam Aktif & Siap Jaga! ✅");
-
-          const permission = await Notification.requestPermission();
-          if (permission !== 'granted') { console.log("Izin ditolak. Klik ikon gembok di browser lalu 'Reset Permission'!"); return; }
-
-          console.log("Sedang mengambil token...");
-          const token = await messaging.getToken({ serviceWorkerRegistration: registration, vapidKey: 'BJ-fS0SMZxgXvwFL8AGRf4dxL9ijWXAONctGak7-4SGM0UxojMSeWpufhfE_kiIbBBx4iFtWUkYyks-8n36ztYo' });
-
-          if (token) {
-            const { error } = await db.from('user_push_tokens').upsert({ user_id: userId, token: token }, { onConflict: 'user_id' });
-            if (error) console.error("Gagal simpan ke Supabase:", error.message);
-            else console.log("Notifikasi HopeHype Aktif! ✅ Token aman di database.");
-          }
-        } catch (err) {
-          console.error("DEBUG ERROR NOTIF:", err.message);
-          if (err.message.includes('403') || err.message.includes('permission')) console.log("Saran: Jalankan perintah 'indexedDB.deleteDatabase' di console.");
+              }
+              if (coinEl) coinEl.textContent = profile.coins ?? 0;
+            }
+          } catch (err) {}
         }
-      }
 
-      // =======================
-      // INIT APP
-      // =======================
-      const initApp = async () => {
-        const skeleton = document.getElementById('skeleton-screen');
-        const mainContent = document.querySelector('.container');
+        async function updateAuthMenu() {
+          try {
+            const logoutBtn = document.getElementById("logoutBtn");
+            if (!logoutBtn) return;
+            const { data: { session } } = await db.auth.getSession();
+            logoutBtn.textContent = session?.user ? "Logout" : "Login";
+          } catch (err) {
+            const logoutBtn = document.getElementById("logoutBtn");
+            if (logoutBtn) logoutBtn.textContent = "Login";
+          }
+        }
 
-        try {
-          await Promise.all([
-            updateAuthMenu(),
-            loadUser(),
-            loadUnreadNotifications(),
-            loadUnreadChats(),
-            subscribeNotifications(),
-            checkPopup()
-          ]);
-        } catch (err) {
-          console.error("initApp error:", err);
-        } finally {
+        // =======================
+        // NOTIFICATION SYSTEM
+        // =======================
+        const notifBell = document.getElementById("notifBell");
+        const notifCountEl = document.getElementById("notifCount");
+        let notifList = document.getElementById("notificationList");
+        let notifChannel = null;
+        let currentUserId = null;
+        let notificationsPaused = false;
+
+        function updateNotifBadge(count) {
+          if (!notifCountEl) return;
+          if (!count || count <= 0) { notifCountEl.style.display = "none"; notifCountEl.textContent = "0"; return; }
+          notifCountEl.style.display = "flex"; notifCountEl.textContent = count > 99 ? "99+" : String(count);
+          notifCountEl.animate([{ transform: "scale(1)" }, { transform: "scale(1.3)" }, { transform: "scale(1)" }], { duration: 300, easing: "ease-out" });
+        }
+        
+        async function loadUnreadNotifications() {
+          try {
+            const { data: { user } } = await db.auth.getUser();
+            if (!user) return updateNotifBadge(0);
+            currentUserId = user.id;
+            const { count, error } = await db.from("notifications").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("is_read", false);
+            if (!error) updateNotifBadge(count || 0);
+          } catch (err) {}
+        }
+
+        // Supaya Modals.astro bisa mancing refresh notif pas checkout pending
+        window.addEventListener('loadUnreadNotifications', loadUnreadNotifications);
+
+        // Hype Talk Chat Badge Logic
+        function updateHopeTalkBadge(count) {
+          const badge = document.getElementById('hopeTalkBadge');
+          if (!badge) return;
+          if (count > 0) { badge.textContent = count > 99 ? "99+" : String(count); badge.style.display = 'flex'; badge.animate([{ transform: "translateY(-50%) scale(1)" }, { transform: "translateY(-50%) scale(1.3)" }, { transform: "translateY(-50%) scale(1)" }], { duration: 300, easing: "ease-out" }); } 
+          else { badge.style.display = 'none'; }
+        }
+
+        async function loadUnreadChats() {
+          try {
+            const { data: { user } } = await db.auth.getUser();
+            if (!user) return updateHopeTalkBadge(0);
+            const lastRead = localStorage.getItem("lastReadHypetalk");
+            let query = db.from("messages").select("*", { count: "exact", head: true }).neq("user_id", user.id);
+            if (lastRead) { query = query.gt("created_at", lastRead); } else { query = query.eq("status", "sent"); }
+            const { count, error } = await query;
+            if (!error) updateHopeTalkBadge(count || 0);
+          } catch (err) {}
+        }
+        
+        const hopeTalkBoxElement = document.getElementById("hopeTalkBox");
+        if (hopeTalkBoxElement) {
+          hopeTalkBoxElement.addEventListener("click", () => {
+            localStorage.setItem("lastReadHypetalk", new Date().toISOString()); updateHopeTalkBadge(0);
+          });
+        }
+
+        // Logic List Notifikasi
+        async function loadNotificationList() {
+          if (!currentUserId) return;
+          if (!notifList) { notifList = document.createElement("div"); notifList.id = "notificationList"; document.body.appendChild(notifList); }
+
+          try {
+            const { data, error } = await db.from("notifications").select("id, type, message, created_at, is_read, post_id, token").eq("user_id", currentUserId).order("created_at", { ascending: false }).limit(20);
+            if (error) throw error;
+
+            const isDark = document.body.classList.contains("dark");
+            const headerBorder = isDark ? "#3f445e" : "#f0f0f0"; const titleColor = isDark ? "#ffffff" : "#1a1a1a";
+
+            notifList.innerHTML = `
+              <div style="padding:5px 5px 15px 5px; border-bottom:1px solid ${headerBorder}; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:18px; font-weight:800; color:${titleColor};">Notifikasi</h2>
+                <span style="background:#1DA1F2; color:white; padding:4px 10px; border-radius:20px; font-size:9px; font-weight:700;">HopeHype</span>
+              </div>
+              <ul id="notifItemsContainer" style="margin:0; padding:0; list-style:none;"></ul>
+            `;
+
+            const container = notifList.querySelector("#notifItemsContainer");
+            if (!data || data.length === 0) { container.innerHTML = `<div style="text-align:center; padding:40px 10px; color:#bbb; font-size:13px;">Belum ada kabar terbaru... </div>`; return; }
+
+            data.forEach((n) => {
+              const li = document.createElement("li");
+              const bgUnread = isDark ? "rgba(29,161,242,0.15)" : "rgba(29,161,242,0.05)"; const bgRead = isDark ? "#363b5e" : "#ffffff";
+              const borderColor = n.is_read ? (isDark ? "#444b75" : "#f0f0f0") : "rgba(29,161,242,0.2)"; const textColor = isDark ? "#eeeeee" : "#333333";
+              const type = n.type ? n.type.toLowerCase() : "";
+
+              let iconName = type === "like" ? "favorite" : type === "comment" ? "chat_bubble" : type === "follow" ? "person_add" : type === "withdraw" ? "payments" : type === "payment_pending" ? "account_balance_wallet" : "notifications";
+              let iconColor = type === "like" ? "#FF3040" : type === "comment" ? "#00D084" : type === "follow" ? "#9b59b6" : type === "withdraw" ? "#f09f33" : type === "payment_pending" ? "#e67e22" : "#1DA1F2";
+              const time = n.created_at ? new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+
+              Object.assign(li.style, { padding: "14px", marginBottom: "10px", borderRadius: "18px", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", background: n.is_read ? bgRead : bgUnread, border: "1px solid " + borderColor, transition: "all 0.2s ease" });
+
+              li.innerHTML = `<div style="background:${iconColor}20; width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><span class="material-icons" style="color:${iconColor}; font-size:18px;">${iconName}</span></div><div style="flex:1;"><p style="margin:0; font-size:12px; color:${textColor}; line-height:1.4; font-weight:500;">${n.message}</p><span style="font-size:10px; color:#888; margin-top:4px; display:block;">${time}</span></div>${!n.is_read ? '<div style="width:6px; height:6px; background:#1DA1F2; border-radius:50%;"></div>' : ""}`;
+
+              li.onclick = async () => {
+                try {
+                  await db.from("notifications").update({ is_read: true }).eq("id", n.id);
+                  switch (type) {
+                    case "payment_pending":
+                      if (n.token) { closeNotif(); if (!window.snap) { loadMidtrans(); showToast("Menyiapkan pembayaran...", "Tunggu", "info"); } setTimeout(() => { if (window.snap) { window.snap.pay(n.token, { onSuccess: () => { showToast("Berhasil!", "", "success"); setTimeout(() => location.reload(), 1200); }, onPending: () => showToast("Pending", "", "warning"), onError: () => showToast("Gagal", "", "error") }); } }, 800); }
+                      break;
+                    case "follow":
+                      const { data: prof } = await db.from("profiles").select("username").eq("id", n.post_id).single();
+                      if (prof?.username) window.location.href = `/data?id=${prof.username}`;
+                      break;
+                    case "withdraw": window.location.href = "/saldo"; break;
+                    default: if (n.post_id) { window.location.href = `/post?id=${n.post_id}`; } else { closeNotif(); } break;
+                  }
+                } catch (e) {}
+              };
+              container.appendChild(li);
+            });
+          } catch (err) {}
+        }
+
+        async function subscribeNotifications() {
+          try {
+            const { data: { user } } = await db.auth.getUser();
+            if (!user) return; currentUserId = user.id;
+            if (notifChannel) db.removeChannel(notifChannel);
+            notifChannel = db.channel("user-notifications").on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+              async (payload) => { if (!notificationsPaused) { await loadUnreadNotifications(); const cleanMsg = payload.new.message.replace(/<[^>]*>/g, ""); showToast("Notifikasi Baru", cleanMsg, "info"); } }
+            ).subscribe();
+          } catch (err) {}
+        }
+
+        if (notifBell) {
+          notifBell.onclick = async (e) => {
+            e.stopPropagation(); notificationsPaused = true;
+            if (notifCountEl) { notifCountEl.style.display = "none"; notifCountEl.textContent = "0"; }
+            try { await db.from("notifications").update({ is_read: true }).eq("user_id", currentUserId).eq("is_read", false); } catch (err) {}
+            await loadNotificationList(); setTimeout(() => notificationsPaused = false, 2000);
+
+            let overlay = document.getElementById("notifOverlay");
+            if (!overlay) { overlay = document.createElement("div"); overlay.id = "notifOverlay"; document.body.appendChild(overlay); }
+            Object.assign(overlay.style, { display: "block", position: "fixed", top: "0", left: "0", width: "100vw", height: "100vh", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)", zIndex: "10000", opacity: "0", transition: "opacity 0.3s ease" });
+            overlay.onclick = closeNotif;
+
+            Object.assign(notifList.style, { display: "flex", flexDirection: "column", position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "88vw", maxWidth: "380px", maxHeight: "75vh", background: document.body.classList.contains("dark") ? "#2b3050" : "#ffffff", zIndex: "10001", borderRadius: "28px", boxShadow: "0 20px 60px rgba(0,0,0,0.4)", padding: "20px", overflowY: "auto", opacity: "0", transition: "opacity 0.3s" });
+            requestAnimationFrame(() => { overlay.style.opacity = "1"; notifList.style.opacity = "1"; });
+          };
+        }
+
+        function closeNotif() {
+          const overlay = document.getElementById("notifOverlay");
+          if (notifList) notifList.style.opacity = "0"; if (overlay) overlay.style.opacity = "0";
+          setTimeout(() => { if (notifList) notifList.style.display = "none"; if (overlay) overlay.remove(); }, 300);
+        }
+
+        // =======================
+        // FIREBASE PUSH NOTIFICATION
+        // =======================
+        async function aktifkanNotifikasi(userId) {
+          if (typeof firebase === 'undefined') { setTimeout(() => aktifkanNotifikasi(userId), 1000); return; }
+          const firebaseConfig = { apiKey: "AIzaSyCRnwkcydQK2LkdQj7H3WmIKdEyZ9giD9I", authDomain: "hopecreate-b21d8.firebaseapp.com", projectId: "hopecreate-b21d8", storageBucket: "hopecreate-b21d8.firebasestorage.app", messagingSenderId: "313569930727", appId: "1:313569930727:web:afd1e2757cd0fe0867a142" };
+          try {
+            if (firebase.apps.length === 0) { firebase.initializeApp(firebaseConfig); console.log("Firebase HopeCreate Siap! 🚀"); }
+            const messaging = firebase.messaging();
+            
+            console.log("Mendaftarkan Satpam (SW)...");
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            await navigator.serviceWorker.ready;
+
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return;
+
+            const token = await messaging.getToken({ serviceWorkerRegistration: registration, vapidKey: 'BJ-fS0SMZxgXvwFL8AGRf4dxL9ijWXAONctGak7-4SGM0UxojMSeWpufhfE_kiIbBBx4iFtWUkYyks-8n36ztYo' });
+
+            if (token) {
+              await db.from('user_push_tokens').upsert({ user_id: userId, token: token }, { onConflict: 'user_id' });
+            }
+          } catch (err) {}
+        }
+
+        // =======================
+        // PWA INSTALL LOGIC
+        // =======================
+        const installAdBtn = document.getElementById('installPwaAd');
+        if (installAdBtn) {
+          installAdBtn.addEventListener('click', async () => {
+            if (window.pwaPrompt) {
+              window.pwaPrompt.prompt(); 
+              await window.pwaPrompt.userChoice;
+              window.pwaPrompt = null; 
+            } else {
+              showToast("Info", "Aplikasi sudah terinstal, atau gunakan menu 'Add to Home Screen' di browser.", "info");
+            }
+          });
+        }
+
+        // =======================
+        // INIT APP (Tampil Secepat Kilat)
+        // =======================
+        const initApp = async () => {
+          const skeleton = document.getElementById('skeleton-screen');
+          const mainContent = document.querySelector('.container');
+
+          // Munculin UI duluan, load data jalan di background
           if (skeleton) skeleton.style.display = 'none';
           if (mainContent) {
             mainContent.style.display = 'block';
             const oldLoader = document.querySelector('.loader');
             if (oldLoader) oldLoader.style.display = 'none';
           }
-        }
-      };
 
-      // RUN MAINTENANCE CHECK LALU START APP
-      checkMaintenance().then((isMaintenance) => {
-          if (!isMaintenance) initApp();
-      });
+          // Tarik data Auth, User, Notif bareng-bareng
+          updateAuthMenu();
+          loadUser();
+          loadUnreadNotifications();
+          loadUnreadChats();
+          subscribeNotifications();
+        };
 
-      // =======================
-      // PWA INSTALL SYSTEM
-      // =======================
-      const installAdBtn = document.getElementById('installPwaAd');
-      if (installAdBtn) {
-        installAdBtn.addEventListener('click', async () => {
-          if (window.pwaPrompt) {
-            window.pwaPrompt.prompt(); 
-            const { outcome } = await window.pwaPrompt.userChoice;
-            if (outcome === 'accepted') console.log('PWA diinstal!');
-            window.pwaPrompt = null; 
-          } else {
-            showToast("Info", "Aplikasi sudah terinstal, atau gunakan menu 'Add to Home Screen' di browser kamu.", "info");
-          }
-        });
-      }
-    </script>
-  </main>
+        // Karena data maintenance udah dicek di Server, langsung hajar jalankan initApp!
+        initApp();
+
+      </script>
+    </main>
+  )}
 </Layout>
