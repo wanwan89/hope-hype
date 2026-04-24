@@ -1,314 +1,215 @@
 ---
-// GiftSheetpost.astro
+// Overlayspost.astro
 ---
-<div id="giftSheet" class="gift-sheet">
-  <div class="gift-sheet-overlay" id="giftOverlay"></div>
-  
-  <div class="gift-sheet-content">
+<div id="toast"></div>
+
+<div id="bigImageContainer" class="overlay-container">
+  <div class="overlay-bg" id="bigImageOverlay"></div>
+  <img id="bigImage" src="" class="preview-img" />
+</div>
+
+<div id="giftAnimationContainer"></div>
+
+<div id="postOptionsSheet" class="action-sheet-overlay">
+  <div class="action-sheet">
     <div class="sheet-handle"></div>
-
-    <div class="gift-header">
-      <span>Kirim hadiah untuk mendukung kreator</span>
-      <span class="gift-close-x" id="giftCloseBtn">&times;</span>
-    </div>
-
-    <div class="gift-grid">
-      <div class="gift-item" data-amount="10" data-img="/asets/png/gift1.png">
-        <div class="gift-img-container">
-          <img src="/asets/png/gift1.png" class="img-gift" alt="Gift 1" />
-        </div>
-        <span class="gift-name">Troi</span>
-        <span class="gift-price">
-          <img src="/asets/svg/koin.webp" class="img-coin-inline" /> 10
-        </span>
+    <div class="sheet-content" id="sheetOptionsContent">
       </div>
-
-      <div class="gift-item" data-amount="20" data-img="/asets/png/gift2.png">
-        <div class="gift-img-container">
-          <img src="/asets/png/gift2.png" class="img-gift" alt="Gift 2" />
-        </div>
-        <span class="gift-name">Fox</span>
-        <span class="gift-price">
-          <img src="/asets/svg/koin.webp" class="img-coin-inline" /> 20
-        </span>
-      </div>
-
-      <div class="gift-item" data-amount="20" data-img="/asets/png/gift3.png">
-        <div class="gift-img-container">
-          <img src="/asets/png/gift3.png" class="img-gift" alt="Gift 3" />
-        </div>
-        <span class="gift-name">Panda</span>
-        <span class="gift-price">
-          <img src="/asets/svg/koin.webp" class="img-coin-inline" /> 20
-        </span>
-      </div>
-
-      <div class="gift-item" data-amount="25" data-img="/asets/png/gift4.png">
-        <div class="gift-img-container">
-          <img src="/asets/png/gift4.png" class="img-gift" alt="Gift 4" />
-        </div>
-        <span class="gift-name">Rabbit</span>
-        <span class="gift-price">
-          <img src="/asets/svg/koin.webp" class="img-coin-inline" /> 25
-        </span>
-      </div>
-
-      <div class="gift-item" data-amount="100" data-img="/asets/png/gift5.png">
-        <div class="gift-img-container">
-          <img src="/asets/png/gift5.png" class="img-gift" alt="Gift 5" />
-        </div>
-        <span class="gift-name">Catglow</span>
-        <span class="gift-price">
-          <img src="/asets/svg/koin.webp" class="img-coin-inline" /> 100
-        </span>
-      </div>
-    </div>
-    
-    <div class="gift-footer">
-      <div class="user-coins-info" onclick="window.location.href='/topup'">
-        <img src="/asets/svg/koin.webp" class="img-coin-footer" />
-        <span id="giftUserCoins">0</span>
-        <span style="color: rgba(255,255,255,0.3); margin-left: 5px;">&rsaquo;</span>
-      </div>
-      <button id="sendGiftBtn" class="btn-send-gift" disabled>
-        Kirim
-      </button>
-    </div>
+    <button class="sheet-cancel" id="closeOptionsBtn">Batal</button>
   </div>
 </div>
 
 <style>
   /* =========================================
-     CSS SCOPED: KHUSUS GIFT SHEET
+     CSS SCOPED: SEMUA OVERLAYS
      ========================================= */
-  .gift-sheet {
-    position: fixed; inset: 0; z-index: 100000;
-    display: none; align-items: flex-end;
-  }
-  .gift-sheet.active { display: flex; }
-
-  .gift-sheet-overlay {
-    position: absolute; inset: 0; background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(2px); cursor: pointer;
-  }
-
-  .gift-sheet-content {
-    position: relative; width: 100%; background: var(--bg-modal);
-    color: var(--text-main); border-radius: 24px 24px 0 0;
-    padding: 15px 20px 30px; transform: translateY(100%);
-    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.4); z-index: 100001;
-  }
-  .gift-sheet.active .gift-sheet-content { transform: translateY(0); }
-
-  .sheet-handle {
-    width: 40px; height: 5px; background: var(--border-card);
-    border-radius: 10px; margin: 0 auto 15px;
-  }
-
-  .gift-header {
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 20px;
-  }
-  .gift-close-x { font-size: 22px; cursor: pointer; color: var(--text-main); }
-
-  .gift-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-  }
-
-  .gift-item {
-    display: flex; flex-direction: column; align-items: center;
-    padding: 12px 5px; border-radius: 14px; border: 2px solid transparent;
-    background: var(--bg-input); transition: 0.2s ease; cursor: pointer;
-  }
-  .gift-item:hover { transform: translateY(-3px); }
   
-  .gift-item.selected-gift {
-    background: rgba(255, 45, 85, 0.1); border-color: #ff2d55;
-    transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 45, 85, 0.2);
+  /* --- TOAST NOTIF --- */
+  #toast {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+    z-index: 1000000; width: calc(100% - 24px); max-width: 420px; pointer-events: none;
   }
-  .gift-item.selected-gift img { animation: bounceMini 0.4s ease; }
-  @keyframes bounceMini { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+  :global(.toast-card) {
+    display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.96);
+    color: #1f2937; border-radius: 20px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(14px); opacity: 0; transform: translateY(-20px) scale(0.96);
+    transition: all 0.28s ease; pointer-events: auto; min-height: 64px; border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+  html.dark :global(.toast-card) { background: rgba(30, 30, 30, 0.96); color: #fff; border-color: rgba(255, 255, 255, 0.1); }
+  :global(.toast-card.show) { opacity: 1; transform: translateY(0) scale(1); }
+  :global(.toast-icon-wrap) { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;}
+  :global(.toast-icon-wrap.success) { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  :global(.toast-icon-wrap.error) { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  :global(.toast-icon-wrap.info) { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+  :global(.toast-icon) { font-size: 22px; font-weight: 800; }
+  :global(.toast-content) { flex: 1; min-width: 0; }
+  :global(.toast-title) { font-size: 14px; font-weight: 800; color: var(--text-main); margin-bottom: 2px; }
+  :global(.toast-subtitle) { font-size: 12px; color: var(--text-muted); line-height: 1.3; }
 
-  .gift-img-container { width: 50px; height: 50px; margin-bottom: 5px; }
-  .img-gift { width: 100%; height: 100%; object-fit: contain; }
+  /* --- BIG IMAGE --- */
+  .overlay-container {
+    position: fixed; inset: 0; z-index: 999999; display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .overlay-bg { position: absolute; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }
+  .preview-img { position: relative; max-width: 100%; max-height: 90vh; border-radius: 16px; box-shadow: 0 0 30px rgba(0,0,0,0.5); z-index: 2; transform: scale(0.9); transition: transform 0.3s ease; }
+
+  /* --- ACTION SHEET (TITIK TIGA) --- */
+  .action-sheet-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999999;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .action-sheet-overlay.active { opacity: 1; pointer-events: auto; }
   
-  .gift-name { font-size: 11px; font-weight: 700; color: var(--text-main); }
-  .gift-price { font-size: 12px; color: #ffd700; display: flex; align-items: center; gap: 3px; font-weight: 800; }
-  .img-coin-inline { width: 12px; height: 12px; }
-
-  .gift-footer {
-    margin-top: 25px; display: flex; justify-content: space-between; align-items: center;
-    padding-top: 15px; border-top: 1px solid var(--border-card);
+  .action-sheet {
+    background: var(--bg-card); width: 100%; max-width: 500px; margin: 0 auto;
+    border-radius: 20px 20px 0 0; padding: 20px;
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
-
-  .user-coins-info {
-    display: flex; align-items: center; gap: 6px; color: var(--text-main);
-    font-weight: 700; cursor: pointer;
-  }
-  .img-coin-footer { width: 22px; height: 22px; }
-  #giftUserCoins { font-size: 16px; }
-
-  .btn-send-gift {
-    background: #ff2d55; color: white; border: none; padding: 12px 30px;
-    border-radius: 25px; font-weight: 800; font-size: 14px; cursor: pointer; transition: 0.2s;
-  }
-  .btn-send-gift:disabled { background: var(--bg-input); color: var(--text-muted); cursor: not-allowed; }
+  .action-sheet-overlay.active .action-sheet { transform: translateY(0); }
   
-  @media (max-width: 400px) {
-    .gift-grid { grid-template-columns: repeat(3, 1fr); } /* Responsif buat HP kecil */
+  .sheet-handle { width: 40px; height: 5px; background: var(--border-card); border-radius: 10px; margin: 0 auto 20px; }
+  
+  :global(.sheet-btn) {
+    display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 12px;
+    background: none; border: none; font-size: 15px; font-weight: 600;
+    color: var(--text-main); text-align: left; cursor: pointer; border-radius: 12px; transition: 0.2s; font-family: inherit;
   }
+  :global(.sheet-btn:hover) { background: var(--bg-input); }
+  :global(.sheet-btn.danger) { color: #ef4444; }
+  :global(.sheet-btn.danger:hover) { background: rgba(239, 68, 68, 0.1); }
+  
+  .sheet-cancel {
+    width: 100%; padding: 16px; margin-top: 10px; border: none; border-radius: 12px;
+    background: var(--bg-input); font-weight: 700; cursor: pointer; font-size: 15px; color: var(--text-muted); font-family: inherit;
+  }
+
+  /* --- GIFT ANIMATION --- */
+  #giftAnimationContainer { position: fixed; inset: 0; pointer-events: none; z-index: 1000001; display: flex; justify-content: center; align-items: center; }
+  :global(.gift-main-img) { width: 280px; filter: drop-shadow(0 0 30px rgba(255,215,0,0.6)); animation: tiktokPopIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+  @keyframes tiktokPopIn { 0% { opacity: 0; transform: scale(0.5) rotate(-15deg); } 40% { opacity: 1; transform: scale(1.1) rotate(5deg); } 100% { opacity: 0; transform: scale(1.5) rotate(0deg); } }
 </style>
 
 <script>
-  const getDB = () => import('../../lib/supabase.js').then(m => m.supabase);
+  // ==========================================
+  // JAVASCRIPT GLOBAL (Bisa dipanggil komponen lain)
+  // ==========================================
 
-  // State
-  let giftState = { 
-    postId: null, 
-    creatorId: null, 
-    creatorName: "", 
-    userCoins: 0, 
-    selectedAmount: 0, 
-    selectedImg: "" 
+  // 1. FUNGSI TOAST NOTIF
+  window.showNotif = function(msg, type = "info") {
+    const container = document.getElementById("toast");
+    if (!container) return;
+
+    const config = {
+      success: { title: "Berhasil", icon: "✓" },
+      error: { title: "Gagal", icon: "✕" },
+      info: { title: "Info", icon: "i" }
+    };
+    const { title, icon } = config[type] || config.info;
+
+    const toastCard = document.createElement("div");
+    toastCard.className = "toast-card";
+    toastCard.innerHTML = `
+      <div class="toast-icon-wrap ${type}"><span class="toast-icon">${icon}</span></div>
+      <div class="toast-content">
+        <div class="toast-title">${title}</div>
+        <div class="toast-subtitle">${msg}</div>
+      </div>
+    `;
+
+    container.appendChild(toastCard);
+    setTimeout(() => toastCard.classList.add("show"), 10);
+    setTimeout(() => {
+      toastCard.classList.remove("show");
+      setTimeout(() => toastCard.remove(), 300);
+    }, 4000);
   };
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const sheet = document.getElementById("giftSheet");
-    const overlay = document.getElementById("giftOverlay");
-    const closeBtn = document.getElementById("giftCloseBtn");
-    const sendBtn = document.getElementById("sendGiftBtn");
-    const coinDisplay = document.getElementById("giftUserCoins");
-    const giftItems = document.querySelectorAll(".gift-item");
+  // 2. FUNGSI BIG IMAGE
+  window.openBigImage = function(src) {
+    const container = document.getElementById("bigImageContainer");
+    const img = document.getElementById("bigImage");
+    img.src = src;
+    container.style.display = "flex";
+    setTimeout(() => { img.style.transform = "scale(1)"; }, 10);
+  };
 
-    // 1. GLOBAL LISTENER BUKA GIFT SHEET (Dari Gallery)
-    document.body.addEventListener("click", async (e) => {
-      const btn = e.target.closest(".gift-btn");
-      if (btn) {
-        const db = await getDB();
-        const { data: { session } } = await db.auth.getSession();
-        
-        if (!session) return window.dispatchEvent(new CustomEvent('openLogin'));
-        
-        if (session.user.id === btn.dataset.creator) {
-            if (window.showNotif) window.showNotif("Masa ngirim gift ke diri sendiri bro? 😂", "warning");
-            return;
-        }
-
-        // Set state
-        giftState.postId = btn.dataset.post;
-        giftState.creatorId = btn.dataset.creator;
-        giftState.creatorName = btn.dataset.name;
-
-        // Fetch koin user
-        const { data: prof } = await db.from("profiles").select("coins").eq("id", session.user.id).single();
-        giftState.userCoins = prof?.coins || 0;
-        coinDisplay.innerText = giftState.userCoins;
-
-        // Munculin Sheet
-        sheet.classList.add("active");
-        document.body.style.overflow = "hidden"; // Kunci scroll layar
-      }
-    });
-
-    // 2. LOGIKA TUTUP SHEET
-    const closeSheet = () => {
-      sheet.classList.remove("active");
-      document.body.style.overflow = "";
-      // Reset Pilihan
-      giftItems.forEach(i => i.classList.remove("selected-gift"));
-      sendBtn.disabled = true;
-      sendBtn.innerText = "Kirim";
-      giftState.selectedAmount = 0;
-    };
-
-    overlay.onclick = closeSheet;
-    closeBtn.onclick = closeSheet;
-
-    // 3. LOGIKA PILIH GIFT
-    giftItems.forEach(item => {
-      item.onclick = () => {
-        // Hapus border aktif di tempat lain
-        giftItems.forEach(i => i.classList.remove("selected-gift"));
-        // Tambahin border aktif ke item yang diklik
-        item.classList.add("selected-gift");
-        
-        // Simpan data
-        giftState.selectedAmount = parseInt(item.dataset.amount);
-        giftState.selectedImg = item.dataset.img;
-        
-        // Aktifin tombol
-        sendBtn.disabled = false;
-        sendBtn.innerText = `Kirim (${giftState.selectedAmount} Koin)`;
-      };
-    });
-
-    // 4. LOGIKA KIRIM GIFT (TRANSAKSI SUPABASE)
-    sendBtn.onclick = async () => {
-      if (giftState.selectedAmount <= 0) return;
-      if (giftState.selectedAmount > giftState.userCoins) {
-        if (window.showNotif) window.showNotif("Koin kamu gak cukup bro! Top up dulu.", "error");
-        return;
-      }
-
-      sendBtn.disabled = true;
-      sendBtn.innerText = "Mengirim...";
-
-      try {
-        const db = await getDB();
-        const { data: { session } } = await db.auth.getSession();
-
-        // 1. Panggil RPC Database (Prosedur Supabase)
-        const { error: rpcErr } = await db.rpc("transfer_coins", { 
-          sender_id: session.user.id, 
-          receiver_id: giftState.creatorId, 
-          amount: giftState.selectedAmount 
-        });
-        if (rpcErr) throw rpcErr;
-
-        // 2. Catat Transaksi
-        await db.from("gift_transactions").insert({ 
-          sender_id: session.user.id, 
-          receiver_id: giftState.creatorId, 
-          post_id: parseInt(giftState.postId), 
-          amount: giftState.selectedAmount 
-        });
-
-        // 3. Ambil data pengirim & Catat Histori
-        const { data: sProf } = await db.from("profiles").select("username").eq("id", session.user.id).single();
-        
-        await db.from("coin_history").insert({ user_id: session.user.id, type: "keluar", transaction_type: "keluar", amount: giftState.selectedAmount, description: `Kirim gift ke ${giftState.creatorName}` });
-        await db.from("coin_history").insert({ user_id: giftState.creatorId, type: "masuk", transaction_type: "masuk", amount: giftState.selectedAmount, description: `Terima gift dari ${sProf?.username || 'Seseorang'}` });
-
-        // 4. Kirim Notifikasi
-        await db.from("notifications").insert({ 
-          user_id: giftState.creatorId, 
-          actor_id: session.user.id, 
-          post_id: parseInt(giftState.postId), 
-          type: "gift", 
-          message: `<b>${sProf?.username}</b> mengirim ${giftState.selectedAmount} koin ke karyamu.` 
-        });
-
-        // 5. Update UI Koin Lokal (Biar gak usah refresh halaman)
-        giftState.userCoins -= giftState.selectedAmount;
-        coinDisplay.innerText = giftState.userCoins;
-
-        // 6. ANIMASI TIKTOK MERIAH & CONFETTI LAZY LOAD!
-        if (window.showBigImage) window.showBigImage(giftState.selectedImg);
-        
-        import('https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/+esm').then((confettiModule) => {
-            const confetti = confettiModule.default;
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-        });
-
-        closeSheet();
-        if (window.showNotif) window.showNotif("Berhasil nyawer kreator!", "success");
-
-      } catch (err) {
-        if (window.showNotif) window.showNotif("Gagal mengirim gift: " + err.message, "error");
-        sendBtn.disabled = false;
-        sendBtn.innerText = `Kirim (${giftState.selectedAmount} Koin)`;
-      }
-    };
+  document.getElementById("bigImageOverlay")?.addEventListener("click", () => {
+    document.getElementById("bigImage").style.transform = "scale(0.9)";
+    setTimeout(() => { document.getElementById("bigImageContainer").style.display = "none"; }, 300);
   });
+
+  // 3. FUNGSI ANIMASI GIFT
+  window.showBigImage = function(imagePath) {
+    const container = document.getElementById("giftAnimationContainer");
+    container.innerHTML = `<img src="${imagePath}" class="gift-main-img">`;
+    setTimeout(() => { container.innerHTML = ""; }, 2000);
+  };
+
+  // 4. FUNGSI ACTION SHEET (TITIK TIGA)
+  window.openPostOptions = function(postId, isOwner, creatorId) {
+    const sheet = document.getElementById('postOptionsSheet');
+    const content = document.getElementById('sheetOptionsContent');
+    
+    content.innerHTML = `
+        <button class="sheet-btn" onclick="window.sharePost('${postId}')">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+            Bagikan Karya
+        </button>
+        <button class="sheet-btn" onclick="window.location.href='/data?id=${creatorId}'">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg>
+            Lihat Profil
+        </button>
+        ${isOwner ? `
+        <button class="sheet-btn danger" onclick="window.confirmDeletePost('${postId}')">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Hapus Karya
+        </button>
+        ` : `
+        <button class="sheet-btn" onclick="window.showNotif('Karya ini telah dilaporkan ke Admin.', 'info'); window.closePostOptions();">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+            Laporkan
+        </button>
+        `}
+    `;
+    
+    sheet.classList.add('active');
+  };
+
+  window.closePostOptions = function() {
+    document.getElementById('postOptionsSheet').classList.remove('active');
+  };
+
+  document.getElementById("closeOptionsBtn")?.addEventListener("click", window.closePostOptions);
+  document.getElementById("postOptionsSheet")?.addEventListener("click", (e) => {
+    if (e.target.id === "postOptionsSheet") window.closePostOptions();
+  });
+
+  window.sharePost = function(postId) {
+    const url = window.location.origin + '/post?id=' + postId;
+    if (navigator.share) {
+        navigator.share({ title: 'Hope Hype', text: 'Cek karya keren ini di Hope Hype!', url: url });
+    } else {
+        navigator.clipboard.writeText(url);
+        window.showNotif('Link disalin ke clipboard!', 'success');
+    }
+    window.closePostOptions();
+  };
+
+  window.confirmDeletePost = function(postId) {
+    window.closePostOptions();
+    setTimeout(async () => {
+      if (!confirm("Yakin ingin menghapus karya ini secara permanen?")) return;
+      window.showNotif("Sedang menghapus karya...", "info");
+      try {
+        const { supabase } = await import('../../lib/supabase.js');
+        const { error } = await supabase.from("posts").delete().eq("id", postId);
+        if (error) throw error;
+        window.showNotif("Karya berhasil dihapus!", "success");
+        setTimeout(() => location.reload(), 1000);
+      } catch (err) {
+        window.showNotif("Gagal menghapus: " + err.message, "error");
+      }
+    }, 300); 
+  };
 </script>
