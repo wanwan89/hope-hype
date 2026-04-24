@@ -16,19 +16,17 @@
   </h1>
   
   <div class="header-actions">
-    <div class="notif-wrapper top-notif" id="notifBell" role="button" aria-label="Buka Notifikasi">
+    <div class="notif-wrapper top-notif" id="notifBell">
       <span class="material-icons notification-icon">notifications</span>
       <span class="notif-dot" id="notifCount" style="display:none;">0</span>
     </div>
-    
-    <label class="switch" for="dark-mode-checkbox" aria-label="Toggle Dark Mode">
+    <label class="switch" for="dark-mode-checkbox">
       <span class="sr-only" style="display:none;">Dark mode</span>
       <input type="checkbox" id="dark-mode-checkbox" class="toggle toggle-dark" />
       <span class="slider"></span>
     </label>
   </div>
 </header>
-
 
 <style is:global>
 /* HEADER & SEARCH */
@@ -82,76 +80,99 @@ body.dark .notification-icon { color: #fff; }
 #notifCount { pointer-events: none !important; z-index: 100000 !important; }
 </style>
 <script>
-  // 🔥 FIX 1: DYNAMIC IMPORT (Ngurangin Unused JS & Network Chain)
-  const getDB = () => import('../lib/supabase.js').then(m => m.supabase);
-  const getUtils = () => import('../lib/ui-utils.js');
+  import { supabase as db } from '../lib/supabase.js';
+  import { showToast } from '../lib/ui-utils.js';
 
+  // =======================
+  // CARDS & THEME (DARK MODE)
+  // =======================
   const toggleBtn = document.querySelector(".toggle-dark");
+  const karyaCard = document.querySelector(".job-card.karya-card"); // Pastiin class ini ada di HTML lu
+  const musicCard = document.querySelector(".job-card.music-card");
 
-  // 🔥 FIX 2: CSS VARIABLES (Gak perlu ganti gambar via JS lagi)
-  // Gambar Dark Mode sekarang diatur lewat CSS, bukan JS !important
+  function CardImages(isDark) {
+    if (!karyaCard || !musicCard) return;
+    if (isDark) {
+      karyaCard.style.setProperty("background-image", "url('/asets/png/job1.webp')", "important");
+      musicCard.style.setProperty("background-image", "url('/asets/png/job.webp')", "important");
+    } else {
+      karyaCard.style.setProperty("background-image", "url('/asets/png/art.webp')", "important");
+      musicCard.style.setProperty("background-image", "url('/asets/png/song.webp')", "important");
+    }
+  }
+
   function applyTheme(isDark) {
     if (isDark) {
       document.documentElement.classList.add("dark");
+      document.body.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
+      document.body.classList.remove("dark");
     }
+    CardImages(isDark);
     if (toggleBtn) toggleBtn.checked = isDark;
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }
 
-  // Init Theme
+  // Cek tema saat web pertama kali diload
   if (toggleBtn) {
     const savedTheme = localStorage.getItem("theme");
     const isAutoDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const isDark = savedTheme ? savedTheme === "dark" : isAutoDark;
+    
     applyTheme(isDark);
 
+    // Event listener pas tombol di-klik
     toggleBtn.addEventListener("change", () => {
-      // Gunakan transition spesifik biar gak Forced Reflow
-      document.body.style.transition = "background-color 0.4s ease";
+      document.body.classList.add("theme-transition");
       applyTheme(toggleBtn.checked);
       if (navigator.vibrate) navigator.vibrate(20);
+      setTimeout(() => { document.body.classList.remove("theme-transition"); }, 400);
     });
   }
 
   // =======================
-  // PROFILE & AVATAR MENU
+  // PROFILE & AVATAR MENU TOGGLE
   // =======================
   const avatar = document.getElementById("avatar");
   const avatarMenu = document.getElementById("avatarMenu");
   
   if (avatar && avatarMenu) {
+    // Buka/tutup menu pas avatar diklik
     avatar.addEventListener("click", (e) => {
       e.stopPropagation();
-      const isVisible = avatarMenu.style.display === "flex";
-      // Pake requestAnimationFrame biar smooth
-      window.requestAnimationFrame(() => {
-        avatarMenu.style.display = isVisible ? "none" : "flex";
-      });
+      avatarMenu.style.display = avatarMenu.style.display === "flex" ? "none" : "flex";
     });
     
+    // Tutup menu kalau user klik di luar kotak menu
     document.addEventListener("click", (e) => {
-      if (avatarMenu.style.display === "flex" && !avatarMenu.contains(e.target) && e.target !== avatar) {
+      if (!avatarMenu.contains(e.target) && e.target !== avatar) {
         avatarMenu.style.display = "none";
       }
     });
   }
 
   // =======================
-  // LOGOUT LOGIC (OPTIMIZED)
+  // LOGOUT LOGIC
   // =======================
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-    const db = await getDB();
-    const { showToast } = await getUtils();
     try {
-      await db.auth.signOut();
+      const { data: { session } } = await db.auth.getSession();
+      if (session) {
+        const { error } = await db.auth.signOut();
+        if (error && error.message !== "Auth session missing!") throw error;
+      }
       localStorage.clear(); 
       sessionStorage.clear(); 
       window.location.href = "/login";
     } catch (err) {
-      window.location.href = "/login";
+      if (err.message === "Auth session missing!") {
+        localStorage.clear(); 
+        sessionStorage.clear(); 
+        window.location.href = "/login"; 
+        return;
+      }
+      showToast("Gagal logout", err.message, "error");
     }
   });
 </script>
-
