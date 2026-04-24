@@ -1,5 +1,5 @@
 ---
-// Komponen Contact Us
+// src/components/Contact.astro
 ---
 <div class="contact-wrapper">
   <input type="checkbox" id="contact-toggle" style="display: none;">
@@ -16,4 +16,64 @@
     </a>
   </div>
 </div>
-<ul id="notifList" style="display: none; list-style: none; margin: 0; padding: 0;"></ul>
+
+<style is:global>
+/* ========================================= */
+/* CONTACT US & SOSIAL MEDIA                 */
+/* ========================================= */
+.contact-wrapper { 
+  position: fixed; 
+  bottom: 20px; 
+  left: 20px; 
+  z-index: 999; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+}
+
+.contact-text { 
+  background-color: var(--bg-container); 
+  color: #007BFF; 
+  padding: 6px 14px; 
+  border-radius: 20px; 
+  font-size: 13px; 
+  font-weight: 700; 
+  cursor: pointer; 
+  box-shadow: 2px 4px 6px var(--shadow-color); 
+  transition: all 0.3s ease; 
+}
+
+:root.dark .contact-text { 
+  color: #ffffff; 
+  background-color: #3f445e; 
+}
+
+.social-icons-container { 
+  display: flex; 
+  flex-direction: row; 
+  gap: 10px; 
+  opacity: 0; 
+  transform: translateX(-20px); 
+  pointer-events: none; 
+  transition: all 0.4s ease-out; 
+}
+
+.social-icon {
+  transition: transform 0.2s ease;
+}
+
+.social-icon:hover {
+  transform: scale(1.1);
+}
+
+#contact-toggle:checked ~ .social-icons-container { 
+  opacity: 1; 
+  transform: translateX(0); 
+  pointer-events: auto; 
+}
+
+#contact-toggle:checked ~ .contact-text { 
+  background-color: #007BFF; 
+  color: #ffffff; 
+}
+</style>
