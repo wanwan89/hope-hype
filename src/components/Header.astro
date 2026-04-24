@@ -29,7 +29,7 @@
   </div>
 </header>
 
-<div id="notificationList" class="notif-list-container">
+<div id="headerNotifPopup" class="notif-list-container">
   <div class="notif-list-header">
     <h3>Notifikasi</h3>
     <button id="closeNotifBtn">&times;</button>
@@ -100,7 +100,9 @@ body.dark .slider { box-shadow: 4px 4px var(--main-color); border: 2px solid var
   border: 1px solid var(--border-card); z-index: 100000; flex-direction: column; overflow: hidden;
   animation: notifSlideDown 0.3s ease forwards;
 }
-.notif-list-container.active { display: flex; }
+/* Tambah !important biar kebal dari file lama */
+.notif-list-container.active { display: flex !important; }
+
 @keyframes notifSlideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
 .notif-list-header {
@@ -197,7 +199,8 @@ body.dark .slider { box-shadow: 4px 4px var(--main-color); border: 2px solid var
     // 🔥 LOGIKA POPUP NOTIFIKASI 🔥
     // =======================
     const notifBell = document.getElementById("notifBell");
-    const notifList = document.getElementById("notificationList");
+    // UDAH DIGANTI ID-NYA BIAR GAK BENTROK
+    const notifList = document.getElementById("headerNotifPopup"); 
     const closeNotifBtn = document.getElementById("closeNotifBtn");
     let currentUser = null;
 
@@ -322,7 +325,6 @@ body.dark .slider { box-shadow: 4px 4px var(--main-color); border: 2px solid var
 
     // Panggil diam-diam di background pas halaman beres diload biar badge merahnya muncul
     setTimeout(loadNotifications, 2000);
-
 
     // =======================
     // LOGOUT LOGIC (LAZY LOAD DB)
