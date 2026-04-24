@@ -1,3 +1,4 @@
+// ✅ FIX: Gunakan huruf kecil 'importScripts'
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
@@ -13,11 +14,14 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
+// Logika Notifikasi di Background
 messaging.onBackgroundMessage(function(payload) {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: '/asets/png/book.png'
+    // Pastikan path icon ini sesuai dengan file koin/book .webp lu biar makin kenceng
+    icon: '/asets/png/book.png' 
   };
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
