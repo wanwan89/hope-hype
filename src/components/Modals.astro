@@ -389,9 +389,27 @@
             window.showNotif("Pembayaran Sukses! Akun diupgrade.", "success"); 
             setTimeout(() => location.reload(), 1200); 
           },
-          onPending: () => window.showNotif("Selesaikan transaksi dulu", "warning"),
+          onPending: async () => {
+            window.showNotif("Selesaikan transaksi dulu", "warning");
+            // 🔥 MASUKIN KE DB BIAR LONCENG NYALA MERAH 🔥
+            await db.from("notifications").insert({
+              user_id: payloadBody.userId,
+              type: "payment_pending",
+              message: `Transaksi ${payloadBody.item_name} tertunda. Lanjutkan pembayaran?`,
+              is_read: false
+            });
+          },
           onError: () => window.showNotif("Pembayaran gagal", "error"),
-          onClose: () => window.showNotif("kamu nutup popup sebelum bayar", "info")
+          onClose: async () => {
+            window.showNotif("Kamu nutup popup sebelum bayar", "info");
+            // 🔥 MASUKIN KE DB BIAR LONCENG NYALA MERAH PAS DICANCEL 🔥
+            await db.from("notifications").insert({
+              user_id: payloadBody.userId,
+              type: "payment_pending",
+              message: `Transaksi ${payloadBody.item_name} belum diselesaikan.`,
+              is_read: false
+            });
+          }
         });
 
       } catch (err) {
