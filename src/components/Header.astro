@@ -245,14 +245,14 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
       notifBell.addEventListener("click", async (e) => {
         e.stopPropagation();
         
-        // 🔥 Tambahin Animasi Goyang Lonceng 🔥
+        // Animasi Goyang Lonceng
         bellIcon.classList.remove("bell-ringing");
-        void bellIcon.offsetWidth; // Trigger reflow biar animasi jalan ulang
+        void bellIcon.offsetWidth; 
         bellIcon.classList.add("bell-ringing");
 
         notifList.classList.toggle("active");
         if (notifList.classList.contains("active")) {
-          loadNotifications(); // Refresh list isi notifnya
+          loadNotifications(); 
         }
       });
 
@@ -343,7 +343,6 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
           const div = document.createElement("div");
           div.className = `notif-item ${!notif.is_read ? 'unread' : ''}`;
           
-          // 🔥 DESAIN ICON PREMIUM SVG SESUAI TRANSAKSI 🔥
           let iconHtml = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`; 
           let iconBg = "#3b82f6"; // Default Biru
 
@@ -381,7 +380,7 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
             ${!notif.is_read ? '<div style="width: 8px; height: 8px; background: #1DA1F2; border-radius: 50%; margin-top: 6px;"></div>' : ''}
           `;
 
-          // Pas diklik, tandain dibaca
+          // 🔥 PAS DIKLIK 🔥
           div.onclick = async () => {
             if (!notif.is_read) {
               div.classList.remove('unread');
@@ -399,20 +398,32 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
               }
             }
             
-            // 🔥 LOGIKA LANJUTIN TRANSAKSI (RESUME PAYMENT) 🔥
+            // 🔥 BUKA MIDTRANS LAGI BUAT TRANSAKSI PENDING 🔥
             if (notif.type === "payment_pending" && notif.token) {
-              if (window.snap) {
-                // Tutup menu notif dulu biar enak
-                document.getElementById("headerNotifPopup").classList.remove("active");
-                // Panggil midtrans lagi
-                window.snap.pay(notif.token, {
-                  onSuccess: () => { window.showNotif("Pembayaran Sukses!", "success"); setTimeout(()=>location.reload(), 1200); },
-                  onPending: () => window.showNotif("Menunggu pembayaran", "warning"),
-                  onError: () => window.showNotif("Pembayaran gagal", "error"),
-                  onClose: () => window.showNotif("Popup ditutup", "info")
-                });
-              } else {
-                window.showNotif("Sistem pembayaran belum siap, refresh web.", "error");
+              try {
+                let utils = await import('../lib/ui-utils.js');
+                if (!window.snap) {
+                  if (utils.loadMidtrans) utils.loadMidtrans();
+                  if (window.showNotif) window.showNotif("Menyiapkan pembayaran...", "info");
+                  for (let i = 0; i < 30; i++) {
+                    if (window.snap) break;
+                    await new Promise(r => setTimeout(r, 100));
+                  }
+                }
+                
+                if (window.snap) {
+                  document.getElementById("headerNotifPopup").classList.remove("active");
+                  window.snap.pay(notif.token, {
+                    onSuccess: () => { if(window.showNotif) window.showNotif("Pembayaran Sukses!", "success"); setTimeout(()=>location.reload(), 1200); },
+                    onPending: () => { if(window.showNotif) window.showNotif("Menunggu pembayaran", "warning"); },
+                    onError: () => { if(window.showNotif) window.showNotif("Pembayaran gagal", "error"); },
+                    onClose: () => { if(window.showNotif) window.showNotif("Popup ditutup", "info"); }
+                  });
+                } else {
+                  if(window.showNotif) window.showNotif("Sistem pembayaran gagal dimuat, silakan refresh web.", "error");
+                }
+              } catch (err) {
+                console.error("Midtrans Resume Error:", err);
               }
             } 
             // Kalo ada post_id, lompat ke postingan
@@ -430,15 +441,20 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
       }
     }
 
-    // 🔥 LANGSUNG CEK TITIK MERAH DI AWAL (Tanpa harus buka popup) 🔥
+    // Panggil diam-diam pas halaman beres diload
     setTimeout(checkInitialUnread, 1500);
 
     // =======================
-    // 🔥 REAL-TIME NOTIFICATION (BADGE MERAH MUNCUL OTOMATIS) 🔥
+    // 🔥 REAL-TIME NOTIFICATION 🔥
     // =======================
     async function initRealtimeNotif() {
       try {
         const { supabase } = await import('../lib/supabase.js');
+        // 🔥 FIX 1: Kalo user null, dia otomatis ngambil ulang biar real-time jalan 🔥
+        if (!currentUser) {
+          const { data: { user } } = await supabase.auth.getUser();
+          currentUser = user;
+        }
         if (!currentUser) return;
 
         supabase
@@ -452,19 +468,14 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
               filter: `user_id=eq.${currentUser.id}` 
             },
             (payload) => {
-              // 1. Tambahin angka di titik merah lonceng
               if (countEl) {
                 let currentCount = parseInt(countEl.innerText) || 0;
                 countEl.innerText = currentCount >= 9 ? "9+" : currentCount + 1;
                 countEl.style.display = "flex";
               }
-
-              // 2. Munculin Toast Popup di layar (kalau fungsi window.showNotif tersedia)
               if (window.showNotif) {
                 window.showNotif(payload.new.message, "info");
               }
-
-              // 3. Kalau menu notif lagi dibuka, otomatis refresh daftarnya
               const notifList = document.getElementById("headerNotifPopup");
               if (notifList && notifList.classList.contains("active")) {
                 loadNotifications();
@@ -477,20 +488,22 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
       }
     }
     
-    // Jalankan real-time setelah pengecekan awal
     setTimeout(initRealtimeNotif, 2500);
 
-    // 🔥 TANGKEP SINYAL DARI MODAL BIAR LONCENG INSTAN NYALA 🔥
+    // 🔥 FIX 2: TANGKEP SINYAL DARI MODAL BIAR LONCENG INSTAN NYALA 🔥
     window.addEventListener("loadUnreadNotifications", () => {
-      checkInitialUnread();
-      // Kalo user lagi buka popup notif, daftarnya otomatis di-refresh
-      if (notifList && notifList.classList.contains("active")) {
-        loadNotifications();
-      }
+      // Kasih delay 0.5 detik biar Modal kelar nyimpen data ke DB sebelum kita cek
+      setTimeout(() => {
+        checkInitialUnread();
+        const notifList = document.getElementById("headerNotifPopup");
+        if (notifList && notifList.classList.contains("active")) {
+          loadNotifications();
+        }
+      }, 500); 
     });
 
     // =======================
-    // LOGOUT LOGIC (LAZY LOAD DB)
+    // LOGOUT LOGIC
     // =======================
     document.getElementById("logoutBtn")?.addEventListener("click", async () => {
       const { supabase: db } = await import('../lib/supabase.js');
