@@ -39,15 +39,15 @@
       <div class="tg-search-container">
         <div class="tg-search-box">
           <span class="material-icons">search</span>
-          <input type="text" id="searchChat" placeholder="Cari Obrolan" autocomplete="off" />
+          <input type="text" id="searchChat" placeholder="Cari teman atau obrolan..." autocomplete="off" />
         </div>
       </div>
     </header>
 
     <main class="tg-chat-list" id="chatList">
-      <div style="text-align: center; padding: 40px 20px; color: #8e8e93;">
-        <span class="material-icons" style="font-size: 40px; animation: spin 1s linear infinite;">sync</span>
-        <p style="margin-top: 10px; font-size: 14px;">Memuat obrolan...</p>
+      <div class="loading-state">
+        <span class="material-icons loading-spinner">sync</span>
+        <p>Memuat obrolan...</p>
       </div>
     </main>
 
@@ -61,72 +61,131 @@
     @keyframes spin { 100% { transform: rotate(360deg); } }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     
-    body { background: #f0f2f5; display: flex; justify-content: center; height: 100dvh; overflow: hidden; transition: background 0.3s ease; }
-    
-    /* MANUAL DARK MODE CLASS (Mengikuti localStorage) */
-    html.dark body { background: #0f0f0f; color: #fff; }
+    body { background: #e5e7eb; display: flex; justify-content: center; height: 100dvh; overflow: hidden; transition: background 0.3s ease; }
+    html.dark body { background: #000000; color: #fff; }
 
-    .telegram-wrapper { width: 100%; max-width: 480px; height: 100dvh; display: flex; flex-direction: column; background: #ffffff; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); transition: background 0.3s ease; }
-    html.dark .telegram-wrapper { background: #1c1e22; box-shadow: none; border-left: 1px solid #2a2d31; border-right: 1px solid #2a2d31; }
+    /* WRAPPER UTAMA */
+    .telegram-wrapper { 
+      width: 100%; 
+      max-width: 480px; 
+      height: 100dvh; 
+      display: flex; 
+      flex-direction: column; 
+      background: #ffffff; 
+      position: relative; 
+      box-shadow: 0 0 20px rgba(0,0,0,0.05); 
+      transition: background 0.3s ease; 
+    }
+    html.dark .telegram-wrapper { background: #15171a; box-shadow: none; border-left: 1px solid #22252a; border-right: 1px solid #22252a; }
 
-    .tg-header { background: #ffffff; padding-top: 10px; z-index: 10; transition: background 0.3s ease; }
-    html.dark .tg-header { background: #1c1e22; }
+    /* HEADER KEKINIAN DENGAN BLUR */
+    .tg-header { 
+      background: rgba(255, 255, 255, 0.85); 
+      backdrop-filter: blur(12px); 
+      -webkit-backdrop-filter: blur(12px); 
+      padding-top: 10px; 
+      z-index: 10; 
+      transition: background 0.3s ease, border-color 0.3s ease; 
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    html.dark .tg-header { background: rgba(21, 23, 26, 0.85); border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-    .tg-header-top { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; }
+    .tg-header-top { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; }
     .tg-header-left { display: flex; align-items: center; gap: 16px; }
-    .tg-header-left h2 { font-size: 20px; font-weight: 600; color: #000; transition: color 0.3s ease; }
-    html.dark .tg-header-left h2 { color: #fff; }
+    .tg-header-left h2 { font-size: 22px; font-weight: 700; color: #111827; letter-spacing: -0.5px; transition: color 0.3s ease; }
+    html.dark .tg-header-left h2 { color: #f9fafb; }
 
-    .icon-btn { background: none; border: none; color: #606060; cursor: pointer; display: flex; align-items: center; transition: color 0.3s ease, opacity 0.2s; }
-    .icon-btn:active { opacity: 0.5; }
-    html.dark .icon-btn { color: #aaa; }
+    .icon-btn { background: none; border: none; color: #4b5563; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; transition: all 0.2s ease; }
+    .icon-btn:active { background: rgba(0,0,0,0.05); transform: scale(0.95); }
+    html.dark .icon-btn { color: #9ca3af; }
+    html.dark .icon-btn:active { background: rgba(255,255,255,0.05); }
 
-    .tg-search-container { padding: 8px 16px 16px; }
-    .tg-search-box { display: flex; align-items: center; background: #f1f3f4; border-radius: 24px; padding: 8px 16px; gap: 10px; transition: background 0.3s ease; }
-    html.dark .tg-search-box { background: #2a2d31; }
+    /* SEARCH BAR PREMIUM */
+    .tg-search-container { padding: 4px 20px 16px; }
+    .tg-search-box { 
+      display: flex; align-items: center; background: #f3f4f6; border-radius: 14px; padding: 10px 16px; gap: 12px; 
+      transition: all 0.3s ease; border: 1px solid transparent;
+    }
+    .tg-search-box:focus-within { background: #ffffff; border-color: #1DA1F2; box-shadow: 0 4px 12px rgba(29, 161, 242, 0.1); }
+    html.dark .tg-search-box { background: #1f2226; }
+    html.dark .tg-search-box:focus-within { background: #15171a; border-color: #1DA1F2; }
     
-    .tg-search-box .material-icons { color: #8e8e93; font-size: 20px; }
-    .tg-search-box input { flex: 1; border: none; background: transparent; outline: none; font-size: 15px; color: #000; transition: color 0.3s ease; }
-    html.dark .tg-search-box input { color: #fff; }
-    .tg-search-box input::placeholder { color: #8e8e93; }
+    .tg-search-box .material-icons { color: #9ca3af; font-size: 20px; transition: color 0.3s; }
+    .tg-search-box:focus-within .material-icons { color: #1DA1F2; }
+    .tg-search-box input { flex: 1; border: none; background: transparent; outline: none; font-size: 15px; color: #111827; transition: color 0.3s ease; }
+    html.dark .tg-search-box input { color: #f9fafb; }
+    .tg-search-box input::placeholder { color: #9ca3af; font-weight: 500; }
 
-    /* 🔥 FIX CHAT KEPOTONG: Tambahin padding-bottom yang besar 🔥 */
-    .tg-chat-list { flex: 1; overflow-y: auto; padding-bottom: 90px; }
+    /* 🔥 FIX LIST CHAT (PADDING BAWAH LEBIH BESAR BIAR GAK KETUTUP FAB) 🔥 */
+    .tg-chat-list { flex: 1; overflow-y: auto; padding-bottom: 120px; scroll-behavior: smooth; }
     .tg-chat-list::-webkit-scrollbar { width: 0; } 
 
-    .tg-chat-item { display: flex; align-items: center; gap: 14px; padding: 10px 16px; cursor: pointer; user-select: none; transition: background 0.2s; }
-    .tg-chat-item:active { background: #f0f0f0; }
-    html.dark .tg-chat-item:active { background: #2a2d31; }
+    /* DESAIN KOTAK CHAT LEBIH NYAMAN */
+    .tg-chat-item { 
+      display: flex; align-items: center; gap: 16px; padding: 12px 20px; cursor: pointer; user-select: none; 
+      transition: background 0.2s, transform 0.1s; position: relative;
+    }
+    /* Efek membal pas diklik */
+    .tg-chat-item:active { background: #f3f4f6; transform: scale(0.98); }
+    html.dark .tg-chat-item:active { background: #1f2226; }
 
-    .tg-avatar { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-    .global-avatar { background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); display: flex; align-items: center; justify-content: center; color: white; }
-    .group-avatar { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; }
+    .tg-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: none !important; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .global-avatar { background: linear-gradient(135deg, #1DA1F2 0%, #007bb5 100%); display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(29, 161, 242, 0.3); }
+    .group-avatar { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); }
 
-    .tg-chat-info { flex: 1; min-width: 0; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; padding-top: 2px; display: flex; flex-direction: column; justify-content: center; height: 100%; transition: border-color 0.3s ease; }
+    .tg-chat-info { flex: 1; min-width: 0; border-bottom: 1px solid #f3f4f6; padding-bottom: 14px; padding-top: 4px; display: flex; flex-direction: column; justify-content: center; height: 100%; transition: border-color 0.3s ease; }
     .tg-chat-item:last-child .tg-chat-info { border-bottom: none; }
-    html.dark .tg-chat-info { border-bottom-color: #2a2d31; }
+    html.dark .tg-chat-info { border-bottom-color: #1f2226; }
 
-    .tg-chat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
-    .tg-name { font-size: 16px; font-weight: 600; color: #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; transition: color 0.3s ease; }
-    html.dark .tg-name { color: #fff; }
+    .tg-chat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .tg-name { font-size: 16px; font-weight: 700; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; transition: color 0.3s ease; }
+    html.dark .tg-name { color: #f9fafb; }
     
-    .verified-badge { color: #1DA1F2; display: flex; align-items: center; margin-left: 4px; }
-    .verified-badge .material-icons { font-size: 14px; }
-    
-    .avatar { border: none !important; box-shadow: none !important; }
+    .verified-badge { color: #1DA1F2; display: flex; align-items: center; }
+    .verified-badge .material-icons { font-size: 15px; }
 
-    .tg-time { font-size: 12px; color: #8e8e93; flex-shrink: 0; }
-    .tg-chat-item.unread .tg-time { color: #3b82f6; font-weight: 600; }
+    .tg-time { font-size: 12px; font-weight: 500; color: #9ca3af; flex-shrink: 0; }
+    .tg-chat-item.unread .tg-time { color: #1DA1F2; font-weight: 700; }
 
     .tg-chat-bottom { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .tg-preview { font-size: 15px; color: #8e8e93; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; display: flex; align-items: center; gap: 4px; }
+    .tg-preview { font-size: 14px; font-weight: 500; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; display: flex; align-items: center; gap: 4px; transition: color 0.3s ease; }
+    html.dark .tg-preview { color: #9ca3af; }
+    .tg-chat-item.unread .tg-preview { color: #374151; font-weight: 600; }
+    html.dark .tg-chat-item.unread .tg-preview { color: #e5e7eb; }
+
     .check-icon { font-size: 16px; color: #10b981; }
 
-    .tg-unread-badge { background: #3b82f6; color: white; font-size: 12px; font-weight: 600; min-width: 22px; height: 22px; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0; }
+    /* Badge Merah Unread */
+    .tg-unread-badge { background: #ef4444; color: white; font-size: 11px; font-weight: 800; min-width: 22px; height: 22px; border-radius: 99px; display: flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4); }
 
-    .tg-fab { position: absolute; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: #4facfe; border: none; color: white; box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; z-index: 50; }
-    .tg-fab:active { transform: scale(0.9); }
-    .tg-fab .material-icons { font-size: 24px; }
+    /* 🔥 FIX TOMBOL FAB (DINAIKKAN & DIBIKIN MAKIN CAKEP) 🔥 */
+    .tg-fab { 
+      position: absolute; 
+      /* Naikin posisi tombol 40px dari bawah + margin safe area HP */
+      bottom: max(40px, env(safe-area-inset-bottom) + 20px); 
+      right: 24px; 
+      width: 60px; 
+      height: 60px; 
+      border-radius: 50%; 
+      background: linear-gradient(135deg, #1DA1F2, #007bb5); 
+      border: none; 
+      color: white; 
+      box-shadow: 0 8px 20px rgba(29, 161, 242, 0.4); 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+      z-index: 50; 
+    }
+    .tg-fab:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 12px 25px rgba(29, 161, 242, 0.5); }
+    .tg-fab:active { transform: scale(0.9); box-shadow: 0 4px 10px rgba(29, 161, 242, 0.4); }
+    .tg-fab .material-icons { font-size: 26px; }
+
+    /* LOADING STATE */
+    .loading-state { text-align: center; padding: 60px 20px; color: #9ca3af; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .loading-spinner { font-size: 40px; animation: spin 1s linear infinite; color: #1DA1F2; }
+    .loading-state p { font-size: 14px; font-weight: 600; }
   </style>
 
   <script>
@@ -157,7 +216,7 @@
           
           const { data: { user }, error: authError } = await supabase.auth.getUser();
           if (authError || !user) {
-            chatList.innerHTML = '<div style="text-align:center; padding:40px 20px; color:#8e8e93;">Silakan login dulu bro.</div>';
+            chatList.innerHTML = '<div class="loading-state"><span class="material-icons" style="color:#ef4444; animation:none;">error_outline</span><p>Silakan login dulu bro.</p></div>';
             return;
           }
           currentUser = user;
@@ -217,7 +276,7 @@
                 if (msg.message === "Pesan ini telah dihapus") previewText = "🚫 Pesan dihapus";
 
                 const isMe = msg.user_id === currentUser.id && !msg.is_system;
-                const statusCheck = isMe ? (msg.status === "read" ? `<span class="material-icons check-icon" style="color:#10b981; font-size:14px; margin-right:4px;">done_all</span>` : `<span class="material-icons check-icon" style="color:#8e8e93; font-size:14px; margin-right:4px;">check</span>`) : '';
+                const statusCheck = isMe ? (msg.status === "read" ? `<span class="material-icons check-icon" style="color:#10b981; font-size:16px; margin-right:4px;">done_all</span>` : `<span class="material-icons check-icon" style="color:#9ca3af; font-size:16px; margin-right:4px;">check</span>`) : '';
 
                 finalChatList.push({
                   id: pId, 
@@ -258,7 +317,7 @@
           chatList.innerHTML = '';
           
           if (finalChatList.length === 1 && finalChatList[0].type === 'global') {
-            chatList.innerHTML = `<div style="text-align:center; padding:40px 20px; color:#8e8e93;">Mulai cari doi untuk melihat riwayat chat pribadi di sini.</div>`;
+            chatList.innerHTML = `<div class="loading-state" style="opacity:0.7;"><span class="material-icons" style="font-size:48px; color:#1DA1F2; animation:none;">forum</span><p>Mulai cari doi untuk melihat riwayat chat pribadi di sini.</p></div>`;
           }
 
           finalChatList.forEach(chat => {
@@ -278,14 +337,14 @@
               avatarHtml = `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>`;
             } else if (chat.type === 'group') {
               avatarHtml = chat.avatar 
-                ? `<img src="${chat.avatar}" class="tg-avatar" style="border:none;">` 
+                ? `<img src="${chat.avatar}" class="tg-avatar">` 
                 : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`;
             } else {
-              avatarHtml = `<img src="${chat.avatar}" class="tg-avatar" style="border:none;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(chat.name)}'">`;
+              avatarHtml = `<img src="${chat.avatar}" class="tg-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(chat.name)}'">`;
             }
 
             let roleBadge = '';
-            if (chat.role === 'admin') roleBadge = `<span class="badge" style="background:#ff4757; color:white; font-size:8px; padding:2px 4px; border-radius:4px; margin-left:4px;">ADMIN</span>`;
+            if (chat.role === 'admin') roleBadge = `<span class="badge" style="background:#ef4444; color:white; font-size:9px; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:800;">ADMIN</span>`;
             if (chat.role === 'verified') roleBadge = `<span class="verified-badge"><span class="material-icons">verified</span></span>`;
 
             div.innerHTML = `
@@ -308,7 +367,7 @@
 
         } catch (err) {
           console.error(err);
-          chatList.innerHTML = '<div style="text-align:center; padding:40px 20px; color:#ff4757;">Gagal memuat history chat.</div>';
+          chatList.innerHTML = '<div class="loading-state"><span class="material-icons" style="color:#ef4444; animation:none;">error_outline</span><p>Gagal memuat history chat.</p></div>';
         }
       }
 
