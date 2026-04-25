@@ -56,7 +56,7 @@
       <div class="search-modal-content">
         <div class="search-modal-header">
           <h3>Mulai Chat Baru</h3>
-          <button class="close-modal-btn" id="close-search-modal"><span class="material-icons">close</span></button>
+          <button class="close-modal-btn" id="close-search-modal" aria-label="Tutup popup"><span class="material-icons">close</span></button>
         </div>
         <p style="font-size: 13px; color: var(--tg-text-muted); margin-bottom: 12px;">Masukkan ID unik temanmu (contoh: 0E870)</p>
         <div class="search-input-group">
@@ -129,10 +129,9 @@
     .tg-search-box input { flex: 1; border: none; background: transparent; outline: none; font-size: 15px; color: var(--tg-text); transition: color 0.2s ease; }
     .tg-search-box input::placeholder { color: var(--tg-text-muted); }
 
-    /* 🔥 FIX LIST CHAT (PADDING BAWAH LEBIH BESAR BIAR GAK KETUTUP FAB) 🔥 */
-    .tg-chat-list { flex: 1; overflow-y: auto; padding-bottom: 140px; scroll-behavior: smooth; }
+    /* LIST CHAT */
+    .tg-chat-list { flex: 1; overflow-y: auto; padding-bottom: 100px; }
     .tg-chat-list::-webkit-scrollbar { width: 0; } 
-
 
     .tg-chat-item { 
       display: flex; align-items: center; gap: 14px; padding: 10px 16px; cursor: pointer; user-select: none; 
@@ -165,31 +164,21 @@
     .tg-unread-badge { background: var(--tg-primary); color: white; font-size: 11px; font-weight: 700; min-width: 22px; height: 22px; border-radius: 99px; display: flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0; }
 
     /* FAB */
-    /* FAB */
     .tg-fab { 
-      position: absolute; 
-      /* DIANGKAT LEBIH TINGGI LAGI BIAR AMAN DARI LENGKUNGAN HP */
-      bottom: max(90px, env(safe-area-inset-bottom) + 60px); 
-      right: 24px; 
-      width: 56px; 
-      height: 56px; 
-      border-radius: 50%; 
-      background: var(--tg-primary); 
-      border: none; 
-      color: white; 
-      box-shadow: 0 4px 14px rgba(29, 161, 242, 0.4); 
-      cursor: pointer; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-      z-index: 50; 
+      position: absolute; bottom: max(30px, env(safe-area-inset-bottom) + 20px); right: 20px; 
+      width: 56px; height: 56px; border-radius: 50%; background: var(--tg-primary); border: none; color: white; 
+      box-shadow: 0 4px 14px rgba(29, 161, 242, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; 
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 50; 
     }
     .tg-fab:active { transform: scale(0.9); }
     .tg-fab .material-icons { font-size: 24px; }
+    
+    /* 🔥 CSS UNTUK MENYEMBUNYIKAN FAB AGAR TIDAK KETUTUP/MENUTUPI 🔥 */
+    .tg-fab.hidden {
+      display: none !important;
+    }
 
-
-    /* MODAL CARI TEMAN */
+    /* MODAL CARI TEMAN (POPUP FULL LOGIC) */
     .search-modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s ease; }
     .search-modal-content { background: var(--tg-bg); width: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 24px; animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     .search-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -213,7 +202,7 @@
       let currentUser = null;
 
       // =====================================
-      // LOGIKA FAB (TOMBOL CHAT BARU)
+      // 🔥 LOGIKA FAB (TOMBOL CHAT BARU) 🔥
       // =====================================
       const fabBtn = document.getElementById("btn-new-chat");
       const searchModal = document.getElementById("search-modal");
@@ -224,19 +213,27 @@
       if (fabBtn && searchModal) {
         fabBtn.addEventListener("click", () => {
           searchModal.style.display = "flex";
+          // 🔥 SEMBUNYIKAN FAB SECARA INSTAN DI LAYAR PRIBADI 🔥
+          fabBtn.classList.add("hidden"); 
           setTimeout(() => inputNewId?.focus(), 100);
         });
 
-        closeModalBtn.addEventListener("click", () => {
+        // 🔥 FUNGSI REUSABLE UNTUK TUTUP MODAL & MUNCULIN LAGI FAB 🔥
+        const closeNewChatModal = () => {
           searchModal.style.display = "none";
-        });
+          fabBtn.classList.remove("hidden"); // Munculkan FAB kembali secara instan
+          if (inputNewId) inputNewId.value = ''; // Bersihkan input
+        }
+
+        closeModalBtn.addEventListener("click", closeNewChatModal);
 
         searchModal.addEventListener("click", (e) => {
-          if (e.target === searchModal) searchModal.style.display = "none";
+          // Tutup kalau user klik area dimmed di luar modal content
+          if (e.target === searchModal) closeNewChatModal();
         });
 
         btnFindUser.addEventListener("click", async () => {
-          const searchValue = inputNewId.value.trim().toUpperCase().replace("#", "");
+          const searchValue = inputNewId?.value.trim().toUpperCase().replace("#", "");
           if (!searchValue) return alert("Masukkan ID teman dulu bro!");
           
           btnFindUser.innerText = "Mencari...";
@@ -252,6 +249,9 @@
 
             if (error || !friend) throw new Error("ID tidak ditemukan!");
             if (friend.id === currentUser?.id) throw new Error("Masa chat ke diri sendiri bro?");
+
+            // 🔥 TUTUP MODAL SEBELUM PINDAH HALAMAN 🔥
+            closeNewChatModal();
 
             // Langsung arahkan ke halaman chat berdua
             window.location.href = `/chat?from=${friend.id}`;
@@ -354,7 +354,7 @@
               let unreadGrp = parseInt(localStorage.getItem('unread_group_' + group.id) || '0');
               finalChatList.push({
                 id: group.id, type: 'group', name: group.name, avatar: group.photo_url || '',
-                preview: 'Obrolan grup', time: 'Aktif', unread: unreadGrp, sortTime: Date.now() - 1000 
+                preview: 'Klik untuk melihat obrolan grup', time: 'Aktif', unread: unreadGrp, sortTime: Date.now() - 1000 
               });
             });
           }
