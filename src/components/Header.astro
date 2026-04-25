@@ -399,8 +399,24 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
               }
             }
             
+            // 🔥 LOGIKA LANJUTIN TRANSAKSI (RESUME PAYMENT) 🔥
+            if (notif.type === "payment_pending" && notif.token) {
+              if (window.snap) {
+                // Tutup menu notif dulu biar enak
+                document.getElementById("headerNotifPopup").classList.remove("active");
+                // Panggil midtrans lagi
+                window.snap.pay(notif.token, {
+                  onSuccess: () => { window.showNotif("Pembayaran Sukses!", "success"); setTimeout(()=>location.reload(), 1200); },
+                  onPending: () => window.showNotif("Menunggu pembayaran", "warning"),
+                  onError: () => window.showNotif("Pembayaran gagal", "error"),
+                  onClose: () => window.showNotif("Popup ditutup", "info")
+                });
+              } else {
+                window.showNotif("Sistem pembayaran belum siap, refresh web.", "error");
+              }
+            } 
             // Kalo ada post_id, lompat ke postingan
-            if (notif.post_id) {
+            else if (notif.post_id) {
                window.location.href = `/post?id=${notif.post_id}`;
             }
           };
@@ -463,6 +479,15 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
     
     // Jalankan real-time setelah pengecekan awal
     setTimeout(initRealtimeNotif, 2500);
+
+    // 🔥 TANGKEP SINYAL DARI MODAL BIAR LONCENG INSTAN NYALA 🔥
+    window.addEventListener("loadUnreadNotifications", () => {
+      checkInitialUnread();
+      // Kalo user lagi buka popup notif, daftarnya otomatis di-refresh
+      if (notifList && notifList.classList.contains("active")) {
+        loadNotifications();
+      }
+    });
 
     // =======================
     // LOGOUT LOGIC (LAZY LOAD DB)
