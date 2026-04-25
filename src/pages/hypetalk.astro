@@ -1,0 +1,348 @@
+---
+// src/pages/hypetalk.astro
+---
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hypetalk - Obrolan</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+  <div class="telegram-wrapper">
+    
+    <header class="tg-header">
+      <div class="tg-header-top">
+        <div class="tg-header-left">
+          <button class="icon-btn menu-btn" onclick="window.location.href='/'">
+            <span class="material-icons">arrow_back</span>
+          </button>
+          <h2>Hypetalk</h2>
+        </div>
+        <button class="icon-btn more-btn">
+          <span class="material-icons">more_vert</span>
+        </button>
+      </div>
+
+      <div class="tg-search-container">
+        <div class="tg-search-box">
+          <span class="material-icons">search</span>
+          <input type="text" id="searchChat" placeholder="Cari Obrolan" autocomplete="off" />
+        </div>
+      </div>
+    </header>
+
+    <main class="tg-chat-list" id="chatList">
+      <div style="text-align: center; padding: 40px 20px; color: #8e8e93;">
+        <span class="material-icons" style="font-size: 40px; animation: spin 1s linear infinite;">sync</span>
+        <p style="margin-top: 10px; font-size: 14px;">Memuat obrolan...</p>
+      </div>
+    </main>
+
+    <button class="tg-fab">
+      <span class="material-icons">edit</span>
+    </button>
+
+  </div>
+
+  <style is:global>
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    
+    body { background: #f0f2f5; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
+    @media (prefers-color-scheme: dark) { body { background: #0f0f0f; color: #fff; } }
+
+    .telegram-wrapper { width: 100%; max-width: 480px; height: 100vh; display: flex; flex-direction: column; background: #ffffff; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+    @media (prefers-color-scheme: dark) { .telegram-wrapper { background: #1c1e22; box-shadow: none; border-left: 1px solid #2a2d31; border-right: 1px solid #2a2d31; } }
+
+    .tg-header { background: #ffffff; padding-top: 10px; z-index: 10; }
+    @media (prefers-color-scheme: dark) { .tg-header { background: #1c1e22; } }
+
+    .tg-header-top { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; }
+    .tg-header-left { display: flex; align-items: center; gap: 16px; }
+    .tg-header-left h2 { font-size: 20px; font-weight: 600; color: #000; }
+    @media (prefers-color-scheme: dark) { .tg-header-left h2 { color: #fff; } }
+
+    .icon-btn { background: none; border: none; color: #606060; cursor: pointer; display: flex; align-items: center; transition: 0.2s; }
+    .icon-btn:active { opacity: 0.5; }
+    @media (prefers-color-scheme: dark) { .icon-btn { color: #aaa; } }
+
+    .tg-search-container { padding: 8px 16px 16px; }
+    .tg-search-box { display: flex; align-items: center; background: #f1f3f4; border-radius: 24px; padding: 8px 16px; gap: 10px; }
+    @media (prefers-color-scheme: dark) { .tg-search-box { background: #2a2d31; } }
+    .tg-search-box .material-icons { color: #8e8e93; font-size: 20px; }
+    .tg-search-box input { flex: 1; border: none; background: transparent; outline: none; font-size: 15px; color: #000; }
+    @media (prefers-color-scheme: dark) { .tg-search-box input { color: #fff; } }
+    .tg-search-box input::placeholder { color: #8e8e93; }
+
+    .tg-chat-list { flex: 1; overflow-y: auto; }
+    .tg-chat-list::-webkit-scrollbar { width: 0; } 
+
+    .tg-chat-item { display: flex; align-items: center; gap: 14px; padding: 10px 16px; cursor: pointer; user-select: none; transition: background 0.2s; }
+    .tg-chat-item:active { background: #f0f0f0; }
+    @media (prefers-color-scheme: dark) { .tg-chat-item:active { background: #2a2d31; } }
+
+    .tg-avatar { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .global-avatar { background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); display: flex; align-items: center; justify-content: center; color: white; }
+    .group-avatar { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); display: flex; align-items: center; justify-content: center; color: white; }
+
+    .tg-chat-info { flex: 1; min-width: 0; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; padding-top: 2px; display: flex; flex-direction: column; justify-content: center; height: 100%; }
+    .tg-chat-item:last-child .tg-chat-info { border-bottom: none; }
+    @media (prefers-color-scheme: dark) { .tg-chat-info { border-bottom-color: #2a2d31; } }
+
+    .tg-chat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+    .tg-name { font-size: 16px; font-weight: 600; color: #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
+    @media (prefers-color-scheme: dark) { .tg-name { color: #fff; } }
+    
+    .verified-badge { color: #1DA1F2; display: flex; align-items: center; margin-left: 4px; }
+    .verified-badge .material-icons { font-size: 14px; }
+    
+    /* FIX: Hapus border tebal untuk avatar */
+    .avatar { border: none !important; box-shadow: none !important; }
+
+    .tg-time { font-size: 12px; color: #8e8e93; flex-shrink: 0; }
+    .tg-chat-item.unread .tg-time { color: #3b82f6; font-weight: 600; }
+
+    .tg-chat-bottom { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .tg-preview { font-size: 15px; color: #8e8e93; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; display: flex; align-items: center; gap: 4px; }
+    .check-icon { font-size: 16px; color: #10b981; }
+
+    .tg-unread-badge { background: #3b82f6; color: white; font-size: 12px; font-weight: 600; min-width: 22px; height: 22px; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0; }
+
+    .tg-fab { position: absolute; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: #4facfe; border: none; color: white; box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+    .tg-fab:active { transform: scale(0.9); }
+    .tg-fab .material-icons { font-size: 24px; }
+  </style>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const chatList = document.getElementById("chatList");
+      const searchInput = document.getElementById("searchChat");
+      let currentUser = null;
+
+      // Format Waktu Mirip Telegram
+      function formatTimeTelegram(dateString) {
+        const dateObj = new Date(dateString);
+        const today = new Date();
+        const isToday = dateObj.toDateString() === today.toDateString();
+        
+        if (isToday) {
+            return dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+        } else {
+            const diffTime = Math.abs(today - dateObj);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            if (diffDays === 1) return "Kemarin";
+            if (diffDays < 7) return dateObj.toLocaleDateString("id-ID", { weekday: "short" });
+            return dateObj.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+        }
+      }
+
+      // =====================================
+      // 🔥 LOGIKA LOAD SEMUA DAFTAR CHAT 🔥
+      // =====================================
+      async function loadAllChats() {
+        try {
+          const { supabase } = await import('../lib/supabase.js');
+          
+          const { data: { user }, error: authError } = await supabase.auth.getUser();
+          if (authError || !user) {
+            chatList.innerHTML = '<div style="text-align:center; padding:40px 20px; color:#8e8e93;">Silakan login dulu bro.</div>';
+            return;
+          }
+          currentUser = user;
+
+          const waktu24JamLalu = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+          
+          // 1. AMBIL HISTORI CHAT PRIBADI
+          const { data: pvMsgs } = await supabase
+            .from("messages")
+            .select("room_id, message, created_at, sticker_url, audio_url, user_id, status, is_system")
+            .ilike("room_id", "pv_%").ilike("room_id", `%${currentUser.id}%`)
+            .gte("created_at", waktu24JamLalu).order("created_at", { ascending: false });
+
+          // 2. AMBIL GRUP YANG DIIKUTI
+          const { data: groups } = await supabase
+            .from('group_members')
+            .select(`group_id, groups(id, name, photo_url)`)
+            .eq('user_id', currentUser.id);
+
+          // Susun daftar list yang mau ditampilkan (gabungan semua)
+          const finalChatList = [];
+
+          // A. MASUKIN CHAT GLOBAL DULUAN
+          let unreadGlobal = parseInt(localStorage.getItem('unread_room-1') || '0');
+          finalChatList.push({
+            id: 'room-1',
+            type: 'global',
+            name: 'HopeTalk Globe',
+            avatar: '',
+            preview: 'Obrolan umum komunitas',
+            time: 'Always',
+            unread: unreadGlobal,
+            sortTime: Date.now() + 10000 // Biar selalu paling atas
+          });
+
+          // B. OLAH CHAT PRIBADI
+          const lastPvMessages = new Map();
+          const unreadPvCounts = new Map();
+
+          if (pvMsgs) {
+            pvMsgs.forEach((msg) => {
+              const partnerId = msg.room_id.replace("pv_", "").split("_").find((id) => id !== currentUser.id);
+              if (!partnerId) return;
+              if (!lastPvMessages.has(partnerId)) lastPvMessages.set(partnerId, msg);
+              if (msg.user_id !== currentUser.id && msg.status !== "read" && !msg.is_system) {
+                unreadPvCounts.set(partnerId, (unreadPvCounts.get(partnerId) || 0) + 1);
+              }
+            });
+
+            // Tarik foto & nama lawan bicara dari tabel profiles
+            const partnerIds = Array.from(lastPvMessages.keys());
+            if (partnerIds.length > 0) {
+              const { data: profiles } = await supabase.from("profiles").select("id, username, avatar_url, role").in("id", partnerIds);
+              
+              const profileMap = new Map();
+              profiles?.forEach(p => profileMap.set(p.id, p));
+
+              lastPvMessages.forEach((msg, pId) => {
+                const profile = profileMap.get(pId);
+                if (!profile) return;
+                
+                let previewText = msg.sticker_url ? "🖼 Mengirim Stiker" : (msg.audio_url ? "🎤 Mengirim Voice Note" : msg.message);
+                if (msg.message === "Pesan ini telah dihapus") previewText = "🚫 Pesan dihapus";
+
+                const isMe = msg.user_id === currentUser.id && !msg.is_system;
+                const statusCheck = isMe ? (msg.status === "read" ? `<span class="material-icons check-icon" style="color:#10b981; font-size:14px; margin-right:4px;">done_all</span>` : `<span class="material-icons check-icon" style="color:#8e8e93; font-size:14px; margin-right:4px;">check</span>`) : '';
+
+                finalChatList.push({
+                  id: pId, // ID Target buat buka room
+                  type: 'private',
+                  name: profile.username || "User",
+                  avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username)}`,
+                  role: profile.role,
+                  preview: `${statusCheck}${previewText}`,
+                  time: formatTimeTelegram(msg.created_at),
+                  unread: unreadPvCounts.get(pId) || 0,
+                  sortTime: new Date(msg.created_at).getTime()
+                });
+              });
+            }
+          }
+
+          // C. OLAH CHAT GRUP
+          if (groups) {
+            groups.forEach(g => {
+              const group = g.groups;
+              if (!group) return;
+              let unreadGrp = parseInt(localStorage.getItem('unread_group_' + group.id) || '0');
+              
+              finalChatList.push({
+                id: group.id,
+                type: 'group',
+                name: group.name,
+                avatar: group.photo_url || '',
+                preview: 'Klik untuk melihat obrolan grup',
+                time: 'Aktif',
+                unread: unreadGrp,
+                sortTime: Date.now() - 1000 // Grup standar ditaruh atas tapi di bawah global
+              });
+            });
+          }
+
+          // URUTKAN BERDASARKAN WAKTU TERBARU
+          finalChatList.sort((a, b) => b.sortTime - a.sortTime);
+
+          // =====================================
+          // RENDER KE LAYAR HTML
+          // =====================================
+          chatList.innerHTML = '';
+          
+          if (finalChatList.length === 1 && finalChatList[0].type === 'global') {
+            chatList.innerHTML = `<div style="text-align:center; padding:40px 20px; color:#8e8e93;">Mulai cari doi untuk melihat riwayat chat pribadi di sini.</div>`;
+          }
+
+          finalChatList.forEach(chat => {
+            const div = document.createElement("div");
+            div.className = `tg-chat-item ${chat.unread > 0 ? 'unread' : ''}`;
+            
+            // Logika Klik Pindah
+            div.onclick = () => {
+              if (chat.type === 'global') {
+                window.location.href = `/chat`; // Global chat biasa
+              } else {
+                window.location.href = `/chat?from=${chat.id}`; // Sesuai sistem "from=" di kodingan lu
+              }
+            };
+
+            // Logika Tampilan Avatar
+            let avatarHtml = '';
+            if (chat.type === 'global') {
+              avatarHtml = `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>`;
+            } else if (chat.type === 'group') {
+              avatarHtml = chat.avatar 
+                ? `<img src="${chat.avatar}" class="tg-avatar" style="border:none;">` 
+                : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`;
+            } else {
+              avatarHtml = `<img src="${chat.avatar}" class="tg-avatar" style="border:none;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(chat.name)}'">`;
+            }
+
+            // Badge Role
+            let roleBadge = '';
+            if (chat.role === 'admin') roleBadge = `<span class="badge" style="background:#ff4757; color:white; font-size:8px; padding:2px 4px; border-radius:4px; margin-left:4px;">ADMIN</span>`;
+            if (chat.role === 'verified') roleBadge = `<span class="verified-badge"><span class="material-icons">verified</span></span>`;
+
+            div.innerHTML = `
+              ${avatarHtml}
+              <div class="tg-chat-info">
+                <div class="tg-chat-top">
+                  <h4 class="tg-name">${escapeHtml(chat.name)} ${roleBadge}</h4>
+                  <span class="tg-time">${chat.time}</span>
+                </div>
+                <div class="tg-chat-bottom">
+                  <p class="tg-preview">${chat.preview}</p>
+                  ${chat.unread > 0 ? `<span class="tg-unread-badge">${chat.unread > 99 ? '99+' : chat.unread}</span>` : ''}
+                </div>
+              </div>
+            `;
+            chatList.appendChild(div);
+          });
+
+          // Panggil Search Filter
+          initSearch();
+
+        } catch (err) {
+          console.error(err);
+          chatList.innerHTML = '<div style="text-align:center; padding:40px 20px; color:#ff4757;">Gagal memuat history chat.</div>';
+        }
+      }
+
+      function escapeHtml(str = "") {
+        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      function initSearch() {
+        if (searchInput) {
+          searchInput.addEventListener("input", (e) => {
+            const query = e.target.value.toLowerCase();
+            const items = document.querySelectorAll(".tg-chat-item");
+            
+            items.forEach(item => {
+              const name = item.querySelector(".tg-name").textContent.toLowerCase();
+              if (name.includes(query)) {
+                item.style.display = "flex";
+              } else {
+                item.style.display = "none";
+              }
+            });
+          });
+        }
+      }
+
+      loadAllChats();
+    });
+  </script>
+</body>
+</html>
