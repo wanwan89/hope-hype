@@ -389,25 +389,30 @@
             window.showNotif("Pembayaran Sukses! Akun diupgrade.", "success"); 
             setTimeout(() => location.reload(), 1200); 
           },
+          onPending: async () => {
             window.showNotif("Selesaikan transaksi dulu", "warning");
-            // 🔥 MASUKIN KE DB BIAR LONCENG NYALA MERAH 🔥
+            // 🔥 MASUKIN KE DB, SIMPAN TOKEN & TRIGGER LONCENG INSTAN 🔥
             await db.from("notifications").insert({
               user_id: payloadBody.userId,
               type: "payment_pending",
-              message: `Transaksi ${payloadBody.item_name} tertunda. Lanjutkan pembayaran?`,
-              is_read: false
+              message: `Transaksi ${payloadBody.item_name} tertunda. Klik untuk bayar.`,
+              is_read: false,
+              token: token // <--- PENTING BANGET BUAT RESUME TRANSAKSI
             });
+            setTimeout(() => { if(window.triggerNotifRefresh) window.triggerNotifRefresh(); }, 500);
           },
           onError: () => window.showNotif("Pembayaran gagal", "error"),
           onClose: async () => {
             window.showNotif("Kamu nutup popup sebelum bayar", "info");
-            // 🔥 MASUKIN KE DB BIAR LONCENG NYALA MERAH PAS DICANCEL 🔥
+            // 🔥 MASUKIN KE DB, SIMPAN TOKEN & TRIGGER LONCENG INSTAN 🔥
             await db.from("notifications").insert({
               user_id: payloadBody.userId,
               type: "payment_pending",
-              message: `Transaksi ${payloadBody.item_name} belum diselesaikan.`,
-              is_read: false
+              message: `Transaksi ${payloadBody.item_name} belum dibayar. Klik untuk lanjut.`,
+              is_read: false,
+              token: token // <--- PENTING BANGET BUAT RESUME TRANSAKSI
             });
+            setTimeout(() => { if(window.triggerNotifRefresh) window.triggerNotifRefresh(); }, 500);
           }
         });
 
