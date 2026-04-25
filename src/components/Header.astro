@@ -248,7 +248,6 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
       });
     }
 
-    // FUNGSI CEK JUMLAH UNREAD SAJA DI AWAL
     async function checkInitialUnread() {
       try {
         const { supabase } = await import('../lib/supabase.js');
@@ -275,7 +274,6 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
       }
     }
 
-    // FUNGSI GLOBAL BIAR BISA DIPANGGIL DARI MODAL.ASTRO
     window.triggerNotifRefresh = () => {
       checkInitialUnread();
       if (notifList && notifList.classList.contains("active")) {
@@ -283,7 +281,6 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
       }
     };
 
-    // FETCH DATA NOTIFIKASI
     async function loadNotifications() {
       const content = document.getElementById("notifListContent");
       if (!content) return;
@@ -367,7 +364,6 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
             ${!notif.is_read ? '<div style="width: 8px; height: 8px; background: #1DA1F2; border-radius: 50%; margin-top: 6px;"></div>' : ''}
           `;
 
-          // 🔥 PAS DIKLIK 🔥
           div.onclick = async () => {
             if (!notif.is_read) {
               div.classList.remove('unread');
@@ -384,12 +380,10 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
               }
             }
             
-            // 🔥 LOGIKA LANJUTIN TRANSAKSI (SUNTIKAN MIDTRANS) 🔥
             if (notif.type === "payment_pending" && notif.token) {
               try {
                 if(window.showNotif) window.showNotif("Menyiapkan pembayaran...", "info");
                 
-                // Pastikan Script Midtrans beneran keload
                 const isLoaded = await window.loadMidtransForce();
                 
                 if (isLoaded && window.snap) {
@@ -423,9 +417,6 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
 
     setTimeout(checkInitialUnread, 1500);
 
-    // =======================
-    // 🔥 REAL-TIME NOTIFICATION 🔥
-    // =======================
     async function initRealtimeNotif() {
       try {
         const { supabase } = await import('../lib/supabase.js');
@@ -468,35 +459,86 @@ body.dark .notif-item.unread { background: rgba(29, 161, 242, 0.08); border-colo
     
     setTimeout(initRealtimeNotif, 2500);
 
-    // =======================
-    // LOGOUT LOGIC
-    // =======================
-    document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-      const { supabase: db } = await import('../lib/supabase.js');
-      let utils = {};
-      try { utils = await import('../lib/ui-utils.js'); } catch(e){}
+    window.addEventListener("loadUnreadNotifications", () => {
+      setTimeout(() => {
+        checkInitialUnread();
+        const notifList = document.getElementById("headerNotifPopup");
+        if (notifList && notifList.classList.contains("active")) {
+          loadNotifications();
+        }
+      }, 500); 
+    });
 
-      const showNotifLocal = utils.showToast || window.showNotif || alert;
+    // =======================
+    // 🔥 DINAMIS LOGIN / LOGOUT LOGIC 🔥
+    // =======================
+    async function setupAuthMenu() {
+      const authBtn = document.getElementById("logoutBtn");
+      const profileBtn = document.getElementById("profileBtn");
+      const settingsBtn = document.getElementById("settingsBtn");
+      
+      if (!authBtn) return;
 
       try {
-        const { data: { session } } = await db.auth.getSession();
-        if (session) {
-          const { error } = await db.auth.signOut();
-          if (error && error.message !== "Auth session missing!") throw error;
+        const { supabase } = await import('../lib/supabase.js');
+        
+        // Pastiin kita dapetin status user saat ini
+        if (!currentUser) {
+          const { data: { user } } = await supabase.auth.getUser();
+          currentUser = user;
         }
-        localStorage.clear(); 
-        sessionStorage.clear(); 
-        window.location.href = "/login";
-      } catch (err) {
-        if (err.message === "Auth session missing!") {
-          localStorage.clear(); 
-          sessionStorage.clear(); 
-          window.location.href = "/login"; 
-          return;
+        
+        if (currentUser) {
+          // UDAH LOGIN
+          authBtn.innerText = "Logout";
+          authBtn.style.background = "#fff0f3"; 
+          authBtn.style.color = "#fe2c55";
+        } else {
+          // BELUM LOGIN
+          authBtn.innerText = "Login";
+          authBtn.style.background = "#e7f3ff"; 
+          authBtn.style.color = "#007bff";
+          
+          // Sembunyiin tombol Profil sama Setting kalo tamu (belum login)
+          if (profileBtn) profileBtn.style.display = "none";
+          if (settingsBtn) settingsBtn.style.display = "none";
         }
-        showNotifLocal("Gagal logout", err.message, "error");
+
+        authBtn.addEventListener("click", async () => {
+          if (!currentUser) {
+            // Kalo user klik tombol "Login"
+            window.location.href = "/login";
+            return;
+          }
+          
+          // Kalo user klik tombol "Logout"
+          let utils = {};
+          try { utils = await import('../lib/ui-utils.js'); } catch(e){}
+          const showNotifLocal = utils.showToast || window.showNotif || alert;
+
+          try {
+            const { error } = await supabase.auth.signOut();
+            if (error && error.message !== "Auth session missing!") throw error;
+            localStorage.clear(); 
+            sessionStorage.clear(); 
+            window.location.href = "/login";
+          } catch (err) {
+            if (err.message === "Auth session missing!") {
+              localStorage.clear(); 
+              sessionStorage.clear(); 
+              window.location.href = "/login"; 
+              return;
+            }
+            showNotifLocal("Gagal logout", err.message, "error");
+          }
+        });
+      } catch (e) {
+        console.error("Auth menu setup error:", e);
       }
-    });
+    }
+    
+    // Panggil fungsi buat nge-set tombol auth-nya
+    setupAuthMenu();
 
   });
 </script>
