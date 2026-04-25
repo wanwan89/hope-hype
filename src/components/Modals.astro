@@ -389,7 +389,6 @@
             window.showNotif("Pembayaran Sukses! Akun diupgrade.", "success"); 
             setTimeout(() => location.reload(), 1200); 
           },
-          onPending: async () => {
             window.showNotif("Selesaikan transaksi dulu", "warning");
             // 🔥 MASUKIN KE DB BIAR LONCENG NYALA MERAH 🔥
             await db.from("notifications").insert({
