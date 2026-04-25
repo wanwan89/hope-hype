@@ -8,6 +8,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Hypetalk - Obrolan</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   
   <script>
@@ -93,29 +98,28 @@
       --tg-hover: #1b1e22;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    /* 🔥 FIX FONT: Ganti jadi font 'Inter' 🔥 */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     
-    /* 🔥 FIX PWA 1: html dan body di-lock biar gak overflow 🔥 */
     html, body { height: 100%; width: 100%; overflow: hidden; }
     
     body { background: #e5e7eb; display: flex; justify-content: center; transition: background 0.3s ease; }
     html.dark body { background: #000000; }
 
-    /* 🔥 FIX PWA 2: Wrapper di-set fixed biar presisi dari atas sampai bawah layar HP 🔥 */
     .telegram-wrapper { 
       position: fixed; 
       top: 0; bottom: 0; left: 50%; transform: translateX(-50%);
       width: 100%; max-width: 480px; display: flex; flex-direction: column; 
       background: var(--tg-bg); box-shadow: 0 0 20px rgba(0,0,0,0.05); 
       transition: background 0.3s ease; 
-      padding-bottom: env(safe-area-inset-bottom); /* Support poni iPhone/Android */
+      padding-bottom: env(safe-area-inset-bottom);
     }
     html.dark .telegram-wrapper { box-shadow: none; border-left: 1px solid var(--tg-border); border-right: 1px solid var(--tg-border); }
 
     /* HEADER */
     .tg-header { 
       background: var(--tg-bg); z-index: 10; transition: background 0.3s ease; 
-      padding-top: env(safe-area-inset-top); /* Support notch */
+      padding-top: env(safe-area-inset-top); 
     }
 
     .tg-header-top { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
@@ -171,7 +175,7 @@
 
     .tg-unread-badge { background: var(--tg-primary); color: white; font-size: 11px; font-weight: 700; min-width: 22px; height: 22px; border-radius: 99px; display: flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0; }
 
-    /* 🔥 FIX PWA 3: FAB dibikin absolute dari wrapper fixed biar selalu kelihatan 🔥 */
+    /* FAB */
     .tg-fab { 
       position: absolute; 
       bottom: max(30px, env(safe-area-inset-bottom) + 30px); 
@@ -184,7 +188,7 @@
     .tg-fab .material-icons { font-size: 24px; }
     .tg-fab.hidden { display: none !important; }
 
-    /* 🔥 FIX PWA 4: Modal dibikin fixed viewport biar nutup se-layar sempurna 🔥 */
+    /* MODAL CARI TEMAN */
     .search-modal-overlay { 
       position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); 
       z-index: 100; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s ease; 
@@ -192,7 +196,7 @@
     .search-modal-content { 
       background: var(--tg-bg); width: 100%; max-width: 480px; 
       border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 24px; 
-      padding-bottom: max(24px, env(safe-area-inset-bottom) + 24px); /* PWA Safe Area di modal */
+      padding-bottom: max(24px, env(safe-area-inset-bottom) + 24px); 
       animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
     }
     .search-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -362,7 +366,7 @@
               let unreadGrp = parseInt(localStorage.getItem('unread_group_' + group.id) || '0');
               finalChatList.push({
                 id: group.id, type: 'group', name: group.name, avatar: group.photo_url || '',
-                preview: 'Obrolan grup', time: 'Aktif', unread: unreadGrp, sortTime: Date.now() - 1000 
+                preview: 'Klik untuk melihat obrolan grup', time: 'Aktif', unread: unreadGrp, sortTime: Date.now() - 1000 
               });
             });
           }
