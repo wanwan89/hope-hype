@@ -35,10 +35,6 @@ import * as uiUtils from '../lib/ui-utils.js';
     </div>
     
     <div class="sidebar-menu">
-      <button class="menu-item" onclick="window.location.href='/'">
-        <span class="material-icons">home</span> Kembali ke Beranda
-      </button>
-      <div class="menu-divider"></div>
       <button class="menu-item" id="btn-open-group-modal">
         <span class="material-icons">group_add</span> Buat Grup Baru
       </button>
@@ -198,6 +194,13 @@ import * as uiUtils from '../lib/ui-utils.js';
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    
+    /* 🔥 FIX: Anti kotak biru pas diklik di HP 🔥 */
+    html, body, button, a, div { 
+      -webkit-tap-highlight-color: transparent !important; 
+      outline: none !important;
+    }
+
     html, body { height: 100%; width: 100%; overflow: hidden; }
     body { background: #e5e7eb; display: flex; justify-content: center; transition: background 0.3s ease; }
     html.dark body { background: #000000; }
@@ -214,7 +217,9 @@ import * as uiUtils from '../lib/ui-utils.js';
     .tg-header-left { display: flex; align-items: center; gap: 16px; }
     .tg-header-left h2 { font-size: 20px; font-weight: 700; color: var(--tg-text); transition: color 0.3s ease; }
     .icon-btn { background: none; border: none; color: var(--tg-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; transition: all 0.2s ease; }
-    .icon-btn:active { background: var(--tg-border); transform: scale(0.95); }
+    
+    /* Tombol transparan pas diklik biar ga biru */
+    .icon-btn:active { background: transparent; transform: scale(0.95); }
 
     .tg-search-container { padding: 4px 16px 12px; }
     .tg-search-box { display: flex; align-items: center; background: var(--tg-bg-secondary); border-radius: 12px; padding: 10px 16px; gap: 12px; transition: all 0.2s ease; border: 1px solid transparent; }
@@ -270,8 +275,11 @@ import * as uiUtils from '../lib/ui-utils.js';
     .btn-edit-bio { background: var(--tg-primary); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 5px; }
     
     .sidebar-menu { display: flex; flex-direction: column; padding: 10px 0; overflow-y: auto; }
-    .menu-item { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: none; border: none; font-size: 15px; font-weight: 600; color: var(--tg-text); cursor: pointer; text-align: left; transition: background 0.2s; }
-    .menu-item:active { background: var(--tg-bg-secondary); }
+    
+    /* 🔥 FIX: Menu Item Bebas Biru & Efek Klik Dimatikan 🔥 */
+    .menu-item { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: transparent; border: none; font-size: 15px; font-weight: 600; color: var(--tg-text); cursor: pointer; text-align: left; outline: none; }
+    .menu-item:active { background: transparent; transform: scale(0.98); }
+    
     .menu-item .material-icons { color: var(--tg-text-muted); }
     .menu-divider { height: 1px; background: var(--tg-border); margin: 8px 0; }
     
@@ -330,14 +338,12 @@ import * as uiUtils from '../lib/ui-utils.js';
 
   <script>
     import { supabase } from '../lib/supabase.js';
-    import * as uiUtils from '../lib/ui-utils.js';
+    import { getRoleBadge } from '../lib/ui-utils.js';
 
     document.addEventListener("DOMContentLoaded", async () => {
       const chatList = document.getElementById("chatList");
       let currentUser = null;
       let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
-
-      let getBadgeFunc = uiUtils.getRoleBadge || uiUtils.getBadge || uiUtils.default?.getRoleBadge || uiUtils.default?.getBadge;
 
       window.showToast = (msg) => {
         const container = document.getElementById("toast-container");
@@ -577,16 +583,15 @@ import * as uiUtils from '../lib/ui-utils.js';
           finalChatList.forEach(chat => {
             const div = document.createElement("div"); div.className = `tg-chat-item ${chat.unread > 0 ? 'unread' : ''}`;
             
-            // 🔥 PERUBAHAN ROUTING BUAT GRUP 🔥
             div.onclick = () => {
               if (chat.type === 'global') window.location.href = `/chat`;
               else if (chat.type === 'group') window.location.href = `/chat?group=${chat.id}&gname=${encodeURIComponent(chat.name)}`;
               else window.location.href = `/chat?from=${chat.id}`;
             };
 
-            let avatarHtml = chat.type === 'global' ? `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>` : (chat.type === 'group' ? (chat.avatar ? `<img src="${chat.avatar}" class="tg-avatar">` : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`) : `<img src="${chat.avatar}" class="tg-avatar">`);
+            let avatarHtml = chat.type === 'global' ? `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>` : (chat.type === 'group' ? (chat.avatar ? `<img src="${chat.avatar}" class="tg-avatar">` : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`) : `<img src="${chat.avatar}" class="tg-avatar" onerror="this.src='/asets/png/profile.webp'">`);
             
-            let roleBadge = getBadgeFunc ? getBadgeFunc(chat.role) : '';
+            let roleBadge = getRoleBadge ? getRoleBadge(chat.role) : '';
 
             div.innerHTML = `${avatarHtml}<div class="tg-chat-info"><div class="tg-chat-top"><h4 class="tg-name">${chat.name.replace(/</g, "&lt;")} ${roleBadge}</h4><span class="tg-time">${chat.time}</span></div><div class="tg-chat-bottom"><p class="tg-preview">${chat.preview}</p>${chat.unread > 0 ? `<span class="tg-unread-badge">${chat.unread>99?'99+':chat.unread}</span>` : ''}</div></div>`;
             chatList.appendChild(div);
