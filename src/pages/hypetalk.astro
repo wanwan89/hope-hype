@@ -1,7 +1,6 @@
 ---
 // src/pages/hypetalk.astro
 import * as uiUtils from '../lib/ui-utils.js';
-import CallOverlays from '../components/modals/CallOverlays.astro'; 
 ---
 
 <!DOCTYPE html>
@@ -189,6 +188,17 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
     .loading-spinner { font-size: 32px; animation: spin 1s linear infinite; color: var(--tg-primary); }
     .loading-state p { font-size: 14px; font-weight: 500; }
     .text-center { text-align: center; }
+
+    /* Modal Call Animasi & Styling */
+    .anim-calling-avatar { animation: radar-pulse-call 1.5s infinite cubic-bezier(0.66, 0, 0, 1); border: 3px solid #10b981; border-radius: 50%; }
+    .anim-calling-text { animation: text-blink 1.5s infinite ease-in-out; color: #10b981 !important; font-weight: bold; letter-spacing: 2px; }
+    
+    @keyframes radar-pulse-call { 
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7), 0 0 0 0 rgba(16, 185, 129, 0.4); transform: scale(0.95); } 
+      50% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0), 0 0 0 30px rgba(16, 185, 129, 0.2); transform: scale(1); } 
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), 0 0 0 45px rgba(16, 185, 129, 0); transform: scale(0.95); } 
+    }
+    @keyframes text-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
   </style>
 </head>
 <body>
@@ -286,7 +296,30 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
       </div>
     </div>
 
-    <CallOverlays />
+    <div id="incoming-call-overlay" class="custom-modal-overlay" style="display: none; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.9); z-index: 999999;">
+      <div class="anim-calling-avatar" style="padding: 10px; border-radius: 50%; margin-bottom: 20px;">
+        <img id="incoming-avatar" src="/asets/png/profile.webp" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+      </div>
+      <h2 id="incoming-name" style="color: white; margin-bottom: 10px;">Nama Teman</h2>
+      <p style="color: #10b981; font-weight: bold; margin-bottom: 40px; letter-spacing: 2px;">MEMANGGIL...</p>
+      <div style="display: flex; gap: 30px;">
+        <button onclick="window.rejectCall()" style="background: #ef4444; border: none; width: 60px; height: 60px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
+          <span class="material-icons" style="font-size: 30px;">call_end</span>
+        </button>
+        <button onclick="window.answerCall()" style="background: #10b981; border: none; width: 60px; height: 60px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); animation: badgeBounce 1s infinite;">
+          <span class="material-icons" style="font-size: 30px;">call</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="call-overlay" class="custom-modal-overlay" style="display: none; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.95); z-index: 999999;">
+      <img id="call-avatar" src="/asets/png/profile.webp" class="anim-calling-avatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 20px;">
+      <h2 id="call-name" style="color: white; margin-bottom: 10px;">Nama Teman</h2>
+      <p id="call-status" style="color: #10b981; font-weight: bold; margin-bottom: 40px; font-size: 18px;">MENYAMBUNGKAN...</p>
+      <button onclick="window.endCall()" style="background: #ef4444; border: none; width: 65px; height: 65px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
+        <span class="material-icons" style="font-size: 35px;">call_end</span>
+      </button>
+    </div>
   </div>
   
   <aside id="tg-sidebar" class="tg-sidebar">
@@ -361,6 +394,8 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
           role = String(role).toLowerCase().trim();
           if (role === "admin") return `<span class="badge" style="background:#ef4444; color:white; font-size:9px; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:800;">ADMIN</span>`;
           if (role === "verified") return `<span class="verified-icon" style="margin-left:4px; display:inline-flex; align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1DA1F2"/><path d="M7 12.5l3 3 7-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+          const crownBadges = { crown1: "/asets/png/crown1.png", crown2: "/asets/png/crown2.png", crown3: "/asets/png/crown3.png" };
+          if (crownBadges[role]) return `<img src="${crownBadges[role]}" alt="${role}" style="width:16px;height:16px;margin-left:4px;vertical-align:middle;object-fit:contain;display:inline-block;" onerror="this.style.display='none';">`;
           return "";
         };
       }
@@ -570,7 +605,10 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
           const textToCopy = sideIdEl.innerText.replace('#', '');
           navigator.clipboard.writeText(textToCopy).then(() => {
             window.showToast("ID berhasil disalin!");
-          }).catch(err => window.showToast("Gagal menyalin ID"));
+          }).catch(err => {
+            console.error('Gagal copy: ', err);
+            window.showToast("Gagal menyalin ID");
+          });
         });
       }
 
@@ -868,12 +906,10 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
         return isToday ? dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : dateObj.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
       }
 
-      // 🔥 FIX: QUERY DIBIKIN PARALEL PAKE PROMISE.ALL BIAR GAK NYANGKUT/HANG 🔥
       async function loadAllChats() {
         try {
           const waktu24JamLalu = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
           
-          // Narik data pesan, daftar grup, dan unread global SEKALIGUS (gak nunggu antrean)
           const [pvMsgsRes, groupsRes, globalUnreadRes] = await Promise.all([
             supabase.from("messages").select("room_id, message, created_at, sticker_url, audio_url, user_id, status, is_system").ilike("room_id", "pv_%").ilike("room_id", `%${currentUser.id}%`).gte("created_at", waktu24JamLalu).order("created_at", { ascending: false }),
             supabase.from('group_members').select(`group_id, groups(id, name, photo_url)`).eq('user_id', currentUser.id),
@@ -930,7 +966,6 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
             });
           }
 
-          // Eksekusi semua hitungan pesan belum dibaca secara BARENGAN
           await Promise.all(countPromises);
 
           finalChatList.sort((a, b) => b.sortTime - a.sortTime);
