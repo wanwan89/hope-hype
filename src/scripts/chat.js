@@ -12,6 +12,7 @@ let currentReplyId = null;
 let currentUser = null;
 let myUsername = "Guest";
 let myRole = "user";
+let myAvatar = "asets/png/profile.webp"; // 🔥 FIX 1: Simpan avatar ke variabel global
 let presenceChannel = null;
 let globalPresenceChannel = null; 
 let messageChannel = null;
@@ -144,12 +145,15 @@ function formatTime(dateString) {
 function triggerPushNotif(teksPesan) {
   const partnerId = getPartnerIdFromRoom(currentRoomId);
   if (!partnerId) return; 
+  
+  // 🔥 FIX 2: Akses Supabase Anon Key langsung dari instance Supabase client
+  const anonKey = supabase.supabaseKey; 
 
-  fetch("https://hqetnqnvmdxdgfnnluew.supabase.co/functions/v1/send-chat-notif", {
+  fetch(`${supabase.supabaseUrl}/functions/v1/send-chat-notif`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}` 
+      'Authorization': `Bearer ${anonKey}` 
     },
     body: JSON.stringify({
       record: {
@@ -257,6 +261,10 @@ async function requireLogin() {
   const myProfile = await getCachedProfile(session.user.id);
   myUsername = myProfile?.username || session.user.email || "Guest";
   myRole = myProfile?.role || "user";
+  
+  // 🔥 FIX 1: Set Avatar kamu secara konsisten buat dipake pas ngirim pesan
+  myAvatar = myProfile?.avatar_url || "asets/png/profile.webp";
+  
   return true;
 }
 
@@ -646,7 +654,7 @@ async function Message() {
     message: text,
     user_id: currentUser.id,
     username: myUsername,
-    avatar: "asets/png/profile.webp", // Default
+    avatar: myAvatar, // 🔥 FIX 1: Pakai myAvatar yang udah kesimpen
     role: myRole || "user",
     created_at: new Date().toISOString(),
     room_id: currentRoomId, 
@@ -714,7 +722,7 @@ if (inputEl) {
 
 async function sendAudioMessage(url) {
   const tempId = "temp-" + Date.now();
-  renderMessage({ id: tempId, message: "🎤 Voice Note", audio_url: url, user_id: currentUser.id, username: myUsername, avatar: "asets/png/profile.webp", role: myRole || "user", created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
+  renderMessage({ id: tempId, message: "🎤 Voice Note", audio_url: url, user_id: currentUser.id, username: myUsername, avatar: myAvatar, role: myRole || "user", created_at: new Date().toISOString(), room_id: currentRoomId, status: "sending" });
   scrollToBottom();
 
   try {
@@ -1085,12 +1093,16 @@ window.rejectCall = async () => {
 
 async function connectToCall(roomName) {
     try {
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/get-livekit-token`, {
+        // 🔥 FIX 2: Akses Supabase URL dan Key langsung dari instance client
+        const apiUrl = supabase.supabaseUrl;
+        const anonKey = supabase.supabaseKey;
+
+        const response = await fetch(`${apiUrl}/functions/v1/get-livekit-token`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json', 
-                'apikey': SUPABASE_ANON_KEY, 
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}` 
+                'apikey': anonKey, 
+                'Authorization': `Bearer ${anonKey}` 
             },
             body: JSON.stringify({ username: myUsername, identity: currentUser.id, roomName: roomName })
         });
