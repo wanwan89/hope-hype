@@ -11,28 +11,50 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   
   <script>
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    if (savedTheme === "dark") document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
   </script>
 </head>
 <body>
+
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <aside id="tg-sidebar" class="tg-sidebar">
+    <div class="sidebar-header">
+      <img id="side-avatar" src="/asets/png/profile.webp" alt="Avatar" onerror="this.src='/asets/png/profile.webp'">
+      <div class="sidebar-user-info">
+        <h3 id="side-username">Memuat...</h3>
+        <p id="side-id" title="Klik untuk salin ID">#0000</p>
+      </div>
+      <button class="btn-edit-bio" id="btn-open-bio">Edit Biodata</button>
+    </div>
+    
+    <div class="sidebar-menu">
+      <button class="menu-item" onclick="window.location.href='/'">
+        <span class="material-icons">home</span> Kembali ke Beranda
+      </button>
+      <div class="menu-divider"></div>
+      <button class="menu-item" id="btn-open-group-modal">
+        <span class="material-icons">group_add</span> Buat Grup Baru
+      </button>
+      <button class="menu-item btn-cari-doi" id="btn-sidebar-search">
+        <span class="material-icons">favorite</span> Cari Doi Sekarang
+        <span class="limit-badge"><span id="limit-doi-text">10</span>/10</span>
+      </button>
+    </div>
+  </aside>
 
   <div class="telegram-wrapper">
     
     <header class="tg-header">
       <div class="tg-header-top">
         <div class="tg-header-left">
-          <button class="icon-btn menu-btn" onclick="window.location.href='/'" aria-label="Kembali">
-            <span class="material-icons">arrow_back</span>
+          <button class="icon-btn menu-btn" id="open-sidebar-btn" aria-label="Menu">
+            <span class="material-icons">menu</span>
           </button>
           <h2>Hypetalk</h2>
         </div>
@@ -41,7 +63,7 @@
       <div class="tg-search-container">
         <div class="tg-search-box">
           <span class="material-icons">search</span>
-          <input type="text" id="searchChat" placeholder="Cari obrolan..." autocomplete="off" />
+          <input type="text" id="searchChat" placeholder="Cari teman atau obrolan..." autocomplete="off" />
         </div>
       </div>
     </header>
@@ -56,28 +78,107 @@
     <button class="tg-fab" id="btn-new-chat" aria-label="Chat Baru">
       <span class="material-icons">chat</span>
     </button>
+  </div>
 
-    <div id="search-modal" class="search-modal-overlay" style="display: none;">
-      <div class="search-modal-content">
-        <div class="search-modal-header">
-          <h3>Mulai Chat Baru</h3>
-          <button class="close-modal-btn" id="close-search-modal" aria-label="Tutup popup"><span class="material-icons">close</span></button>
+  <div id="search-modal" class="custom-modal-overlay">
+    <div class="custom-modal-content">
+      <div class="modal-header">
+        <h3>Mulai Chat Baru</h3>
+        <button class="close-modal-btn"><span class="material-icons">close</span></button>
+      </div>
+      <p class="modal-desc">Masukkan ID unik temanmu (contoh: 0E870)</p>
+      <div class="input-group">
+        <span class="material-icons">tag</span>
+        <input type="text" id="input-new-id" placeholder="Ketik ID teman..." autocomplete="off" />
+      </div>
+      <button class="action-btn" id="btn-find-user">Cari & Chat</button>
+    </div>
+  </div>
+
+  <div id="bio-modal" class="custom-modal-overlay">
+    <div class="custom-modal-content">
+      <div class="modal-header">
+        <h3>Edit Biodata</h3>
+        <button class="close-modal-btn"><span class="material-icons">close</span></button>
+      </div>
+      <p class="modal-desc">Isi data agar bisa ditemukan di radar Cari Doi</p>
+      
+      <div class="form-grid">
+        <div class="input-group"><input type="number" id="in-umur" placeholder="Umur (contoh: 20)"></div>
+        <div class="input-group">
+          <select id="in-gender">
+            <option value="Pria">Pria</option>
+            <option value="Wanita">Wanita</option>
+          </select>
         </div>
-        <p style="font-size: 13px; color: var(--tg-text-muted); margin-bottom: 12px;">Masukkan ID unik temanmu (contoh: 0E870)</p>
-        <div class="search-input-group">
-          <span class="material-icons">tag</span>
-          <input type="text" id="input-new-id" placeholder="Ketik ID teman..." autocomplete="off" />
+        <div class="input-group"><input type="text" id="in-zodiak" placeholder="Zodiak (contoh: Aries)"></div>
+        <div class="input-group"><input type="text" id="in-kerja" placeholder="Pekerjaan (contoh: Mahasiswa)"></div>
+        <div class="input-group" style="grid-column: span 2;"><input type="text" id="in-hobi" placeholder="Hobi (contoh: Musik, Coding)"></div>
+      </div>
+      
+      <button class="action-btn" id="btn-save-bio">Simpan Profil</button>
+    </div>
+  </div>
+
+  <div id="group-modal" class="custom-modal-overlay">
+    <div class="custom-modal-content">
+      <div class="modal-header">
+        <h3>Buat Grup Baru</h3>
+        <button class="close-modal-btn"><span class="material-icons">close</span></button>
+      </div>
+      <div class="group-photo-upload">
+        <label for="group-photo-input">
+          <img id="group-photo-preview" src="/asets/png/profile.webp" alt="Grup">
+          <div class="upload-badge"><span class="material-icons">camera_alt</span></div>
+        </label>
+        <input type="file" id="group-photo-input" accept="image/*" style="display:none;">
+      </div>
+      <div class="input-group" style="margin-bottom: 16px;">
+        <span class="material-icons">groups</span>
+        <input type="text" id="in-group-name" placeholder="Nama Grup..." autocomplete="off" />
+      </div>
+      <button class="action-btn" id="btn-create-group">Buat Sekarang</button>
+    </div>
+  </div>
+
+  <div id="doi-card-modal" class="custom-modal-overlay">
+    <div class="custom-modal-content doi-result-card">
+      <div class="modal-header">
+        <h3>Kecocokan Ditemukan! 🎉</h3>
+        <button class="close-modal-btn"><span class="material-icons">close</span></button>
+      </div>
+      <div class="doi-profile-box">
+        <img id="doi-photo" src="" alt="Doi">
+        <h2 id="doi-name-age">Nama, Umur</h2>
+        <div class="doi-tags">
+          <span class="d-tag"><span class="material-icons">work</span> <span id="doi-job">-</span></span>
+          <span class="d-tag"><span class="material-icons">auto_awesome</span> <span id="doi-zodiac">-</span></span>
+          <span class="d-tag" style="width: 100%;"><span class="material-icons">favorite</span> <span id="doi-hobby">-</span></span>
         </div>
-        <button class="search-action-btn" id="btn-find-user">Cari & Chat</button>
+      </div>
+      <button class="action-btn love-btn" id="btn-gas-chat">Gas Chat Sekarang</button>
+    </div>
+  </div>
+
+  <div id="modal-limit-doi" class="custom-modal-overlay">
+    <div class="custom-modal-content text-center">
+      <span class="material-icons" style="font-size: 50px; color: #ef4444; margin-bottom: 10px;">hourglass_empty</span>
+      <h3 style="margin-bottom: 10px; color: var(--tg-text);">Kuota Habis Bro!</h3>
+      <p style="font-size: 14px; color: var(--tg-text-muted); margin-bottom: 20px;">Tonton iklan pendek buat dapetin 10 kuota pencarian lagi.</p>
+      <div style="display: flex; gap: 10px;">
+        <button class="action-btn outline close-modal-btn" style="flex:1;">Nanti Aja</button>
+        <button class="action-btn" style="flex:1;" onclick="window.jalankanIklanIsiUlangDoi()">Tonton Iklan</button>
       </div>
     </div>
-
   </div>
+
+  <div id="toast-container"></div>
 
   <style is:global>
     @keyframes spin { 100% { transform: rotate(360deg); } }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes radarPulse { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
 
     :root {
       --tg-bg: #ffffff;
@@ -98,336 +199,438 @@
       --tg-hover: #1b1e22;
     }
 
-    /* 🔥 FIX FONT: Ganti jadi font 'Inter' 🔥 */
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     html, body { height: 100%; width: 100%; overflow: hidden; }
-    
     body { background: #e5e7eb; display: flex; justify-content: center; transition: background 0.3s ease; }
     html.dark body { background: #000000; }
 
+    /* INBOX WRAPPER */
     .telegram-wrapper { 
-      position: fixed; 
-      top: 0; bottom: 0; left: 50%; transform: translateX(-50%);
-      width: 100%; max-width: 480px; display: flex; flex-direction: column; 
-      background: var(--tg-bg); box-shadow: 0 0 20px rgba(0,0,0,0.05); 
-      transition: background 0.3s ease; 
-      padding-bottom: env(safe-area-inset-bottom);
+      position: fixed; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; 
+      display: flex; flex-direction: column; background: var(--tg-bg); box-shadow: 0 0 20px rgba(0,0,0,0.05); 
+      transition: background 0.3s ease; padding-bottom: env(safe-area-inset-bottom); z-index: 1;
     }
     html.dark .telegram-wrapper { box-shadow: none; border-left: 1px solid var(--tg-border); border-right: 1px solid var(--tg-border); }
 
     /* HEADER */
-    .tg-header { 
-      background: var(--tg-bg); z-index: 10; transition: background 0.3s ease; 
-      padding-top: env(safe-area-inset-top); 
-    }
-
+    .tg-header { background: var(--tg-bg); z-index: 10; transition: background 0.3s ease; padding-top: env(safe-area-inset-top); }
     .tg-header-top { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
     .tg-header-left { display: flex; align-items: center; gap: 16px; }
-    .tg-header-left h2 { font-size: 20px; font-weight: 700; color: var(--tg-text); letter-spacing: -0.3px; transition: color 0.3s ease; }
-
+    .tg-header-left h2 { font-size: 20px; font-weight: 700; color: var(--tg-text); transition: color 0.3s ease; }
     .icon-btn { background: none; border: none; color: var(--tg-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; transition: all 0.2s ease; }
     .icon-btn:active { background: var(--tg-border); transform: scale(0.95); }
 
-    /* SEARCH BAR */
     .tg-search-container { padding: 4px 16px 12px; }
-    .tg-search-box { 
-      display: flex; align-items: center; background: var(--tg-bg-secondary); border-radius: 12px; padding: 10px 16px; gap: 12px; 
-      transition: all 0.2s ease; border: 1px solid transparent;
-    }
+    .tg-search-box { display: flex; align-items: center; background: var(--tg-bg-secondary); border-radius: 12px; padding: 10px 16px; gap: 12px; transition: all 0.2s ease; border: 1px solid transparent; }
     .tg-search-box:focus-within { background: var(--tg-bg); border-color: var(--tg-primary); box-shadow: 0 4px 12px rgba(29, 161, 242, 0.08); }
-    .tg-search-box .material-icons { color: var(--tg-text-muted); font-size: 20px; transition: color 0.2s; }
+    .tg-search-box .material-icons { color: var(--tg-text-muted); font-size: 20px; }
     .tg-search-box:focus-within .material-icons { color: var(--tg-primary); }
-    .tg-search-box input { flex: 1; border: none; background: transparent; outline: none; font-size: 15px; color: var(--tg-text); transition: color 0.2s ease; }
+    .tg-search-box input { flex: 1; border: none; background: transparent; outline: none; font-size: 15px; color: var(--tg-text); }
     .tg-search-box input::placeholder { color: var(--tg-text-muted); }
 
     /* LIST CHAT */
     .tg-chat-list { flex: 1; overflow-y: auto; padding-bottom: 100px; }
     .tg-chat-list::-webkit-scrollbar { width: 0; } 
-
-    .tg-chat-item { 
-      display: flex; align-items: center; gap: 14px; padding: 10px 16px; cursor: pointer; user-select: none; 
-      transition: background 0.2s; position: relative; animation: fadeIn 0.3s ease forwards;
-    }
+    .tg-chat-item { display: flex; align-items: center; gap: 14px; padding: 10px 16px; cursor: pointer; user-select: none; transition: background 0.2s; position: relative; animation: fadeIn 0.3s ease forwards; }
     .tg-chat-item:active { background: var(--tg-hover); }
-
     .tg-avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: none !important; }
     .global-avatar { background: linear-gradient(135deg, #1DA1F2, #007bb5); display: flex; align-items: center; justify-content: center; color: white; }
     .group-avatar { background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center; color: white; }
-
     .tg-chat-info { flex: 1; min-width: 0; border-bottom: 1px solid var(--tg-border); padding-bottom: 12px; padding-top: 2px; display: flex; flex-direction: column; justify-content: center; height: 100%; transition: border-color 0.3s ease; }
     .tg-chat-item:last-child .tg-chat-info { border-bottom: none; }
-
     .tg-chat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .tg-name { font-size: 16px; font-weight: 600; color: var(--tg-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; transition: color 0.3s ease; }
-    
+    .tg-name { font-size: 16px; font-weight: 600; color: var(--tg-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
     .verified-badge { color: var(--tg-primary); display: flex; align-items: center; }
     .verified-badge .material-icons { font-size: 15px; }
-
     .tg-time { font-size: 12px; font-weight: 500; color: var(--tg-text-muted); flex-shrink: 0; }
     .tg-chat-item.unread .tg-time { color: var(--tg-primary); font-weight: 600; }
-
     .tg-chat-bottom { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .tg-preview { font-size: 14px; color: var(--tg-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; display: flex; align-items: center; gap: 4px; transition: color 0.3s ease; }
+    .tg-preview { font-size: 14px; color: var(--tg-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; display: flex; align-items: center; gap: 4px; }
     .tg-chat-item.unread .tg-preview { color: var(--tg-text); font-weight: 500; }
-
     .check-icon { font-size: 16px; color: #10b981; }
-
     .tg-unread-badge { background: var(--tg-primary); color: white; font-size: 11px; font-weight: 700; min-width: 22px; height: 22px; border-radius: 99px; display: flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0; }
 
     /* FAB */
     .tg-fab { 
-      position: absolute; 
-      bottom: max(30px, env(safe-area-inset-bottom) + 30px); 
-      right: 20px; 
+      position: absolute; bottom: max(30px, env(safe-area-inset-bottom) + 30px); right: 20px; 
       width: 56px; height: 56px; border-radius: 50%; background: var(--tg-primary); border: none; color: white; 
       box-shadow: 0 4px 14px rgba(29, 161, 242, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; 
       transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 50; 
     }
     .tg-fab:active { transform: scale(0.9); }
-    .tg-fab .material-icons { font-size: 24px; }
     .tg-fab.hidden { display: none !important; }
 
-    /* MODAL CARI TEMAN */
-    .search-modal-overlay { 
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); 
-      z-index: 100; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s ease; 
+    /* SIDEBAR DRAWER */
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 100; display: none; animation: fadeIn 0.2s ease; }
+    .tg-sidebar { 
+      position: fixed; top: 0; bottom: 0; left: 50%; width: 100%; max-width: 320px; background: var(--tg-bg); 
+      transform: translateX(calc(-50% - 100vw)); z-index: 105; display: flex; flex-direction: column; 
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1); box-shadow: 5px 0 25px rgba(0,0,0,0.1);
     }
-    .search-modal-content { 
-      background: var(--tg-bg); width: 100%; max-width: 480px; 
-      border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 24px; 
-      padding-bottom: max(24px, env(safe-area-inset-bottom) + 24px); 
-      animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    .tg-sidebar.open { transform: translateX(-50%); } /* Nengah di layar max 480px, nempel kiri di layar asli */
+    @media (max-width: 480px) {
+      .tg-sidebar { left: 0; transform: translateX(-100%); }
+      .tg-sidebar.open { transform: translateX(0); }
     }
-    .search-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .search-modal-header h3 { color: var(--tg-text); font-size: 18px; font-weight: 700; }
-    .close-modal-btn { background: none; border: none; color: var(--tg-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--tg-bg-secondary); }
-    .search-input-group { display: flex; align-items: center; background: var(--tg-bg-secondary); border-radius: 12px; padding: 12px 16px; gap: 12px; border: 1px solid var(--tg-border); margin-bottom: 16px; }
-    .search-input-group input { flex: 1; border: none; background: transparent; outline: none; font-size: 15px; color: var(--tg-text); }
-    .search-input-group .material-icons { color: var(--tg-text-muted); font-size: 18px; }
-    .search-action-btn { width: 100%; background: var(--tg-primary); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-    .search-action-btn:active { background: #007bb5; }
+    .sidebar-header { padding: 40px 20px 20px; background: var(--tg-bg-secondary); border-bottom: 1px solid var(--tg-border); display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+    #side-avatar { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--tg-primary); }
+    .sidebar-user-info { display: flex; flex-direction: column; gap: 2px; }
+    #side-username { font-size: 18px; font-weight: 700; color: var(--tg-text); }
+    #side-id { font-size: 13px; color: var(--tg-text-muted); cursor: pointer; }
+    .btn-edit-bio { background: var(--tg-primary); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 5px; }
+    
+    .sidebar-menu { display: flex; flex-direction: column; padding: 10px 0; overflow-y: auto; }
+    .menu-item { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: none; border: none; font-size: 15px; font-weight: 600; color: var(--tg-text); cursor: pointer; text-align: left; transition: background 0.2s; }
+    .menu-item:active { background: var(--tg-bg-secondary); }
+    .menu-item .material-icons { color: var(--tg-text-muted); }
+    .menu-divider { height: 1px; background: var(--tg-border); margin: 8px 0; }
+    
+    .btn-cari-doi { color: #ec4899 !important; justify-content: space-between; }
+    .btn-cari-doi .material-icons { color: #ec4899 !important; }
+    .limit-badge { background: #fee2e2; color: #ef4444; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 800; }
+    html.dark .limit-badge { background: rgba(239,68,68,0.15); }
 
+    /* MODALS & FORMS */
+    .custom-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 200; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s ease; }
+    .custom-modal-content { background: var(--tg-bg); width: 100%; max-width: 480px; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 24px; padding-bottom: max(24px, env(safe-area-inset-bottom) + 24px); animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .modal-header h3 { color: var(--tg-text); font-size: 18px; font-weight: 700; }
+    .close-modal-btn { background: var(--tg-bg-secondary); border: none; color: var(--tg-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; }
+    .modal-desc { font-size: 13px; color: var(--tg-text-muted); margin-bottom: 16px; }
+    
+    .input-group { display: flex; align-items: center; background: var(--tg-bg-secondary); border-radius: 12px; padding: 12px 16px; gap: 12px; border: 1px solid var(--tg-border); width: 100%; }
+    .input-group input, .input-group select { flex: 1; border: none; background: transparent; outline: none; font-size: 14px; color: var(--tg-text); width: 100%; }
+    .input-group .material-icons { color: var(--tg-text-muted); font-size: 18px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    
+    .action-btn { width: 100%; background: var(--tg-primary); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; text-align: center; }
+    .action-btn:active { transform: scale(0.98); }
+    .action-btn.outline { background: transparent; border: 2px solid var(--tg-border); color: var(--tg-text); }
+    .love-btn { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+
+    .group-photo-upload { display: flex; justify-content: center; margin-bottom: 20px; }
+    .group-photo-upload label { position: relative; cursor: pointer; display: inline-block; }
+    .group-photo-upload img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--tg-border); }
+    .upload-badge { position: absolute; bottom: 0; right: 0; background: var(--tg-primary); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--tg-bg); }
+    .upload-badge .material-icons { font-size: 14px; }
+
+    /* DOI CARD */
+    .doi-result-card { align-items: center; text-align: center; }
+    .doi-profile-box { margin-bottom: 20px; width: 100%; }
+    .doi-profile-box img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid var(--tg-bg-secondary); margin-bottom: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+    .doi-profile-box h2 { font-size: 20px; color: var(--tg-text); margin-bottom: 16px; }
+    .doi-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .d-tag { background: var(--tg-bg-secondary); color: var(--tg-text); font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 4px; }
+    .d-tag .material-icons { font-size: 14px; color: var(--tg-text-muted); }
+
+    /* RADAR ANIMATION */
+    .doi-search-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .radar-container { position: relative; width: 150px; height: 150px; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; }
+    .radar-wave { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #ec4899; animation: radarPulse 2s infinite cubic-bezier(0.25, 0.8, 0.25, 1); }
+    .radar-wave:nth-child(2) { animation-delay: 0.6s; }
+    .radar-wave:nth-child(3) { animation-delay: 1.2s; }
+    .search-title-glow { color: white; font-size: 20px; margin-bottom: 8px; text-shadow: 0 0 10px #ec4899; }
+    .search-subtitle-glow { color: #aaa; font-size: 14px; }
+    .floating-radar-user { position: absolute; color: white; background: #ec4899; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px #ec4899; animation: fadeIn 0.3s ease; }
+
+    /* TOAST */
+    #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; align-items: center; pointer-events: none; }
+    .toast-msg { background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 24px; font-size: 13px; font-weight: 500; backdrop-filter: blur(5px); animation: slideUp 0.3s ease; }
     .loading-state { text-align: center; padding: 60px 20px; color: var(--tg-text-muted); display: flex; flex-direction: column; align-items: center; gap: 12px; }
     .loading-spinner { font-size: 32px; animation: spin 1s linear infinite; color: var(--tg-primary); }
     .loading-state p { font-size: 14px; font-weight: 500; }
+    .text-center { text-align: center; }
   </style>
 
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
+      const { supabase } = await import('../lib/supabase.js');
       const chatList = document.getElementById("chatList");
-      const searchInput = document.getElementById("searchChat");
       let currentUser = null;
+      let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
+
+      // Toast Notification function
+      window.showToast = (msg) => {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className = "toast-msg"; toast.innerText = msg;
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+      };
 
       // =====================================
-      // LOGIKA FAB (TOMBOL CHAT BARU)
+      // 1. LOAD USER PROFILE & SIDEBAR
       // =====================================
-      const fabBtn = document.getElementById("btn-new-chat");
-      const searchModal = document.getElementById("search-modal");
-      const closeModalBtn = document.getElementById("close-search-modal");
-      const inputNewId = document.getElementById("input-new-id");
-      const btnFindUser = document.getElementById("btn-find-user");
-
-      if (fabBtn && searchModal) {
-        fabBtn.addEventListener("click", () => {
-          searchModal.style.display = "flex";
-          fabBtn.classList.add("hidden"); 
-          setTimeout(() => inputNewId?.focus(), 100);
-        });
-
-        const closeNewChatModal = () => {
-          searchModal.style.display = "none";
-          fabBtn.classList.remove("hidden"); 
-          if (inputNewId) inputNewId.value = ''; 
+      async function initUser() {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) {
+          window.location.href = '/login'; return;
         }
+        currentUser = user;
 
-        closeModalBtn.addEventListener("click", closeNewChatModal);
-
-        searchModal.addEventListener("click", (e) => {
-          if (e.target === searchModal) closeNewChatModal();
-        });
-
-        btnFindUser.addEventListener("click", async () => {
-          const searchValue = inputNewId?.value.trim().toUpperCase().replace("#", "");
-          if (!searchValue) return alert("Masukkan ID teman dulu bro!");
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        if (profile) {
+          document.getElementById("side-username").innerText = profile.username || "User";
+          document.getElementById("side-avatar").src = profile.avatar_url || "/asets/png/profile.webp";
+          document.getElementById("side-id").innerText = "#" + (profile.short_id || "N/A");
           
-          btnFindUser.innerText = "Mencari...";
-          btnFindUser.disabled = true;
-
-          try {
-            const { supabase } = await import('../lib/supabase.js');
-            const { data: friend, error } = await supabase
-              .from("profiles")
-              .select("id, username")
-              .eq("short_id", searchValue)
-              .single();
-
-            if (error || !friend) throw new Error("ID tidak ditemukan!");
-            if (friend.id === currentUser?.id) throw new Error("Masa chat ke diri sendiri bro?");
-
-            closeNewChatModal();
-            window.location.href = `/chat?from=${friend.id}`;
-          } catch (err) {
-            alert(err.message);
-          } finally {
-            btnFindUser.innerText = "Cari & Chat";
-            btnFindUser.disabled = false;
-          }
-        });
+          // Isi input form bio kalau ada
+          document.getElementById("in-umur").value = profile.umur || "";
+          document.getElementById("in-gender").value = profile.gender || "Pria";
+          document.getElementById("in-zodiak").value = profile.zodiak || "";
+          document.getElementById("in-kerja").value = profile.pekerjaan || "";
+          document.getElementById("in-hobi").value = profile.hobi || "";
+        }
+        updateLimitUI();
+        loadAllChats();
       }
 
+      // =====================================
+      // 2. LOGIKA SEMUA MODAL & OVERLAY
+      // =====================================
+      const modals = document.querySelectorAll('.custom-modal-overlay');
+      const closeBtns = document.querySelectorAll('.close-modal-btn');
+
+      function openModal(id) {
+        document.getElementById(id).style.display = "flex";
+        if (id === 'search-modal') document.getElementById('btn-new-chat').classList.add('hidden');
+      }
+      function closeModal(id) {
+        document.getElementById(id).style.display = "none";
+        document.getElementById('btn-new-chat').classList.remove('hidden');
+      }
+
+      closeBtns.forEach(btn => {
+        btn.onclick = (e) => closeModal(e.target.closest('.custom-modal-overlay').id);
+      });
+      modals.forEach(m => {
+        m.onclick = (e) => { if (e.target === m) closeModal(m.id); }
+      });
+
+      // SIDEBAR DRAWER
+      const sidebarOverlay = document.getElementById("sidebar-overlay");
+      const sidebar = document.getElementById("tg-sidebar");
+      document.getElementById("open-sidebar-btn").onclick = () => {
+        sidebarOverlay.style.display = "block";
+        setTimeout(() => sidebar.classList.add("open"), 10);
+      };
+      sidebarOverlay.onclick = () => {
+        sidebar.classList.remove("open");
+        setTimeout(() => sidebarOverlay.style.display = "none", 300);
+      };
+      // Tutup sidebar tiap ngeklik menu
+      document.querySelectorAll('.menu-item, .btn-edit-bio').forEach(btn => {
+        btn.addEventListener('click', () => sidebarOverlay.onclick());
+      });
+
+      // =====================================
+      // 3. FITUR: CARI TEMAN BY ID
+      // =====================================
+      document.getElementById("btn-new-chat").onclick = () => openModal("search-modal");
+      document.getElementById("btn-find-user").onclick = async () => {
+        const input = document.getElementById("input-new-id").value.trim().toUpperCase().replace("#", "");
+        if (!input) return window.showToast("Masukkan ID dulu!");
+        document.getElementById("btn-find-user").innerText = "Mencari...";
+        try {
+          const { data: friend, error } = await supabase.from("profiles").select("id, username").eq("short_id", input).single();
+          if (error || !friend) throw new Error("ID tidak ditemukan!");
+          if (friend.id === currentUser.id) throw new Error("Tidak bisa chat dengan diri sendiri.");
+          window.location.href = `/chat?from=${friend.id}`;
+        } catch (err) { window.showToast(err.message); } 
+        finally { document.getElementById("btn-find-user").innerText = "Cari & Chat"; }
+      };
+
+      // =====================================
+      // 4. FITUR: EDIT BIODATA
+      // =====================================
+      document.getElementById("btn-open-bio").onclick = () => openModal("bio-modal");
+      document.getElementById("btn-save-bio").onclick = async () => {
+        const btn = document.getElementById("btn-save-bio");
+        btn.innerText = "Menyimpan..."; btn.disabled = true;
+        try {
+          const updateData = {
+            umur: Number(document.getElementById("in-umur").value) || null,
+            gender: document.getElementById("in-gender").value,
+            zodiak: document.getElementById("in-zodiak").value,
+            pekerjaan: document.getElementById("in-kerja").value,
+            hobi: document.getElementById("in-hobi").value
+          };
+          const { error } = await supabase.from("profiles").update(updateData).eq("id", currentUser.id);
+          if (error) throw error;
+          window.showToast("Profil tersimpan!");
+          closeModal("bio-modal");
+        } catch (err) { window.showToast("Gagal menyimpan profil."); }
+        finally { btn.innerText = "Simpan Profil"; btn.disabled = false; }
+      };
+
+      // =====================================
+      // 5. FITUR: BUAT GRUP BARU
+      // =====================================
+      document.getElementById("btn-open-group-modal").onclick = () => openModal("group-modal");
+      let selectedGroupFile = null;
+      document.getElementById("group-photo-input").onchange = (e) => {
+        if (e.target.files[0]) {
+          selectedGroupFile = e.target.files[0];
+          document.getElementById("group-photo-preview").src = URL.createObjectURL(selectedGroupFile);
+        }
+      };
+      document.getElementById("btn-create-group").onclick = async () => {
+        const name = document.getElementById("in-group-name").value.trim();
+        if (!name) return window.showToast("Isi nama grup!");
+        const btn = document.getElementById("btn-create-group");
+        btn.innerText = "Mengunggah..."; btn.disabled = true;
+        try {
+          let photoUrl = "";
+          if (selectedGroupFile) {
+            const fd = new FormData(); fd.append("file", selectedGroupFile); fd.append("upload_preset", "post_hope");
+            const res = await fetch("https://api.cloudinary.com/v1_1/dhhmkb8kl/image/upload", { method: "POST", body: fd });
+            const cData = await res.json();
+            if (cData.secure_url) photoUrl = cData.secure_url;
+          }
+          const { data: group, error } = await supabase.from('groups').insert([{ name, created_by: currentUser.id, photo_url: photoUrl }]).select().single();
+          if (error) throw error;
+          await supabase.from('group_members').insert([{ group_id: group.id, user_id: currentUser.id }]);
+          window.showToast("Grup berhasil dibuat!");
+          closeModal("group-modal");
+          loadAllChats(); // Refresh list chat
+        } catch (err) { window.showToast("Gagal membuat grup."); }
+        finally { btn.innerText = "Buat Sekarang"; btn.disabled = false; }
+      };
+
+      // =====================================
+      // 6. FITUR: GACHA/CARI DOI 
+      // =====================================
+      function updateLimitUI() {
+        document.getElementById("limit-doi-text").innerText = sisaLimitDoi;
+      }
+      
+      document.getElementById("btn-sidebar-search").onclick = async () => {
+        if (sisaLimitDoi <= 0) return openModal("modal-limit-doi");
+        
+        const { data: profile } = await supabase.from('profiles').select('gender').eq('id', currentUser.id).single();
+        if (!profile || !profile.gender) {
+          window.showToast("Setel Gender kamu dulu di Edit Biodata!"); return openModal("bio-modal");
+        }
+
+        sisaLimitDoi--; localStorage.setItem('doi_limit', sisaLimitDoi.toString()); updateLimitUI();
+
+        // Tampilkan overlay animasi radar
+        const overlay = document.createElement("div"); 
+        overlay.className = "doi-search-overlay"; 
+        overlay.id = "active-search-overlay";
+        overlay.innerHTML = `
+          <div class="radar-container"><div class="radar-wave"></div><div class="radar-wave"></div><div class="radar-wave"></div><div id="radar-icons"></div></div>
+          <div style="text-align: center; z-index: 10;"><h3 class="search-title-glow">Mencari kecocokan...</h3><p class="search-subtitle-glow">Memindai profil di sekitarmu</p></div>
+        `; 
+        document.body.appendChild(overlay);
+
+        const lawanJenis = profile.gender === "Pria" ? "Wanita" : "Pria";
+        
+        setTimeout(async () => {
+          try {
+            const { data: users, error } = await supabase.from("profiles").select("*").neq("id", currentUser.id).eq("gender", lawanJenis);
+            document.getElementById("active-search-overlay")?.remove();
+            
+            if (error || !users || users.length === 0) return window.showToast(`Belum ada ${lawanJenis} yang tersedia.`);
+            
+            const doi = users[Math.floor(Math.random() * users.length)];
+            
+            // Tampilkan Result Card
+            document.getElementById("doi-photo").src = doi.avatar_url || `https://ui-avatars.com/api/?name=${doi.username}`;
+            document.getElementById("doi-name-age").innerText = `${doi.username}, ${doi.umur || "?"}`;
+            document.getElementById("doi-zodiac").innerText = doi.zodiac || "Rahasia";
+            document.getElementById("doi-job").innerText = doi.pekerjaan || "Sibuk";
+            document.getElementById("doi-hobby").innerText = doi.hobi || "Rebahan";
+            
+            document.getElementById("btn-gas-chat").onclick = () => window.location.href = `/chat?from=${doi.id}`;
+            openModal("doi-card-modal");
+            
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+          } catch (err) {
+            document.getElementById("active-search-overlay")?.remove(); window.showToast("Gangguan koneksi.");
+          }
+        }, 3000);
+      };
+
+      window.jalankanIklanIsiUlangDoi = function() {
+        window.open("https://omg10.com/4/10901295", "_blank");
+        closeModal("modal-limit-doi");
+        window.showToast("Menunggu konfirmasi iklan...");
+        setTimeout(() => {
+          sisaLimitDoi = 10; localStorage.setItem('doi_limit', '10'); updateLimitUI();
+          window.showToast("Kuota berhasil diisi ulang!");
+        }, 15000); // Asumsi tonton 15 detik
+      };
+
+      // =====================================
+      // 7. LOGIKA LOAD DAFTAR CHAT
+      // =====================================
       function formatTimeTelegram(dateString) {
         const dateObj = new Date(dateString);
-        const today = new Date();
-        const isToday = dateObj.toDateString() === today.toDateString();
-        if (isToday) return dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-        const diffTime = Math.abs(today - dateObj);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-        if (diffDays === 1) return "Kemarin";
-        if (diffDays < 7) return dateObj.toLocaleDateString("id-ID", { weekday: "short" });
-        return dateObj.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
+        const isToday = dateObj.toDateString() === new Date().toDateString();
+        return isToday ? dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : dateObj.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
       }
 
       async function loadAllChats() {
         try {
-          const { supabase } = await import('../lib/supabase.js');
-          const { data: { user }, error: authError } = await supabase.auth.getUser();
-          if (authError || !user) {
-            chatList.innerHTML = '<div class="loading-state"><span class="material-icons" style="color:#ef4444; animation:none;">error_outline</span><p>Silakan login dulu bro.</p></div>';
-            return;
-          }
-          currentUser = user;
-
           const waktu24JamLalu = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+          const { data: pvMsgs } = await supabase.from("messages").select("room_id, message, created_at, sticker_url, audio_url, user_id, status, is_system").ilike("room_id", "pv_%").ilike("room_id", `%${currentUser.id}%`).gte("created_at", waktu24JamLalu).order("created_at", { ascending: false });
+          const { data: groups } = await supabase.from('group_members').select(`group_id, groups(id, name, photo_url)`).eq('user_id', currentUser.id);
+
+          const finalChatList = [{ id: 'room-1', type: 'global', name: 'HopeTalk Globe', avatar: '', preview: 'Obrolan umum komunitas', time: 'Always', unread: parseInt(localStorage.getItem('unread_room-1')||'0'), sortTime: Date.now() + 10000 }];
           
-          const { data: pvMsgs } = await supabase
-            .from("messages")
-            .select("room_id, message, created_at, sticker_url, audio_url, user_id, status, is_system")
-            .ilike("room_id", "pv_%").ilike("room_id", `%${currentUser.id}%`)
-            .gte("created_at", waktu24JamLalu).order("created_at", { ascending: false });
-
-          const { data: groups } = await supabase
-            .from('group_members')
-            .select(`group_id, groups(id, name, photo_url)`)
-            .eq('user_id', currentUser.id);
-
-          const finalChatList = [];
-
-          let unreadGlobal = parseInt(localStorage.getItem('unread_room-1') || '0');
-          finalChatList.push({
-            id: 'room-1', type: 'global', name: 'HopeTalk Globe', avatar: '',
-            preview: 'Obrolan umum komunitas', time: 'Always', unread: unreadGlobal, sortTime: Date.now() + 10000 
-          });
-
-          const lastPvMessages = new Map();
-          const unreadPvCounts = new Map();
-
           if (pvMsgs) {
+            const lastPvMessages = new Map();
             pvMsgs.forEach((msg) => {
-              const partnerId = msg.room_id.replace("pv_", "").split("_").find((id) => id !== currentUser.id);
-              if (!partnerId) return;
-              if (!lastPvMessages.has(partnerId)) lastPvMessages.set(partnerId, msg);
-              if (msg.user_id !== currentUser.id && msg.status !== "read" && !msg.is_system) {
-                unreadPvCounts.set(partnerId, (unreadPvCounts.get(partnerId) || 0) + 1);
-              }
+              const pId = msg.room_id.replace("pv_", "").split("_").find(id => id !== currentUser.id);
+              if (pId && !lastPvMessages.has(pId)) lastPvMessages.set(pId, msg);
             });
-
             const partnerIds = Array.from(lastPvMessages.keys());
             if (partnerIds.length > 0) {
               const { data: profiles } = await supabase.from("profiles").select("id, username, avatar_url, role").in("id", partnerIds);
-              const profileMap = new Map();
-              profiles?.forEach(p => profileMap.set(p.id, p));
-
+              const profileMap = new Map(); profiles?.forEach(p => profileMap.set(p.id, p));
               lastPvMessages.forEach((msg, pId) => {
-                const profile = profileMap.get(pId);
-                if (!profile) return;
-                
-                let previewText = msg.sticker_url ? "🖼 Mengirim Stiker" : (msg.audio_url ? "🎤 Mengirim Voice Note" : msg.message);
-                if (msg.message === "Pesan ini telah dihapus") previewText = "🚫 Pesan dihapus";
-
+                const profile = profileMap.get(pId); if (!profile) return;
+                let preview = msg.sticker_url ? "🖼 Stiker" : (msg.audio_url ? "🎤 Voice Note" : msg.message);
+                if (msg.message === "Pesan ini telah dihapus") preview = "🚫 Dihapus";
                 const isMe = msg.user_id === currentUser.id && !msg.is_system;
-                const statusCheck = isMe ? (msg.status === "read" ? `<span class="material-icons check-icon" style="color:#10b981; font-size:16px; margin-right:4px;">done_all</span>` : `<span class="material-icons check-icon" style="color:var(--tg-text-muted); font-size:16px; margin-right:4px;">check</span>`) : '';
-
-                finalChatList.push({
-                  id: pId, type: 'private', name: profile.username || "User",
-                  avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username)}`,
-                  role: profile.role, preview: `${statusCheck}${previewText}`,
-                  time: formatTimeTelegram(msg.created_at), unread: unreadPvCounts.get(pId) || 0,
-                  sortTime: new Date(msg.created_at).getTime()
-                });
+                const statusHtml = isMe ? (msg.status === "read" ? `<span class="material-icons check-icon" style="color:#10b981;font-size:16px;">done_all</span> ` : `<span class="material-icons check-icon" style="color:var(--tg-text-muted);font-size:16px;">check</span> `) : '';
+                finalChatList.push({ id: pId, type: 'private', name: profile.username, avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}`, role: profile.role, preview: statusHtml+preview, time: formatTimeTelegram(msg.created_at), unread: 0, sortTime: new Date(msg.created_at).getTime() });
               });
             }
           }
 
           if (groups) {
             groups.forEach(g => {
-              const group = g.groups;
-              if (!group) return;
-              let unreadGrp = parseInt(localStorage.getItem('unread_group_' + group.id) || '0');
-              finalChatList.push({
-                id: group.id, type: 'group', name: group.name, avatar: group.photo_url || '',
-                preview: 'Klik untuk melihat obrolan grup', time: 'Aktif', unread: unreadGrp, sortTime: Date.now() - 1000 
-              });
+              if (!g.groups) return;
+              finalChatList.push({ id: g.groups.id, type: 'group', name: g.groups.name, avatar: g.groups.photo_url || '', preview: 'Obrolan grup aktif', time: 'Aktif', unread: parseInt(localStorage.getItem('unread_group_'+g.groups.id)||'0'), sortTime: Date.now() - 1000 });
             });
           }
 
           finalChatList.sort((a, b) => b.sortTime - a.sortTime);
-
           chatList.innerHTML = '';
+          if (finalChatList.length === 1) chatList.innerHTML = `<div class="loading-state"><span class="material-icons" style="font-size:48px;color:var(--tg-primary);animation:none;">forum</span><p>Mulai cari teman untuk chat!</p></div>`;
           
-          if (finalChatList.length === 1 && finalChatList[0].type === 'global') {
-            chatList.innerHTML = `<div class="loading-state" style="opacity:0.7;"><span class="material-icons" style="font-size:48px; color:var(--tg-primary); animation:none;">forum</span><p>Mulai cari doi untuk melihat riwayat chat pribadi di sini.</p></div>`;
-          }
-
           finalChatList.forEach(chat => {
-            const div = document.createElement("div");
-            div.className = `tg-chat-item ${chat.unread > 0 ? 'unread' : ''}`;
-            div.onclick = () => { window.location.href = chat.type === 'global' ? `/chat` : `/chat?from=${chat.id}`; };
+            const div = document.createElement("div"); div.className = `tg-chat-item ${chat.unread > 0 ? 'unread' : ''}`;
+            div.onclick = () => window.location.href = chat.type === 'global' ? `/chat` : `/chat?from=${chat.id}`;
+            let avatarHtml = chat.type === 'global' ? `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>` : (chat.type === 'group' ? (chat.avatar ? `<img src="${chat.avatar}" class="tg-avatar">` : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`) : `<img src="${chat.avatar}" class="tg-avatar">`);
+            let roleBadge = chat.role === 'admin' ? `<span class="badge" style="background:#ef4444; color:white; font-size:9px; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:800;">ADMIN</span>` : (chat.role === 'verified' ? `<span class="verified-badge" style="margin-left:4px; color:var(--tg-primary);"><span class="material-icons" style="font-size:15px;">verified</span></span>` : '');
 
-            let avatarHtml = '';
-            if (chat.type === 'global') avatarHtml = `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>`;
-            else if (chat.type === 'group') avatarHtml = chat.avatar ? `<img src="${chat.avatar}" class="tg-avatar">` : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`;
-            else avatarHtml = `<img src="${chat.avatar}" class="tg-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(chat.name)}'">`;
-
-            let roleBadge = '';
-            if (chat.role === 'admin') roleBadge = `<span class="badge" style="background:#ef4444; color:white; font-size:9px; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:800;">ADMIN</span>`;
-            if (chat.role === 'verified') roleBadge = `<span class="verified-badge"><span class="material-icons">verified</span></span>`;
-
-            div.innerHTML = `
-              ${avatarHtml}
-              <div class="tg-chat-info">
-                <div class="tg-chat-top">
-                  <h4 class="tg-name">${escapeHtml(chat.name)} ${roleBadge}</h4>
-                  <span class="tg-time">${chat.time}</span>
-                </div>
-                <div class="tg-chat-bottom">
-                  <p class="tg-preview">${chat.preview}</p>
-                  ${chat.unread > 0 ? `<span class="tg-unread-badge">${chat.unread > 99 ? '99+' : chat.unread}</span>` : ''}
-                </div>
-              </div>
-            `;
+            div.innerHTML = `${avatarHtml}<div class="tg-chat-info"><div class="tg-chat-top"><h4 class="tg-name">${chat.name.replace(/</g, "&lt;")} ${roleBadge}</h4><span class="tg-time">${chat.time}</span></div><div class="tg-chat-bottom"><p class="tg-preview">${chat.preview}</p>${chat.unread > 0 ? `<span class="tg-unread-badge">${chat.unread>99?'99+':chat.unread}</span>` : ''}</div></div>`;
             chatList.appendChild(div);
           });
-
-          if (searchInput) {
-            searchInput.addEventListener("input", (e) => {
-              const query = e.target.value.toLowerCase();
-              const items = document.querySelectorAll(".tg-chat-item");
-              items.forEach(item => {
-                const name = item.querySelector(".tg-name").textContent.toLowerCase();
-                item.style.display = name.includes(query) ? "flex" : "none";
-              });
+          
+          document.getElementById("searchChat").addEventListener("input", (e) => {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll(".tg-chat-item").forEach(item => {
+              item.style.display = item.querySelector(".tg-name").textContent.toLowerCase().includes(query) ? "flex" : "none";
             });
-          }
-
-        } catch (err) {
-          console.error(err);
-          chatList.innerHTML = '<div class="loading-state"><span class="material-icons" style="color:#ef4444; animation:none;">error_outline</span><p>Gagal memuat history chat.</p></div>';
-        }
+          });
+        } catch (err) { chatList.innerHTML = '<div class="loading-state"><span class="material-icons" style="color:#ef4444;animation:none;">error_outline</span><p>Gagal memuat chat.</p></div>'; }
       }
 
-      function escapeHtml(str = "") { return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-      loadAllChats();
+      initUser();
     });
   </script>
 </body>
