@@ -1,5 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
-  /* 🔥 LIGHT MODE (Fresh & Clean) 🔥 */
+  /* 🔥 LIGHT MODE (Fresh, Clean, Solid) 🔥 */
   --bg-main: #f8fafc; 
   --bg-panel: #ffffff;
   --bg-sidebar: #ffffff;
@@ -7,18 +9,17 @@
   --text-color: #0f172a;
   --text-muted: #64748b;
 
-  --chat-bg-image: url("../asets/png/chat.png");
-
   --chat-item-bg: #ffffff;
   --label-bg: #f1f5f9; 
   --border-color: #e2e8f0;
 
-  --username-color: #2563eb; 
-  --chat-self-bg: #dcf8c6; 
+  /* Hitam gelap biar jelas di layar terang */
+  --username-color: #111827; 
+  --chat-self-bg: #dcf8c6; /* Ijo terang ala WA */
 }
 
 html.dark {
-  /* 🔥 DARK MODE "MIDNIGHT SLATE" (Elegan, Anti-Silau) 🔥 */
+  /* 🔥 DARK MODE (Midnight Slate - Lembut di Mata) 🔥 */
   --bg-main: #0f172a; 
   --bg-panel: #1e293b; 
   --bg-sidebar: #1e293b; 
@@ -26,30 +27,30 @@ html.dark {
   --text-color: #e2e8f0; 
   --text-muted: #94a3b8;
 
-  --chat-bg-image: url("../asets/png/chatdark.webp");
-
   --chat-item-bg: #1e293b; 
   --label-bg: #0f172a; 
   --border-color: rgba(255, 255, 255, 0.08); 
 
-  --username-color: #38bdf8; 
-  --chat-self-bg: #2b5278; 
+  /* Putih bersih biar kebaca di layar gelap */
+  --username-color: #f8fafc; 
+  --chat-self-bg: #166534; /* Ijo tua redup biar gak silau */
 }
 
-/* 🔥 TRANSISI SUPER EMPUK (SMOOTH) 🔥 */
+/* 🔥 TRANSISI SUPER EMPUK 🔥 */
 *, *::before, *::after {
   transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
               border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+              color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              fill 0.2s ease;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
 }
 
 /* --- Base Styles --- */
-html,
-body {
+html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: "Poppins", sans-serif;
   background: var(--bg-main); 
   color: var(--text-color);
   display: flex;
@@ -62,10 +63,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-image: var(--chat-bg-image); 
   background-color: var(--bg-main);
-  background-size: cover;
-  background-position: center;
   position: relative;
   z-index: 1;
 }
@@ -235,16 +233,19 @@ body {
 
 .chat-message.self {
   background: var(--chat-self-bg);
+  color: var(--text-color); /* Pastikan teks di dalam ijo kebaca jelas */
   align-self: flex-end;
   border-bottom-right-radius: 2px;
   flex-direction: row-reverse;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
+
 .chat-message.other {
   background: var(--bg-panel); 
   color: var(--text-color); 
   align-self: flex-start;
   border-bottom-left-radius: 2px;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .chat-message.new-msg {
@@ -273,8 +274,9 @@ body {
   padding-bottom: 5px;
 }
 
+/* Username Auto Switch (Hitam/Putih) */
 .chat-message .username {
-  font-weight: 600;
+  font-weight: 700; /* Dibuat lebih tebal sedikit biar tegas */
   font-size: 12px;
   color: var(--username-color); 
   margin-bottom: 2px;
@@ -293,6 +295,10 @@ body {
 
 .chat-message.self .message-info {
   color: rgba(255, 255, 255, 0.7);
+}
+
+html.dark .chat-message.self .message-info {
+  color: rgba(255, 255, 255, 0.5); /* Supaya ga silau di bubble ijo tua */
 }
 
 .message-info {
@@ -526,24 +532,11 @@ body {
   line-height: 1;
 }
 
-/* --- Special Modes --- */
-.private-mode .chat-message.self {
-  background: rgba(162, 155, 254, 0.9);
-}
-.private-mode .chat-message.other {
-  background: rgba(224, 231, 255, 0.9);
-}
-.private-mode.telegram-chat {
-  background-image: none;
-  background-color: var(--bg-main); 
-}
-
 /* --- UI Elements --- */
 .cta {
   display: flex;
   padding: 8px 20px;
   text-decoration: none;
-  font-family: "Poppins", sans-serif;
   font-size: 14px;
   color: white;
   background: #3a7bd5 !important; 
@@ -697,7 +690,6 @@ body {
 }
 
 .searching-text {
-  font-family: "Poppins", sans-serif;
   letter-spacing: 2px;
   font-weight: 600;
   animation: pulse 1.5s infinite;
