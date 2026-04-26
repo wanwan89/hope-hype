@@ -240,6 +240,8 @@
     .tg-chat-item:last-child .tg-chat-info { border-bottom: none; }
     .tg-chat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
     .tg-name { font-size: 16px; font-weight: 600; color: var(--tg-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
+    .verified-badge { color: var(--tg-primary); display: flex; align-items: center; }
+    .verified-badge .material-icons { font-size: 15px; }
     .tg-time { font-size: 12px; font-weight: 500; color: var(--tg-text-muted); flex-shrink: 0; }
     .tg-chat-item.unread .tg-time { color: var(--tg-primary); font-weight: 600; }
     .tg-chat-bottom { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -265,7 +267,7 @@
       transform: translateX(calc(-50% - 100vw)); z-index: 105; display: flex; flex-direction: column; 
       transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1); box-shadow: 5px 0 25px rgba(0,0,0,0.1);
     }
-    .tg-sidebar.open { transform: translateX(-50%); } /* Nengah di layar max 480px, nempel kiri di layar asli */
+    .tg-sidebar.open { transform: translateX(-50%); } 
     @media (max-width: 480px) {
       .tg-sidebar { left: 0; transform: translateX(-100%); }
       .tg-sidebar.open { transform: translateX(0); }
@@ -343,9 +345,28 @@
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
       const { supabase } = await import('../lib/supabase.js');
-      // Import UI Utils untuk Badge (Admin/Verified/dll)
-      const utils = await import('../lib/ui-utils.js').catch(() => ({}));
-      const getBadgeFunc = utils.getRoleBadge || utils.getBadge || (() => '');
+      
+      // 🔥 BENTENG PERTAHANAN BADGE DARI UI-UTILS 🔥
+      let getBadgeFunc = null;
+      try {
+        const utils = await import('../lib/ui-utils.js');
+        getBadgeFunc = utils.getRoleBadge || utils.getBadge || utils.default?.getRoleBadge || utils.default?.getBadge || null;
+      } catch (err) {
+        console.warn("ui-utils.js tidak ditemukan, memakai badge default lokal.");
+      }
+
+      // Kalau ui-utils gagal ngasih fungsi, kita pake fallback lokal yang dijamin aman
+      if (!getBadgeFunc) {
+        getBadgeFunc = function(role) {
+          if (!role) return "";
+          role = String(role).toLowerCase().trim();
+          if (role === "admin") return `<span class="badge" style="background:#ef4444; color:white; font-size:9px; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:800;">ADMIN</span>`;
+          if (role === "verified") return `<span class="verified-badge" style="margin-left:4px; color:var(--tg-primary);"><span class="material-icons" style="font-size:15px;">verified</span></span>`;
+          const crownBadges = { crown1: "/asets/png/crown1.png", crown2: "/asets/png/crown2.png", crown3: "/asets/png/crown3.png" };
+          if (crownBadges[role]) return `<img src="${crownBadges[role]}" alt="${role}" style="width:16px;height:16px;margin-left:4px;vertical-align:middle;object-fit:contain;display:inline-block;" onerror="this.style.display='none';">`;
+          return "";
+        };
+      }
 
       const chatList = document.getElementById("chatList");
       let currentUser = null;
@@ -618,7 +639,7 @@
             div.onclick = () => window.location.href = chat.type === 'global' ? `/chat` : `/chat?from=${chat.id}`;
             let avatarHtml = chat.type === 'global' ? `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>` : (chat.type === 'group' ? (chat.avatar ? `<img src="${chat.avatar}" class="tg-avatar">` : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`) : `<img src="${chat.avatar}" class="tg-avatar">`);
             
-            // 🔥 PERUBAHAN: MENGGUNAKAN FUNGSI BADGE DARI ui-utils.js 🔥
+            // 🔥 PERUBAHAN: MENGGUNAKAN FUNGSI BADGE HYBRID 🔥
             let roleBadge = getBadgeFunc(chat.role);
 
             div.innerHTML = `${avatarHtml}<div class="tg-chat-info"><div class="tg-chat-top"><h4 class="tg-name">${chat.name.replace(/</g, "&lt;")} ${roleBadge}</h4><span class="tg-time">${chat.time}</span></div><div class="tg-chat-bottom"><p class="tg-preview">${chat.preview}</p>${chat.unread > 0 ? `<span class="tg-unread-badge">${chat.unread>99?'99+':chat.unread}</span>` : ''}</div></div>`;
