@@ -111,7 +111,7 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
     .tg-fab:active { transform: scale(0.9); }
     .tg-fab.hidden { display: none !important; }
 
-    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 100; animation: fadeIn 0.2s ease; }
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 100; display: none; animation: fadeIn 0.2s ease; }
     .tg-sidebar { 
       position: fixed; top: 0; bottom: 0; left: 50%; width: 100%; max-width: 320px; background: var(--tg-bg); 
       transform: translateX(calc(-50% - 100vw)); z-index: 105; display: flex; flex-direction: column; 
@@ -141,7 +141,8 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
     .limit-badge { background: #fee2e2; color: #ef4444; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 800; }
     html.dark .limit-badge { background: rgba(239,68,68,0.15); }
 
-    .custom-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 200; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s ease; }
+    /* 🔥 MODAL NYA DIBIKIN DISPLAY NONE DARI AWAL 🔥 */
+    .custom-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 200; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s ease; }
     .custom-modal-content { background: var(--tg-bg); width: 100%; max-width: 480px; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 24px; padding-bottom: max(24px, env(safe-area-inset-bottom) + 24px); animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .modal-header h3 { color: var(--tg-text); font-size: 18px; font-weight: 700; }
@@ -172,7 +173,7 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
     .d-tag { background: var(--tg-bg-secondary); color: var(--tg-text); font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 4px; }
     .d-tag .material-icons { font-size: 14px; color: var(--tg-text-muted); }
 
-    .doi-search-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .doi-search-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
     .radar-container { position: relative; width: 150px; height: 150px; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; }
     .radar-wave { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #ec4899; animation: radarPulse 2s infinite cubic-bezier(0.25, 0.8, 0.25, 1); }
     .radar-wave:nth-child(2) { animation-delay: 0.6s; }
@@ -191,7 +192,101 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
 </head>
 <body>
 
-  <div id="sidebar-overlay" class="sidebar-overlay" style="display: none;"></div>
+  <div id="modals-container">
+    <div id="sidebar-overlay" class="sidebar-overlay" style="display: none;"></div>
+    
+    <div id="search-modal" class="custom-modal-overlay" style="display: none;">
+      <div class="custom-modal-content">
+        <div class="modal-header">
+          <h3>Mulai Chat Baru</h3>
+          <button class="close-modal-btn"><span class="material-icons">close</span></button>
+        </div>
+        <p class="modal-desc">Masukkan ID unik temanmu (contoh: 0E870)</p>
+        <div class="input-group">
+          <span class="material-icons">tag</span>
+          <input type="text" id="input-new-id" placeholder="Ketik ID teman..." autocomplete="off" />
+        </div>
+        <button class="action-btn" id="btn-find-user">Cari & Chat</button>
+      </div>
+    </div>
+
+    <div id="bio-modal" class="custom-modal-overlay" style="display: none;">
+      <div class="custom-modal-content">
+        <div class="modal-header">
+          <h3>Edit Biodata</h3>
+          <button class="close-modal-btn"><span class="material-icons">close</span></button>
+        </div>
+        <p class="modal-desc">Isi data agar bisa ditemukan di radar Cari Doi</p>
+        <div class="form-grid">
+          <div class="input-group"><input type="number" id="in-umur" placeholder="Umur (contoh: 20)"></div>
+          <div class="input-group">
+            <select id="in-gender">
+              <option value="Pria">Pria</option>
+              <option value="Wanita">Wanita</option>
+            </select>
+          </div>
+          <div class="input-group"><input type="text" id="in-zodiak" placeholder="Zodiak (contoh: Aries)"></div>
+          <div class="input-group"><input type="text" id="in-kerja" placeholder="Pekerjaan (contoh: Mahasiswa)"></div>
+          <div class="input-group" style="grid-column: span 2;"><input type="text" id="in-hobi" placeholder="Hobi (contoh: Musik, Coding)"></div>
+        </div>
+        <button class="action-btn" id="btn-save-bio">Simpan Profil</button>
+      </div>
+    </div>
+
+    <div id="group-modal" class="custom-modal-overlay" style="display: none;">
+      <div class="custom-modal-content">
+        <div class="modal-header">
+          <h3>Buat Grup Baru</h3>
+          <button class="close-modal-btn"><span class="material-icons">close</span></button>
+        </div>
+        <div class="group-photo-upload">
+          <label for="group-photo-input">
+            <img id="group-photo-preview" src="/asets/png/profile.webp" alt="Grup">
+            <div class="upload-badge"><span class="material-icons">camera_alt</span></div>
+          </label>
+          <input type="file" id="group-photo-input" accept="image/*" style="display:none;">
+        </div>
+        <div class="input-group" style="margin-bottom: 16px;">
+          <span class="material-icons">groups</span>
+          <input type="text" id="in-group-name" placeholder="Nama Grup..." autocomplete="off" />
+        </div>
+        <button class="action-btn" id="btn-create-group">Buat Sekarang</button>
+      </div>
+    </div>
+
+    <div id="doi-card-modal" class="custom-modal-overlay" style="display: none;">
+      <div class="custom-modal-content doi-result-card">
+        <div class="modal-header">
+          <h3>Kecocokan Ditemukan! 🎉</h3>
+          <button class="close-modal-btn"><span class="material-icons">close</span></button>
+        </div>
+        <div class="doi-profile-box">
+          <img id="doi-photo" src="" alt="Doi">
+          <h2 id="doi-name-age">Nama, Umur</h2>
+          <div class="doi-tags">
+            <span class="d-tag"><span class="material-icons">work</span> <span id="doi-job">-</span></span>
+            <span class="d-tag"><span class="material-icons">auto_awesome</span> <span id="doi-zodiac">-</span></span>
+            <span class="d-tag" style="width: 100%;"><span class="material-icons">favorite</span> <span id="doi-hobby">-</span></span>
+          </div>
+        </div>
+        <button class="action-btn love-btn" id="btn-gas-chat">Gas Chat Sekarang</button>
+      </div>
+    </div>
+
+    <div id="modal-limit-doi" class="custom-modal-overlay" style="display: none;">
+      <div class="custom-modal-content text-center">
+        <span class="material-icons" style="font-size: 50px; color: #ef4444; margin-bottom: 10px;">hourglass_empty</span>
+        <h3 style="margin-bottom: 10px; color: var(--tg-text);">Kuota Habis Bro!</h3>
+        <p style="font-size: 14px; color: var(--tg-text-muted); margin-bottom: 20px;">Tonton iklan pendek buat dapetin 10 kuota pencarian lagi.</p>
+        <div style="display: flex; gap: 10px;">
+          <button class="action-btn outline close-modal-btn" style="flex:1;">Nanti Aja</button>
+          <button class="action-btn" style="flex:1;" onclick="window.jalankanIklanIsiUlangDoi()">Tonton Iklan</button>
+        </div>
+      </div>
+    </div>
+
+    <CallOverlays />
+  </div>
   
   <aside id="tg-sidebar" class="tg-sidebar">
     <div class="sidebar-header">
@@ -244,98 +339,6 @@ import CallOverlays from '../components/modals/CallOverlays.astro';
       <span class="material-icons">chat</span>
     </button>
   </div>
-
-  <div id="search-modal" class="custom-modal-overlay" style="display: none;">
-    <div class="custom-modal-content">
-      <div class="modal-header">
-        <h3>Mulai Chat Baru</h3>
-        <button class="close-modal-btn"><span class="material-icons">close</span></button>
-      </div>
-      <p class="modal-desc">Masukkan ID unik temanmu (contoh: 0E870)</p>
-      <div class="input-group">
-        <span class="material-icons">tag</span>
-        <input type="text" id="input-new-id" placeholder="Ketik ID teman..." autocomplete="off" />
-      </div>
-      <button class="action-btn" id="btn-find-user">Cari & Chat</button>
-    </div>
-  </div>
-
-  <div id="bio-modal" class="custom-modal-overlay" style="display: none;">
-    <div class="custom-modal-content">
-      <div class="modal-header">
-        <h3>Edit Biodata</h3>
-        <button class="close-modal-btn"><span class="material-icons">close</span></button>
-      </div>
-      <p class="modal-desc">Isi data agar bisa ditemukan di radar Cari Doi</p>
-      <div class="form-grid">
-        <div class="input-group"><input type="number" id="in-umur" placeholder="Umur (contoh: 20)"></div>
-        <div class="input-group">
-          <select id="in-gender">
-            <option value="Pria">Pria</option>
-            <option value="Wanita">Wanita</option>
-          </select>
-        </div>
-        <div class="input-group"><input type="text" id="in-zodiak" placeholder="Zodiak (contoh: Aries)"></div>
-        <div class="input-group"><input type="text" id="in-kerja" placeholder="Pekerjaan (contoh: Mahasiswa)"></div>
-        <div class="input-group" style="grid-column: span 2;"><input type="text" id="in-hobi" placeholder="Hobi (contoh: Musik, Coding)"></div>
-      </div>
-      <button class="action-btn" id="btn-save-bio">Simpan Profil</button>
-    </div>
-  </div>
-
-  <div id="group-modal" class="custom-modal-overlay" style="display: none;">
-    <div class="custom-modal-content">
-      <div class="modal-header">
-        <h3>Buat Grup Baru</h3>
-        <button class="close-modal-btn"><span class="material-icons">close</span></button>
-      </div>
-      <div class="group-photo-upload">
-        <label for="group-photo-input">
-          <img id="group-photo-preview" src="/asets/png/profile.webp" alt="Grup">
-          <div class="upload-badge"><span class="material-icons">camera_alt</span></div>
-        </label>
-        <input type="file" id="group-photo-input" accept="image/*" style="display:none;">
-      </div>
-      <div class="input-group" style="margin-bottom: 16px;">
-        <span class="material-icons">groups</span>
-        <input type="text" id="in-group-name" placeholder="Nama Grup..." autocomplete="off" />
-      </div>
-      <button class="action-btn" id="btn-create-group">Buat Sekarang</button>
-    </div>
-  </div>
-
-  <div id="doi-card-modal" class="custom-modal-overlay" style="display: none;">
-    <div class="custom-modal-content doi-result-card">
-      <div class="modal-header">
-        <h3>Kecocokan Ditemukan! 🎉</h3>
-        <button class="close-modal-btn"><span class="material-icons">close</span></button>
-      </div>
-      <div class="doi-profile-box">
-        <img id="doi-photo" src="" alt="Doi">
-        <h2 id="doi-name-age">Nama, Umur</h2>
-        <div class="doi-tags">
-          <span class="d-tag"><span class="material-icons">work</span> <span id="doi-job">-</span></span>
-          <span class="d-tag"><span class="material-icons">auto_awesome</span> <span id="doi-zodiac">-</span></span>
-          <span class="d-tag" style="width: 100%;"><span class="material-icons">favorite</span> <span id="doi-hobby">-</span></span>
-        </div>
-      </div>
-      <button class="action-btn love-btn" id="btn-gas-chat">Gas Chat Sekarang</button>
-    </div>
-  </div>
-
-  <div id="modal-limit-doi" class="custom-modal-overlay" style="display: none;">
-    <div class="custom-modal-content text-center">
-      <span class="material-icons" style="font-size: 50px; color: #ef4444; margin-bottom: 10px;">hourglass_empty</span>
-      <h3 style="margin-bottom: 10px; color: var(--tg-text);">Kuota Habis Bro!</h3>
-      <p style="font-size: 14px; color: var(--tg-text-muted); margin-bottom: 20px;">Tonton iklan pendek buat dapetin 10 kuota pencarian lagi.</p>
-      <div style="display: flex; gap: 10px;">
-        <button class="action-btn outline close-modal-btn" style="flex:1;">Nanti Aja</button>
-        <button class="action-btn" style="flex:1;" onclick="window.jalankanIklanIsiUlangDoi()">Tonton Iklan</button>
-      </div>
-    </div>
-  </div>
-
-  <CallOverlays />
 
   <div id="toast-container"></div>
 
