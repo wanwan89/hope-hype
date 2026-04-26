@@ -1260,43 +1260,103 @@ window.playVN = function (btn, audioUrl) {
   audio.onended = () => { playerContainer.classList.remove("playing"); btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M8 5v14l11-7z"/></svg>`; window.currentAudio = null; };
 };
 
-// ===== Initial Routing =====
+// ===== Initial Routing & Initialization =====
 const urlParams = new URLSearchParams(window.location.search);
 const fromId = urlParams.get('from');
-
-if (fromId) {
-    // Kalau ada 'from' di URL, set langsung ke room private-nya
-    currentRoomId = `pv_${[currentUser?.id || "", fromId].sort().join('_')}`;
-    window.history.replaceState({}, document.title, window.location.pathname);
-}
-
-document.addEventListener("visibilitychange", async () => { if (!document.hidden) await markRoomAsRead(); });
+const groupId = urlParams.get('group');
+const groupName = urlParams.get('gname');
 
 async function init() {
   try {
+    // 1. Pastikan login dulu sebelum ngapa-ngapain
     const ok = await requireLogin(); 
     if (!ok) return;
 
-    if (fromId) {
+    const headerTitle = document.querySelector(".chat-header h3");
+    const btnCall = document.getElementById('btn-start-call');
+    const btnInvite = document.getElementById('btn-open-invite');
+
+    // 2. CEK URL: APAKAH INI GRUP ATAU CHAT PRIBADI?
+    if (groupId) {
+        // --- MODE GRUP ---
+        window.currentChatMode = 'group';
+        window.activeGroupId = groupId;
+        currentRoomId = `group_${groupId}`;
+        
+        if (btnCall) btnCall.style.display = 'none'; // Sembunyikan tombol telpon
+        if (btnInvite) btnInvite.style.display = 'flex'; // Munculkan tombol undang
+        
+        if (headerTitle) {
+            const customIcon = `
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                   style="vertical-align: middle; cursor: pointer; margin-left: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); transition: transform 0.3s ease;" 
+                   onclick="window.openGroupSettings()" 
+                   title="Pengaturan Grup">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            `;
+            headerTitle.innerHTML = `${escapeHtml(groupName || "Memuat Grup...")} ${customIcon}`;
+        }
+        
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+    } else if (fromId) {
+        // --- MODE CHAT PRIBADI ---
+        window.currentChatMode = 'private';
+        window.activeGroupId = null;
+        
         const ids = [currentUser.id, fromId].sort();
         currentRoomId = `pv_${ids[0]}_${ids[1]}`;
-        const headerTitle = document.querySelector(".chat-header h3");
+        
+        if (btnInvite) btnInvite.style.display = 'none'; // Sembunyikan tombol undang
+        
         if (headerTitle) {
             const profile = await getCachedProfile(fromId);
-            if (profile) headerTitle.innerText = profile.username;
+            if (profile) {
+                headerTitle.innerHTML = `${escapeHtml(profile.username)} <span style="font-size:10px; opacity:0.5;">#${escapeHtml(profile.short_id || "")}</span>`;
+            }
+            
+            // Nyalain tombol telpon buat chat pribadi
+            if (btnCall) {
+                btnCall.style.display = 'flex';
+                btnCall.dataset.targetId = fromId;
+                btnCall.dataset.targetName = profile ? profile.username : "Teman";
+                btnCall.onclick = () => window.startLiveKitCall();
+            }
         }
+        
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } else {
+        // --- MODE GLOBAL CHAT (Default) ---
+        window.currentChatMode = null;
+        window.activeGroupId = null;
+        currentRoomId = "room-1";
+        
+        if (headerTitle) headerTitle.textContent = "HopeTalk Globe";
+        if (btnCall) btnCall.style.display = 'none';
+        if (btnInvite) btnInvite.style.display = 'none';
     }
 
+    // 3. BARU MULAI LOAD DATA SETELAH ROOM DITENTUKAN DI ATAS!
     await initPresence(); 
     initRealtimeMessages(); 
-    await loadMessages(); 
+    await loadMessages(); // Sekarang dia load pesan berdasarkan currentRoomId yang udah bener
     fetchStickers(); 
+    updateHeaderStatus();
     
     scrollToBottom();
-  } catch (err) { console.error("Gagal memulai aplikasi:", err); }
+  } catch (err) { 
+    console.error("Gagal memulai aplikasi:", err); 
+  }
 }
 
+// Jalankan Fungsi
 init();
+
+document.addEventListener("visibilitychange", async () => { 
+  if (!document.hidden) await markRoomAsRead(); 
+});
 
 // Logika Animasi Tombol Mic <-> Send
 const animChatInput = document.getElementById("chat-input");

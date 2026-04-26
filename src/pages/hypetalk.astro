@@ -50,7 +50,6 @@ import * as uiUtils from '../lib/ui-utils.js';
   </aside>
 
   <div class="telegram-wrapper">
-    
     <header class="tg-header">
       <div class="tg-header-top">
         <div class="tg-header-left">
@@ -103,7 +102,6 @@ import * as uiUtils from '../lib/ui-utils.js';
         <button class="close-modal-btn"><span class="material-icons">close</span></button>
       </div>
       <p class="modal-desc">Isi data agar bisa ditemukan di radar Cari Doi</p>
-      
       <div class="form-grid">
         <div class="input-group"><input type="number" id="in-umur" placeholder="Umur (contoh: 20)"></div>
         <div class="input-group">
@@ -116,7 +114,6 @@ import * as uiUtils from '../lib/ui-utils.js';
         <div class="input-group"><input type="text" id="in-kerja" placeholder="Pekerjaan (contoh: Mahasiswa)"></div>
         <div class="input-group" style="grid-column: span 2;"><input type="text" id="in-hobi" placeholder="Hobi (contoh: Musik, Coding)"></div>
       </div>
-      
       <button class="action-btn" id="btn-save-bio">Simpan Profil</button>
     </div>
   </div>
@@ -205,7 +202,6 @@ import * as uiUtils from '../lib/ui-utils.js';
     body { background: #e5e7eb; display: flex; justify-content: center; transition: background 0.3s ease; }
     html.dark body { background: #000000; }
 
-    /* INBOX WRAPPER */
     .telegram-wrapper { 
       position: fixed; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; 
       display: flex; flex-direction: column; background: var(--tg-bg); box-shadow: 0 0 20px rgba(0,0,0,0.05); 
@@ -213,7 +209,6 @@ import * as uiUtils from '../lib/ui-utils.js';
     }
     html.dark .telegram-wrapper { box-shadow: none; border-left: 1px solid var(--tg-border); border-right: 1px solid var(--tg-border); }
 
-    /* HEADER */
     .tg-header { background: var(--tg-bg); z-index: 10; transition: background 0.3s ease; padding-top: env(safe-area-inset-top); }
     .tg-header-top { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
     .tg-header-left { display: flex; align-items: center; gap: 16px; }
@@ -229,7 +224,6 @@ import * as uiUtils from '../lib/ui-utils.js';
     .tg-search-box input { flex: 1; border: none; background: transparent; outline: none; font-size: 15px; color: var(--tg-text); }
     .tg-search-box input::placeholder { color: var(--tg-text-muted); }
 
-    /* LIST CHAT */
     .tg-chat-list { flex: 1; overflow-y: auto; padding-bottom: 100px; }
     .tg-chat-list::-webkit-scrollbar { width: 0; } 
     .tg-chat-item { display: flex; align-items: center; gap: 14px; padding: 10px 16px; cursor: pointer; user-select: none; transition: background 0.2s; position: relative; animation: fadeIn 0.3s ease forwards; }
@@ -246,10 +240,8 @@ import * as uiUtils from '../lib/ui-utils.js';
     .tg-chat-bottom { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
     .tg-preview { font-size: 14px; color: var(--tg-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; display: flex; align-items: center; gap: 4px; }
     .tg-chat-item.unread .tg-preview { color: var(--tg-text); font-weight: 500; }
-    .check-icon { font-size: 16px; color: #10b981; }
     .tg-unread-badge { background: var(--tg-primary); color: white; font-size: 11px; font-weight: 700; min-width: 22px; height: 22px; border-radius: 99px; display: flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0; }
 
-    /* FAB */
     .tg-fab { 
       position: absolute; bottom: max(30px, env(safe-area-inset-bottom) + 30px); right: 20px; 
       width: 56px; height: 56px; border-radius: 50%; background: var(--tg-primary); border: none; color: white; 
@@ -259,7 +251,6 @@ import * as uiUtils from '../lib/ui-utils.js';
     .tg-fab:active { transform: scale(0.9); }
     .tg-fab.hidden { display: none !important; }
 
-    /* SIDEBAR DRAWER */
     .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 100; display: none; animation: fadeIn 0.2s ease; }
     .tg-sidebar { 
       position: fixed; top: 0; bottom: 0; left: 50%; width: 100%; max-width: 320px; background: var(--tg-bg); 
@@ -289,7 +280,6 @@ import * as uiUtils from '../lib/ui-utils.js';
     .limit-badge { background: #fee2e2; color: #ef4444; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 800; }
     html.dark .limit-badge { background: rgba(239,68,68,0.15); }
 
-    /* MODALS & FORMS */
     .custom-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 200; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s ease; }
     .custom-modal-content { background: var(--tg-bg); width: 100%; max-width: 480px; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 24px; padding-bottom: max(24px, env(safe-area-inset-bottom) + 24px); animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -313,7 +303,6 @@ import * as uiUtils from '../lib/ui-utils.js';
     .upload-badge { position: absolute; bottom: 0; right: 0; background: var(--tg-primary); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--tg-bg); }
     .upload-badge .material-icons { font-size: 14px; }
 
-    /* DOI CARD */
     .doi-result-card { align-items: center; text-align: center; }
     .doi-profile-box { margin-bottom: 20px; width: 100%; }
     .doi-profile-box img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid var(--tg-bg-secondary); margin-bottom: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
@@ -322,7 +311,6 @@ import * as uiUtils from '../lib/ui-utils.js';
     .d-tag { background: var(--tg-bg-secondary); color: var(--tg-text); font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 4px; }
     .d-tag .material-icons { font-size: 14px; color: var(--tg-text-muted); }
 
-    /* RADAR ANIMATION */
     .doi-search-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
     .radar-container { position: relative; width: 150px; height: 150px; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; }
     .radar-wave { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #ec4899; animation: radarPulse 2s infinite cubic-bezier(0.25, 0.8, 0.25, 1); }
@@ -332,7 +320,6 @@ import * as uiUtils from '../lib/ui-utils.js';
     .search-subtitle-glow { color: #aaa; font-size: 14px; }
     .floating-radar-user { position: absolute; color: white; background: #ec4899; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px #ec4899; animation: fadeIn 0.3s ease; }
 
-    /* TOAST */
     #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; align-items: center; pointer-events: none; }
     .toast-msg { background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 24px; font-size: 13px; font-weight: 500; backdrop-filter: blur(5px); animation: slideUp 0.3s ease; }
     .loading-state { text-align: center; padding: 60px 20px; color: var(--tg-text-muted); display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -343,14 +330,15 @@ import * as uiUtils from '../lib/ui-utils.js';
 
   <script>
     import { supabase } from '../lib/supabase.js';
-    import { getRoleBadge } from '../lib/ui-utils.js';
+    import * as uiUtils from '../lib/ui-utils.js';
 
     document.addEventListener("DOMContentLoaded", async () => {
       const chatList = document.getElementById("chatList");
       let currentUser = null;
       let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
 
-      // Toast Notification function
+      let getBadgeFunc = uiUtils.getRoleBadge || uiUtils.getBadge || uiUtils.default?.getRoleBadge || uiUtils.default?.getBadge;
+
       window.showToast = (msg) => {
         const container = document.getElementById("toast-container");
         const toast = document.createElement("div");
@@ -359,9 +347,6 @@ import * as uiUtils from '../lib/ui-utils.js';
         setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
       };
 
-      // =====================================
-      // 1. LOAD USER PROFILE & SIDEBAR
-      // =====================================
       async function initUser() {
         const { data: { user }, error } = await supabase.auth.getUser();
         if (error || !user) {
@@ -375,19 +360,16 @@ import * as uiUtils from '../lib/ui-utils.js';
           document.getElementById("side-avatar").src = profile.avatar_url || "/asets/png/profile.webp";
           document.getElementById("side-id").innerText = "#" + (profile.short_id || "N/A");
           
-          document.getElementById("in-umur").value = profile.umur || "";
-          document.getElementById("in-gender").value = profile.gender || "Pria";
-          document.getElementById("in-zodiak").value = profile.zodiak || "";
-          document.getElementById("in-kerja").value = profile.pekerjaan || "";
-          document.getElementById("in-hobi").value = profile.hobi || "";
+          if (document.getElementById("in-umur")) document.getElementById("in-umur").value = profile.umur || "";
+          if (document.getElementById("in-gender")) document.getElementById("in-gender").value = profile.gender || "Pria";
+          if (document.getElementById("in-zodiak")) document.getElementById("in-zodiak").value = profile.zodiak || "";
+          if (document.getElementById("in-kerja")) document.getElementById("in-kerja").value = profile.pekerjaan || "";
+          if (document.getElementById("in-hobi")) document.getElementById("in-hobi").value = profile.hobi || "";
         }
         updateLimitUI();
         loadAllChats();
       }
 
-      // =====================================
-      // 2. LOGIKA SEMUA MODAL & OVERLAY
-      // =====================================
       const modals = document.querySelectorAll('.custom-modal-overlay');
       const closeBtns = document.querySelectorAll('.close-modal-btn');
 
@@ -421,9 +403,6 @@ import * as uiUtils from '../lib/ui-utils.js';
         btn.addEventListener('click', () => sidebarOverlay.onclick());
       });
 
-      // =====================================
-      // 3. FITUR: CARI TEMAN BY ID
-      // =====================================
       document.getElementById("btn-new-chat").onclick = () => openModal("search-modal");
       document.getElementById("btn-find-user").onclick = async () => {
         const input = document.getElementById("input-new-id").value.trim().toUpperCase().replace("#", "");
@@ -438,9 +417,6 @@ import * as uiUtils from '../lib/ui-utils.js';
         finally { document.getElementById("btn-find-user").innerText = "Cari & Chat"; }
       };
 
-      // =====================================
-      // 4. FITUR: EDIT BIODATA
-      // =====================================
       document.getElementById("btn-open-bio").onclick = () => openModal("bio-modal");
       document.getElementById("btn-save-bio").onclick = async () => {
         const btn = document.getElementById("btn-save-bio");
@@ -461,9 +437,6 @@ import * as uiUtils from '../lib/ui-utils.js';
         finally { btn.innerText = "Simpan Profil"; btn.disabled = false; }
       };
 
-      // =====================================
-      // 5. FITUR: BUAT GRUP BARU
-      // =====================================
       document.getElementById("btn-open-group-modal").onclick = () => openModal("group-modal");
       let selectedGroupFile = null;
       document.getElementById("group-photo-input").onchange = (e) => {
@@ -490,14 +463,11 @@ import * as uiUtils from '../lib/ui-utils.js';
           await supabase.from('group_members').insert([{ group_id: group.id, user_id: currentUser.id }]);
           window.showToast("Grup berhasil dibuat!");
           closeModal("group-modal");
-          loadAllChats(); // Refresh list chat
+          loadAllChats(); 
         } catch (err) { window.showToast("Gagal membuat grup."); }
         finally { btn.innerText = "Buat Sekarang"; btn.disabled = false; }
       };
 
-      // =====================================
-      // 6. FITUR: GACHA/CARI DOI 
-      // =====================================
       function updateLimitUI() {
         document.getElementById("limit-doi-text").innerText = sisaLimitDoi;
       }
@@ -558,9 +528,6 @@ import * as uiUtils from '../lib/ui-utils.js';
         }, 15000); 
       };
 
-      // =====================================
-      // 7. LOGIKA LOAD DAFTAR CHAT
-      // =====================================
       function formatTimeTelegram(dateString) {
         const dateObj = new Date(dateString);
         const isToday = dateObj.toDateString() === new Date().toDateString();
@@ -609,11 +576,17 @@ import * as uiUtils from '../lib/ui-utils.js';
           
           finalChatList.forEach(chat => {
             const div = document.createElement("div"); div.className = `tg-chat-item ${chat.unread > 0 ? 'unread' : ''}`;
-            div.onclick = () => window.location.href = chat.type === 'global' ? `/chat` : `/chat?from=${chat.id}`;
-            let avatarHtml = chat.type === 'global' ? `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>` : (chat.type === 'group' ? (chat.avatar ? `<img src="${chat.avatar}" class="tg-avatar">` : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`) : `<img src="${chat.avatar}" class="tg-avatar" onerror="this.src='/asets/png/profile.webp'">`);
             
-            // 🔥 MURNI MENGGUNAKAN getRoleBadge DARI ui-utils.js 🔥
-            let roleBadge = getRoleBadge(chat.role);
+            // 🔥 PERUBAHAN ROUTING BUAT GRUP 🔥
+            div.onclick = () => {
+              if (chat.type === 'global') window.location.href = `/chat`;
+              else if (chat.type === 'group') window.location.href = `/chat?group=${chat.id}&gname=${encodeURIComponent(chat.name)}`;
+              else window.location.href = `/chat?from=${chat.id}`;
+            };
+
+            let avatarHtml = chat.type === 'global' ? `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>` : (chat.type === 'group' ? (chat.avatar ? `<img src="${chat.avatar}" class="tg-avatar">` : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`) : `<img src="${chat.avatar}" class="tg-avatar">`);
+            
+            let roleBadge = getBadgeFunc ? getBadgeFunc(chat.role) : '';
 
             div.innerHTML = `${avatarHtml}<div class="tg-chat-info"><div class="tg-chat-top"><h4 class="tg-name">${chat.name.replace(/</g, "&lt;")} ${roleBadge}</h4><span class="tg-time">${chat.time}</span></div><div class="tg-chat-bottom"><p class="tg-preview">${chat.preview}</p>${chat.unread > 0 ? `<span class="tg-unread-badge">${chat.unread>99?'99+':chat.unread}</span>` : ''}</div></div>`;
             chatList.appendChild(div);
