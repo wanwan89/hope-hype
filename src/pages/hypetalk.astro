@@ -1,5 +1,6 @@
 ---
 // src/pages/hypetalk.astro
+import * as uiUtils from '../lib/ui-utils.js';
 ---
 
 <!DOCTYPE html>
@@ -240,8 +241,6 @@
     .tg-chat-item:last-child .tg-chat-info { border-bottom: none; }
     .tg-chat-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
     .tg-name { font-size: 16px; font-weight: 600; color: var(--tg-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
-    .verified-badge { color: var(--tg-primary); display: flex; align-items: center; }
-    .verified-badge .material-icons { font-size: 15px; }
     .tg-time { font-size: 12px; font-weight: 500; color: var(--tg-text-muted); flex-shrink: 0; }
     .tg-chat-item.unread .tg-time { color: var(--tg-primary); font-weight: 600; }
     .tg-chat-bottom { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -343,31 +342,10 @@
   </style>
 
   <script>
+    import { supabase } from '../lib/supabase.js';
+    import { getRoleBadge } from '../lib/ui-utils.js';
+
     document.addEventListener("DOMContentLoaded", async () => {
-      const { supabase } = await import('../lib/supabase.js');
-      
-      // 🔥 BENTENG PERTAHANAN BADGE DARI UI-UTILS 🔥
-      let getBadgeFunc = null;
-      try {
-        const utils = await import('../lib/ui-utils.js');
-        getBadgeFunc = utils.getRoleBadge || utils.getBadge || utils.default?.getRoleBadge || utils.default?.getBadge || null;
-      } catch (err) {
-        console.warn("ui-utils.js tidak ditemukan, memakai badge default lokal.");
-      }
-
-      // Kalau ui-utils gagal ngasih fungsi, kita pake fallback lokal yang dijamin aman
-      if (!getBadgeFunc) {
-        getBadgeFunc = function(role) {
-          if (!role) return "";
-          role = String(role).toLowerCase().trim();
-          if (role === "admin") return `<span class="badge" style="background:#ef4444; color:white; font-size:9px; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:800;">ADMIN</span>`;
-          if (role === "verified") return `<span class="verified-badge" style="margin-left:4px; color:var(--tg-primary);"><span class="material-icons" style="font-size:15px;">verified</span></span>`;
-          const crownBadges = { crown1: "/asets/png/crown1.png", crown2: "/asets/png/crown2.png", crown3: "/asets/png/crown3.png" };
-          if (crownBadges[role]) return `<img src="${crownBadges[role]}" alt="${role}" style="width:16px;height:16px;margin-left:4px;vertical-align:middle;object-fit:contain;display:inline-block;" onerror="this.style.display='none';">`;
-          return "";
-        };
-      }
-
       const chatList = document.getElementById("chatList");
       let currentUser = null;
       let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
@@ -397,7 +375,6 @@
           document.getElementById("side-avatar").src = profile.avatar_url || "/asets/png/profile.webp";
           document.getElementById("side-id").innerText = "#" + (profile.short_id || "N/A");
           
-          // Isi input form bio kalau ada
           document.getElementById("in-umur").value = profile.umur || "";
           document.getElementById("in-gender").value = profile.gender || "Pria";
           document.getElementById("in-zodiak").value = profile.zodiak || "";
@@ -430,7 +407,6 @@
         m.onclick = (e) => { if (e.target === m) closeModal(m.id); }
       });
 
-      // SIDEBAR DRAWER
       const sidebarOverlay = document.getElementById("sidebar-overlay");
       const sidebar = document.getElementById("tg-sidebar");
       document.getElementById("open-sidebar-btn").onclick = () => {
@@ -441,7 +417,6 @@
         sidebar.classList.remove("open");
         setTimeout(() => sidebarOverlay.style.display = "none", 300);
       };
-      // Tutup sidebar tiap ngeklik menu
       document.querySelectorAll('.menu-item, .btn-edit-bio').forEach(btn => {
         btn.addEventListener('click', () => sidebarOverlay.onclick());
       });
@@ -537,7 +512,6 @@
 
         sisaLimitDoi--; localStorage.setItem('doi_limit', sisaLimitDoi.toString()); updateLimitUI();
 
-        // Tampilkan overlay animasi radar
         const overlay = document.createElement("div"); 
         overlay.className = "doi-search-overlay"; 
         overlay.id = "active-search-overlay";
@@ -558,7 +532,6 @@
             
             const doi = users[Math.floor(Math.random() * users.length)];
             
-            // Tampilkan Result Card
             document.getElementById("doi-photo").src = doi.avatar_url || `https://ui-avatars.com/api/?name=${doi.username}`;
             document.getElementById("doi-name-age").innerText = `${doi.username}, ${doi.umur || "?"}`;
             document.getElementById("doi-zodiac").innerText = doi.zodiac || "Rahasia";
@@ -582,7 +555,7 @@
         setTimeout(() => {
           sisaLimitDoi = 10; localStorage.setItem('doi_limit', '10'); updateLimitUI();
           window.showToast("Kuota berhasil diisi ulang!");
-        }, 15000); // Asumsi tonton 15 detik
+        }, 15000); 
       };
 
       // =====================================
@@ -637,10 +610,10 @@
           finalChatList.forEach(chat => {
             const div = document.createElement("div"); div.className = `tg-chat-item ${chat.unread > 0 ? 'unread' : ''}`;
             div.onclick = () => window.location.href = chat.type === 'global' ? `/chat` : `/chat?from=${chat.id}`;
-            let avatarHtml = chat.type === 'global' ? `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>` : (chat.type === 'group' ? (chat.avatar ? `<img src="${chat.avatar}" class="tg-avatar">` : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`) : `<img src="${chat.avatar}" class="tg-avatar">`);
+            let avatarHtml = chat.type === 'global' ? `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>` : (chat.type === 'group' ? (chat.avatar ? `<img src="${chat.avatar}" class="tg-avatar">` : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`) : `<img src="${chat.avatar}" class="tg-avatar" onerror="this.src='/asets/png/profile.webp'">`);
             
-            // 🔥 PERUBAHAN: MENGGUNAKAN FUNGSI BADGE HYBRID 🔥
-            let roleBadge = getBadgeFunc(chat.role);
+            // 🔥 MURNI MENGGUNAKAN getRoleBadge DARI ui-utils.js 🔥
+            let roleBadge = getRoleBadge(chat.role);
 
             div.innerHTML = `${avatarHtml}<div class="tg-chat-info"><div class="tg-chat-top"><h4 class="tg-name">${chat.name.replace(/</g, "&lt;")} ${roleBadge}</h4><span class="tg-time">${chat.time}</span></div><div class="tg-chat-bottom"><p class="tg-preview">${chat.preview}</p>${chat.unread > 0 ? `<span class="tg-unread-badge">${chat.unread>99?'99+':chat.unread}</span>` : ''}</div></div>`;
             chatList.appendChild(div);
