@@ -1421,3 +1421,245 @@ async function markRoomAsRead() {
     console.error("Gagal menandai pesan terbaca:", err);
   }
 }
+// ==========================================
+// LOGIKA GRUP (UNDANG & PENGATURAN) 
+// ==========================================
+
+const btnOpenInvite = document.getElementById('btn-open-invite');
+if (btnOpenInvite) {
+  btnOpenInvite.onclick = (e) => {
+    e.preventDefault(); e.stopPropagation(); 
+    const modal = document.getElementById('invite-modal');
+    if (modal) { modal.style.display = 'flex'; if (navigator.vibrate) navigator.vibrate(40); }
+  };
+}
+
+const btnInviteNow = document.getElementById('btn-invite-now');
+if (btnInviteNow) {
+  btnInviteNow.onclick = async () => {
+    let input = document.getElementById('in-invite-search').value.trim();
+    input = input.replace('@', '').replace('#', ''); 
+
+    if (!input) return showToast("Isi ID atau Username dulu!");
+    if (!window.activeGroupId) return showToast("Grup belum terpilih!");
+
+    btnInviteNow.innerText = "Mencari...";
+    btnInviteNow.disabled = true;
+
+    try {
+      const { data: targetUser, error: findError } = await supabase
+        .from('profiles').select('id, username')
+        .or(`short_id.eq.${input.toUpperCase()},username.ilike.${input}`).maybeSingle();
+
+      if (findError || !targetUser) throw new Error("User tidak ditemukan!");
+
+      const { data: isMember } = await supabase
+        .from('group_members').select('id')
+        .eq('group_id', window.activeGroupId).eq('user_id', targetUser.id).maybeSingle();
+
+      if (isMember) throw new Error("Dia sudah ada di grup ini!");
+
+      const { error: insertError } = await supabase
+        .from('group_members').insert([{ group_id: window.activeGroupId, user_id: targetUser.id }]);
+      if (insertError) throw insertError;
+
+      const systemMsg = `${myUsername} mengundang ${targetUser.username}`;
+      await supabase.from('messages').insert([{
+          room_id: `group_${window.activeGroupId}`,
+          message: systemMsg,
+          user_id: currentUser.id,
+          is_system: true
+      }]);
+
+      showToast(`Berhasil! ${targetUser.username} bergabung!`);
+      const modalInvite = document.getElementById('invite-modal');
+      if(modalInvite) modalInvite.style.display = 'none';
+      document.getElementById('in-invite-search').value = '';
+
+    } catch (err) { showToast(err.message); } 
+    finally { btnInviteNow.innerText = "Tambah Member"; btnInviteNow.disabled = false; }
+  };
+}
+
+let selectedEditGroupFile = null;
+const editGroupPhotoInput = document.getElementById('edit-group-photo-input');
+if (editGroupPhotoInput) {
+    editGroupPhotoInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            selectedEditGroupFile = file; 
+            document.getElementById('edit-group-photo-preview').src = URL.createObjectURL(file); 
+        }
+    };
+}
+
+window.openGroupSettings = async () => {
+    if (!window.activeGroupId || window.currentChatMode !== 'group') return;
+    
+    const modal = document.getElementById('group-settings-modal');
+    if(modal) modal.style.display = 'flex';
+
+    const container = document.getElementById('member-list-container');
+    if(container) container.innerHTML = "<div style='font-size:12px; color:#666; text-align:center;'>Memuat anggota...</div>";
+
+    try {
+        const { data: group, error: groupErr } = await supabase
+            .from('groups').select('*').eq('id', window.activeGroupId).single();
+            
+        if (groupErr) throw groupErr;
+        
+        const isAdmin = group && group.created_by === currentUser.id;
+        
+        const editNameInput = document.getElementById('edit-group-name');
+        if(editNameInput && group) editNameInput.value = group.name || '';
+
+        const editPhotoPreview = document.getElementById('edit-group-photo-preview');
+        if (editPhotoPreview && group) editPhotoPreview.src = group.photo_url || 'asets/png/profile.webp';
+        
+        selectedEditGroupFile = null;
+
+        const { data: members, error: membersErr } = await supabase
+            .from('group_members')
+            .select(`user_id, profiles(username, avatar_url)`)
+            .eq('group_id', window.activeGroupId);
+
+        if (membersErr) throw membersErr;
+
+        if(container) {
+            container.innerHTML = "";
+            if (members && members.length > 0) {
+                members.forEach(m => {
+                    const profileName = m.profiles?.username || "User";
+                    const profileAvatar = m.profiles?.avatar_url || 'asets/png/profile.webp';
+                    const isMe = m.user_id === currentUser.id;
+                    
+                    const kickButton = (isAdmin && !isMe) 
+                        ? `<button onclick="window.kickMember('${m.user_id}', '${profileName}')" style="margin-left:auto; background:rgba(239, 68, 68, 0.1); color:#ef4444; border:none; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer;">Keluarkan</button>` 
+                        : '';
+
+                    let roleLabel = '';
+                    if (isMe && isAdmin) roleLabel = '<span style="font-size:10px; color:#10b981; font-weight:600; background:rgba(16, 185, 129, 0.1); padding:2px 6px; border-radius:4px;">Admin (Kamu)</span>';
+                    else if (isMe) roleLabel = '<span style="font-size:10px; color:#3a7bd5; font-weight:600;">(Kamu)</span>';
+                    else if (group.created_by === m.user_id) roleLabel = '<span style="font-size:10px; color:#10b981; font-weight:600; background:rgba(16, 185, 129, 0.1); padding:2px 6px; border-radius:4px;">Admin</span>';
+
+                    const div = document.createElement('div');
+                    div.style = "display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(0,0,0,0.05);";
+                    div.innerHTML = `
+                        <img src="${profileAvatar}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border: 1px solid rgba(0,0,0,0.1);">
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                          <span style="font-size:13px; font-weight:600; color: inherit;">${profileName}</span>
+                          ${roleLabel}
+                        </div>
+                        ${kickButton}
+                    `;
+                    container.appendChild(div);
+                });
+            } else {
+                container.innerHTML = "<div style='font-size:12px; color:#999; text-align:center;'>Belum ada anggota.</div>";
+            }
+        }
+    } catch (err) {
+        if(container) container.innerHTML = "<div style='font-size:12px; color:#ff4757; text-align:center;'>Gagal memuat data.</div>";
+    }
+};
+
+window.updateGroupInfo = async () => {
+    const newName = document.getElementById('edit-group-name')?.value.trim();
+    const btn = document.getElementById('btn-save-group-info');
+    
+    if (!newName && !selectedEditGroupFile) {
+        return showToast("Tidak ada yang diubah");
+    }
+
+    if(btn) { btn.innerText = "Mengunggah..."; btn.disabled = true; }
+
+    try {
+        let finalPhotoUrl = null;
+
+        if (selectedEditGroupFile) {
+            const fd = new FormData();
+            fd.append("file", selectedEditGroupFile);
+            fd.append("upload_preset", "post_hope"); 
+
+            const res = await fetch("https://api.cloudinary.com/v1_1/dhhmkb8kl/image/upload", { 
+                method: "POST", body: fd 
+            });
+            const cData = await res.json();
+            
+            if (cData.secure_url) {
+                finalPhotoUrl = cData.secure_url;
+            } else {
+                throw new Error("Gagal mengunggah foto ke server");
+            }
+        }
+
+        const updateData = {};
+        if (newName) updateData.name = newName;
+        if (finalPhotoUrl) updateData.photo_url = finalPhotoUrl;
+
+        const { error } = await supabase.from('groups').update(updateData).eq('id', window.activeGroupId);
+        if(error) throw error;
+        
+        showToast("Info grup berhasil diperbarui!");
+        
+        if (newName) {
+            const headerTitle = document.querySelector('.chat-header h3');
+            if(headerTitle) {
+                const customIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; cursor: pointer; margin-left: 6px;" onclick="window.openGroupSettings()"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
+                headerTitle.innerHTML = `${escapeHtml(newName)} ${customIcon}`;
+            }
+        }
+        
+        selectedEditGroupFile = null;
+        const modal = document.getElementById('group-settings-modal');
+        if(modal) modal.style.display = 'none';
+
+    } catch(err) { 
+        showToast("Gagal: " + err.message); 
+    } finally { 
+        if(btn) { btn.innerText = "Simpan Perubahan"; btn.disabled = false; } 
+    }
+};
+
+window.leaveGroup = async () => {
+    if(!confirm("Yakin mau keluar dari grup ini?")) return;
+    try {
+        const { error } = await supabase.from('group_members').delete()
+            .eq('group_id', window.activeGroupId).eq('user_id', currentUser.id);
+        if (error) throw error;
+        
+        await supabase.from('messages').insert([{
+            room_id: `group_${window.activeGroupId}`,
+            message: `${myUsername} telah meninggalkan grup`,
+            user_id: currentUser.id,
+            is_system: true
+        }]);
+
+        showToast("Kamu telah keluar dari grup");
+        
+        const modal = document.getElementById('group-settings-modal');
+        if(modal) modal.style.display = 'none';
+        
+        // Langsung lempar balik ke halaman inbox kalau udah keluar
+        window.location.href = '/hypetalk';
+    } catch(err) { showToast("Gagal keluar dari grup"); }
+};
+
+window.kickMember = async (targetId, targetName) => {
+    if(!confirm(`Keluarkan ${targetName} dari grup?`)) return;
+    try {
+        const { error } = await supabase.from('group_members').delete()
+            .eq('group_id', window.activeGroupId).eq('user_id', targetId);
+        if (error) throw error;
+        
+        showToast(`${targetName} dikeluarkan`);
+        window.openGroupSettings(); // Refresh list member
+        
+        await supabase.from('messages').insert([{
+            room_id: `group_${window.activeGroupId}`,
+            message: `${targetName} telah dikeluarkan oleh admin`,
+            user_id: currentUser.id,
+            is_system: true
+        }]);
+    } catch(err) { showToast("Gagal mengeluarkan member"); }
+};
