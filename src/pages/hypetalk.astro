@@ -1,6 +1,7 @@
 ---
 // src/pages/hypetalk.astro
 import * as uiUtils from '../lib/ui-utils.js';
+import CallOverlays from '../components/modals/CallOverlays.astro'; // 🔥 FIX 1: Import Overlay Telpon
 ---
 
 <!DOCTYPE html>
@@ -20,6 +21,8 @@ import * as uiUtils from '../lib/ui-utils.js';
     if (savedTheme === "dark") document.documentElement.classList.add("dark");
     else document.documentElement.classList.remove("dark");
   </script>
+  
+  <script is:inline src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 </head>
 <body>
 
@@ -166,6 +169,8 @@ import * as uiUtils from '../lib/ui-utils.js';
     </div>
   </div>
 
+  <CallOverlays />
+
   <div id="toast-container"></div>
 
   <style is:global>
@@ -173,6 +178,7 @@ import * as uiUtils from '../lib/ui-utils.js';
     @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes radarPulse { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
+    @keyframes badgeBounce { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 
     :root {
       --tg-bg: #ffffff;
@@ -195,7 +201,6 @@ import * as uiUtils from '../lib/ui-utils.js';
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
-    /* 🔥 FIX: Anti kotak biru pas diklik di HP 🔥 */
     html, body, button, a, div { 
       -webkit-tap-highlight-color: transparent !important; 
       outline: none !important;
@@ -217,8 +222,6 @@ import * as uiUtils from '../lib/ui-utils.js';
     .tg-header-left { display: flex; align-items: center; gap: 16px; }
     .tg-header-left h2 { font-size: 20px; font-weight: 700; color: var(--tg-text); transition: color 0.3s ease; }
     .icon-btn { background: none; border: none; color: var(--tg-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; transition: all 0.2s ease; }
-    
-    /* Tombol transparan pas diklik biar ga biru */
     .icon-btn:active { background: transparent; transform: scale(0.95); }
 
     .tg-search-container { padding: 4px 16px 12px; }
@@ -245,7 +248,8 @@ import * as uiUtils from '../lib/ui-utils.js';
     .tg-chat-bottom { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
     .tg-preview { font-size: 14px; color: var(--tg-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; display: flex; align-items: center; gap: 4px; }
     .tg-chat-item.unread .tg-preview { color: var(--tg-text); font-weight: 500; }
-    .tg-unread-badge { background: var(--tg-primary); color: white; font-size: 11px; font-weight: 700; min-width: 22px; height: 22px; border-radius: 99px; display: flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0; }
+    .tg-unread-badge { background: var(--tg-primary); color: white; font-size: 11px; font-weight: 700; min-width: 22px; height: 22px; border-radius: 99px; display: flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0; transition: all 0.3s ease; }
+    .tg-unread-badge.bump { animation: badgeBounce 0.4s ease; }
 
     .tg-fab { 
       position: absolute; bottom: max(30px, env(safe-area-inset-bottom) + 30px); right: 20px; 
@@ -275,11 +279,8 @@ import * as uiUtils from '../lib/ui-utils.js';
     .btn-edit-bio { background: var(--tg-primary); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 5px; }
     
     .sidebar-menu { display: flex; flex-direction: column; padding: 10px 0; overflow-y: auto; }
-    
-    /* 🔥 FIX: Menu Item Bebas Biru & Efek Klik Dimatikan 🔥 */
     .menu-item { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: transparent; border: none; font-size: 15px; font-weight: 600; color: var(--tg-text); cursor: pointer; text-align: left; outline: none; }
     .menu-item:active { background: transparent; transform: scale(0.98); }
-    
     .menu-item .material-icons { color: var(--tg-text-muted); }
     .menu-divider { height: 1px; background: var(--tg-border); margin: 8px 0; }
     
@@ -338,20 +339,16 @@ import * as uiUtils from '../lib/ui-utils.js';
 
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
-      // 1. Import Supabase
       const { supabase } = await import('../lib/supabase.js');
       
-      // 2. Import Fungsi Badge (Pakai sistem aman/Fallback)
       let getBadgeFunc = null;
       try {
         const utils = await import('../lib/ui-utils.js');
-        // Cari fungsi yang tersedia
         getBadgeFunc = utils.getRoleBadge || utils.getBadge || utils.default?.getRoleBadge || utils.default?.getBadge;
       } catch (err) {
         console.warn("Gagal import ui-utils, menggunakan fallback lokal.");
       }
 
-      // Jika gagal import, pakai ini sebagai cadangan anti-error!
       if (!getBadgeFunc || typeof getBadgeFunc !== 'function') {
         getBadgeFunc = function(role) {
           if (!role) return "";
@@ -367,6 +364,193 @@ import * as uiUtils from '../lib/ui-utils.js';
       const chatList = document.getElementById("chatList");
       let currentUser = null;
       let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
+      let inboxRealtimeChannel = null;
+
+      // 🔥 KODE UNTUK NELPON DI HALAMAN INBOX 🔥
+      const ringtoneSound = new Audio("/asets/sound/call.wav");
+      ringtoneSound.loop = true;
+      let callRoom = null;
+      let callSignalData = null;
+      let callRingingTimeout = null; 
+      let callTalkTimer = null;      
+      let callSeconds = 0;
+
+      window.myUsernameLocal = "User"; // Buat dikirim ke LiveKit
+
+      function stopRingtone() {
+          ringtoneSound.pause();
+          ringtoneSound.currentTime = 0;
+      }
+
+      function startCallTimer() {
+          const statusEl = document.getElementById('call-status');
+          callSeconds = 0;
+          if (callTalkTimer) clearInterval(callTalkTimer);
+          callTalkTimer = setInterval(() => {
+              callSeconds++;
+              const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+              const s = String(callSeconds % 60).padStart(2, '0');
+              if (statusEl) statusEl.innerText = `${m}:${s}`;
+          }, 1000);
+      }
+
+      function stopCallTimer() {
+          if (callTalkTimer) {
+              clearInterval(callTalkTimer);
+              callTalkTimer = null;
+          }
+      }
+
+      window.endCall = (isSilent = false) => {
+          stopRingtone(); 
+          clearTimeout(callRingingTimeout);
+          stopCallTimer();
+
+          const avatarEl = document.getElementById('call-avatar');
+          const statusEl = document.getElementById('call-status');
+          if (avatarEl) avatarEl.classList.remove('anim-calling-avatar');
+          if (statusEl) {
+              statusEl.classList.remove('anim-calling-text');
+              statusEl.style.color = ""; 
+          }
+
+          const callOverlay = document.getElementById('call-overlay');
+          const incomingOverlay = document.getElementById('incoming-call-overlay');
+          let isOverlayOpen = (callOverlay && callOverlay.style.display !== 'none') || 
+                              (incomingOverlay && incomingOverlay.style.display !== 'none');
+
+          if (callRoom) {
+              callRoom.disconnect();
+              callRoom = null;
+          }
+          
+          if (callOverlay) callOverlay.style.display = 'none';
+          if (incomingOverlay) incomingOverlay.style.display = 'none';
+          
+          if (isOverlayOpen && !isSilent) {
+              if (callSeconds > 0) {
+                  const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+                  const s = String(callSeconds % 60).padStart(2, '0');
+                  window.showToast(`Panggilan berakhir (${m}:${s})`);
+              } else {
+                  window.showToast("Panggilan berakhir");
+              }
+          }
+      };
+
+      window.showIncomingCall = async function(msgData) {
+          callSignalData = msgData; 
+          const overlay = document.getElementById('incoming-call-overlay');
+          const nameEl = document.getElementById('incoming-name');
+          const avatarEl = document.getElementById('incoming-avatar'); 
+          
+          if (overlay) overlay.style.display = 'flex';
+          if (nameEl) nameEl.innerText = "Memuat..."; 
+
+          if (msgData.user_id) {
+              const { data: profile } = await supabase.from('profiles').select('username, avatar_url').eq('id', msgData.user_id).single();
+              if (profile) {
+                  if (avatarEl) avatarEl.src = profile.avatar_url || '/asets/png/profile.webp';
+                  if (nameEl) nameEl.innerText = profile.username || "Teman"; 
+              }
+          }
+          ringtoneSound.play().catch(e => console.log("Browser blokir autoplay:", e));
+      };
+
+      window.answerCall = async () => {
+          stopRingtone(); 
+          const incomingOverlay = document.getElementById('incoming-call-overlay');
+          if (incomingOverlay) incomingOverlay.style.display = 'none';
+
+          const callOverlay = document.getElementById('call-overlay');
+          if (callOverlay) callOverlay.style.display = 'flex';
+
+          const callStatus = document.getElementById('call-status');
+          if (callStatus) callStatus.innerText = "CONNECTING...";
+
+          const callAvatar = document.getElementById('call-avatar');
+          if (callAvatar && callSignalData?.user_id) {
+              const { data: profile } = await supabase.from('profiles').select('avatar_url').eq('id', callSignalData.user_id).single();
+              if (profile) callAvatar.src = profile.avatar_url || '/asets/png/profile.webp';
+          }
+
+          if (callSignalData) {
+              await connectToCall(callSignalData.room_id);
+              if (callStatus) callStatus.innerText = "ON CALL";
+          }
+      };
+
+      window.rejectCall = async () => {
+          stopRingtone(); 
+          const incomingOverlay = document.getElementById('incoming-call-overlay');
+          if (incomingOverlay) incomingOverlay.style.display = 'none';
+          
+          if (callSignalData) {
+              await supabase.from('messages').insert([{
+                  room_id: callSignalData.room_id,
+                  message: `🚫 Panggilan Ditolak`,
+                  user_id: currentUser.id,
+                  is_system: true
+              }]);
+              callSignalData = null;
+          }
+      };
+
+      async function connectToCall(roomName) {
+          try {
+              const apiUrl = supabase.supabaseUrl;
+              const anonKey = supabase.supabaseKey;
+
+              const response = await fetch(`${apiUrl}/functions/v1/get-livekit-token`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'apikey': anonKey, 'Authorization': `Bearer ${anonKey}` },
+                  body: JSON.stringify({ username: window.myUsernameLocal, identity: currentUser.id, roomName: roomName })
+              });
+              
+              const data = await response.json();
+
+              callRoom = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
+
+              callRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+                  if (track.kind === "audio") {
+                      const element = track.attach();
+                      document.body.appendChild(element);
+                      element.play().catch(() => {});
+                  }
+              });
+              callRoom.on(LivekitClient.RoomEvent.ParticipantDisconnected, () => {
+                  window.showToast("Panggilan diakhiri oleh lawan bicara.");
+                  window.endCall();
+              });
+              callRoom.on(LivekitClient.RoomEvent.Disconnected, () => window.endCall());
+
+              callRoom.on(LivekitClient.RoomEvent.ParticipantConnected, () => {
+                  clearTimeout(callRingingTimeout); 
+                  const avatarEl = document.getElementById('call-avatar');
+                  const statusEl = document.getElementById('call-status');
+                  if (avatarEl) avatarEl.classList.remove('anim-calling-avatar');
+                  if (statusEl) { statusEl.classList.remove('anim-calling-text'); statusEl.style.color = "#2ecc71"; }
+                  startCallTimer(); 
+              });
+
+              const LIVEKIT_URL = "wss://voicegrup-zxmeibkn.livekit.cloud"; 
+              await callRoom.connect(LIVEKIT_URL, data.token);
+              await callRoom.localParticipant.setMicrophoneEnabled(true);
+
+              if (callRoom.remoteParticipants.size > 0) {
+                  clearTimeout(callRingingTimeout);
+                  const avatarEl = document.getElementById('call-avatar');
+                  const statusEl = document.getElementById('call-status');
+                  if (avatarEl) avatarEl.classList.remove('anim-calling-avatar');
+                  if (statusEl) { statusEl.classList.remove('anim-calling-text'); statusEl.style.color = "#2ecc71"; }
+                  startCallTimer();
+              }
+          } catch (e) {
+              console.error("Gagal koneksi LiveKit:", e);
+              window.showToast("Gagal terhubung ke server panggilan.");
+              window.endCall();
+          }
+      }
 
       window.showToast = (msg) => {
         const container = document.getElementById("toast-container");
@@ -389,6 +573,8 @@ import * as uiUtils from '../lib/ui-utils.js';
           document.getElementById("side-avatar").src = profile.avatar_url || "/asets/png/profile.webp";
           document.getElementById("side-id").innerText = "#" + (profile.short_id || "N/A");
           
+          window.myUsernameLocal = profile.username || "User"; // Disimpan buat telpon
+
           if (document.getElementById("in-umur")) document.getElementById("in-umur").value = profile.umur || "";
           if (document.getElementById("in-gender")) document.getElementById("in-gender").value = profile.gender || "Pria";
           if (document.getElementById("in-zodiak")) document.getElementById("in-zodiak").value = profile.zodiak || "";
@@ -396,7 +582,73 @@ import * as uiUtils from '../lib/ui-utils.js';
           if (document.getElementById("in-hobi")) document.getElementById("in-hobi").value = profile.hobi || "";
         }
         updateLimitUI();
-        loadAllChats();
+        await loadAllChats();
+        initInboxRealtime(); 
+      }
+
+      function initInboxRealtime() {
+        if (!currentUser) return;
+        if (inboxRealtimeChannel) supabase.removeChannel(inboxRealtimeChannel);
+
+        inboxRealtimeChannel = supabase.channel('inbox-monitor')
+          .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
+             const newMsg = payload.new;
+             
+             const isGlobal = newMsg.room_id === "room-1";
+             const isPrivateForMe = newMsg.room_id.startsWith("pv_") && newMsg.room_id.includes(currentUser.id);
+             const isGroup = newMsg.room_id.startsWith("group_"); 
+             
+             if (isGlobal || isPrivateForMe || isGroup) {
+                 if (newMsg.is_system && newMsg.message.includes("📞 Memanggil") && newMsg.user_id !== currentUser.id) {
+                     if (typeof window.showIncomingCall === "function") {
+                         window.showIncomingCall(newMsg);
+                     }
+                 }
+
+                 if (newMsg.user_id !== currentUser.id) {
+                     updateChatItemRealtime(newMsg);
+                 }
+             }
+          }).subscribe();
+      }
+
+      async function updateChatItemRealtime(msg) {
+         let targetId = msg.room_id;
+         if (msg.room_id.startsWith("pv_")) {
+             targetId = msg.room_id.replace("pv_", "").split("_").find(id => id !== currentUser.id);
+         } else if (msg.room_id.startsWith("group_")) {
+             targetId = msg.room_id.replace("group_", "");
+         }
+
+         const chatItemEl = document.querySelector(`.tg-chat-item[data-room-id="${targetId}"]`);
+         
+         let previewText = msg.sticker_url ? "🖼 Stiker" : (msg.audio_url ? "🎤 Voice Note" : msg.message);
+         if (msg.is_system) previewText = msg.message;
+
+         if (chatItemEl) {
+             chatItemEl.querySelector('.tg-preview').innerText = previewText;
+             chatItemEl.classList.add('unread');
+             chatItemEl.querySelector('.tg-time').innerText = formatTimeTelegram(msg.created_at);
+             
+             let badgeEl = chatItemEl.querySelector('.tg-unread-badge');
+             if (!badgeEl) {
+                 const bottomContainer = chatItemEl.querySelector('.tg-chat-bottom');
+                 badgeEl = document.createElement('span');
+                 badgeEl.className = 'tg-unread-badge bump';
+                 badgeEl.innerText = '1';
+                 bottomContainer.appendChild(badgeEl);
+             } else {
+                 let currentCount = parseInt(badgeEl.innerText) || 0;
+                 badgeEl.innerText = currentCount > 98 ? '99+' : (currentCount + 1).toString();
+                 badgeEl.classList.remove('bump');
+                 void badgeEl.offsetWidth; 
+                 badgeEl.classList.add('bump');
+             }
+
+             chatList.insertBefore(chatItemEl, chatList.firstChild);
+         } else {
+             loadAllChats();
+         }
       }
 
       const modals = document.querySelectorAll('.custom-modal-overlay');
@@ -569,34 +821,47 @@ import * as uiUtils from '../lib/ui-utils.js';
           const { data: pvMsgs } = await supabase.from("messages").select("room_id, message, created_at, sticker_url, audio_url, user_id, status, is_system").ilike("room_id", "pv_%").ilike("room_id", `%${currentUser.id}%`).gte("created_at", waktu24JamLalu).order("created_at", { ascending: false });
           const { data: groups } = await supabase.from('group_members').select(`group_id, groups(id, name, photo_url)`).eq('user_id', currentUser.id);
 
-          const finalChatList = [{ id: 'room-1', type: 'global', name: 'HopeTalk Globe', avatar: '', preview: 'Obrolan umum komunitas', time: 'Always', unread: parseInt(localStorage.getItem('unread_room-1')||'0'), sortTime: Date.now() + 10000 }];
+          const finalChatList = [{ id: 'room-1', type: 'global', name: 'HopeTalk Globe', avatar: '', preview: 'Obrolan umum komunitas', time: 'Always', unread: 0, sortTime: Date.now() + 10000 }];
           
+          const { count: globalUnread } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('room_id', 'room-1').neq('user_id', currentUser.id).eq('status', 'sent');
+          if(globalUnread > 0) finalChatList[0].unread = globalUnread;
+
           if (pvMsgs) {
             const lastPvMessages = new Map();
             pvMsgs.forEach((msg) => {
               const pId = msg.room_id.replace("pv_", "").split("_").find(id => id !== currentUser.id);
               if (pId && !lastPvMessages.has(pId)) lastPvMessages.set(pId, msg);
             });
+            
             const partnerIds = Array.from(lastPvMessages.keys());
             if (partnerIds.length > 0) {
               const { data: profiles } = await supabase.from("profiles").select("id, username, avatar_url, role").in("id", partnerIds);
               const profileMap = new Map(); profiles?.forEach(p => profileMap.set(p.id, p));
-              lastPvMessages.forEach((msg, pId) => {
-                const profile = profileMap.get(pId); if (!profile) return;
+              
+              for (const pId of partnerIds) {
+                const msg = lastPvMessages.get(pId);
+                const profile = profileMap.get(pId); if (!profile) continue;
+                
                 let preview = msg.sticker_url ? "🖼 Stiker" : (msg.audio_url ? "🎤 Voice Note" : msg.message);
                 if (msg.message === "Pesan ini telah dihapus") preview = "🚫 Dihapus";
+                
                 const isMe = msg.user_id === currentUser.id && !msg.is_system;
                 const statusHtml = isMe ? (msg.status === "read" ? `<span class="material-icons check-icon" style="color:#10b981;font-size:16px;">done_all</span> ` : `<span class="material-icons check-icon" style="color:var(--tg-text-muted);font-size:16px;">check</span> `) : '';
-                finalChatList.push({ id: pId, type: 'private', name: profile.username, avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}`, role: profile.role, preview: statusHtml+preview, time: formatTimeTelegram(msg.created_at), unread: 0, sortTime: new Date(msg.created_at).getTime() });
-              });
+                
+                const { count: pvUnread } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('room_id', msg.room_id).eq('user_id', pId).eq('status', 'sent');
+
+                finalChatList.push({ id: pId, type: 'private', name: profile.username, avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}`, role: profile.role, preview: statusHtml+preview, time: formatTimeTelegram(msg.created_at), unread: pvUnread || 0, sortTime: new Date(msg.created_at).getTime() });
+              }
             }
           }
 
           if (groups) {
-            groups.forEach(g => {
-              if (!g.groups) return;
-              finalChatList.push({ id: g.groups.id, type: 'group', name: g.groups.name, avatar: g.groups.photo_url || '', preview: 'Obrolan grup aktif', time: 'Aktif', unread: parseInt(localStorage.getItem('unread_group_'+g.groups.id)||'0'), sortTime: Date.now() - 1000 });
-            });
+            for (const g of groups) {
+              if (!g.groups) continue;
+              const { count: gUnread } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('room_id', `group_${g.group_id}`).neq('user_id', currentUser.id).eq('status', 'sent');
+              
+              finalChatList.push({ id: g.groups.id, type: 'group', name: g.groups.name, avatar: g.groups.photo_url || '', preview: 'Obrolan grup aktif', time: 'Aktif', unread: gUnread || 0, sortTime: Date.now() - 1000 });
+            }
           }
 
           finalChatList.sort((a, b) => b.sortTime - a.sortTime);
@@ -604,7 +869,9 @@ import * as uiUtils from '../lib/ui-utils.js';
           if (finalChatList.length === 1) chatList.innerHTML = `<div class="loading-state"><span class="material-icons" style="font-size:48px;color:var(--tg-primary);animation:none;">forum</span><p>Mulai cari teman untuk chat!</p></div>`;
           
           finalChatList.forEach(chat => {
-            const div = document.createElement("div"); div.className = `tg-chat-item ${chat.unread > 0 ? 'unread' : ''}`;
+            const div = document.createElement("div"); 
+            div.className = `tg-chat-item ${chat.unread > 0 ? 'unread' : ''}`;
+            div.dataset.roomId = chat.id; 
             
             div.onclick = () => {
               if (chat.type === 'global') window.location.href = `/chat`;
@@ -632,6 +899,5 @@ import * as uiUtils from '../lib/ui-utils.js';
       initUser();
     });
   </script>
-
 </body>
 </html>

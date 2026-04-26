@@ -12,7 +12,7 @@ let currentReplyId = null;
 let currentUser = null;
 let myUsername = "Guest";
 let myRole = "user";
-let myAvatar = "asets/png/profile.webp"; // 🔥 FIX 1: Simpan avatar ke variabel global
+let myAvatar = "asets/png/profile.webp"; 
 let presenceChannel = null;
 let globalPresenceChannel = null; 
 let messageChannel = null;
@@ -146,7 +146,6 @@ function triggerPushNotif(teksPesan) {
   const partnerId = getPartnerIdFromRoom(currentRoomId);
   if (!partnerId) return; 
   
-  // 🔥 FIX 2: Akses Supabase Anon Key langsung dari instance Supabase client
   const anonKey = supabase.supabaseKey; 
 
   fetch(`${supabase.supabaseUrl}/functions/v1/send-chat-notif`, {
@@ -261,8 +260,6 @@ async function requireLogin() {
   const myProfile = await getCachedProfile(session.user.id);
   myUsername = myProfile?.username || session.user.email || "Guest";
   myRole = myProfile?.role || "user";
-  
-  // 🔥 FIX 1: Set Avatar kamu secara konsisten buat dipake pas ngirim pesan
   myAvatar = myProfile?.avatar_url || "asets/png/profile.webp";
   
   return true;
@@ -327,6 +324,7 @@ async function initPresence() {
     inputEl.addEventListener("input", handleTypingInput);
   }
 
+  // 🔥 FIX ONLINE STATUS: Cek Global Presence 🔥
   if (!globalPresenceChannel) {
     globalPresenceChannel = supabase.channel(`global-online-users`, { config: { presence: { key: currentUser.id } } });
     
@@ -367,25 +365,33 @@ async function handleTypingInput() {
   }, 3000);
 }
 
+// 🔥 FIX ONLINE STATUS UI 🔥
 function updateHeaderStatus() {
   const headerStatusEl = document.getElementById("status-header");
   if (!headerStatusEl || !currentUser) return;
 
-  if (membersEl) membersEl.innerHTML = `<span class="online-dot"></span> ${totalOnlineUsers} user online`;
+  const state = globalPresenceChannel ? globalPresenceChannel.presenceState() : {};
+  const totalOnline = Object.keys(state).length;
+
+  if (membersEl) membersEl.innerHTML = `<span class="online-dot"></span> ${totalOnline} user online`;
 
   if (currentRoomId === "room-1") {
-    if (totalOnlineUsers <= 1) { 
+    if (totalOnline <= 1) { 
       headerStatusEl.innerHTML = `<span style="opacity:0.8;">Hanya kamu yang online</span>`; 
     } else { 
-      headerStatusEl.innerHTML = `<span class="online-dot" style="background:#fff; width:7px; height:7px; display:inline-block; border-radius:50%; margin-right:4px;"></span> ${totalOnlineUsers} users online`; 
+      headerStatusEl.innerHTML = `<span class="online-dot" style="background:#fff; width:7px; height:7px; display:inline-block; border-radius:50%; margin-right:4px;"></span> ${totalOnline} users online`; 
     }
     return;
   }
 
   const partnerId = getPartnerIdFromRoom(currentRoomId);
-  if (!partnerId) return;
+  if (!partnerId) {
+      // Jika Grup, hitung dari presence channel local room aja
+      const roomPresence = presenceChannel ? Object.keys(presenceChannel.presenceState()).length : 1;
+      headerStatusEl.innerHTML = `<span class="online-dot" style="background:#2ecc71; width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:4px;"></span> ${roomPresence} anggota online`; 
+      return;
+  }
 
-  const state = globalPresenceChannel ? globalPresenceChannel.presenceState() : {};
   const isOnline = !!state[partnerId];
 
   if (isOnline) { 
@@ -654,7 +660,7 @@ async function Message() {
     message: text,
     user_id: currentUser.id,
     username: myUsername,
-    avatar: myAvatar, // 🔥 FIX 1: Pakai myAvatar yang udah kesimpen
+    avatar: myAvatar, 
     role: myRole || "user",
     created_at: new Date().toISOString(),
     room_id: currentRoomId, 
@@ -737,7 +743,7 @@ async function sendAudioMessage(url) {
   } catch (err) { showToast("Gagal mengirim VN ke chat"); }
 }
 
-// ===== Realtime Messages =====
+// 🔥 FIX REALTIME MESSAGE (NO REFRESH) 🔥
 function initRealtimeMessages() {
   if (!currentUser) return;
   if (messageChannel) {
@@ -745,9 +751,15 @@ function initRealtimeMessages() {
     messageChannel = null;
   }
 
+  // Filter channel HANYA untuk room yang sedang dibuka
   messageChannel = supabase
-    .channel(`messages-global-monitor`)
-    .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, async (payload) => {
+    .channel(`room-${currentRoomId}`)
+    .on("postgres_changes", { 
+        event: "INSERT", 
+        schema: "public", 
+        table: "messages", 
+        filter: `room_id=eq.${currentRoomId}` // 🔥 Ini kunci realtimenya!
+    }, async (payload) => {
       const newMsg = payload.new;
 
       if (newMsg.is_system) {
@@ -764,33 +776,38 @@ function initRealtimeMessages() {
         }
       }
 
-      if (newMsg.room_id === currentRoomId) {
-        if (document.getElementById(`msg-${newMsg.id}`)) return;
+      if (document.getElementById(`msg-${newMsg.id}`)) return;
 
-        const senderProfile = await getCachedProfile(newMsg.user_id);
-        newMsg.profiles = {
-          username: senderProfile?.username || "User",
-          avatar_url: senderProfile?.avatar_url || "asets/png/profile.webp",
-          role: senderProfile?.role || "user"
-        };
+      const senderProfile = await getCachedProfile(newMsg.user_id);
+      newMsg.profiles = {
+        username: senderProfile?.username || "User",
+        avatar_url: senderProfile?.avatar_url || "asets/png/profile.webp",
+        role: senderProfile?.role || "user"
+      };
 
-        if (newMsg.user_id === currentUser.id && !newMsg.is_system) {
-          const tempEl = document.querySelector(`[id^="msg-temp-"]`);
-          if (tempEl) tempEl.remove();
-          renderMessage(newMsg);
-        } else {
-          if (typeof removeTypingBubble === "function") removeTypingBubble();
-          renderMessage(newMsg);
-          if (!newMsg.is_system) receiveSound.play().catch(() => {});
+      // Hilangkan bubble ngetik saat pesan masuk
+      removeTypingBubble();
 
-          if (newMsg.status !== "read" && !document.hidden && !newMsg.is_system) {
-            await supabase.from("messages").update({ status: "read" }).eq("id", newMsg.id);
-          }
+      if (newMsg.user_id === currentUser.id && !newMsg.is_system) {
+        const tempEl = document.querySelector(`[id^="msg-temp-"]`);
+        if (tempEl) tempEl.remove();
+        renderMessage(newMsg);
+      } else {
+        renderMessage(newMsg);
+        if (!newMsg.is_system) receiveSound.play().catch(() => {});
+
+        if (newMsg.status !== "read" && !document.hidden && !newMsg.is_system) {
+          await supabase.from("messages").update({ status: "read" }).eq("id", newMsg.id);
         }
-        scrollToBottom();
       }
+      scrollToBottom();
     })
-    .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (payload) => {
+    .on("postgres_changes", { 
+        event: "UPDATE", 
+        schema: "public", 
+        table: "messages",
+        filter: `room_id=eq.${currentRoomId}` 
+    }, (payload) => {
       const updated = payload.new;
       const old = payload.old;
 
@@ -799,8 +816,6 @@ function initRealtimeMessages() {
           updateMessageStatusUI(updated.id, updated.status || "sent");
         }
       }
-
-      if (updated.room_id !== currentRoomId) return;
 
       if (updated.message === "Pesan ini telah dihapus") {
         const msgEl = document.getElementById(`msg-${updated.id}`);
@@ -1093,7 +1108,6 @@ window.rejectCall = async () => {
 
 async function connectToCall(roomName) {
     try {
-        // 🔥 FIX 2: Akses Supabase URL dan Key langsung dari instance client
         const apiUrl = supabase.supabaseUrl;
         const anonKey = supabase.supabaseKey;
 
@@ -1280,7 +1294,6 @@ const groupName = urlParams.get('gname');
 
 async function init() {
   try {
-    // 1. Pastikan login dulu sebelum ngapa-ngapain
     const ok = await requireLogin(); 
     if (!ok) return;
 
@@ -1288,40 +1301,29 @@ async function init() {
     const btnCall = document.getElementById('btn-start-call');
     const btnInvite = document.getElementById('btn-open-invite');
 
-    // 2. CEK URL: APAKAH INI GRUP ATAU CHAT PRIBADI?
     if (groupId) {
-        // --- MODE GRUP ---
         window.currentChatMode = 'group';
         window.activeGroupId = groupId;
         currentRoomId = `group_${groupId}`;
         
-        if (btnCall) btnCall.style.display = 'none'; // Sembunyikan tombol telpon
-        if (btnInvite) btnInvite.style.display = 'flex'; // Munculkan tombol undang
+        if (btnCall) btnCall.style.display = 'none'; 
+        if (btnInvite) btnInvite.style.display = 'flex'; 
         
         if (headerTitle) {
-            const customIcon = `
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                   style="vertical-align: middle; cursor: pointer; margin-left: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); transition: transform 0.3s ease;" 
-                   onclick="window.openGroupSettings()" 
-                   title="Pengaturan Grup">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-              </svg>
-            `;
+            const customIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; cursor: pointer; margin-left: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); transition: transform 0.3s ease;" onclick="window.openGroupSettings()" title="Pengaturan Grup"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
             headerTitle.innerHTML = `${escapeHtml(groupName || "Memuat Grup...")} ${customIcon}`;
         }
         
         window.history.replaceState({}, document.title, window.location.pathname);
 
     } else if (fromId) {
-        // --- MODE CHAT PRIBADI ---
         window.currentChatMode = 'private';
         window.activeGroupId = null;
         
         const ids = [currentUser.id, fromId].sort();
         currentRoomId = `pv_${ids[0]}_${ids[1]}`;
         
-        if (btnInvite) btnInvite.style.display = 'none'; // Sembunyikan tombol undang
+        if (btnInvite) btnInvite.style.display = 'none'; 
         
         if (headerTitle) {
             const profile = await getCachedProfile(fromId);
@@ -1329,7 +1331,6 @@ async function init() {
                 headerTitle.innerHTML = `${escapeHtml(profile.username)} <span style="font-size:10px; opacity:0.5;">#${escapeHtml(profile.short_id || "")}</span>`;
             }
             
-            // Nyalain tombol telpon buat chat pribadi
             if (btnCall) {
                 btnCall.style.display = 'flex';
                 btnCall.dataset.targetId = fromId;
@@ -1340,7 +1341,6 @@ async function init() {
         
         window.history.replaceState({}, document.title, window.location.pathname);
     } else {
-        // --- MODE GLOBAL CHAT (Default) ---
         window.currentChatMode = null;
         window.activeGroupId = null;
         currentRoomId = "room-1";
@@ -1350,10 +1350,9 @@ async function init() {
         if (btnInvite) btnInvite.style.display = 'none';
     }
 
-    // 3. BARU MULAI LOAD DATA SETELAH ROOM DITENTUKAN DI ATAS!
     await initPresence(); 
     initRealtimeMessages(); 
-    await loadMessages(); // Sekarang dia load pesan berdasarkan currentRoomId yang udah bener
+    await loadMessages(); 
     fetchStickers(); 
     updateHeaderStatus();
     
@@ -1363,14 +1362,12 @@ async function init() {
   }
 }
 
-// Jalankan Fungsi
 init();
 
 document.addEventListener("visibilitychange", async () => { 
   if (!document.hidden) await markRoomAsRead(); 
 });
 
-// Logika Animasi Tombol Mic <-> Send
 const animChatInput = document.getElementById("chat-input");
 const animActionBtn = document.getElementById("action-btn");
 
@@ -1421,10 +1418,10 @@ async function markRoomAsRead() {
     console.error("Gagal menandai pesan terbaca:", err);
   }
 }
+
 // ==========================================
 // LOGIKA GRUP (UNDANG & PENGATURAN) 
 // ==========================================
-
 const btnOpenInvite = document.getElementById('btn-open-invite');
 if (btnOpenInvite) {
   btnOpenInvite.onclick = (e) => {
@@ -1605,7 +1602,7 @@ window.updateGroupInfo = async () => {
         if (newName) {
             const headerTitle = document.querySelector('.chat-header h3');
             if(headerTitle) {
-                const customIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; cursor: pointer; margin-left: 6px;" onclick="window.openGroupSettings()"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
+                const customIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; cursor: pointer; margin-left: 6px;" onclick="window.openGroupSettings()"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
                 headerTitle.innerHTML = `${escapeHtml(newName)} ${customIcon}`;
             }
         }
@@ -1640,7 +1637,6 @@ window.leaveGroup = async () => {
         const modal = document.getElementById('group-settings-modal');
         if(modal) modal.style.display = 'none';
         
-        // Langsung lempar balik ke halaman inbox kalau udah keluar
         window.location.href = '/hypetalk';
     } catch(err) { showToast("Gagal keluar dari grup"); }
 };
