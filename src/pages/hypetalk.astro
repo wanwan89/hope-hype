@@ -1,7 +1,7 @@
 ---
 // src/pages/hypetalk.astro
 import * as uiUtils from '../lib/ui-utils.js';
-import CallOverlays from '../components/modals/CallOverlays.astro'; // 🔥 FIX 1: Import Overlay Telpon
+import CallOverlays from '../components/modals/CallOverlays.astro';
 ---
 
 <!DOCTYPE html>
@@ -32,7 +32,7 @@ import CallOverlays from '../components/modals/CallOverlays.astro'; // 🔥 FIX 
       <img id="side-avatar" src="/asets/png/profile.webp" alt="Avatar" onerror="this.src='/asets/png/profile.webp'">
       <div class="sidebar-user-info">
         <h3 id="side-username">Memuat...</h3>
-        <p id="side-id" title="Klik untuk salin ID">#0000</p>
+        <p id="side-id" title="Klik untuk salin ID" style="cursor: pointer;">#0000</p>
       </div>
       <button class="btn-edit-bio" id="btn-open-bio">Edit Biodata</button>
     </div>
@@ -47,7 +47,6 @@ import CallOverlays from '../components/modals/CallOverlays.astro'; // 🔥 FIX 
       </button>
     </div>
   </aside>
-
   <div class="telegram-wrapper">
     <header class="tg-header">
       <div class="tg-header-top">
@@ -201,7 +200,8 @@ import CallOverlays from '../components/modals/CallOverlays.astro'; // 🔥 FIX 
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
-    html, body, button, a, div { 
+    /* 🔥 FIX: Anti kotak biru pas diklik di HP & Webkit Tap 🔥 */
+    html, body, button, a, div, span, p { 
       -webkit-tap-highlight-color: transparent !important; 
       outline: none !important;
     }
@@ -222,6 +222,7 @@ import CallOverlays from '../components/modals/CallOverlays.astro'; // 🔥 FIX 
     .tg-header-left { display: flex; align-items: center; gap: 16px; }
     .tg-header-left h2 { font-size: 20px; font-weight: 700; color: var(--tg-text); transition: color 0.3s ease; }
     .icon-btn { background: none; border: none; color: var(--tg-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; transition: all 0.2s ease; }
+    
     .icon-btn:active { background: transparent; transform: scale(0.95); }
 
     .tg-search-container { padding: 4px 16px 12px; }
@@ -275,12 +276,15 @@ import CallOverlays from '../components/modals/CallOverlays.astro'; // 🔥 FIX 
     #side-avatar { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--tg-primary); }
     .sidebar-user-info { display: flex; flex-direction: column; gap: 2px; }
     #side-username { font-size: 18px; font-weight: 700; color: var(--tg-text); }
-    #side-id { font-size: 13px; color: var(--tg-text-muted); cursor: pointer; }
+    #side-id { font-size: 13px; color: var(--tg-text-muted); cursor: pointer; transition: color 0.2s; }
+    #side-id:active { color: var(--tg-primary); }
     .btn-edit-bio { background: var(--tg-primary); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 5px; }
     
     .sidebar-menu { display: flex; flex-direction: column; padding: 10px 0; overflow-y: auto; }
+    
     .menu-item { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: transparent; border: none; font-size: 15px; font-weight: 600; color: var(--tg-text); cursor: pointer; text-align: left; outline: none; }
     .menu-item:active { background: transparent; transform: scale(0.98); }
+    
     .menu-item .material-icons { color: var(--tg-text-muted); }
     .menu-divider { height: 1px; background: var(--tg-border); margin: 8px 0; }
     
@@ -338,9 +342,9 @@ import CallOverlays from '../components/modals/CallOverlays.astro'; // 🔥 FIX 
   </style>
 
   <script>
+    import { supabase } from '../lib/supabase.js';
+    
     document.addEventListener("DOMContentLoaded", async () => {
-      const { supabase } = await import('../lib/supabase.js');
-      
       let getBadgeFunc = null;
       try {
         const utils = await import('../lib/ui-utils.js');
@@ -366,7 +370,6 @@ import CallOverlays from '../components/modals/CallOverlays.astro'; // 🔥 FIX 
       let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
       let inboxRealtimeChannel = null;
 
-      // 🔥 KODE UNTUK NELPON DI HALAMAN INBOX 🔥
       const ringtoneSound = new Audio("/asets/sound/call.wav");
       ringtoneSound.loop = true;
       let callRoom = null;
@@ -375,7 +378,7 @@ import CallOverlays from '../components/modals/CallOverlays.astro'; // 🔥 FIX 
       let callTalkTimer = null;      
       let callSeconds = 0;
 
-      window.myUsernameLocal = "User"; // Buat dikirim ke LiveKit
+      window.myUsernameLocal = "User"; 
 
       function stopRingtone() {
           ringtoneSound.pause();
@@ -555,10 +558,25 @@ import CallOverlays from '../components/modals/CallOverlays.astro'; // 🔥 FIX 
       window.showToast = (msg) => {
         const container = document.getElementById("toast-container");
         const toast = document.createElement("div");
-        toast.className = "toast-msg"; toast.innerText = msg;
+        toast.className = "toast-msg";
+        toast.innerText = msg;
         container.appendChild(toast);
         setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
       };
+
+      // 🔥 FIX: FUNGSI COPY ID 🔥
+      const sideIdEl = document.getElementById("side-id");
+      if (sideIdEl) {
+        sideIdEl.addEventListener("click", () => {
+          const textToCopy = sideIdEl.innerText.replace('#', '');
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            window.showToast("ID berhasil disalin!");
+          }).catch(err => {
+            console.error('Gagal copy: ', err);
+            window.showToast("Gagal menyalin ID");
+          });
+        });
+      }
 
       async function initUser() {
         const { data: { user }, error } = await supabase.auth.getUser();
@@ -573,7 +591,7 @@ import CallOverlays from '../components/modals/CallOverlays.astro'; // 🔥 FIX 
           document.getElementById("side-avatar").src = profile.avatar_url || "/asets/png/profile.webp";
           document.getElementById("side-id").innerText = "#" + (profile.short_id || "N/A");
           
-          window.myUsernameLocal = profile.username || "User"; // Disimpan buat telpon
+          window.myUsernameLocal = profile.username || "User";
 
           if (document.getElementById("in-umur")) document.getElementById("in-umur").value = profile.umur || "";
           if (document.getElementById("in-gender")) document.getElementById("in-gender").value = profile.gender || "Pria";
