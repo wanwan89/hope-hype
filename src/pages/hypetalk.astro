@@ -337,10 +337,33 @@ import * as uiUtils from '../lib/ui-utils.js';
   </style>
 
   <script>
-    import { supabase } from '../lib/supabase.js';
-    import { getRoleBadge } from '../lib/ui-utils.js';
-
     document.addEventListener("DOMContentLoaded", async () => {
+      // 1. Import Supabase
+      const { supabase } = await import('../lib/supabase.js');
+      
+      // 2. Import Fungsi Badge (Pakai sistem aman/Fallback)
+      let getBadgeFunc = null;
+      try {
+        const utils = await import('../lib/ui-utils.js');
+        // Cari fungsi yang tersedia
+        getBadgeFunc = utils.getRoleBadge || utils.getBadge || utils.default?.getRoleBadge || utils.default?.getBadge;
+      } catch (err) {
+        console.warn("Gagal import ui-utils, menggunakan fallback lokal.");
+      }
+
+      // Jika gagal import, pakai ini sebagai cadangan anti-error!
+      if (!getBadgeFunc || typeof getBadgeFunc !== 'function') {
+        getBadgeFunc = function(role) {
+          if (!role) return "";
+          role = String(role).toLowerCase().trim();
+          if (role === "admin") return `<span class="badge" style="background:#ef4444; color:white; font-size:9px; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:800;">ADMIN</span>`;
+          if (role === "verified") return `<span class="verified-icon" style="margin-left:4px; display:inline-flex; align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1DA1F2"/><path d="M7 12.5l3 3 7-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+          const crownBadges = { crown1: "/asets/png/crown1.png", crown2: "/asets/png/crown2.png", crown3: "/asets/png/crown3.png" };
+          if (crownBadges[role]) return `<img src="${crownBadges[role]}" alt="${role}" style="width:16px;height:16px;margin-left:4px;vertical-align:middle;object-fit:contain;display:inline-block;" onerror="this.style.display='none';">`;
+          return "";
+        };
+      }
+
       const chatList = document.getElementById("chatList");
       let currentUser = null;
       let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
@@ -591,7 +614,7 @@ import * as uiUtils from '../lib/ui-utils.js';
 
             let avatarHtml = chat.type === 'global' ? `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>` : (chat.type === 'group' ? (chat.avatar ? `<img src="${chat.avatar}" class="tg-avatar">` : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`) : `<img src="${chat.avatar}" class="tg-avatar" onerror="this.src='/asets/png/profile.webp'">`);
             
-            let roleBadge = getRoleBadge ? getRoleBadge(chat.role) : '';
+            let roleBadge = getBadgeFunc(chat.role);
 
             div.innerHTML = `${avatarHtml}<div class="tg-chat-info"><div class="tg-chat-top"><h4 class="tg-name">${chat.name.replace(/</g, "&lt;")} ${roleBadge}</h4><span class="tg-time">${chat.time}</span></div><div class="tg-chat-bottom"><p class="tg-preview">${chat.preview}</p>${chat.unread > 0 ? `<span class="tg-unread-badge">${chat.unread>99?'99+':chat.unread}</span>` : ''}</div></div>`;
             chatList.appendChild(div);
@@ -609,5 +632,6 @@ import * as uiUtils from '../lib/ui-utils.js';
       initUser();
     });
   </script>
+
 </body>
 </html>
