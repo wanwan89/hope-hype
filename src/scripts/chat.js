@@ -412,12 +412,16 @@ async function handleTypingInput() {
 
   if (!isCurrentlyTyping) {
     isCurrentlyTyping = true;
-    // ✅ ADDED: Send typing state using Realtime Broadcast instead of Presence
-    presenceChannel.send({
-      type: "broadcast",
-      event: "typing",
-      payload: { username: myUsername, userId: currentUser.id }
-    }).catch(()=>{});
+    
+    // ✅ ADDED: Pastikan channel sudah tersambung (joined) sebelum mengirim broadcast.
+    // Ini menghilangkan warning "falling back to REST API"
+    if (presenceChannel.state === 'joined') {
+      presenceChannel.send({
+        type: "broadcast",
+        event: "typing",
+        payload: { username: myUsername, userId: currentUser.id }
+      }).catch(()=>{});
+    }
   }
 
   clearTimeout(typingTimeout);
