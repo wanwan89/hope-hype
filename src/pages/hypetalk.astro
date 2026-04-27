@@ -199,6 +199,12 @@ import * as uiUtils from '../lib/ui-utils.js';
       100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), 0 0 0 45px rgba(16, 185, 129, 0); transform: scale(0.95); } 
     }
     @keyframes text-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    /* Tambahkan animasi pulse ini di dalam tag <style> kamu */
+    @keyframes pulse { 
+      0% { transform: scale(0.8); opacity: 0.8; box-shadow: 0 0 10px #ec4899; } 
+      100% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 25px #ec4899, 0 0 40px #ec4899; } 
+    }
+
   </style>
 </head>
 <body>
@@ -810,7 +816,6 @@ import * as uiUtils from '../lib/ui-utils.js';
       }
       
       let radarInterval;
-
       document.getElementById("btn-sidebar-search").onclick = async () => {
         if (sisaLimitDoi <= 0) return openModal("modal-limit-doi");
         
@@ -824,6 +829,12 @@ import * as uiUtils from '../lib/ui-utils.js';
         const overlay = document.createElement("div"); 
         overlay.className = "doi-search-overlay"; 
         overlay.id = "active-search-overlay";
+        
+        // --- INI BAGIAN YANG DITAMBAHKAN ---
+        // Kita paksa CSS display menjadi 'flex' agar tidak menggunakan 'none' dari class aslinya
+        overlay.style.display = "flex"; 
+        // -----------------------------------
+
         overlay.innerHTML = `
           <div class="radar-container" id="radar-container-box">
             <div class="radar-wave"></div><div class="radar-wave"></div><div class="radar-wave"></div>
