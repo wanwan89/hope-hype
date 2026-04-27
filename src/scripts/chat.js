@@ -36,7 +36,7 @@ let isFirstMessageLoad = true;
 let totalOnlineUsers = 0; 
 let callRoom; 
 let receiverTypingTimeout = null;
-
+let isRealtimeInitialized = false; 
 // ===== DOM =====
 const messagesEl = document.getElementById("chat-messages");
 const inputEl = document.getElementById("chat-input");
@@ -765,21 +765,17 @@ async function sendAudioMessage(url) {
   } catch (err) { showToast("Gagal mengirim VN ke chat"); }
 }
 
-// 🔥 FIX REALTIME MESSAGE (ANTI CHANNEL LEAK) 🔥
-async function initRealtimeMessages() {
+// 🔥 FIX REALTIME: 1 CHANNEL GLOBAL ANTI LIMIT 🔥
+function initRealtimeMessages() {
   if (!currentUser) return;
-  
-  // 1. Hapus koneksi lama secara TUNTAS menggunakan await
-  if (messageChannel) {
-    await supabase.removeChannel(messageChannel);
-    messageChannel = null;
-  }
 
-  // 2. Gunakan nama channel yang KONSISTEN (jangan random)
-  const channelName = `chat-room-${currentRoomId}`;
+  // CEGAH BIKIN CHANNEL BERKALI-KALI
+  if (isRealtimeInitialized) return;
+  isRealtimeInitialized = true;
 
+  // Kita pakai 1 nama channel statis untuk seluruh aplikasi
   messageChannel = supabase
-    .channel(channelName)
+    .channel('global-chat-channel')
     .on("postgres_changes", { 
         event: "INSERT", 
         schema: "public", 
@@ -787,6 +783,7 @@ async function initRealtimeMessages() {
     }, async (payload) => {
       const newMsg = payload.new;
 
+      // 🔥 Pastikan pesan ini untuk room yang SEDANG DIBUKA 🔥
       if (!newMsg || newMsg.room_id !== currentRoomId) return;
 
       if (newMsg.is_system) {
@@ -832,6 +829,7 @@ async function initRealtimeMessages() {
       const updated = payload.new;
       const old = payload.old;
 
+      // 🔥 Pastikan update ini untuk room yang SEDANG DIBUKA 🔥
       if (!updated || updated.room_id !== currentRoomId) return;
 
       if (updated.status !== old?.status && updated.user_id === currentUser.id) {
@@ -848,14 +846,14 @@ async function initRealtimeMessages() {
             textEl.querySelectorAll("img, .vn-custom-player").forEach(m => m.remove());
           }
         }
-        return;
       }
     })
     .subscribe((status, err) => {
        if (status === 'SUBSCRIBED') {
-           console.log(`✅ Realtime OK untuk room: ${currentRoomId}`);
+           console.log('✅ Realtime GLOBAL Berhasil Tersambung!');
        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-           console.error('❌ Error Realtime:', status, err);
+           console.error('❌ Error Realtime:', status);
+           isRealtimeInitialized = false; // Reset flag supaya bisa dicoba lagi kalau gagal
        }
     });
 }
