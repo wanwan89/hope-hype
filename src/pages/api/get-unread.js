@@ -3,20 +3,17 @@ import { supabase } from '../../lib/supabase.js';
 export async function GET({ request }) {
   try {
     if (!import.meta.env.PUBLIC_SUPABASE_URL || !import.meta.env.PUBLIC_SUPABASE_ANON_KEY) {
-      throw new Error("Kunci Supabase kosonggg! Cek file .env kamuuu yaaah cintakuuu");
+      throw new Error("Kunci Supabase kosong! Cek file .env lu bro");
     }
 
     const { count, error } = await supabase
-      // 👇 Balik pake tabel 'messages' lagiii yaaah sayangkuuu 👇
       .from('messages') 
       .select('*', { count: 'exact', head: true })
-      // 👇 Kolomnya 'status', trus kita cari yang isinya 'send' 👇
-      // (Penting: Kalo di database kamuuu tulisannya 'sent' pake 't', atau 'belum_dibaca', 
-      // tulisan 'send' di bawah ini tinggal kamuuu sesuaikan aja yaaah cintakuuu)
-      .eq('status', 'send'); 
+      // 👇 INI YANG DIGANTI: dari 'send' jadi 'sent' 👇
+      .eq('status', 'sent'); 
 
     if (error) {
-      throw new Error(error.message || "Ada yang salah pas nyari datanya nih sayangkuuu");
+      throw new Error(error.message || "Ada yang salah pas nyari datanya nih");
     }
 
     return new Response(JSON.stringify({ unread_count: count || 0 }), {
@@ -25,7 +22,7 @@ export async function GET({ request }) {
     });
 
   } catch (err) {
-    console.error("🚨 ERROR API GET-UNREAD SAYANGKUUU:", err.message); 
+    console.error("🚨 ERROR API GET-UNREAD:", err.message); 
     
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
