@@ -810,34 +810,39 @@ async function sendAudioMessage(url) {
     }
   } catch (err) { showToast("Gagal mengirim VN ke chat"); }
 }
-// 🔧 MODIFIED
+// ===== UPDATE: Fungsi Realtime dengan Debugging Tambahan =====
 async function initRealtimeMessages() {
   if (!currentUser) return;
 
-  // Bersihkan channel lama jika ada untuk mencegah tabrakan/zombie connection
+  // 1. Bersihkan channel lama jika ada untuk mencegah pesan ganda/zombie
   if (messageChannel) {
     await supabase.removeChannel(messageChannel);
     messageChannel = null;
   }
 
-  // 🔧 MODIFIED: Make channel dynamic per room and use postgres_changes filter
+  console.log(`⏳ Sedang menghubungkan realtime untuk room: ${currentRoomId}...`);
+
+  // 2. Buat jalur realtime yang dinamis per room
   messageChannel = supabase
-    .channel(`messages-${currentRoomId}`) // ✅ ADDED: Unique channel for each room
+    .channel(`messages-${currentRoomId}`)
     .on("postgres_changes", { 
         event: "INSERT", 
         schema: "public", 
         table: "messages",
-        filter: `room_id=eq.${currentRoomId}` // ✅ ADDED: Database-level filter for real-time
+        filter: `room_id=eq.${currentRoomId}`
     }, async (payload) => {
+      
+      console.log("🔥 YAY! Pesan baru masuk dari Supabase:", payload.new); // <-- Indikator ini akan muncul jika Realtime Supabase berhasil menyala
+      
       const newMsg = payload.new;
 
-      // 🔥 FILTER MANUAL: Pastikan pesan hanya diproses jika Room ID cocok
+      // Filter manual untuk jaga-jaga
       if (!newMsg || newMsg.room_id !== currentRoomId) return;
 
       // Cegah duplikasi pesan di layar
       if (document.getElementById(`msg-${newMsg.id}`)) return;
 
-      // Ambil profil pengirim (pakai cache agar cepat)
+      // Ambil profil pengirim
       const senderProfile = await getCachedProfile(newMsg.user_id);
       newMsg.profiles = {
         username: senderProfile?.username || "User",
@@ -848,14 +853,14 @@ async function initRealtimeMessages() {
       removeTypingBubble();
 
       if (newMsg.user_id === currentUser.id && !newMsg.is_system) {
-        // Jika saya yang kirim, hapus bubble "sending" ganti dengan pesan asli database
+        // Jika saya yang kirim, hapus bubble "sending" ganti dengan id asli
         const tempEl = document.querySelector(`[id^="msg-temp-"]`);
         if (tempEl) tempEl.remove();
         renderMessage(newMsg);
       } else {
         // Jika orang lain yang kirim
         renderMessage(newMsg);
-        if (!newMsg.is_system) receiveSound.play().catch(() => {});
+        if (!newMsg.is_system && receiveSound) receiveSound.play().catch(() => {});
 
         // Tandai otomatis terbaca (Read) jika sedang fokus di chat ini
         if (newMsg.status !== "read" && !document.hidden && !newMsg.is_system) {
@@ -868,7 +873,7 @@ async function initRealtimeMessages() {
         event: "UPDATE", 
         schema: "public", 
         table: "messages",
-        filter: `room_id=eq.${currentRoomId}` // ✅ ADDED: Filter updates by room
+        filter: `room_id=eq.${currentRoomId}`
     }, (payload) => {
       const updated = payload.new;
       const old = payload.old;
@@ -893,9 +898,14 @@ async function initRealtimeMessages() {
         }
       }
     })
-    .subscribe((status) => {
+    .subscribe(async (status, err) => {
+       // 3. Sensor Status: Akan memberitahu kita di Console jika ada yang salah
        if (status === 'SUBSCRIBED') {
-           console.log(`✅ Realtime Messages Berhasil Tersambung di ${currentRoomId}!`);
+           console.log(`✅ Realtime Messages Berhasil Tersambung di ${currentRoomId}! Menunggu pesan...`);
+       } else if (status === 'CHANNEL_ERROR') {
+           console.error(`❌ Gagal tersambung ke realtime Supabase. Ada error:`, err);
+       } else if (status === 'TIMED_OUT') {
+           console.error(`⏱️ Koneksi realtime timeout. Periksa internetmu.`);
        }
     });
 }
