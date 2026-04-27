@@ -765,30 +765,28 @@ async function sendAudioMessage(url) {
   } catch (err) { showToast("Gagal mengirim VN ke chat"); }
 }
 
-// 🔥 FIX REALTIME MESSAGE (ANTI CHANNEL ERROR) 🔥
+// 🔥 FIX REALTIME MESSAGE (ANTI CHANNEL LEAK) 🔥
 async function initRealtimeMessages() {
   if (!currentUser) return;
   
-  // 1. Hapus koneksi lama secara TUNTAS (wajib pakai await)
+  // 1. Hapus koneksi lama secara TUNTAS menggunakan await
   if (messageChannel) {
     await supabase.removeChannel(messageChannel);
     messageChannel = null;
   }
 
-  // 2. Buat nama channel yang selalu UNIK setiap kali dibuka
-  const uniqueChannelName = `chat_${currentRoomId}_${Math.random().toString(36).substring(7)}`;
+  // 2. Gunakan nama channel yang KONSISTEN (jangan random)
+  const channelName = `chat-room-${currentRoomId}`;
 
   messageChannel = supabase
-    .channel(uniqueChannelName)
+    .channel(channelName)
     .on("postgres_changes", { 
         event: "INSERT", 
         schema: "public", 
         table: "messages" 
-        // 🔥 Perhatikan: Baris 'filter' sengaja dihapus di sini
     }, async (payload) => {
       const newMsg = payload.new;
 
-      // 🔥 KITA FILTER MANUAL DI SINI BIAR SUPABASE GAK BINGUNG 🔥
       if (!newMsg || newMsg.room_id !== currentRoomId) return;
 
       if (newMsg.is_system) {
@@ -830,12 +828,10 @@ async function initRealtimeMessages() {
         event: "UPDATE", 
         schema: "public", 
         table: "messages"
-        // 🔥 Baris 'filter' juga dihapus di sini
     }, (payload) => {
       const updated = payload.new;
       const old = payload.old;
 
-      // 🔥 FILTER MANUAL UNTUK UPDATE PESAN 🔥
       if (!updated || updated.room_id !== currentRoomId) return;
 
       if (updated.status !== old?.status && updated.user_id === currentUser.id) {
@@ -854,37 +850,12 @@ async function initRealtimeMessages() {
         }
         return;
       }
-
-      if (updated.reactions) {
-        const msgEl = document.getElementById(`msg-${updated.id}`);
-        if (msgEl) {
-          const contentEl = msgEl.querySelector(".content");
-          const reactions = updated.reactions || {};
-          const reactionIcons = Object.values(reactions);
-          const uniqueIcons = [...new Set(reactionIcons)].slice(0, 3);
-          const reactionsHtml = uniqueIcons.length > 0 ? `${uniqueIcons.join("")} ${reactionIcons.length > 1 ? `<span style="font-size:9px; color:#999; margin-left:2px;">${reactionIcons.length}</span>` : ""}` : "";
-
-          let badgeEl = contentEl.querySelector(".message-reactions");
-          if (reactionsHtml) {
-            if (!badgeEl) {
-              badgeEl = document.createElement("div");
-              badgeEl.className = "message-reactions";
-              contentEl.insertBefore(badgeEl, contentEl.querySelector(".message-info"));
-            }
-            badgeEl.innerHTML = reactionsHtml;
-            contentEl.style.marginBottom = "15px";
-          } else if (badgeEl) {
-            badgeEl.remove();
-            contentEl.style.marginBottom = "5px";
-          }
-        }
-      }
     })
     .subscribe((status, err) => {
        if (status === 'SUBSCRIBED') {
-           console.log('✅ Realtime OK!');
+           console.log(`✅ Realtime OK untuk room: ${currentRoomId}`);
        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-           console.error('❌ Error Realtime:', err);
+           console.error('❌ Error Realtime:', status, err);
        }
     });
 }
