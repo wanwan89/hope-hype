@@ -450,6 +450,8 @@ import * as uiUtils from '../lib/ui-utils.js';
       let currentUser = null;
       let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
       let inboxRealtimeChannel = null;
+      
+      // 🔥 MEMORI TYPING 🔥
       const typingChannels = new Map(); 
       const lastMessageMap = new Map(); 
 
@@ -690,22 +692,47 @@ import * as uiUtils from '../lib/ui-utils.js';
         }
       }
 
-      function subscribeToTyping(id, type, originalPreview) {
-        const roomId = type === 'private' ? (currentUser.id < id ? `pv_${currentUser.id}_${id}` : `pv_${id}_${currentUser.id}`) : (type === 'group' ? `group_${id}` : 'room-1');
-        lastMessageMap.set(id, originalPreview);
-        if (typingChannels.has(id)) supabase.removeChannel(typingChannels.get(id));
-        const chan = supabase.channel(`typing-${roomId}`)
+      // 🔥 FIX: FUNGSI MENGETIK (TYPING) 🔥
+      function subscribeToTyping(partnerId, type, originalPreview) {
+        // Samakan Room ID dengan logika chat.astro
+        let roomId = "";
+        if (type === 'private') {
+           const ids = [currentUser.id, partnerId].sort();
+           roomId = `pv_${ids[0]}_${ids[1]}`;
+        } else if (type === 'group') {
+           roomId = `group_${partnerId}`;
+        } else {
+           roomId = "room-1";
+        }
+
+        // Simpan pesan asli agar bisa dikembalikan nanti
+        lastMessageMap.set(partnerId, originalPreview);
+
+        // Tutup channel lama jika ada
+        if (typingChannels.has(partnerId)) {
+           supabase.removeChannel(typingChannels.get(partnerId));
+        }
+
+        // Berlangganan ke channel presence (karena chat.astro kirim typing lewat sini)
+        const chan = supabase.channel(`presence-${roomId}`)
           .on("broadcast", { event: "typing" }, (payload) => {
-            const chatItem = document.querySelector(`.tg-chat-item[data-room-id="${id}"]`);
+            const chatItem = document.querySelector(`.tg-chat-item[data-room-id="${partnerId}"]`);
             if (!chatItem || payload.payload.userId === currentUser.id) return;
+
             const previewEl = chatItem.querySelector('.tg-preview');
-            previewEl.innerHTML = `<span style="color:var(--tg-primary); font-style:italic; font-weight:500;">sedang mengetik...</span>`;
+            
+            // Tampilkan status mengetik
+            previewEl.innerHTML = `<span style="color:var(--tg-primary); font-weight:600; font-style:italic;">sedang mengetik...</span>`;
+
+            // Kembalikan ke teks asli setelah 3.5 detik diam
             clearTimeout(chatItem.typingTimeout);
             chatItem.typingTimeout = setTimeout(() => {
-              previewEl.innerText = lastMessageMap.get(id) || "";
-            }, 3000);
-          }).subscribe();
-        typingChannels.set(id, chan);
+                previewEl.innerText = lastMessageMap.get(partnerId) || "";
+            }, 3500);
+          })
+          .subscribe();
+
+        typingChannels.set(partnerId, chan);
       }
 
       function initInboxRealtime() {
@@ -720,13 +747,16 @@ import * as uiUtils from '../lib/ui-utils.js';
              const isGroup = newMsg.room_id.startsWith("group_"); 
              
              if (isGlobal || isPrivateForMe || isGroup) {
+                 // 📞 DETEKSI CALL
                  if (newMsg.is_system && newMsg.message.includes("📞 Memanggil") && newMsg.user_id !== currentUser.id) {
                      if (typeof window.showIncomingCall === "function") window.showIncomingCall(newMsg);
                  }
+                 // 🚫 DETEKSI REJECT/STOP
                  const stopKeywords = ["🚫 Panggilan Ditolak", "☎️ Panggilan tak terjawab", "Panggilan berakhir"];
                  if (newMsg.is_system && stopKeywords.some(k => newMsg.message.includes(k))) {
                      if (typeof window.endCall === "function") window.endCall(false);
                  }
+                 // 📩 UPDATE CHAT ITEM
                  if (newMsg.user_id !== currentUser.id) updateChatItemRealtime(newMsg);
              }
           }).subscribe();
@@ -745,10 +775,11 @@ import * as uiUtils from '../lib/ui-utils.js';
          if (msg.is_system) previewText = msg.message;
 
          if (chatItemEl) {
-             lastMessageMap.set(targetId, previewText);
+             lastMessageMap.set(targetId, previewText); // Update memori pesan asli
              chatItemEl.querySelector('.tg-preview').innerText = previewText;
              chatItemEl.classList.add('unread');
              chatItemEl.querySelector('.tg-time').innerText = formatTimeTelegram(msg.created_at);
+             
              let badgeEl = chatItemEl.querySelector('.tg-unread-badge');
              if (!badgeEl) {
                  const bottomContainer = chatItemEl.querySelector('.tg-chat-bottom');
@@ -769,6 +800,7 @@ import * as uiUtils from '../lib/ui-utils.js';
          }
       }
 
+      // Sisa logika modal, sidebar, dll tetap sama
       const modals = document.querySelectorAll('.custom-modal-overlay');
       const closeBtns = document.querySelectorAll('.close-modal-btn');
 
@@ -798,9 +830,6 @@ import * as uiUtils from '../lib/ui-utils.js';
         sidebar.classList.remove("open");
         setTimeout(() => sidebarOverlay.style.display = "none", 300);
       };
-      document.querySelectorAll('.menu-item, .btn-edit-bio').forEach(btn => {
-        btn.addEventListener('click', () => sidebarOverlay.onclick());
-      });
 
       document.getElementById("btn-new-chat").onclick = () => openModal("search-modal");
       document.getElementById("btn-find-user").onclick = async () => {
@@ -1000,12 +1029,15 @@ import * as uiUtils from '../lib/ui-utils.js';
             let avatarHtml = chat.type === 'global' ? `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>` : (chat.type === 'group' ? (chat.avatar ? `<img src="${chat.avatar}" class="tg-avatar">` : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`) : `<img src="${chat.avatar}" class="tg-avatar" onerror="this.src='/asets/png/profile.webp'">`);
             div.innerHTML = `${avatarHtml}<div class="tg-chat-info"><div class="tg-chat-top"><h4 class="tg-name">${chat.name.replace(/</g, "&lt;")} ${getBadgeFunc(chat.role)}</h4><span class="tg-time">${chat.time}</span></div><div class="tg-chat-bottom"><p class="tg-preview">${chat.preview}</p>${chat.unread > 0 ? `<span class="tg-unread-badge">${chat.unread>99?'99+':chat.unread}</span>` : ''}</div></div>`;
             chatList.appendChild(div);
+            
+            // 🔥 AKTIFKAN LISTENER TYPING PER ITEM 🔥
             subscribeToTyping(chat.id, chat.type, chat.preview);
           });
           document.getElementById("searchChat").addEventListener("input", (e) => {
-            const query = e.target.value.toLowerCase();
+            const query = (e.target as HTMLInputElement).value.toLowerCase();
             document.querySelectorAll(".tg-chat-item").forEach(item => {
-              item.style.display = item.querySelector(".tg-name").textContent.toLowerCase().includes(query) ? "flex" : "none";
+              const htmlItem = item as HTMLElement;
+              htmlItem.style.display = htmlItem.querySelector(".tg-name")?.textContent?.toLowerCase().includes(query) ? "flex" : "none";
             });
           });
         } catch (err) { chatList.innerHTML = '<div class="loading-state"><span class="material-icons" style="color:#ef4444;animation:none;">error_outline</span><p>Gagal memuat obrolan.</p></div>'; }
@@ -1014,5 +1046,6 @@ import * as uiUtils from '../lib/ui-utils.js';
       initUser();
     });
   </script>
+
 </body>
 </html>
