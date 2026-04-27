@@ -1,3 +1,5 @@
+
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
@@ -49,6 +51,10 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden; /* Mencegah scroll pada layar utama */
+  
+  /* FIX: Mencegah zoom di mobile (pinch to zoom / double tap) */
+  touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* --- Layout & Containers --- */
@@ -328,6 +334,11 @@ html.dark .chat-message.self .message-info {
   /* Pastikan input tidak mengecil saat pesan di atasnya sangat banyak */
   flex-shrink: 0; 
   z-index: 100;
+  
+  /* FIX: Posisi Sticky agar input selalu menempel di bawah walau keyboard muncul */
+  position: sticky;
+  bottom: 0;
+  width: 100%;
 }
 
 .chat-input input {
