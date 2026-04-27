@@ -134,6 +134,26 @@
       });
     }
   });
+  
+function updateChatBadge(unreadCount) {
+      const badge = document.getElementById("hopeTalkBadge");
+      if (badge) {
+        if (unreadCount > 0) {
+          badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+          badge.style.display = "flex"; 
+        } else {
+          badge.style.display = "none"; 
+        }
+      }
+    }
+
+    // CONTOH: Munculin angka 3 setelah nunggu 2 detik.
+    // (Nanti bagian ini kamu hapus kalau udah di-connect ke database kamu)
+    setTimeout(() => {
+      updateChatBadge(3);
+    }, 2000);
+
+  });
 </script>
 
 <style is:global>
