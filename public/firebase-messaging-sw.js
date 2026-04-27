@@ -11,17 +11,27 @@ const firebaseConfig = {
   appId: "1:313569930727:web:afd1e2757cd0fe0867a142"
 };
 
-firebase.initializeApp(firebaseConfig);
-const messaging = firebase.messaging();
+// 👇 KITA BUNGKUS PAKE PELINDUNG DI SINI YAAAH SAYANGKUUU 👇
+try {
+  firebase.initializeApp(firebaseConfig);
+  const messaging = firebase.messaging();
 
-// Logika Notifikasi di Background
-messaging.onBackgroundMessage(function(payload) {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  const notificationTitle = payload.notification.title;
-  const notificationOptions = {
-    body: payload.notification.body,
-    // Pastikan path icon ini sesuai dengan file koin/book .webp lu biar makin kenceng
-    icon: '/asets/png/book.png' 
-  };
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
+  // Logika Notifikasi di Background
+  messaging.onBackgroundMessage(function(payload) {
+    console.log('[firebase-messaging-sw.js] Ada pesan masuk nih sayangkuuu: ', payload);
+    
+    // Pake tanda tanya (?) biar ngga error kalo title/body-nya kosong
+    const notificationTitle = payload.notification?.title || 'Pesan Baru di Hope Hype';
+    const notificationOptions = {
+      body: payload.notification?.body || 'Buka aplikasinya yuk cintakuuu!',
+      icon: '/asets/png/book.png' 
+    };
+    self.registration.showNotification(notificationTitle, notificationOptions);
+  });
+  
+  console.log("💖 Service Worker Firebase Notif nyala amannn!");
+
+} catch (error) {
+  // Kalo gagal (misal kena blokir), dia cuma ngasih tau tanpa ngerusak aplikasi!
+  console.warn("🚨 Firebase Notif gagal connect nih sayangkuuu (Biasanya kena Ad-Block):", error.message);
+}
