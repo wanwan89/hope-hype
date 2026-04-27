@@ -1757,3 +1757,57 @@ window.kickMember = async (targetId, targetName) => {
         }]);
     } catch(err) { showToast("Gagal mengeluarkan member"); }
 };
+// ==========================================
+// HANDLE TOMBOL KEMBALI (BACK BUTTON SYSTEM)
+// ==========================================
+
+// 1. Dorong state awal saat halaman pertama kali dimuat
+history.pushState({ page: 'chat-room' }, document.title, window.location.href);
+
+// 2. Listen event popstate (saat user tekan tombol kembali di HP/Browser)
+window.addEventListener('popstate', (e) => {
+    // Daftar semua ID overlay, modal, atau menu yang mungkin terbuka
+    const popups = [
+        'reaction-menu',
+        'sticker-menu',
+        'delete-overlay',
+        'invite-modal',
+        'group-settings-modal',
+        'vn-overlay'
+    ];
+
+    let isPopupOpen = false;
+
+    // Cek apakah ada modal/menu yang sedang tampil
+    popups.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && (el.style.display === 'flex' || el.style.display === 'block')) {
+            el.style.display = 'none'; // Tutup modalnya
+            isPopupOpen = true;
+        }
+    });
+
+    // Cek juga apakah mode "Reply" sedang aktif
+    const replyBox = document.getElementById("reply-preview-box");
+    if (replyBox && replyBox.style.display === 'flex') {
+        window.cancelReply(); // Panggil fungsi cancel reply kamu
+        isPopupOpen = true;
+    }
+
+    if (isPopupOpen) {
+        // Jika ada menu yang ditutup, kita NETRALKAN efek tombol kembali 
+        // dengan cara mendorong state baru agar history tidak benar-benar mundur.
+        history.pushState({ page: 'chat-room' }, document.title, window.location.href);
+    } else {
+        // JIKA TIDAK ADA POPUP YANG TERBUKA:
+        // Cek apakah user sedang di dalam room chat (ada ?from= atau ?group= di URL)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('from') || urlParams.get('group')) {
+            // Lempar kembali ke halaman beranda/lobby chat-mu (sesuaikan path-nya ya!)
+            window.location.href = '/hypetalk'; 
+        } else {
+            // Kalau memang lagi di lobby, biarkan dia keluar/mundur normal
+            history.back(); 
+        }
+    }
+});
