@@ -1,5 +1,18 @@
 import { supabase } from '../lib/supabase.js';
 
+// ===== INJEKSI CSS ANIMASI TYPING (AGAR BUBBLE MUNCUL) =====
+if (!document.getElementById('hh-dynamic-styles')) {
+  const style = document.createElement('style');
+  style.id = 'hh-dynamic-styles';
+  style.innerHTML = `
+    @keyframes typingBlink {
+      0%, 100% { transform: translateY(0); opacity: 0.4; }
+      50% { transform: translateY(-3px); opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // ===== Audio Config =====
 const sendSound = new Audio("asets/sound/send.mp3");
 const receiveSound = new Audio("asets/sound/receive.mp3");
@@ -74,6 +87,7 @@ function scrollToBottom() {
   }
 }
 
+// 🔥 FIX ANIMASI TYPING 🔥
 function renderTypingBubble(username, userId) {
   if (!messagesEl) return;
 
@@ -84,13 +98,16 @@ function renderTypingBubble(username, userId) {
     typingEl.id = "typing-indicator-bubble";
     typingEl.className = "chat-message other new-msg";
     
+    // Perbaikan struktur HTML bubble typing agar terlihat jelas
     typingEl.innerHTML = `
-      <img id="typing-avatar" class="avatar" src="asets/png/profile.webp" onerror="this.src='asets/png/profile.webp'">
-      <div class="content" style="margin-bottom: 5px;">
-        <div class="username">${escapeHtml(username)}</div>
-        <div class="text">
-          <div class="typing-bubble" style="padding: 2px 8px; min-width: auto;">
-            <span></span><span></span><span></span>
+      <img id="typing-avatar" class="avatar" src="asets/png/profile.webp" onerror="this.src='asets/png/profile.webp'" style="width: 32px; height: 32px; border-radius: 50%; align-self: flex-end; margin-bottom: 15px;">
+      <div class="content" style="margin-bottom: 15px;">
+        <div class="username" style="font-size: 11px; color: #666; margin-bottom: 2px;">${escapeHtml(username)}</div>
+        <div class="text" style="background: var(--tg-bg-secondary, #fff); padding: 10px 14px; border-radius: 16px; border-bottom-left-radius: 4px; display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+          <div class="typing-bubble" style="display: inline-flex; gap: 4px; align-items: center; height: 12px;">
+            <span style="width: 6px; height: 6px; background: #9ca3af; border-radius: 50%; animation: typingBlink 1.4s infinite both;"></span>
+            <span style="width: 6px; height: 6px; background: #9ca3af; border-radius: 50%; animation: typingBlink 1.4s infinite both; animation-delay: 0.2s;"></span>
+            <span style="width: 6px; height: 6px; background: #9ca3af; border-radius: 50%; animation: typingBlink 1.4s infinite both; animation-delay: 0.4s;"></span>
           </div>
         </div>
       </div>
@@ -316,7 +333,9 @@ async function initPresence() {
   });
 
   presenceChannel.subscribe(async (status) => {
-    if (status === "SUBSCRIBED") await presenceChannel.track({ isTyping: false, username: myUsername });
+    if (status === "SUBSCRIBED") {
+        await presenceChannel.track({ isTyping: false, username: myUsername });
+    }
   });
 
   if (inputEl) {
@@ -331,11 +350,13 @@ async function initPresence() {
     globalPresenceChannel.on("presence", { event: "sync" }, () => {
       const state = globalPresenceChannel.presenceState();
       totalOnlineUsers = Object.keys(state).length;
-      updateHeaderStatus();
+      updateHeaderStatus(state); // Parsing parameter state ke fungsi
     });
 
     globalPresenceChannel.subscribe(async (status) => {
-      if (status === "SUBSCRIBED") await globalPresenceChannel.track({ online: true, last_seen: new Date().toISOString() });
+      if (status === "SUBSCRIBED") {
+          await globalPresenceChannel.track({ online: true, last_seen: new Date().toISOString(), user_id: currentUser.id });
+      }
     });
   }
 }
@@ -366,11 +387,11 @@ async function handleTypingInput() {
 }
 
 // 🔥 FIX ONLINE STATUS UI 🔥
-function updateHeaderStatus() {
+function updateHeaderStatus(passedState = null) {
   const headerStatusEl = document.getElementById("status-header");
   if (!headerStatusEl || !currentUser) return;
 
-  const state = globalPresenceChannel ? globalPresenceChannel.presenceState() : {};
+  const state = passedState || (globalPresenceChannel ? globalPresenceChannel.presenceState() : {});
   const totalOnline = Object.keys(state).length;
 
   if (membersEl) membersEl.innerHTML = `<span class="online-dot"></span> ${totalOnline} user online`;
@@ -392,6 +413,7 @@ function updateHeaderStatus() {
       return;
   }
 
+  // Jika partnerId ada di object state, berarti dia sedang online!
   const isOnline = !!state[partnerId];
 
   if (isOnline) { 
@@ -751,14 +773,14 @@ function initRealtimeMessages() {
     messageChannel = null;
   }
 
-  // Filter channel HANYA untuk room yang sedang dibuka
+  // Nama channel dibuat lebih unik agar terpisah per room
   messageChannel = supabase
-    .channel(`room-${currentRoomId}`)
+    .channel(`room-messages-${currentRoomId}`)
     .on("postgres_changes", { 
         event: "INSERT", 
         schema: "public", 
         table: "messages", 
-        filter: `room_id=eq.${currentRoomId}` // 🔥 Ini kunci realtimenya!
+        filter: `room_id=eq.${currentRoomId}` 
     }, async (payload) => {
       const newMsg = payload.new;
 
@@ -785,7 +807,6 @@ function initRealtimeMessages() {
         role: senderProfile?.role || "user"
       };
 
-      // Hilangkan bubble ngetik saat pesan masuk
       removeTypingBubble();
 
       if (newMsg.user_id === currentUser.id && !newMsg.is_system) {
@@ -849,12 +870,20 @@ function initRealtimeMessages() {
             badgeEl.innerHTML = reactionsHtml;
             contentEl.style.marginBottom = "15px";
           } else if (badgeEl) {
-            badgeEl.remove();
+            if (badgeEl) badgeEl.remove();
             contentEl.style.marginBottom = "5px";
           }
         }
       }
-    }).subscribe();
+    })
+    .subscribe((status, err) => {
+       if (status === 'SUBSCRIBED') {
+           console.log('✅ Realtime tersambung untuk room:', currentRoomId);
+       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+           console.error('❌ Realtime gagal terkoneksi:', status, err);
+           showToast("Gagal menyambungkan pesan realtime. Mohon nyalakan 'Realtime' di Supabase.");
+       }
+    });
 }
 
 const apiKey = "vPUlBU5Qfz2ZygoEtKXVUqmIEAEcIB08";
