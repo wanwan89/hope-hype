@@ -1,6 +1,7 @@
 // File: src/pages/api/get-unread.js
 
-import { supabase } from '../../lib/supabase'; // Sesuaikan sama lokasi file koneksi Supabase kamuuu yaaah
+import { supabase } from '../../lib/supabase.js'; 
+
 
 export async function GET({ request }) {
   try {
