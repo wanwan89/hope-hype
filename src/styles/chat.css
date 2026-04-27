@@ -44,13 +44,15 @@ html, body {
   margin: 0;
   padding: 0;
   width: 100%;
+  max-width: 100vw; /* 👈 Kunci biar nggak bisa melar ngelewatin layar */
+  overflow-x: hidden; /* 👈 Pastikan mutlak nggak ada geser kanan-kiri */
   /* dvh adalah kunci agar tinggi mengikuti area yang terlihat saja */
   height: 100dvh; 
   background: var(--bg-main); 
   color: var(--text-color);
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Mencegah scroll pada layar utama */
+  overflow: hidden; 
   
   /* FIX: Mencegah zoom di mobile (pinch to zoom / double tap) */
   touch-action: pan-x pan-y;
@@ -68,6 +70,8 @@ html, body {
   z-index: 1;
   /* FIX: Memastikan container mengambil seluruh sisa tinggi */
   height: 100%;
+  width: 100%; /* 👈 Tambahin iniii */
+  max-width: 100%; /* 👈 Tambahin iniii juga yaaa */
 }
 
 /* --- Styling Utama Header --- */
