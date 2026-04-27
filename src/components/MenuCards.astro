@@ -133,12 +133,13 @@
         }
       });
     }
-  });
-  
-function updateChatBadge(unreadCount) {
+
+    // 👇👇👇 TAMBAHAN LOGIKA BADGE HYPETALK DI SINI 👇👇👇
+    function updateChatBadge(unreadCount) {
       const badge = document.getElementById("hopeTalkBadge");
       if (badge) {
         if (unreadCount > 0) {
+          // Maksimal nampilin 99+ biar layout gak rusak
           badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
           badge.style.display = "flex"; 
         } else {
@@ -147,14 +148,16 @@ function updateChatBadge(unreadCount) {
       }
     }
 
-    // CONTOH: Munculin angka 3 setelah nunggu 2 detik.
-    // (Nanti bagian ini kamu hapus kalau udah di-connect ke database kamu)
+    // SIMULASI: Munculin angka 3 setelah web diload 2 detik.
+    // Nanti '3' ini bisa kamu ganti pakai data real dari database/backend kamu.
     setTimeout(() => {
       updateChatBadge(3);
     }, 2000);
+    // 👆👆👆 SAMPAI SINI 👆👆👆
 
   });
 </script>
+
 
 <style is:global>
 /* ========================================= */
