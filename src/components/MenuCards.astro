@@ -134,12 +134,11 @@
       });
     }
 
-    // 👇👇👇 TAMBAHAN LOGIKA BADGE HYPETALK DI SINI 👇👇👇
+    // 4. LOGIKA BADGE HYPETALK (REAL DATA FETCH)
     function updateChatBadge(unreadCount) {
       const badge = document.getElementById("hopeTalkBadge");
       if (badge) {
         if (unreadCount > 0) {
-          // Maksimal nampilin 99+ biar layout gak rusak
           badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
           badge.style.display = "flex"; 
         } else {
@@ -148,16 +147,32 @@
       }
     }
 
-    // SIMULASI: Munculin angka 3 setelah web diload 2 detik.
-    // Nanti '3' ini bisa kamu ganti pakai data real dari database/backend kamu.
-    setTimeout(() => {
-      updateChatBadge(3);
-    }, 2000);
-    // 👆👆👆 SAMPAI SINI 👆👆👆
+    async function fetchUnreadChats() {
+      try {
+        // Sesuaikan URL endpoint ini dengan backend kamu
+        const response = await fetch('/api/get-unread'); 
+        
+        if (!response.ok) throw new Error('Gagal menarik data');
+        
+        const data = await response.json();
+        
+        // Sesuaikan key json-nya, di sini aku asumsikan pake "unread_count"
+        if (data && typeof data.unread_count === 'number') {
+          updateChatBadge(data.unread_count);
+        }
+      } catch (error) {
+        console.error("Gagal load badge chat:", error);
+      }
+    }
+
+    // Panggil saat halaman pertama kali diload
+    fetchUnreadChats();
+
+    // Auto-update badge setiap 10 detik
+    setInterval(fetchUnreadChats, 10000); 
 
   });
 </script>
-
 
 <style is:global>
 /* ========================================= */
