@@ -765,36 +765,39 @@ async function sendAudioMessage(url) {
   } catch (err) { showToast("Gagal mengirim VN ke chat"); }
 }
 
-// 🔥 FIX REALTIME MESSAGE (NO REFRESH) 🔥
-function initRealtimeMessages() {
+// 🔥 FIX REALTIME MESSAGE (ANTI CHANNEL ERROR) 🔥
+async function initRealtimeMessages() {
   if (!currentUser) return;
+  
+  // 1. Hapus koneksi lama secara TUNTAS (wajib pakai await)
   if (messageChannel) {
-    supabase.removeChannel(messageChannel);
+    await supabase.removeChannel(messageChannel);
     messageChannel = null;
   }
 
-  // Nama channel dibuat lebih unik agar terpisah per room
+  // 2. Buat nama channel yang selalu UNIK setiap kali dibuka
+  const uniqueChannelName = `chat_${currentRoomId}_${Math.random().toString(36).substring(7)}`;
+
   messageChannel = supabase
-    .channel(`room-messages-${currentRoomId}`)
+    .channel(uniqueChannelName)
     .on("postgres_changes", { 
         event: "INSERT", 
         schema: "public", 
-        table: "messages", 
-        filter: `room_id=eq.${currentRoomId}` 
+        table: "messages" 
+        // 🔥 Perhatikan: Baris 'filter' sengaja dihapus di sini
     }, async (payload) => {
       const newMsg = payload.new;
 
+      // 🔥 KITA FILTER MANUAL DI SINI BIAR SUPABASE GAK BINGUNG 🔥
+      if (!newMsg || newMsg.room_id !== currentRoomId) return;
+
       if (newMsg.is_system) {
-        if (newMsg.message.includes("📞 Memanggil")) {
-          if (newMsg.user_id !== currentUser.id) {
+        if (newMsg.message.includes("📞 Memanggil") && newMsg.user_id !== currentUser.id) {
             if (typeof showIncomingCall === "function") showIncomingCall(newMsg);
-          }
         }
-        if (newMsg.message.includes("🚫 Panggilan Ditolak")) {
-          if (newMsg.user_id !== currentUser.id) {
+        if (newMsg.message.includes("🚫 Panggilan Ditolak") && newMsg.user_id !== currentUser.id) {
             if (typeof window.endCall === "function") window.endCall();
             showToast("Panggilan ditolak oleh lawan bicara.");
-          }
         }
       }
 
@@ -826,16 +829,17 @@ function initRealtimeMessages() {
     .on("postgres_changes", { 
         event: "UPDATE", 
         schema: "public", 
-        table: "messages",
-        filter: `room_id=eq.${currentRoomId}` 
+        table: "messages"
+        // 🔥 Baris 'filter' juga dihapus di sini
     }, (payload) => {
       const updated = payload.new;
       const old = payload.old;
 
-      if (updated.status !== old?.status) {
-        if (updated.user_id === currentUser.id) {
+      // 🔥 FILTER MANUAL UNTUK UPDATE PESAN 🔥
+      if (!updated || updated.room_id !== currentRoomId) return;
+
+      if (updated.status !== old?.status && updated.user_id === currentUser.id) {
           updateMessageStatusUI(updated.id, updated.status || "sent");
-        }
       }
 
       if (updated.message === "Pesan ini telah dihapus") {
@@ -870,7 +874,7 @@ function initRealtimeMessages() {
             badgeEl.innerHTML = reactionsHtml;
             contentEl.style.marginBottom = "15px";
           } else if (badgeEl) {
-            if (badgeEl) badgeEl.remove();
+            badgeEl.remove();
             contentEl.style.marginBottom = "5px";
           }
         }
@@ -878,10 +882,9 @@ function initRealtimeMessages() {
     })
     .subscribe((status, err) => {
        if (status === 'SUBSCRIBED') {
-           console.log('✅ Realtime tersambung untuk room:', currentRoomId);
+           console.log('✅ Realtime OK!');
        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-           console.error('❌ Realtime gagal terkoneksi:', status, err);
-           showToast("Gagal menyambungkan pesan realtime. Mohon nyalakan 'Realtime' di Supabase.");
+           console.error('❌ Error Realtime:', err);
        }
     });
 }
