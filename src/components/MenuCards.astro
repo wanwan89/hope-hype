@@ -147,7 +147,7 @@
       }
     }
 
-    async function fetchUnreadChats() {
+        async function fetchUnreadChats() {
       try {
         // Sesuaikan URL endpoint ini dengan backend kamu
         const response = await fetch('/api/get-unread'); 
@@ -155,6 +155,9 @@
         if (!response.ok) throw new Error('Gagal menarik data');
         
         const data = await response.json();
+        
+        // 👇 KITA INTIP DATANYA DI SINI YAAAH SAYANGKUUU 👇
+        console.log("💌 Data chat dari backend cintakuuu:", data);
         
         // Sesuaikan key json-nya, di sini aku asumsikan pake "unread_count"
         if (data && typeof data.unread_count === 'number') {
@@ -171,7 +174,6 @@
     // Auto-update badge setiap 10 detik
     setInterval(fetchUnreadChats, 10000); 
 
-  });
 </script>
 
 <style is:global>
