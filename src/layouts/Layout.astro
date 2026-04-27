@@ -59,7 +59,6 @@ const {
     media-src 'self' blob: https://res.cloudinary.com https://audio-ssl.itunes.apple.com https://itunes.apple.com;
   ">
 
-
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/asets/png/book.png" />
   <link rel="icon" type="image/png" href="/asets/png/book.png" />
@@ -83,9 +82,8 @@ const {
       if (e.target.tagName === 'IMG') e.preventDefault();
     });
 
-    // 🔥 FIX 2: LAZY LOAD FIREBASE (Basmi "JavaScript Duplikat" & "Unused JS")
+    // 🔥 FIX 2: LAZY LOAD FIREBASE
     window.addEventListener('load', () => {
-      // Tunggu 2 detik setelah web selesai render, baru Firebase didownload di belakang layar
       setTimeout(() => {
         const fbApp = document.createElement('script');
         fbApp.src = "https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js";
@@ -104,6 +102,32 @@ const {
   <script is:inline src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script is:inline>eruda.init();</script>
 
+  <script>
+    import { supabase } from '../lib/supabase.js';
+
+    // 1. Bersihkan channel saat mau pindah halaman agar tidak 'nyangkut'
+    document.addEventListener('astro:before-preparation', () => {
+      if (supabase) {
+        supabase.removeAllChannels();
+        console.log("🧹 Supabase channels cleaned before navigation.");
+      }
+    });
+
+    // 2. Tangani masalah Auth Lock saat halaman dimuat ulang oleh ClientRouter
+    document.addEventListener('astro:page-load', async () => {
+      try {
+        // Cek session dengan cara yang tidak memicu lock berkepanjangan
+        const { data, error } = await supabase.auth.getSession();
+        if (error && error.message.includes('lock')) {
+          console.warn("🔐 Auth lock detected, recovering session...");
+          // Memaksa pengambilan ulang jika terkunci
+          await supabase.auth.getUser();
+        }
+      } catch (e) {
+        console.error("Auth initialization error:", e);
+      }
+    });
+  </script>
 
   <ClientRouter /> 
 </head>
