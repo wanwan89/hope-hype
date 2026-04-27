@@ -37,6 +37,7 @@ let totalOnlineUsers = 0;
 let callRoom; 
 let receiverTypingTimeout = null;
 let isRealtimeInitialized = false; 
+let reactionTargetId = null; 
 // ===== DOM =====
 const messagesEl = document.getElementById("chat-messages");
 const inputEl = document.getElementById("chat-input");
@@ -155,7 +156,36 @@ function formatTime(dateString) {
   const d = new Date(dateString);
   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
 }
+window.openReactionMenu = function(id, event) {
+  const menu = document.getElementById("reaction-menu");
+  if (!menu) return;
+  
+  reactionTargetId = id;
+  menu.style.display = "flex";
+  
+  // Menentukan posisi menu berdasarkan posisi klik/sentuhan
+  const x = event.touches ? event.touches[0].clientX : event.clientX;
+  const y = event.touches ? event.touches[0].clientY : event.clientY;
+  
+  // Agar menu tidak keluar layar
+  menu.style.left = `${Math.min(x, window.innerWidth - 220)}px`;
+  menu.style.top = `${Math.min(y, window.innerHeight - 100)}px`;
 
+  if (navigator.vibrate) navigator.vibrate(20);
+
+  // Fungsi tutup menu jika klik di luar
+  const closeMenu = (e) => {
+    if (!menu.contains(e.target)) {
+      menu.style.display = "none";
+      document.removeEventListener('mousedown', closeMenu);
+      document.removeEventListener('touchstart', closeMenu);
+    }
+  };
+  setTimeout(() => {
+    document.addEventListener('mousedown', closeMenu);
+    document.addEventListener('touchstart', closeMenu);
+  }, 10);
+};
 // ==========================================
 // FUNGSI PEMICU PUSH NOTIF
 // ==========================================
@@ -764,16 +794,16 @@ async function sendAudioMessage(url) {
     }
   } catch (err) { showToast("Gagal mengirim VN ke chat"); }
 }
-
-// 🔥 FIX REALTIME: 1 CHANNEL GLOBAL ANTI LIMIT 🔥
-function initRealtimeMessages() {
+async function initRealtimeMessages() {
   if (!currentUser) return;
 
-  // CEGAH BIKIN CHANNEL BERKALI-KALI
-  if (isRealtimeInitialized) return;
-  isRealtimeInitialized = true;
+  // Bersihkan channel lama jika ada untuk mencegah tabrakan/zombie connection
+  if (messageChannel) {
+    await supabase.removeChannel(messageChannel);
+    messageChannel = null;
+  }
 
-  // Kita pakai 1 nama channel statis untuk seluruh aplikasi
+  // Gunakan 1 channel global statis agar tidak terkena limit Supabase
   messageChannel = supabase
     .channel('global-chat-channel')
     .on("postgres_changes", { 
@@ -783,21 +813,13 @@ function initRealtimeMessages() {
     }, async (payload) => {
       const newMsg = payload.new;
 
-      // 🔥 Pastikan pesan ini untuk room yang SEDANG DIBUKA 🔥
+      // 🔥 FILTER MANUAL: Pastikan pesan hanya diproses jika Room ID cocok
       if (!newMsg || newMsg.room_id !== currentRoomId) return;
 
-      if (newMsg.is_system) {
-        if (newMsg.message.includes("📞 Memanggil") && newMsg.user_id !== currentUser.id) {
-            if (typeof showIncomingCall === "function") showIncomingCall(newMsg);
-        }
-        if (newMsg.message.includes("🚫 Panggilan Ditolak") && newMsg.user_id !== currentUser.id) {
-            if (typeof window.endCall === "function") window.endCall();
-            showToast("Panggilan ditolak oleh lawan bicara.");
-        }
-      }
-
+      // Cegah duplikasi pesan di layar
       if (document.getElementById(`msg-${newMsg.id}`)) return;
 
+      // Ambil profil pengirim (pakai cache agar cepat)
       const senderProfile = await getCachedProfile(newMsg.user_id);
       newMsg.profiles = {
         username: senderProfile?.username || "User",
@@ -808,13 +830,16 @@ function initRealtimeMessages() {
       removeTypingBubble();
 
       if (newMsg.user_id === currentUser.id && !newMsg.is_system) {
+        // Jika saya yang kirim, hapus bubble "sending" ganti dengan pesan asli database
         const tempEl = document.querySelector(`[id^="msg-temp-"]`);
         if (tempEl) tempEl.remove();
         renderMessage(newMsg);
       } else {
+        // Jika orang lain yang kirim
         renderMessage(newMsg);
         if (!newMsg.is_system) receiveSound.play().catch(() => {});
 
+        // Tandai otomatis terbaca (Read) jika sedang fokus di chat ini
         if (newMsg.status !== "read" && !document.hidden && !newMsg.is_system) {
           await supabase.from("messages").update({ status: "read" }).eq("id", newMsg.id);
         }
@@ -829,13 +854,14 @@ function initRealtimeMessages() {
       const updated = payload.new;
       const old = payload.old;
 
-      // 🔥 Pastikan update ini untuk room yang SEDANG DIBUKA 🔥
       if (!updated || updated.room_id !== currentRoomId) return;
 
+      // Update status centang (sent/read) secara live
       if (updated.status !== old?.status && updated.user_id === currentUser.id) {
           updateMessageStatusUI(updated.id, updated.status || "sent");
       }
 
+      // Update jika pesan dihapus oleh lawan bicara
       if (updated.message === "Pesan ini telah dihapus") {
         const msgEl = document.getElementById(`msg-${updated.id}`);
         if (msgEl) {
@@ -848,12 +874,9 @@ function initRealtimeMessages() {
         }
       }
     })
-    .subscribe((status, err) => {
+    .subscribe((status) => {
        if (status === 'SUBSCRIBED') {
            console.log('✅ Realtime GLOBAL Berhasil Tersambung!');
-       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-           console.error('❌ Error Realtime:', status);
-           isRealtimeInitialized = false; // Reset flag supaya bisa dicoba lagi kalau gagal
        }
     });
 }
@@ -1352,7 +1375,7 @@ async function init() {
     }
 
     await initPresence(); 
-    initRealtimeMessages(); 
+    await initRealtimeMessages(); 
     await loadMessages(); 
     fetchStickers(); 
     updateHeaderStatus();
