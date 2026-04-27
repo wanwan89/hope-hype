@@ -332,6 +332,7 @@ async function requireLogin() {
 }
 
 // ===== Presence / Typing =====
+// 🔧 MODIFIED
 async function initPresence() {
   if (!currentUser) return;
 
@@ -345,45 +346,31 @@ async function initPresence() {
   if (presenceChannel) { await supabase.removeChannel(presenceChannel); presenceChannel = null; }
   presenceChannel = supabase.channel(`presence-${currentRoomId}`, { config: { presence: { key: currentUser.id } } });
 
-  presenceChannel.on("presence", { event: "sync" }, () => {
-    const state = presenceChannel.presenceState();
-    const typingUsers = [];
-    let typingUserId = null; 
-
-    for (const userId in state) {
-      if (userId !== currentUser.id && state[userId].some((p) => p.isTyping)) {
-        typingUsers.push(state[userId][0].username);
-        typingUserId = userId; 
-      }
-    }
-
-    if (typingUsers.length > 0) {
-      if (typeof renderTypingBubble === "function") {
-        renderTypingBubble(typingUsers[0], typingUserId);
-      }
-    } else {
-      if (typeof removeTypingBubble === "function") {
-        removeTypingBubble();
-      }
+  // ✅ ADDED: Listen for broadcast typing events instead of presence
+  presenceChannel.on("broadcast", { event: "typing" }, (payload) => {
+    const typingUser = payload.payload.username;
+    if (typeof renderTypingBubble === "function") {
+      renderTypingBubble(typingUser, payload.payload.userId);
     }
 
     const currentTypingHeader = document.getElementById("typing-header");
     const currentStatusHeader = document.getElementById("status-header");
     if (currentTypingHeader && currentStatusHeader) {
-      if (typingUsers.length > 0) {
-        currentTypingHeader.style.display = "inline-block";
-        currentStatusHeader.style.display = "none";
-        currentTypingHeader.innerText = `${typingUsers[0]} sedang mengetik...`;
-      } else {
-        currentTypingHeader.style.display = "none";
-        currentStatusHeader.style.display = "inline-block";
-      }
+      currentTypingHeader.style.display = "inline-block";
+      currentStatusHeader.style.display = "none";
+      currentTypingHeader.innerText = `${typingUser} sedang mengetik...`;
     }
+  });
+
+  presenceChannel.on("presence", { event: "sync" }, () => {
+    // 🔧 MODIFIED: Only use presence sync for updating online status (removed slow typing checks)
+    updateHeaderStatus();
   });
 
   presenceChannel.subscribe(async (status) => {
     if (status === "SUBSCRIBED") {
-        await presenceChannel.track({ isTyping: false, username: myUsername });
+        // 🔧 MODIFIED: Track simple online status in the room
+        await presenceChannel.track({ online: true, user_id: currentUser.id });
     }
   });
 
@@ -399,7 +386,7 @@ async function initPresence() {
     globalPresenceChannel.on("presence", { event: "sync" }, () => {
       const state = globalPresenceChannel.presenceState();
       totalOnlineUsers = Object.keys(state).length;
-      updateHeaderStatus(state); // Parsing parameter state ke fungsi
+      updateHeaderStatus(state); 
     });
 
     globalPresenceChannel.subscribe(async (status) => {
@@ -410,6 +397,7 @@ async function initPresence() {
   }
 }
 
+// 🔧 MODIFIED
 async function handleTypingInput() {
   if (!presenceChannel) return;
   const text = inputEl ? inputEl.value.trim() : "";
@@ -418,24 +406,28 @@ async function handleTypingInput() {
     clearTimeout(typingTimeout);
     if (isCurrentlyTyping) {
       isCurrentlyTyping = false;
-      presenceChannel.track({ isTyping: false, username: myUsername }).catch(()=>{});
     }
     return;
   }
 
   if (!isCurrentlyTyping) {
     isCurrentlyTyping = true;
-    presenceChannel.track({ isTyping: true, username: myUsername }).catch(()=>{});
+    // ✅ ADDED: Send typing state using Realtime Broadcast instead of Presence
+    presenceChannel.send({
+      type: "broadcast",
+      event: "typing",
+      payload: { username: myUsername, userId: currentUser.id }
+    }).catch(()=>{});
   }
 
   clearTimeout(typingTimeout);
   typingTimeout = setTimeout(() => {
     isCurrentlyTyping = false;
-    if (presenceChannel) presenceChannel.track({ isTyping: false, username: myUsername }).catch(()=>{});
   }, 3000);
 }
 
 // 🔥 FIX ONLINE STATUS UI 🔥
+// 🔧 MODIFIED
 function updateHeaderStatus(passedState = null) {
   const headerStatusEl = document.getElementById("status-header");
   if (!headerStatusEl || !currentUser) return;
@@ -456,8 +448,9 @@ function updateHeaderStatus(passedState = null) {
 
   const partnerId = getPartnerIdFromRoom(currentRoomId);
   if (!partnerId) {
-      // Jika Grup, hitung dari presence channel local room aja
-      const roomPresence = presenceChannel ? Object.keys(presenceChannel.presenceState()).length : 1;
+      // 🔧 MODIFIED: Safely read presenceState without crashing if undefined
+      const roomPresenceState = presenceChannel ? presenceChannel.presenceState() : {};
+      const roomPresence = Object.keys(roomPresenceState).length || 1;
       headerStatusEl.innerHTML = `<span class="online-dot" style="background:#2ecc71; width:8px; height:8px; display:inline-block; border-radius:50%; margin-right:4px;"></span> ${roomPresence} anggota online`; 
       return;
   }
@@ -813,6 +806,7 @@ async function sendAudioMessage(url) {
     }
   } catch (err) { showToast("Gagal mengirim VN ke chat"); }
 }
+// 🔧 MODIFIED
 async function initRealtimeMessages() {
   if (!currentUser) return;
 
@@ -822,13 +816,14 @@ async function initRealtimeMessages() {
     messageChannel = null;
   }
 
-  // Gunakan 1 channel global statis agar tidak terkena limit Supabase
+  // 🔧 MODIFIED: Make channel dynamic per room and use postgres_changes filter
   messageChannel = supabase
-    .channel('global-chat-channel')
+    .channel(`messages-${currentRoomId}`) // ✅ ADDED: Unique channel for each room
     .on("postgres_changes", { 
         event: "INSERT", 
         schema: "public", 
-        table: "messages" 
+        table: "messages",
+        filter: `room_id=eq.${currentRoomId}` // ✅ ADDED: Database-level filter for real-time
     }, async (payload) => {
       const newMsg = payload.new;
 
@@ -868,7 +863,8 @@ async function initRealtimeMessages() {
     .on("postgres_changes", { 
         event: "UPDATE", 
         schema: "public", 
-        table: "messages"
+        table: "messages",
+        filter: `room_id=eq.${currentRoomId}` // ✅ ADDED: Filter updates by room
     }, (payload) => {
       const updated = payload.new;
       const old = payload.old;
@@ -895,7 +891,7 @@ async function initRealtimeMessages() {
     })
     .subscribe((status) => {
        if (status === 'SUBSCRIBED') {
-           console.log('✅ Realtime GLOBAL Berhasil Tersambung!');
+           console.log(`✅ Realtime Messages Berhasil Tersambung di ${currentRoomId}!`);
        }
     });
 }
