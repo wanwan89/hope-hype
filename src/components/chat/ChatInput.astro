@@ -1,11 +1,10 @@
 ---
 ---
 <div class="chat-input-container" 
-     style="display: flex; align-items: flex-end; gap: 10px; padding: 10px 15px; padding-bottom: calc(env(safe-area-inset-bottom) + 15px) !important; background: var(--bg-panel) !important; width: 100%; box-sizing: border-box; border-top: 1px solid var(--border-color); transition: all 0.3s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;">
+     style="position: sticky; bottom: 0; z-index: 100; display: flex; align-items: flex-end; gap: 10px; padding: 10px 15px; padding-bottom: calc(env(safe-area-inset-bottom) + 15px) !important; background: var(--bg-panel) !important; width: 100%; box-sizing: border-box; border-top: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;">
 
-  
   <div class="input-group-wrapper" 
-       style="flex: 1; display: flex; align-items: center; background: var(--bg-main) !important; border-radius: 30px; padding: 4px 16px; position: relative; min-height: 48px; box-sizing: border-box; border: 1px solid var(--border-color); transition: all 0.3s;">
+       style="flex: 1; display: flex; align-items: center; background: var(--bg-main) !important; border-radius: 30px; padding: 4px 16px; position: relative; min-height: 48px; box-sizing: border-box; border: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s;">
     
     <button id="sticker-btn" style="background: none; border: none; cursor: pointer; padding: 0; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; outline: none; -webkit-tap-highlight-color: transparent;">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted, #888)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
