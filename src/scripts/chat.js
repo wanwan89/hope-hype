@@ -156,6 +156,7 @@ function formatTime(dateString) {
   const d = new Date(dateString);
   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
 }
+// 🛠 FIX: openReactionMenu agar tidak error clientX undefined
 window.openReactionMenu = function(id, event) {
   const menu = document.getElementById("reaction-menu");
   if (!menu) return;
@@ -163,17 +164,33 @@ window.openReactionMenu = function(id, event) {
   reactionTargetId = id;
   menu.style.display = "flex";
   
-  // Menentukan posisi menu berdasarkan posisi klik/sentuhan
-  const x = event.touches ? event.touches[0].clientX : event.clientX;
-  const y = event.touches ? event.touches[0].clientY : event.clientY;
+  // Ambil koordinat dengan pengecekan ekstra ketat
+  let posX = 0;
+  let posY = 0;
+
+  if (event) {
+    if (event.touches && event.touches.length > 0) {
+      posX = event.touches[0].clientX;
+      posY = event.touches[0].clientY;
+    } else if (event.clientX !== undefined) {
+      posX = event.clientX;
+      posY = event.clientY;
+    }
+  }
+
+  // Jika tetap gagal mendapatkan koordinat (misal karena event hilang), 
+  // posisikan di tengah layar sebagai fallback agar tidak crash
+  if (posX === 0 && posY === 0) {
+    posX = window.innerWidth / 2 - 100;
+    posY = window.innerHeight / 2;
+  }
   
-  // Agar menu tidak keluar layar
-  menu.style.left = `${Math.min(x, window.innerWidth - 220)}px`;
-  menu.style.top = `${Math.min(y, window.innerHeight - 100)}px`;
+  // Atur posisi menu
+  menu.style.left = `${Math.min(posX, window.innerWidth - 220)}px`;
+  menu.style.top = `${Math.min(posY, window.innerHeight - 100)}px`;
 
-  if (navigator.vibrate) navigator.vibrate(20);
+  if (navigator.vibrate) navigator.vibrate(25);
 
-  // Fungsi tutup menu jika klik di luar
   const closeMenu = (e) => {
     if (!menu.contains(e.target)) {
       menu.style.display = "none";
@@ -181,11 +198,13 @@ window.openReactionMenu = function(id, event) {
       document.removeEventListener('touchstart', closeMenu);
     }
   };
+  
   setTimeout(() => {
     document.addEventListener('mousedown', closeMenu);
     document.addEventListener('touchstart', closeMenu);
   }, 10);
 };
+
 // ==========================================
 // FUNGSI PEMICU PUSH NOTIF
 // ==========================================
