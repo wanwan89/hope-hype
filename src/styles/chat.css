@@ -1040,3 +1040,29 @@ img {
 
 * { -webkit-tap-highlight-color: transparent; outline: none; }
 .btn, .tab, button { -webkit-tap-highlight-color: rgba(0, 0, 0, 0); user-select: none; }
+/* === FIX INPUT AGAR TIDAK KEPOTONG DI SEMUA DEVICE === */
+@supports (height: 100dvh) {
+  html, body {
+    height: 100dvh;
+  }
+}
+
+/* Fix tambahan khusus mobile + keyboard */
+.chat-input {
+  position: sticky;
+  bottom: 0;
+}
+
+/* Khusus Android Chrome & iOS Safari (keyboard muncul) */
+@supports (-webkit-touch-callout: none) {
+  .chat-input {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 25px) !important;
+  }
+}
+
+/* Fallback device yang ga support env() */
+@supports not (padding: max(0px)) {
+  .chat-input {
+    padding-bottom: 25px !important;
+  }
+}
