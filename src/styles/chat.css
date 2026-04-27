@@ -38,23 +38,17 @@ html.dark {
   box-sizing: border-box;
 }
 
-/* --- FIX BASE LAYOUT UNTUK SEMUA DEVICE --- */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  /* FIX: Menggunakan 100dvh agar tinggi pas dengan area pandang browser mobile yang dinamis */
-  height: 100%;
+  /* dvh adalah kunci agar tinggi mengikuti area yang terlihat saja */
   height: 100dvh; 
   background: var(--bg-main); 
   color: var(--text-color);
   display: flex;
   flex-direction: column;
-  /* FIX: Mencegah layar goyang/bounce di iOS Safari */
-  overflow: hidden;
-  position: fixed;
-  left: 0;
-  top: 0;
+  overflow: hidden; /* Mencegah scroll pada layar utama */
 }
 
 /* --- Layout & Containers --- */
@@ -320,17 +314,20 @@ html.dark .chat-message.self .message-info {
   line-height: 1;
 }
 
-/* --- Input Area --- */
 .chat-input {
   display: flex;
   align-items: center; 
   border-top: 1px solid var(--border-color); 
   padding: 10px;
   background: var(--bg-panel); 
-  /* FIX: Memberikan ruang aman di bawah (untuk gesture bar iPhone/Android terbaru) */
-  padding-bottom: calc(env(safe-area-inset-bottom) + 12px) !important;
+  
+  /* --- PERUBAHAN DI SINI --- */
+  /* Ganti + 12px menjadi + 20px atau + 25px agar area input lebih naik ke atas */
+  padding-bottom: calc(env(safe-area-inset-bottom) + 20px) !important;
+  
+  /* Pastikan input tidak mengecil saat pesan di atasnya sangat banyak */
+  flex-shrink: 0; 
   z-index: 100;
-  flex-shrink: 0;
 }
 
 .chat-input input {
