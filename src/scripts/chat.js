@@ -546,8 +546,9 @@ function renderMessage(msg) {
       </div>
     </div>`;
 
-  let startX = 0; let currentX = 0; let swiping = false;
+    let startX = 0; let currentX = 0; let swiping = false;
   let holdTimer = null; let isHeld = false;
+  let lastTapTime = 0; // 🔥 Tambahan untuk deteksi double tap 🔥
 
   msgEl.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX; currentX = startX; swiping = true; isHeld = false;
@@ -578,9 +579,15 @@ function renderMessage(msg) {
     let diff = currentX - startX;
     const realMsgId = msgEl.id.replace("msg-", "");
 
-    if (!isHeld && Math.abs(diff) < 10 && msg.message !== "Pesan ini telah dihapus") {
+    // 🔥 LOGIKA DOUBLE TAP UNTUK REACTION 🔥
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTapTime;
+
+    if (tapLength < 300 && tapLength > 0 && !isHeld && Math.abs(diff) < 10 && msg.message !== "Pesan ini telah dihapus") {
       window.openReactionMenu(realMsgId, e);
+      if (e.cancelable) e.preventDefault(); 
     }
+    lastTapTime = currentTime; // Update waktu tap terakhir
 
     msgEl.style.transition = "transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)"; 
     msgEl.style.transform = "translateX(0)";
@@ -900,6 +907,43 @@ async function initRealtimeMessages() {
             textEl.style.color = "#aaa";
             textEl.querySelectorAll("img, .vn-custom-player").forEach(m => m.remove());
           }
+        }
+      }
+
+      // 🔥 UPDATE REACTION SECARA REALTIME 🔥
+      if (JSON.stringify(updated.reactions) !== JSON.stringify(old?.reactions)) {
+        const msgEl = document.getElementById(`msg-${updated.id}`);
+        if (msgEl) {
+           const contentEl = msgEl.querySelector(".content");
+           
+           // Hapus reaction UI yang lama
+           const oldReactions = contentEl.querySelector(".message-reactions");
+           if (oldReactions) oldReactions.remove();
+
+           // Render reaction UI yang baru
+           const reactions = updated.reactions || {};
+           const reactionIcons = Object.values(reactions);
+           const uniqueIcons = [...new Set(reactionIcons)].slice(0, 3);
+
+           if (uniqueIcons.length > 0) {
+             const reactionsDiv = document.createElement("div");
+             reactionsDiv.className = "message-reactions";
+             reactionsDiv.innerHTML = `
+               ${uniqueIcons.join("")} 
+               ${reactionIcons.length > 1 ? `<span style="font-size:9px; color:#999; margin-left:2px;">${reactionIcons.length}</span>` : ""}
+             `;
+             
+             // Masukkan tepat di atas elemen timestamp/message-info
+             const msgInfo = contentEl.querySelector(".message-info");
+             if (msgInfo) {
+               contentEl.insertBefore(reactionsDiv, msgInfo);
+             } else {
+               contentEl.appendChild(reactionsDiv);
+             }
+             contentEl.style.marginBottom = '15px'; // Beri space biar rapi
+           } else {
+             contentEl.style.marginBottom = '5px'; // Kembalikan space normal jika kosong
+           }
         }
       }
     })
@@ -1230,7 +1274,6 @@ async function connectToCall(roomName) {
 
     } catch (e) {
         console.error("Gagal koneksi LiveKit:", e.message);
-        showToast("Gagal terhubung ke server panggilan.");
         window.endCall();
     }
 }
