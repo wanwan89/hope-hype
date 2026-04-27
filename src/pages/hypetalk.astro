@@ -450,6 +450,8 @@ import * as uiUtils from '../lib/ui-utils.js';
       let currentUser = null;
       let sisaLimitDoi = parseInt(localStorage.getItem('doi_limit') || '10');
       let inboxRealtimeChannel = null;
+      const typingChannels = new Map(); 
+      const lastMessageMap = new Map(); 
 
       const ringtoneSound = new Audio("/asets/sound/call.wav");
       ringtoneSound.loop = true;
@@ -688,6 +690,24 @@ import * as uiUtils from '../lib/ui-utils.js';
         }
       }
 
+      function subscribeToTyping(id, type, originalPreview) {
+        const roomId = type === 'private' ? (currentUser.id < id ? `pv_${currentUser.id}_${id}` : `pv_${id}_${currentUser.id}`) : (type === 'group' ? `group_${id}` : 'room-1');
+        lastMessageMap.set(id, originalPreview);
+        if (typingChannels.has(id)) supabase.removeChannel(typingChannels.get(id));
+        const chan = supabase.channel(`typing-${roomId}`)
+          .on("broadcast", { event: "typing" }, (payload) => {
+            const chatItem = document.querySelector(`.tg-chat-item[data-room-id="${id}"]`);
+            if (!chatItem || payload.payload.userId === currentUser.id) return;
+            const previewEl = chatItem.querySelector('.tg-preview');
+            previewEl.innerHTML = `<span style="color:var(--tg-primary); font-style:italic; font-weight:500;">sedang mengetik...</span>`;
+            clearTimeout(chatItem.typingTimeout);
+            chatItem.typingTimeout = setTimeout(() => {
+              previewEl.innerText = lastMessageMap.get(id) || "";
+            }, 3000);
+          }).subscribe();
+        typingChannels.set(id, chan);
+      }
+
       function initInboxRealtime() {
         if (!currentUser) return;
         if (inboxRealtimeChannel) supabase.removeChannel(inboxRealtimeChannel);
@@ -695,21 +715,19 @@ import * as uiUtils from '../lib/ui-utils.js';
         inboxRealtimeChannel = supabase.channel('inbox-monitor')
           .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
              const newMsg = payload.new;
-             
              const isGlobal = newMsg.room_id === "room-1";
              const isPrivateForMe = newMsg.room_id.startsWith("pv_") && newMsg.room_id.includes(currentUser.id);
              const isGroup = newMsg.room_id.startsWith("group_"); 
              
              if (isGlobal || isPrivateForMe || isGroup) {
                  if (newMsg.is_system && newMsg.message.includes("📞 Memanggil") && newMsg.user_id !== currentUser.id) {
-                     if (typeof window.showIncomingCall === "function") {
-                         window.showIncomingCall(newMsg);
-                     }
+                     if (typeof window.showIncomingCall === "function") window.showIncomingCall(newMsg);
                  }
-
-                 if (newMsg.user_id !== currentUser.id) {
-                     updateChatItemRealtime(newMsg);
+                 const stopKeywords = ["🚫 Panggilan Ditolak", "☎️ Panggilan tak terjawab", "Panggilan berakhir"];
+                 if (newMsg.is_system && stopKeywords.some(k => newMsg.message.includes(k))) {
+                     if (typeof window.endCall === "function") window.endCall(false);
                  }
+                 if (newMsg.user_id !== currentUser.id) updateChatItemRealtime(newMsg);
              }
           }).subscribe();
       }
@@ -723,15 +741,14 @@ import * as uiUtils from '../lib/ui-utils.js';
          }
 
          const chatItemEl = document.querySelector(`.tg-chat-item[data-room-id="${targetId}"]`);
-         
          let previewText = msg.sticker_url ? "🖼 Stiker" : (msg.audio_url ? "🎤 Voice Note" : msg.message);
          if (msg.is_system) previewText = msg.message;
 
          if (chatItemEl) {
+             lastMessageMap.set(targetId, previewText);
              chatItemEl.querySelector('.tg-preview').innerText = previewText;
              chatItemEl.classList.add('unread');
              chatItemEl.querySelector('.tg-time').innerText = formatTimeTelegram(msg.created_at);
-             
              let badgeEl = chatItemEl.querySelector('.tg-unread-badge');
              if (!badgeEl) {
                  const bottomContainer = chatItemEl.querySelector('.tg-chat-bottom');
@@ -746,7 +763,6 @@ import * as uiUtils from '../lib/ui-utils.js';
                  void badgeEl.offsetWidth; 
                  badgeEl.classList.add('bump');
              }
-
              chatList.insertBefore(chatItemEl, chatList.firstChild);
          } else {
              loadAllChats();
@@ -859,78 +875,45 @@ import * as uiUtils from '../lib/ui-utils.js';
 
       document.getElementById("btn-sidebar-search").onclick = async () => {
         if (sisaLimitDoi <= 0) return openModal("modal-limit-doi");
-        
         const { data: profile } = await supabase.from('profiles').select('gender').eq('id', currentUser.id).single();
         if (!profile || !profile.gender) {
           window.showToast("Setel Gender kamu dulu di Edit Biodata!"); return openModal("bio-modal");
         }
-
         sisaLimitDoi--; localStorage.setItem('doi_limit', sisaLimitDoi.toString()); updateLimitUI();
-
         const overlay = document.createElement("div"); 
         overlay.className = "doi-search-overlay"; 
         overlay.id = "active-search-overlay";
         overlay.style.display = "flex"; 
-
-        overlay.innerHTML = `
-          <div class="paper-plane-container" id="paper-plane-container-box">
-             <span class="material-icons paper-plane-icon">send</span>
-          </div>
-          <div style="text-align: center; z-index: 10;">
-             <h3 class="search-title-glow">Menerbangkan Pesawat...</h3>
-             <p class="search-subtitle-glow">Menjelajah mencari doi buat kamu</p>
-          </div>
-        `; 
+        overlay.innerHTML = `<div class="paper-plane-container" id="paper-plane-container-box"><span class="material-icons paper-plane-icon">send</span></div><div style="text-align: center; z-index: 10;"><h3 class="search-title-glow">Menerbangkan Pesawat...</h3><p class="search-subtitle-glow">Menjelajah mencari doi buat kamu</p></div>`; 
         document.body.appendChild(overlay);
-        
         const container = document.getElementById("paper-plane-container-box");
-        const dummyPhotos = [
-            "https://ui-avatars.com/api/?name=Alex&background=random",
-            "https://ui-avatars.com/api/?name=Budi&background=random",
-            "https://ui-avatars.com/api/?name=Caca&background=random",
-            "https://ui-avatars.com/api/?name=Deni&background=random",
-            "https://ui-avatars.com/api/?name=Eka&background=random"
-        ];
-        
+        const dummyPhotos = ["https://ui-avatars.com/api/?name=Alex&background=random","https://ui-avatars.com/api/?name=Budi&background=random","https://ui-avatars.com/api/?name=Caca&background=random","https://ui-avatars.com/api/?name=Deni&background=random","https://ui-avatars.com/api/?name=Eka&background=random"];
         radarInterval = setInterval(() => {
             const img = document.createElement("img");
             img.className = "floating-avatar";
             img.src = dummyPhotos[Math.floor(Math.random() * dummyPhotos.length)];
-            
             const angle = Math.random() * Math.PI * 2;
             const radius = 60 + Math.random() * 50; 
-            const x = Math.cos(angle) * radius;
-            const y = Math.sin(angle) * radius;
-            
-            img.style.left = `calc(50% + ${x}px)`;
-            img.style.top = `calc(50% + ${y}px)`;
-            
+            img.style.left = `calc(50% + ${Math.cos(angle) * radius}px)`;
+            img.style.top = `calc(50% + ${Math.sin(angle) * radius}px)`;
             container.appendChild(img);
-            
             setTimeout(() => { if (img && img.parentNode) img.remove(); }, 1500);
         }, 800);
-
         const lawanJenis = profile.gender === "Pria" ? "Wanita" : "Pria";
-        
         setTimeout(async () => {
           clearInterval(radarInterval); 
           try {
             const { data: users, error } = await supabase.from("profiles").select("*").neq("id", currentUser.id).eq("gender", lawanJenis);
             document.getElementById("active-search-overlay")?.remove();
-            
             if (error || !users || users.length === 0) return window.showToast(`Belum ada ${lawanJenis} yang tersedia.`);
-            
             const doi = users[Math.floor(Math.random() * users.length)];
-            
             document.getElementById("doi-photo").src = doi.avatar_url || `https://ui-avatars.com/api/?name=${doi.username}`;
             document.getElementById("doi-name-age").innerText = `${doi.username}, ${doi.umur || "?"}`;
             document.getElementById("doi-zodiac").innerText = doi.zodiac || "Rahasia";
             document.getElementById("doi-job").innerText = doi.pekerjaan || "Sibuk";
             document.getElementById("doi-hobby").innerText = doi.hobi || "Rebahan";
-            
             document.getElementById("btn-gas-chat").onclick = () => window.location.href = `/chat?from=${doi.id}`;
             openModal("doi-card-modal");
-            
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
           } catch (err) {
             document.getElementById("active-search-overlay")?.remove(); window.showToast("Gangguan koneksi.");
@@ -957,53 +940,41 @@ import * as uiUtils from '../lib/ui-utils.js';
       async function loadAllChats() {
         try {
           const waktu24JamLalu = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-          
           const [pvMsgsRes, groupsRes, globalUnreadRes] = await Promise.all([
             supabase.from("messages").select("room_id, message, created_at, sticker_url, audio_url, user_id, status, is_system").ilike("room_id", "pv_%").ilike("room_id", `%${currentUser.id}%`).gte("created_at", waktu24JamLalu).order("created_at", { ascending: false }),
             supabase.from('group_members').select(`group_id, groups(id, name, photo_url)`).eq('user_id', currentUser.id),
             supabase.from('messages').select('*', { count: 'exact', head: true }).eq('room_id', 'room-1').neq('user_id', currentUser.id).eq('status', 'sent')
           ]);
-
           const pvMsgs = pvMsgsRes.data;
           const groups = groupsRes.data;
           const globalUnread = globalUnreadRes.count || 0;
-
           const finalChatList = [{ id: 'room-1', type: 'global', name: 'HopeTalk Globe', avatar: '', preview: 'Obrolan umum komunitas', time: 'Always', unread: globalUnread, sortTime: Date.now() + 10000 }];
-          
           const countPromises = [];
-
           if (pvMsgs) {
             const lastPvMessages = new Map();
             pvMsgs.forEach((msg) => {
               const pId = msg.room_id.replace("pv_", "").split("_").find(id => id !== currentUser.id);
               if (pId && !lastPvMessages.has(pId)) lastPvMessages.set(pId, msg);
             });
-            
             const partnerIds = Array.from(lastPvMessages.keys());
             if (partnerIds.length > 0) {
               const { data: profiles } = await supabase.from("profiles").select("id, username, avatar_url, role").in("id", partnerIds);
               const profileMap = new Map(); profiles?.forEach(p => profileMap.set(p.id, p));
-              
               partnerIds.forEach(pId => {
                 const msg = lastPvMessages.get(pId);
                 const profile = profileMap.get(pId); 
                 if (!profile) return;
-                
                 countPromises.push((async () => {
                     let preview = msg.sticker_url ? "🖼 Stiker" : (msg.audio_url ? "🎤 Voice Note" : msg.message);
                     if (msg.message === "Pesan ini telah dihapus") preview = "🚫 Dihapus";
-                    
                     const isMe = msg.user_id === currentUser.id && !msg.is_system;
                     const statusHtml = isMe ? (msg.status === "read" ? `<span class="material-icons check-icon" style="color:#10b981;font-size:16px;">done_all</span> ` : `<span class="material-icons check-icon" style="color:var(--tg-text-muted);font-size:16px;">check</span> `) : '';
-                    
                     const { count: pvUnread } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('room_id', msg.room_id).eq('user_id', pId).eq('status', 'sent');
-
                     finalChatList.push({ id: pId, type: 'private', name: profile.username, avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.username}`, role: profile.role, preview: statusHtml+preview, time: formatTimeTelegram(msg.created_at), unread: pvUnread || 0, sortTime: new Date(msg.created_at).getTime() });
                 })());
               });
             }
           }
-
           if (groups) {
             groups.forEach(g => {
               if (!g.groups) return;
@@ -1013,42 +984,31 @@ import * as uiUtils from '../lib/ui-utils.js';
               })());
             });
           }
-
           await Promise.all(countPromises);
-
           finalChatList.sort((a, b) => b.sortTime - a.sortTime);
           chatList.innerHTML = '';
           if (finalChatList.length === 1) chatList.innerHTML = `<div class="loading-state"><span class="material-icons" style="font-size:48px;color:var(--tg-primary);animation:none;">forum</span><p>Mulai cari teman untuk chat!</p></div>`;
-          
           finalChatList.forEach(chat => {
             const div = document.createElement("div"); 
             div.className = `tg-chat-item ${chat.unread > 0 ? 'unread' : ''}`;
             div.dataset.roomId = chat.id; 
-            
             div.onclick = () => {
               if (chat.type === 'global') window.location.href = `/chat`;
               else if (chat.type === 'group') window.location.href = `/chat?group=${chat.id}&gname=${encodeURIComponent(chat.name)}`;
               else window.location.href = `/chat?from=${chat.id}`;
             };
-
             let avatarHtml = chat.type === 'global' ? `<div class="tg-avatar global-avatar"><span class="material-icons">public</span></div>` : (chat.type === 'group' ? (chat.avatar ? `<img src="${chat.avatar}" class="tg-avatar">` : `<div class="tg-avatar group-avatar"><span class="material-icons">groups</span></div>`) : `<img src="${chat.avatar}" class="tg-avatar" onerror="this.src='/asets/png/profile.webp'">`);
-            
-            let roleBadge = getBadgeFunc(chat.role);
-
-            div.innerHTML = `${avatarHtml}<div class="tg-chat-info"><div class="tg-chat-top"><h4 class="tg-name">${chat.name.replace(/</g, "&lt;")} ${roleBadge}</h4><span class="tg-time">${chat.time}</span></div><div class="tg-chat-bottom"><p class="tg-preview">${chat.preview}</p>${chat.unread > 0 ? `<span class="tg-unread-badge">${chat.unread>99?'99+':chat.unread}</span>` : ''}</div></div>`;
+            div.innerHTML = `${avatarHtml}<div class="tg-chat-info"><div class="tg-chat-top"><h4 class="tg-name">${chat.name.replace(/</g, "&lt;")} ${getBadgeFunc(chat.role)}</h4><span class="tg-time">${chat.time}</span></div><div class="tg-chat-bottom"><p class="tg-preview">${chat.preview}</p>${chat.unread > 0 ? `<span class="tg-unread-badge">${chat.unread>99?'99+':chat.unread}</span>` : ''}</div></div>`;
             chatList.appendChild(div);
+            subscribeToTyping(chat.id, chat.type, chat.preview);
           });
-          
           document.getElementById("searchChat").addEventListener("input", (e) => {
             const query = e.target.value.toLowerCase();
             document.querySelectorAll(".tg-chat-item").forEach(item => {
               item.style.display = item.querySelector(".tg-name").textContent.toLowerCase().includes(query) ? "flex" : "none";
             });
           });
-        } catch (err) { 
-            console.error("Gagal load obrolan: ", err);
-            chatList.innerHTML = '<div class="loading-state"><span class="material-icons" style="color:#ef4444;animation:none;">error_outline</span><p>Gagal memuat obrolan.</p></div>'; 
-        }
+        } catch (err) { chatList.innerHTML = '<div class="loading-state"><span class="material-icons" style="color:#ef4444;animation:none;">error_outline</span><p>Gagal memuat obrolan.</p></div>'; }
       }
 
       initUser();

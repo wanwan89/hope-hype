@@ -88,7 +88,6 @@ function scrollToBottom() {
   }
 }
 
-// 🔥 FIX ANIMASI TYPING 🔥
 function renderTypingBubble(username, userId) {
   if (!messagesEl) return;
 
@@ -99,16 +98,16 @@ function renderTypingBubble(username, userId) {
     typingEl.id = "typing-indicator-bubble";
     typingEl.className = "chat-message other new-msg";
     
-    // Perbaikan struktur HTML bubble typing agar terlihat jelas
+    // Ukuran disesuaikan jadi lebih kecil (avatar 24px, padding dipersempit)
     typingEl.innerHTML = `
-      <img id="typing-avatar" class="avatar" src="asets/png/profile.webp" onerror="this.src='asets/png/profile.webp'" style="width: 32px; height: 32px; border-radius: 50%; align-self: flex-end; margin-bottom: 15px;">
-      <div class="content" style="margin-bottom: 15px;">
-        <div class="username" style="font-size: 11px; color: #666; margin-bottom: 2px;">${escapeHtml(username)}</div>
-        <div class="text" style="background: var(--tg-bg-secondary, #fff); padding: 10px 14px; border-radius: 16px; border-bottom-left-radius: 4px; display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-          <div class="typing-bubble" style="display: inline-flex; gap: 4px; align-items: center; height: 12px;">
-            <span style="width: 6px; height: 6px; background: #9ca3af; border-radius: 50%; animation: typingBlink 1.4s infinite both;"></span>
-            <span style="width: 6px; height: 6px; background: #9ca3af; border-radius: 50%; animation: typingBlink 1.4s infinite both; animation-delay: 0.2s;"></span>
-            <span style="width: 6px; height: 6px; background: #9ca3af; border-radius: 50%; animation: typingBlink 1.4s infinite both; animation-delay: 0.4s;"></span>
+      <img id="typing-avatar" class="avatar" src="asets/png/profile.webp" onerror="this.src='asets/png/profile.webp'" style="width: 24px; height: 24px; border-radius: 50%; align-self: flex-end; margin-bottom: 8px;">
+      <div class="content" style="margin-bottom: 8px;">
+        <div class="username" style="font-size: 10px; color: #888; margin-bottom: 1px;">${escapeHtml(username)}</div>
+        <div class="text" style="background: var(--tg-bg-secondary, #f0f0f0); padding: 6px 10px; border-radius: 12px; border-bottom-left-radius: 4px; display: inline-block; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+          <div class="typing-bubble" style="display: inline-flex; gap: 3px; align-items: center; height: 10px;">
+            <span style="width: 4px; height: 4px; background: #9ca3af; border-radius: 50%; animation: typingBlink 1.4s infinite both;"></span>
+            <span style="width: 4px; height: 4px; background: #9ca3af; border-radius: 50%; animation: typingBlink 1.4s infinite both; animation-delay: 0.2s;"></span>
+            <span style="width: 4px; height: 4px; background: #9ca3af; border-radius: 50%; animation: typingBlink 1.4s infinite both; animation-delay: 0.4s;"></span>
           </div>
         </div>
       </div>
@@ -810,19 +809,17 @@ async function sendAudioMessage(url) {
     }
   } catch (err) { showToast("Gagal mengirim VN ke chat"); }
 }
-// ===== UPDATE: Fungsi Realtime dengan Debugging Tambahan =====
 async function initRealtimeMessages() {
   if (!currentUser) return;
 
-  // 1. Bersihkan channel lama jika ada untuk mencegah pesan ganda/zombie
+  // 1. Bersihkan channel lama jika ada
   if (messageChannel) {
     await supabase.removeChannel(messageChannel);
     messageChannel = null;
   }
 
-  console.log(`⏳ Sedang menghubungkan realtime untuk room: ${currentRoomId}...`);
+  console.log(`⏳ Menghubungkan realtime room: ${currentRoomId}...`);
 
-  // 2. Buat jalur realtime yang dinamis per room
   messageChannel = supabase
     .channel(`messages-${currentRoomId}`)
     .on("postgres_changes", { 
@@ -831,18 +828,31 @@ async function initRealtimeMessages() {
         table: "messages",
         filter: `room_id=eq.${currentRoomId}`
     }, async (payload) => {
-      
-      console.log("🔥 YAY! Pesan baru masuk dari Supabase:", payload.new); // <-- Indikator ini akan muncul jika Realtime Supabase berhasil menyala
-      
       const newMsg = payload.new;
-
-      // Filter manual untuk jaga-jaga
       if (!newMsg || newMsg.room_id !== currentRoomId) return;
-
-      // Cegah duplikasi pesan di layar
       if (document.getElementById(`msg-${newMsg.id}`)) return;
 
-      // Ambil profil pengirim
+      // 🔥 LOGIKA PANGGILAN (CALL LOGIC) 🔥
+      
+      // A. Jika ada panggilan masuk (Pihak Penerima)
+      if (newMsg.is_system && newMsg.message.includes("📞 Memanggil") && newMsg.user_id !== currentUser.id) {
+        if (typeof window.showIncomingCall === "function") {
+          window.showIncomingCall(newMsg);
+        }
+      }
+
+      // B. Jika panggilan ditolak/tak terjawab/berakhir (Pihak Penelepon & Penerima)
+      const stopKeywords = ["🚫 Panggilan Ditolak", "☎️ Panggilan tak terjawab", "Panggilan berakhir"];
+      const isCallStopped = stopKeywords.some(key => newMsg.message.includes(key));
+
+      if (newMsg.is_system && isCallStopped) {
+        if (typeof window.endCall === "function") {
+          // False artinya tidak silent, agar muncul toast "Panggilan berakhir"
+          window.endCall(false); 
+        }
+      }
+
+      // Prosedur render pesan seperti biasa
       const senderProfile = await getCachedProfile(newMsg.user_id);
       newMsg.profiles = {
         username: senderProfile?.username || "User",
@@ -853,16 +863,14 @@ async function initRealtimeMessages() {
       removeTypingBubble();
 
       if (newMsg.user_id === currentUser.id && !newMsg.is_system) {
-        // Jika saya yang kirim, hapus bubble "sending" ganti dengan id asli
         const tempEl = document.querySelector(`[id^="msg-temp-"]`);
         if (tempEl) tempEl.remove();
         renderMessage(newMsg);
       } else {
-        // Jika orang lain yang kirim
         renderMessage(newMsg);
+        // Suara pesan masuk hanya jika bukan sistem & bukan kita sendiri
         if (!newMsg.is_system && receiveSound) receiveSound.play().catch(() => {});
 
-        // Tandai otomatis terbaca (Read) jika sedang fokus di chat ini
         if (newMsg.status !== "read" && !document.hidden && !newMsg.is_system) {
           await supabase.from("messages").update({ status: "read" }).eq("id", newMsg.id);
         }
@@ -877,15 +885,12 @@ async function initRealtimeMessages() {
     }, (payload) => {
       const updated = payload.new;
       const old = payload.old;
-
       if (!updated || updated.room_id !== currentRoomId) return;
 
-      // Update status centang (sent/read) secara live
       if (updated.status !== old?.status && updated.user_id === currentUser.id) {
           updateMessageStatusUI(updated.id, updated.status || "sent");
       }
 
-      // Update jika pesan dihapus oleh lawan bicara
       if (updated.message === "Pesan ini telah dihapus") {
         const msgEl = document.getElementById(`msg-${updated.id}`);
         if (msgEl) {
@@ -899,13 +904,10 @@ async function initRealtimeMessages() {
       }
     })
     .subscribe(async (status, err) => {
-       // 3. Sensor Status: Akan memberitahu kita di Console jika ada yang salah
        if (status === 'SUBSCRIBED') {
-           console.log(`✅ Realtime Messages Berhasil Tersambung di ${currentRoomId}! Menunggu pesan...`);
+           console.log(`✅ Realtime Messages Berhasil Tersambung di ${currentRoomId}!`);
        } else if (status === 'CHANNEL_ERROR') {
            console.error(`❌ Gagal tersambung ke realtime Supabase. Ada error:`, err);
-       } else if (status === 'TIMED_OUT') {
-           console.error(`⏱️ Koneksi realtime timeout. Periksa internetmu.`);
        }
     });
 }
