@@ -1081,27 +1081,3 @@ img {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important; 
   }
 }
-/* 🔥 JURUS JINAKIN TOMBOL INPUT DI MODE GELAP 🔥 */
-html.dark .input-group-wrapper {
-  background: #1E293B !important; 
-  border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-html.dark .chat-input textarea {
-  color: #F1F5F9 !important;
-}
-
-/* Bikin tombol sticker & mic ikutan blend sama tema gelap */
-html.dark #sticker-btn,
-html.dark #action-btn {
-  background-color: #334155 !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
-}
-
-html.dark #sticker-btn svg {
-  stroke: #94A3B8 !important;
-}
-
-html.dark #vn-overlay {
-  background: #1E293B !important;
-}
