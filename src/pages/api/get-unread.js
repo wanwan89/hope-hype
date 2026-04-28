@@ -22,9 +22,8 @@ export async function GET({ request }) {
       .from('messages') 
       .select('*', { count: 'exact', head: true })
       .eq('status', 'sent')
-      // 👇 INI KUNCINYA SAYANGKUU: Jangan hitung yang pengirimnya kita sendirii 👇
-      .neq('sender_id', userId); 
-      // (Atau kalau kamuu pake sistem penerima, bisa ganti jadi: .eq('receiver_id', userId) yaa)
+      // 👇 INI NAMA KOLOMNYA UDAH DIBENERIN JADI 'user_id' YAA SAYANGKUU 👇
+      .neq('user_id', userId); 
 
     if (error) {
       throw new Error(error.message || "Ada yang salah pas nyari datanya nihh");
