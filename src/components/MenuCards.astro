@@ -72,7 +72,7 @@
 
 <script type="module">
   // 👇 PASTIKAN IMPORT INI ADA DAN PATH-NYA BENAR YAA SAYANGKUU 👇
-  import { supabase } from '/../lib/supabase.js'; 
+  import { supabase } from '../../lib/supabase.js'; 
 
   document.addEventListener("DOMContentLoaded", () => {
     
@@ -137,7 +137,7 @@
       });
     }
 
-    // 4. LOGIKA BADGE HYPETALK (REAL DATA FETCHH)
+    // 4. LOGIKA BADGE HYPETALK (LANGSUNG KE SUPABASE)
     function updateChatBadge(unreadCount) {
       const badge = document.getElementById("hopeTalkBadge");
       if (badge) {
@@ -152,33 +152,30 @@
 
     async function fetchUnreadChats() {
       try {
-        // 👇 KITA AMBIL ID LANGSUNG DARI SESI SUPABASE YAA SAYANGKUU 👇
+        // Ambil sesi login kamuu
         const { data: { session } } = await supabase.auth.getSession();
         
-        // Kalau belum login, fungsi ini berhenti ajaa
-        if (!session || !session.user) {
-            console.log("Belum login nih cintakuuu...");
-            return; 
-        }
+        // Kalau belum login, diem ajaa
+        if (!session || !session.user) return; 
         
         const myUserId = session.user.id; 
 
-        // Fetch ke backend pake parameter user ID kamuu
-        const response = await fetch(`/api/get-unread?userId=${myUserId}`); 
+        // 👇 LANGSUNG TANYA SUPABASE DARI SINI BIAR RLS AMANN 👇
+        const { count, error } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .neq('status', 'read') 
+          .neq('user_id', myUserId) // Yang ngirim bukan kamuu
+          .neq('room_id', 'room-1') // Bukan dari chat globall
+          .like('room_id', `%${myUserId}%`); // Harus di room yang ada ID kamuu
+
+        if (error) throw error;
+
+        console.log("💌 Cek total pesan baru cintakuuu:", count);
         
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error('Gagal menarik dataa: ' + errorText);
-        }
-        
-        const data = await response.json();
-        
-        // Buat mastiin datanya nyampe ke depan sayangkuuu
-        console.log("💌 Data chat dari backend cintakuuu:", data);
-        
-        if (data && typeof data.unread_count === 'number') {
-          updateChatBadge(data.unread_count);
-        }
+        // Update tampilan badgenyaa
+        updateChatBadge(count || 0);
+
       } catch (error) {
         console.error("Gagal load badge chatt:", error);
       }
@@ -191,6 +188,8 @@
     setInterval(fetchUnreadChats, 10000); 
   });
 </script>
+
+
 
 <style is:global>
 /* ========================================= */
