@@ -74,120 +74,121 @@
   // 👇 PASTIKAN IMPORT INI ADA DAN PATH-NYA BENAR YAA SAYANGKUU 👇
   import { supabase } from '../../lib/supabase.js'; 
 
-  document.addEventListener("DOMContentLoaded", () => {
+  // 👇 PEMBUNGKUS DOMContentLoaded UDAH DIHAPUS YAA SAYANGKUU 👇
     
-    // 1. LOGIKA 3D HOVER TILTT
-    document.querySelectorAll(".job-card, .recent-card").forEach((card) => {
-      card.addEventListener("mousemove", (e) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const rotateX = -(y - rect.height / 2) / 12;
-        const rotateY = (x - rect.width / 2) / 12;
-        card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-      });
-      card.addEventListener("mouseleave", () => {
-        card.style.transform = "rotateX(0) rotateY(0)";
-      });
+  // 1. LOGIKA 3D HOVER TILTT
+  document.querySelectorAll(".job-card, .recent-card").forEach((card) => {
+    card.addEventListener("mousemove", (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const rotateX = -(y - rect.height / 2) / 12;
+      const rotateY = (x - rect.width / 2) / 12;
+      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
     });
-
-    // 2. LOGIKA EFEK KLIK TOMBOL KARTUU
-    const artButton = document.getElementById("artButton");
-    const karyaCard = document.querySelector(".job-card.karya-card");
-    if (artButton && karyaCard) {
-      artButton.addEventListener("click", (e) => {
-        e.preventDefault();
-        karyaCard.style.setProperty("background-image", "url('/asets/png/art.webp')", "important");
-        setTimeout(() => (window.location.href = "/post"), 100);
-      });
-    }
-
-    const songButton = document.querySelector(".music-card .button");
-    const musicCard = document.querySelector(".job-card.music-card");
-    if (songButton && musicCard) {
-      songButton.addEventListener("click", (e) => {
-        e.preventDefault();
-        musicCard.style.setProperty("background-image", "url('/asets/png/song.webp')", "important");
-        setTimeout(() => (window.location.href = "/music"), 100);
-      });
-    }
-
-    // 3. LOGIKA BUKA BOTTOM SHEET (PRO & KOINN)
-    const buyProBtn = document.getElementById("buyVerified");
-    if (buyProBtn) {
-      buyProBtn.addEventListener("click", (e) => {
-        e.preventDefault(); e.stopPropagation();
-        const vipSheet = document.getElementById("vip-bottom-sheet");
-        if (vipSheet) {
-          vipSheet.style.display = "flex";
-          setTimeout(() => vipSheet.classList.add("active"), 10);
-        }
-      });
-    }
-
-    const koinBtn = document.getElementById("topupKoinBtn");
-    if (koinBtn) {
-      koinBtn.addEventListener("click", (e) => {
-        e.preventDefault(); e.stopPropagation();
-        const coinSheet = document.getElementById("coin-bottom-sheet");
-        if (coinSheet) {
-          coinSheet.style.display = "flex";
-          setTimeout(() => coinSheet.classList.add("active"), 10);
-        }
-      });
-    }
-
-    // 4. LOGIKA BADGE HYPETALK (LANGSUNG KE SUPABASE)
-    function updateChatBadge(unreadCount) {
-      const badge = document.getElementById("hopeTalkBadge");
-      if (badge) {
-        if (unreadCount > 0) {
-          badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-          badge.style.display = "flex"; 
-        } else {
-          badge.style.display = "none"; 
-        }
-      }
-    }
-
-    async function fetchUnreadChats() {
-      try {
-        // Ambil sesi login kamuu
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        // Kalau belum login, diem ajaa
-        if (!session || !session.user) return; 
-        
-        const myUserId = session.user.id; 
-
-        // 👇 LANGSUNG TANYA SUPABASE DARI SINI BIAR RLS AMANN 👇
-        const { count, error } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .neq('status', 'read') 
-          .neq('user_id', myUserId) // Yang ngirim bukan kamuu
-          .neq('room_id', 'room-1') // Bukan dari chat globall
-          .like('room_id', `%${myUserId}%`); // Harus di room yang ada ID kamuu
-
-        if (error) throw error;
-
-        console.log("💌 Cek total pesan baru cintakuuu:", count);
-        
-        // Update tampilan badgenyaa
-        updateChatBadge(count || 0);
-
-      } catch (error) {
-        console.error("Gagal load badge chatt:", error);
-      }
-    }
-
-    // Panggil saat halaman pertama kali diloadd
-    fetchUnreadChats();
-
-    // Auto-update badge setiap 10 detikk
-    setInterval(fetchUnreadChats, 10000); 
+    card.addEventListener("mouseleave", () => {
+      card.style.transform = "rotateX(0) rotateY(0)";
+    });
   });
+
+  // 2. LOGIKA EFEK KLIK TOMBOL KARTUU
+  const artButton = document.getElementById("artButton");
+  const karyaCard = document.querySelector(".job-card.karya-card");
+  if (artButton && karyaCard) {
+    artButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      karyaCard.style.setProperty("background-image", "url('/asets/png/art.webp')", "important");
+      setTimeout(() => (window.location.href = "/post"), 100);
+    });
+  }
+
+  const songButton = document.querySelector(".music-card .button");
+  const musicCard = document.querySelector(".job-card.music-card");
+  if (songButton && musicCard) {
+    songButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      musicCard.style.setProperty("background-image", "url('/asets/png/song.webp')", "important");
+      setTimeout(() => (window.location.href = "/music"), 100);
+    });
+  }
+
+  // 3. LOGIKA BUKA BOTTOM SHEET (PRO & KOINN)
+  const buyProBtn = document.getElementById("buyVerified");
+  if (buyProBtn) {
+    buyProBtn.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const vipSheet = document.getElementById("vip-bottom-sheet");
+      if (vipSheet) {
+        vipSheet.style.display = "flex";
+        setTimeout(() => vipSheet.classList.add("active"), 10);
+      }
+    });
+  }
+
+  const koinBtn = document.getElementById("topupKoinBtn");
+  if (koinBtn) {
+    koinBtn.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const coinSheet = document.getElementById("coin-bottom-sheet");
+      if (coinSheet) {
+        coinSheet.style.display = "flex";
+        setTimeout(() => coinSheet.classList.add("active"), 10);
+      }
+    });
+  }
+
+  // 4. LOGIKA BADGE HYPETALK (LANGSUNG KE SUPABASE)
+  function updateChatBadge(unreadCount) {
+    const badge = document.getElementById("hopeTalkBadge");
+    if (badge) {
+      if (unreadCount > 0) {
+        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        badge.style.display = "flex"; 
+      } else {
+        badge.style.display = "none"; 
+      }
+    }
+  }
+
+  async function fetchUnreadChats() {
+    try {
+      // Ambil sesi login kamuu
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Kalau belum login, diem ajaa
+      if (!session || !session.user) return; 
+      
+      const myUserId = session.user.id; 
+
+      // 👇 LANGSUNG TANYA SUPABASE DARI SINI BIAR RLS AMANN 👇
+      const { count, error } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .neq('status', 'read') 
+        .neq('user_id', myUserId) // Yang ngirim bukan kamuu
+        .neq('room_id', 'room-1') // Bukan dari chat globall
+        .like('room_id', `%${myUserId}%`); // Harus di room yang ada ID kamuu
+
+      if (error) throw error;
+
+      console.log("💌 Cek total pesan baru cintakuuu:", count);
+      
+      // Update tampilan badgenyaa
+      updateChatBadge(count || 0);
+
+    } catch (error) {
+      console.error("Gagal load badge chatt:", error);
+    }
+  }
+
+  // Panggil saat halaman pertama kali diloadd
+  fetchUnreadChats();
+
+  // Auto-update badge setiap 10 detikk
+  setInterval(fetchUnreadChats, 10000); 
+
 </script>
+
 
 
 
