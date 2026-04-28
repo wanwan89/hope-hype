@@ -44,9 +44,10 @@ html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  max-width: 100vw; /* 👈 Kunci biar nggak bisa melar ngelewatin layar */
-  overflow-x: hidden; /* 👈 Pastikan mutlak nggak ada geser kanan-kiri */
-  /* dvh adalah kunci agar tinggi mengikuti area yang terlihat saja */
+  max-width: 100vw; 
+  overflow-x: hidden; 
+  /* Paksa tinggi selalu 100% dari layar nyata */
+  height: 100%;
   height: 100dvh; 
   background: var(--bg-main); 
   color: var(--text-color);
@@ -54,9 +55,16 @@ html, body {
   flex-direction: column;
   overflow: hidden; 
   
-  /* FIX: Mencegah zoom di mobile (pinch to zoom / double tap) */
+  /* Mencegah zoom di mobile (pinch to zoom / double tap) */
   touch-action: pan-x pan-y;
   -webkit-text-size-adjust: 100%;
+  
+  /* 👇 INI TAMBAHAN JURUS KUNCIAN PWA-NYA YAA SAYANGKUU 👇 */
+  position: fixed; 
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 /* --- Layout & Containers --- */
@@ -331,15 +339,13 @@ html.dark .chat-message.self .message-info {
   padding: 10px;
   background: var(--bg-panel); 
   
-  /* --- PERUBAHAN DI SINI --- */
-  /* Ganti + 12px menjadi + 20px atau + 25px agar area input lebih naik ke atas */
+  /* Ini udah bener banget sayangkuu, pertahaninn! */
   padding-bottom: calc(env(safe-area-inset-bottom) + 20px) !important;
   
-  /* Pastikan input tidak mengecil saat pesan di atasnya sangat banyak */
   flex-shrink: 0; 
   z-index: 100;
   
-  /* FIX: Posisi Sticky agar input selalu menempel di bawah walau keyboard muncul */
+  /* Posisi Sticky agar input selalu menempel di bawah */
   position: sticky;
   bottom: 0;
   width: 100%;
