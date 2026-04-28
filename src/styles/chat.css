@@ -1061,3 +1061,21 @@ img {
 
 * { -webkit-tap-highlight-color: transparent; outline: none; }
 .btn, .tab, button { -webkit-tap-highlight-color: rgba(0, 0, 0, 0); user-select: none; }
+/* Buat nempel di paling bawah */
+.chat-input-container {
+  position: sticky;
+  bottom: 0;
+}
+
+/* Default pas dibuka di Chrome biasa (Biar nggak ngambang) */
+.chat-input-container {
+  padding-bottom: env(safe-area-inset-bottom, 5px) !important;
+}
+
+/* JURUS PINTAR: Cuma aktif pas dibuka lewat PWA (Standalone) */
+@media (display-mode: standalone) {
+  .chat-input-container {
+    /* Kita kasih 12px aja biar cukup ngelewatin garis navigasi, nggak lebay kayak tadi */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important; 
+  }
+}
