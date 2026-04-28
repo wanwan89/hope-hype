@@ -3,17 +3,31 @@ import { supabase } from '../../lib/supabase.js';
 export async function GET({ request }) {
   try {
     if (!import.meta.env.PUBLIC_SUPABASE_URL || !import.meta.env.PUBLIC_SUPABASE_ANON_KEY) {
-      throw new Error("Kunci Supabase kosong! Cek file .env lu bro");
+      throw new Error("Kunci Supabase kosong! Cek file .env lu broo");
+    }
+
+    // 👇 KITA TANGKAP USER ID DARI URL YAA SAYANGKUU 👇
+    const url = new URL(request.url);
+    const userId = url.searchParams.get('userId');
+
+    // Kalau nggak ada userId, kita tolak yaa cintakuu
+    if (!userId) {
+        return new Response(JSON.stringify({ error: "User ID nya mana sayangkuu?" }), { 
+            status: 400,
+            headers: { "Content-Type": "application/json" }
+        });
     }
 
     const { count, error } = await supabase
       .from('messages') 
       .select('*', { count: 'exact', head: true })
-      // 👇 INI YANG DIGANTI: dari 'send' jadi 'sent' 👇
-      .eq('status', 'sent'); 
+      .eq('status', 'sent')
+      // 👇 INI KUNCINYA SAYANGKUU: Jangan hitung yang pengirimnya kita sendirii 👇
+      .neq('sender_id', userId); 
+      // (Atau kalau kamuu pake sistem penerima, bisa ganti jadi: .eq('receiver_id', userId) yaa)
 
     if (error) {
-      throw new Error(error.message || "Ada yang salah pas nyari datanya nih");
+      throw new Error(error.message || "Ada yang salah pas nyari datanya nihh");
     }
 
     return new Response(JSON.stringify({ unread_count: count || 0 }), {

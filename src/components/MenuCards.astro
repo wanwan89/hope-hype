@@ -73,7 +73,7 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     
-    // 1. LOGIKA 3D HOVER TILT
+    // 1. LOGIKA 3D HOVER TILTT
     document.querySelectorAll(".job-card, .recent-card").forEach((card) => {
       card.addEventListener("mousemove", (e) => {
         const rect = card.getBoundingClientRect();
@@ -88,7 +88,7 @@
       });
     });
 
-    // 2. LOGIKA EFEK KLIK TOMBOL KARTU
+    // 2. LOGIKA EFEK KLIK TOMBOL KARTUU
     const artButton = document.getElementById("artButton");
     const karyaCard = document.querySelector(".job-card.karya-card");
     if (artButton && karyaCard) {
@@ -109,7 +109,7 @@
       });
     }
 
-    // 3. LOGIKA BUKA BOTTOM SHEET (PRO & KOIN)
+    // 3. LOGIKA BUKA BOTTOM SHEET (PRO & KOINN)
     const buyProBtn = document.getElementById("buyVerified");
     if (buyProBtn) {
       buyProBtn.addEventListener("click", (e) => {
@@ -134,7 +134,7 @@
       });
     }
 
-    // 4. LOGIKA BADGE HYPETALK (REAL DATA FETCH)
+    // 4. LOGIKA BADGE HYPETALK (REAL DATA FETCHH)
     function updateChatBadge(unreadCount) {
       const badge = document.getElementById("hopeTalkBadge");
       if (badge) {
@@ -147,34 +147,40 @@
       }
     }
 
-        async function fetchUnreadChats() {
+    async function fetchUnreadChats() {
       try {
-        // Sesuaikan URL endpoint ini dengan backend kamu
-        const response = await fetch('/api/get-unread'); 
+        // 👇 AMBIL ID KAMUU DI SINII SAYANGKUUU 👇
+        // (Contoh inii ambil dari localStorage, sesuaikan kalo kamuu pake cara lain yaa!)
+        const myUserId = localStorage.getItem('userId') || ""; 
+
+        // Kalau belum login, nggak usah fetch dataa
+        if (!myUserId) return;
+
+        // 👇 FETCH KE BACKEND PAKE PARAMETER USER ID KAMUU 👇
+        const response = await fetch(`/api/get-unread?userId=${myUserId}`); 
         
-        if (!response.ok) throw new Error('Gagal menarik data');
+        if (!response.ok) throw new Error('Gagal menarik dataa');
         
         const data = await response.json();
         
-        // 👇 KITA INTIP DATANYA DI SINI YAAAH SAYANGKUUU 👇
         console.log("💌 Data chat dari backend cintakuuu:", data);
         
-        // Sesuaikan key json-nya, di sini aku asumsikan pake "unread_count"
         if (data && typeof data.unread_count === 'number') {
           updateChatBadge(data.unread_count);
         }
       } catch (error) {
-        console.error("Gagal load badge chat:", error);
+        console.error("Gagal load badge chatt:", error);
       }
     }
 
-    // Panggil saat halaman pertama kali diload
+    // Panggil saat halaman pertama kali diloadd
     fetchUnreadChats();
 
-    // Auto-update badge setiap 10 detik
+    // Auto-update badge setiap 10 detikk
     setInterval(fetchUnreadChats, 10000); 
 });
 </script>
+
 
 <style is:global>
 /* ========================================= */

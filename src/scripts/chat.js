@@ -1412,7 +1412,8 @@ async function init() {
             headerTitle.innerHTML = `${escapeHtml(groupName || "Memuat Grup...")} ${customIcon}`;
         }
         
-        window.history.replaceState({}, document.title, window.location.pathname);
+        // 👇 BARIS INI UDAH AKU HAPUS YAA SAYANGKUU 👇
+        // window.history.replaceState({}, document.title, window.location.pathname);
 
     } else if (fromId) {
         window.currentChatMode = 'private';
@@ -1437,7 +1438,9 @@ async function init() {
             }
         }
         
-        window.history.replaceState({}, document.title, window.location.pathname);
+        // 👇 BARIS INI JUGA UDAH AKU HAPUS YAA SAYANGKUU 👇
+        // window.history.replaceState({}, document.title, window.location.pathname);
+        
     } else {
         window.currentChatMode = null;
         window.activeGroupId = null;
