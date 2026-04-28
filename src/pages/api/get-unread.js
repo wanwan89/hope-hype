@@ -22,8 +22,9 @@ export async function GET({ request }) {
       .from('messages') 
       .select('*', { count: 'exact', head: true })
       .eq('status', 'sent')
-      // 👇 INI NAMA KOLOMNYA UDAH DIBENERIN JADI 'user_id' YAA SAYANGKUU 👇
-      .neq('user_id', userId); 
+      .neq('user_id', userId) 
+      // 👇 INI DIA TAMBAHANNYA SAYANGKUU, BIAR CHAT GLOBAL GAK IKUT KEHITUNG 👇
+      .neq('room_id', 'room-1'); 
 
     if (error) {
       throw new Error(error.message || "Ada yang salah pas nyari datanya nihh");

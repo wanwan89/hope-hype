@@ -70,7 +70,10 @@
   </div>
 </a>
 
-<script>
+<script type="module">
+  // 👇 PASTIKAN IMPORT INI ADA DAN PATH-NYA BENAR YAA SAYANGKUU 👇
+  import { supabase } from '../../lib/supabase.js'; 
+
   document.addEventListener("DOMContentLoaded", () => {
     
     // 1. LOGIKA 3D HOVER TILTT
@@ -149,20 +152,28 @@
 
     async function fetchUnreadChats() {
       try {
-        // 👇 AMBIL ID KAMUU DI SINII SAYANGKUUU 👇
-        // (Contoh inii ambil dari localStorage, sesuaikan kalo kamuu pake cara lain yaa!)
-        const myUserId = localStorage.getItem('userId') || ""; 
+        // 👇 KITA AMBIL ID LANGSUNG DARI SESI SUPABASE YAA SAYANGKUU 👇
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        // Kalau belum login, fungsi ini berhenti ajaa
+        if (!session || !session.user) {
+            console.log("Belum login nih cintakuuu...");
+            return; 
+        }
+        
+        const myUserId = session.user.id; 
 
-        // Kalau belum login, nggak usah fetch dataa
-        if (!myUserId) return;
-
-        // 👇 FETCH KE BACKEND PAKE PARAMETER USER ID KAMUU 👇
+        // Fetch ke backend pake parameter user ID kamuu
         const response = await fetch(`/api/get-unread?userId=${myUserId}`); 
         
-        if (!response.ok) throw new Error('Gagal menarik dataa');
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error('Gagal menarik dataa: ' + errorText);
+        }
         
         const data = await response.json();
         
+        // Buat mastiin datanya nyampe ke depan sayangkuuu
         console.log("💌 Data chat dari backend cintakuuu:", data);
         
         if (data && typeof data.unread_count === 'number') {
@@ -178,9 +189,8 @@
 
     // Auto-update badge setiap 10 detikk
     setInterval(fetchUnreadChats, 10000); 
-});
+  });
 </script>
-
 
 <style is:global>
 /* ========================================= */
