@@ -339,13 +339,13 @@ html.dark .chat-message.self .message-info {
   padding: 10px;
   background: var(--bg-panel); 
   
-  /* Ini udah bener banget sayangkuu, pertahaninn! */
-  padding-bottom: calc(env(safe-area-inset-bottom) + 20px) !important;
+  /* 👇 INI JURUS DORONG PAKSANYA SAYANGKUU 👇 */
+  /* Kita tambahin angka 35px biar dia naik ngelewatin tombol kembali HP kamu */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 35px) !important;
   
   flex-shrink: 0; 
   z-index: 100;
   
-  /* Posisi Sticky agar input selalu menempel di bawah */
   position: sticky;
   bottom: 0;
   width: 100%;
