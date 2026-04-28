@@ -71,11 +71,8 @@
 </a>
 
 <script>
-  // 👇 Import Supabase-nya tetep aman di sini yaa cintakuuu 👇
-  import { supabase } from '../../lib/supabase.js'; 
+import { supabase } from '../lib/supabase.js';
 
-  // ❌ PEMBUNGKUS DOMContentLoaded UDAH KITA BUANG ❌
-    
   // 1. LOGIKA 3D HOVER TILTT
   document.querySelectorAll(".job-card, .recent-card").forEach((card) => {
     card.addEventListener("mousemove", (e) => {
