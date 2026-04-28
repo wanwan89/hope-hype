@@ -1,8 +1,10 @@
 ---
 ---
 <section id="stage-grid" class="stage-container"></section>
-
 <style is:global>
+/* ==================================================
+   1. STAGE CONTAINER (PREMIUM CURVES)
+================================================== */
 .stage-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -10,21 +12,26 @@
     padding: 24px 15px;
     background: var(--panel-bg);
     border-radius: 0 0 32px 32px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2); 
+    border-bottom: 1px solid var(--border); /* Dinamis mengikuti tema */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04); /* Bayangan tipis agar elegan */
     z-index: 90;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+[data-theme="dark"] .stage-container {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); /* Bayangan lebih kuat di mode gelap */
+}
+
+/* ==================================================
+   2. SPEAKER ITEM & AVATAR
+================================================== */
 .speaker-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%; 
-    min-width: 0; /* Penting agar grid tidak jebol kesamping */
+    min-width: 0; /* Penting agar grid tidak jebol ke samping */
 }
-
-.speaker-item.empty .avatar { background: var(--empty-slot); border: none; box-shadow: none; }
-.speaker-item.empty .avatar .material-icons { color: #475569; font-size: 28px; }
 
 .avatar {
     width: 64px; 
@@ -33,79 +40,129 @@
     background: var(--empty-slot);
     position: relative;
     border: 2px solid transparent; 
-    display: flex; align-items: center; justify-content: center;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
     flex-shrink: 0;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-.avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.avatar img { 
+    width: 100%; 
+    height: 100%; 
+    border-radius: 50%; 
+    object-fit: cover; 
+}
 
-/* 🔥 EFEK SONAR SAAT NGOMONG 🔥 */
+/* Tampilan Slot Kosong */
+.speaker-item.empty .avatar { 
+    background: var(--empty-slot); 
+    border: 2px dashed var(--border); /* Efek garis putus-putus agar terlihat lebih rapi */
+    box-shadow: none; 
+}
+
+.speaker-item.empty .avatar .material-icons { 
+    color: var(--text-muted); /* Dinamis, tidak lagi pakai hardcode #475569 */
+    font-size: 28px; 
+}
+
+/* ==================================================
+   3. EFEK SONAR (SPEAKING) - OTOMATIS IKUT TEMA
+================================================== */
 .avatar.speaking {
     border-color: var(--success) !important; 
-    /* Animasi gelombang suara memancar */
-    animation: sonar-wave 1.5s infinite ease-out;
+    /* Animasi gelombang memancar dengan timing membal (cubic-bezier) */
+    animation: sonar-wave 1.5s infinite cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 @keyframes sonar-wave {
-    0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.6), 0 0 0 0 rgba(0, 255, 136, 0.4); }
-    50% { box-shadow: 0 0 0 8px rgba(0, 255, 136, 0.2), 0 0 0 16px rgba(0, 255, 136, 0.1); }
-    100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0), 0 0 0 0 rgba(0, 255, 136, 0); }
+    /* Trik menggunakan properti transparan agar menyatu sempurna dengan variabel var(--success) */
+    0% { box-shadow: 0 0 0 0 var(--success); }
+    50% { box-shadow: 0 0 0 6px var(--success), 0 0 0 12px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent; }
 }
 
+/* ==================================================
+   4. TRIGGER GIFT KECIL DI AVATAR
+================================================== */
 .gift-trigger {
-    position: absolute; bottom: -4px; right: -4px;
-    background: var(--empty-slot); color: var(--accent);
-    border: 2px solid var(--panel-bg); border-radius: 50%;
-    width: 26px; height: 26px; font-size: 13px;
-    display: flex; align-items: center; justify-content: center; z-index: 10;
+    position: absolute; 
+    bottom: -4px; 
+    right: -4px;
+    background: var(--empty-slot); 
+    color: var(--accent);
+    border: 2px solid var(--panel-bg); /* Cutout effect (seperti memotong avatar utama) */
+    border-radius: 50%;
+    width: 26px; 
+    height: 26px; 
+    font-size: 13px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 10;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.15s ease, background-color 0.3s ease;
 }
 
-/* 🔥 PERBAIKAN 1 & 2: NAMA DAN BADGE SATU BARIS RAPI 🔥 */
+.gift-trigger:active {
+    transform: scale(0.85); /* Mengecil saat ditekan */
+}
+
+/* ==================================================
+   5. NAMA & BADGE (RAPI & MODERN)
+================================================== */
 .name-label {
     margin-top: 10px;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px; /* Jarak antar elemen */
-    font-size: 13px; /* Ukuran font normal */
+    gap: 4px; 
+    font-size: 13px; 
     font-weight: 700;
     color: var(--text-main);
-    
-    /* Paksa 1 baris */
     flex-wrap: nowrap; 
     overflow: hidden; 
+    transition: color 0.3s ease;
 }
 
-/* Teks nama dipotong (ellipsis) jika kepanjangan */
+/* Teks nama dipotong jika kepanjangan */
 .name-label span, 
 .name-label .user-name-text {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    /* Jangan biarkan nama memakan semua ruang, beri sisa untuk badge */
     flex-shrink: 1; 
 }
 
-/* Styling Badge Normal */
+/* Styling Badge Modern */
 .name-label b, 
 .badge {
     font-size: 10px !important; 
-    padding: 2px 5px !important;
-    border-radius: 4px;
+    padding: 3px 6px !important;
+    background: rgba(59, 130, 246, 0.1); /* Background biru super transparan */
+    color: var(--primary); /* Teks biru menyala */
+    border: 1px solid rgba(59, 130, 246, 0.2); /* Garis batas tipis */
+    border-radius: 6px; 
     height: auto;
-    
-    /* Mencegah badge terpotong; ia akan tetap utuh meski nama memendek */
     flex-shrink: 0; 
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
 }
 
-/* Styling icon (seperti mahkota) di dalam label */
 .name-label img {
     height: 14px !important; 
     width: auto;
     flex-shrink: 0;
 }
 
-.speaker-item.empty .name-label { color: var(--text-muted); font-size: 12px; }
+.speaker-item.empty .name-label { 
+    color: var(--text-muted); 
+    font-size: 12px; 
+    font-weight: 600;
+}
 </style>
+

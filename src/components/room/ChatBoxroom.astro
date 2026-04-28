@@ -8,6 +8,24 @@
 </div>
 
 <style is:global>
+/* ==================================================
+   1. VARIABEL TAMBAHAN KHUSUS CHAT 
+================================================== */
+:root, [data-theme="light"] {
+    --msg-bg: #ffffff;
+    --msg-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --sys-gift-text: #d97706; /* Kuning/Emas gelap agar terbaca jelas di background terang */
+}
+
+[data-theme="dark"] {
+    --msg-bg: #1e293b; 
+    --msg-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --sys-gift-text: #fbbf24; /* Kuning/Emas terang untuk mode gelap */
+}
+
+/* ==================================================
+   2. CHAT DISPLAY CONTAINER
+================================================== */
 .chat-display {
     flex: 1;
     overflow-y: auto;
@@ -21,35 +39,65 @@
 }
 .chat-display::-webkit-scrollbar { display: none; }
 
+/* ==================================================
+   3. BUBBLE CHAT UTAMA (CLEAN & MODERN)
+================================================== */
 .msg {
-    background: rgba(30, 40, 54, 0.9);
-    border-radius: 16px; border-top-left-radius: 4px; 
-    padding: 10px 14px; max-width: 85%;
-    font-size: 13px; line-height: 1.4; color: var(--text-main); align-self: flex-start;
+    background: var(--msg-bg);
+    box-shadow: var(--msg-shadow);
+    border: 1px solid var(--border); /* Border super halus */
+    border-radius: 16px 16px 16px 4px; /* Penulisan shorthand yang lebih rapi */
+    padding: 10px 14px; 
+    max-width: 85%;
+    font-size: 13px; 
+    line-height: 1.4; 
+    color: var(--text-main); 
+    align-self: flex-start;
+    transition: background-color 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
 }
 
-.msg .user { font-weight: 700; color: var(--primary); margin-right: 6px; }
-.msg.system { background: rgba(245, 158, 11, 0.1); border-left: 3px solid var(--accent); }
-.msg.system .user { color: var(--accent); }
+.msg .user { 
+    font-weight: 700; 
+    color: var(--primary); 
+    margin-right: 6px; 
+}
 
-/* Tampilan Pesan Gift di Kolom Chat */
+/* ==================================================
+   4. PESAN SISTEM (WARNING / INFO)
+================================================== */
+.msg.system { 
+    background: rgba(245, 158, 11, 0.1); /* Background transparan amber */
+    border: none;
+    border-left: 3px solid var(--accent); 
+    border-radius: 4px 16px 16px 4px;
+    box-shadow: none;
+}
+.msg.system .user { 
+    color: var(--accent); 
+}
+
+/* ==================================================
+   5. PESAN GIFT / DONASI
+================================================== */
 .msg.system-gift {
-    background: rgba(245, 158, 11, 0.15) !important;
-    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+    background: rgba(245, 158, 11, 0.1) !important;
+    border: 1px solid rgba(245, 158, 11, 0.2) !important;
     border-radius: 12px !important;
-    align-self: center !important; /* Ke tengah */
+    align-self: center !important; /* Posisi ke tengah */
     text-align: center;
-    padding: 6px 15px;
+    padding: 8px 16px;
     margin: 8px 0;
     font-size: 12px;
-    font-weight: 700;
-    color: #f1c40f;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    animation: giftMsgIn 0.3s ease-out;
+    font-weight: 600;
+    color: var(--sys-gift-text); /* Dinamis sesuai tema */
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.1);
+    animation: giftMsgIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Animasi membal (bouncy) yang elegan */
 }
 
+/* Animasi muncul dari bawah sedikit lalu membesar */
 @keyframes giftMsgIn {
-    0% { opacity: 0; transform: scale(0.8); }
-    100% { opacity: 1; transform: scale(1); }
+    0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 </style>
+

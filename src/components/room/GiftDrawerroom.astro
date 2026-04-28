@@ -77,43 +77,195 @@
 </div>
 
 <style is:global>
+/* ==================================================
+   1. DRAWER KADO (BOTTOM SHEET)
+================================================== */
 .gift-drawer {
-    position: fixed; bottom: -100%; left: 0; right: 0;
-    background: var(--bg-base);
-    border-top-left-radius: 24px; border-top-right-radius: 24px;
-    z-index: 5001; padding: 20px; padding-top: 30px; 
+    position: fixed; 
+    bottom: -100%; 
+    left: 0; right: 0;
+    background: var(--bg-base); /* Sengaja pakai bg-base agar lebih padat dari panel */
+    border-top-left-radius: 32px; /* Lengkungan lebih halus ala iOS */
+    border-top-right-radius: 32px;
+    z-index: 5001; 
+    padding: 24px 20px; 
+    padding-top: 32px; 
     padding-bottom: calc(30px + env(safe-area-inset-bottom)); 
-    transition: bottom 0.3s ease; box-shadow: 0 -5px 25px rgba(0,0,0,0.5);
+    /* Animasi snap yang ngebut tapi berhenti dengan sangat mulus */
+    transition: bottom 0.4s cubic-bezier(0.32, 0.72, 0, 1); 
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08); /* Bayangan tipis untuk mode terang */
+    border-top: 1px solid var(--border); /* Garis batas atas agar rapi */
 }
-.gift-drawer.open { bottom: 0 !important; }
 
-.drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.drawer-title { font-weight: 700; font-size: 15px; }
+/* Bayangan lebih kuat khusus mode gelap */
+[data-theme="dark"] .gift-drawer {
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+}
 
-.handle { width: 40px; height: 4px; background: #334155; border-radius: 10px; position: absolute; top: 12px; left: 50%; transform: translateX(-50%); }
+.gift-drawer.open { 
+    bottom: 0 !important; 
+}
 
-.coin-panel { background: rgba(245, 158, 11, 0.1); padding: 4px 12px; border-radius: 20px; display: flex; align-items: center; gap: 6px; }
-#user-coins { color: var(--accent); font-weight: 700; font-size: 13px; }
+/* Handle (Garis penarik laci di atas) */
+.handle { 
+    width: 48px; 
+    height: 5px; 
+    background: var(--border); /* Mengikuti tema otomatis */
+    border-radius: 10px; 
+    position: absolute; 
+    top: 12px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+}
 
-.target-selection-container { margin-bottom: 20px; }
-.target-label { font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 10px; display: block; }
-.target-list { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
-.target-user { display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: 0.5; }
-.target-user.selected { opacity: 1; }
-.target-avatar { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid transparent;}
-.target-user.selected .target-avatar { border-color: var(--primary); }
-.target-name { font-size: 10px; font-weight: 600; }
+/* ==================================================
+   2. HEADER & PANEL KOIN
+================================================== */
+.drawer-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 24px; 
+}
 
+.drawer-title { 
+    font-weight: 800; 
+    font-size: 16px; 
+    color: var(--text-main);
+    letter-spacing: -0.3px;
+}
+
+.coin-panel { 
+    background: rgba(245, 158, 11, 0.12); 
+    padding: 6px 14px; 
+    border-radius: 20px; 
+    display: flex; 
+    align-items: center; 
+    gap: 6px; 
+    border: 1px solid rgba(245, 158, 11, 0.2); /* Efek premium badge */
+}
+
+#user-coins { 
+    color: var(--accent); 
+    font-weight: 800; 
+    font-size: 14px; 
+}
+
+/* ==================================================
+   3. PEMILIHAN TARGET (SIAPA YANG DIKIRIM KADO)
+================================================== */
+.target-selection-container { 
+    margin-bottom: 24px; 
+}
+
+.target-label { 
+    font-size: 12px; 
+    color: var(--text-muted); 
+    font-weight: 700; 
+    margin-bottom: 12px; 
+    display: block; 
+}
+
+.target-list { 
+    display: flex; 
+    gap: 14px; 
+    overflow-x: auto; 
+    padding-bottom: 10px; 
+    scrollbar-width: none; 
+}
+
+.target-user { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 8px; 
+    opacity: 0.4; /* Lebih redup saat tidak dipilih */
+    transition: opacity 0.3s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+.target-user.selected { 
+    opacity: 1; 
+    transform: translateY(-2px); /* Naik sedikit menandakan status aktif */
+}
+
+.target-avatar { 
+    width: 50px; 
+    height: 50px; 
+    border-radius: 50%; 
+    object-fit: cover; 
+    border: 2px solid transparent;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Ring efek menyala saat user dipilih */
+.target-user.selected .target-avatar { 
+    border-color: var(--primary); 
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); 
+}
+
+.target-name { 
+    font-size: 11px; 
+    font-weight: 600; 
+    color: var(--text-main);
+}
+
+/* ==================================================
+   4. LIST KADO (GRID ITEM)
+================================================== */
 .gift-list { 
     display: grid; 
     grid-template-columns: repeat(3, 1fr); 
-    gap: 10px; 
-    max-height: 250px; /* 👇 Batas tinggi laci kado */
-    overflow-y: auto;  /* 👇 Bikin bisa di-scroll ke bawah */
-    padding-right: 4px; /* Biar scrollbar nggak nempel ke pinggir */
+    gap: 12px; 
+    max-height: 280px; 
+    overflow-y: auto;  
+    padding-right: 4px; 
+    padding-bottom: 10px; /* Jarak agar kado terbawah tidak terpotong */
+    scrollbar-width: none; /* Sembunyikan scrollbar agar rapi */
 }
-.gift-item { background: var(--panel-bg); padding: 12px 6px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; }
-.gift-img { width: 45px; height: 45px; object-fit: contain; margin-bottom: 8px; }
-.gift-label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
-.gift-price { font-size: 11px; color: var(--accent); font-weight: 700; margin-top: 4px; }
+
+.gift-item { 
+    background: var(--panel-bg); 
+    padding: 16px 8px; 
+    border-radius: 20px; /* Lebih membulat */
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    border: 1px solid var(--border); /* Bingkai halus */
+    transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s;
+    cursor: pointer;
+}
+
+/* Efek saat kado ditekan (Bouncy feedback) */
+.gift-item:active {
+    transform: scale(0.92);
+    background-color: var(--empty-slot);
+    border-color: var(--primary); /* Bingkai menyala biru saat diketuk */
+}
+
+.gift-img { 
+    width: 50px; 
+    height: 50px; 
+    object-fit: contain; 
+    margin-bottom: 10px; 
+    /* Tambahan drop-shadow agar gambar kado terlihat seperti objek 3D */
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+.gift-label { 
+    font-size: 11px; 
+    font-weight: 700; 
+    color: var(--text-main); /* Mengikuti tema */
+}
+
+.gift-price { 
+    font-size: 12px; 
+    color: var(--accent); 
+    font-weight: 800; 
+    margin-top: 4px; 
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
 </style>
+

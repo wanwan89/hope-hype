@@ -1,16 +1,39 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-:root {
+/* ==================================================
+   1. THEME VARIABLES (LIGHT & DARK MODE)
+================================================== */
+
+/* Mode Terang (Default) */
+:root, [data-theme="light"] {
     --primary: #3b82f6;         
-    --bg-base: #121822;         
-    --panel-bg: rgba(30, 40, 54, 0.95); 
+    --bg-base: #f8fafc;         /* Warna dasar terang */
+    --panel-bg: #ffffff;        /* Panel putih solid */
+    --empty-slot: #e2e8f0;      
+    --accent: #f59e0b;          
+    --success: #10b981;         
+    --text-main: #0f172a;       /* Teks gelap */
+    --text-muted: #64748b;      
+    --danger: #ef4444;
+    --vh: 1vh;
+}
+
+/* Mode Gelap */
+[data-theme="dark"] {
+    --primary: #3b82f6;         
+    --bg-base: #121822;         /* Warna dasar gelap solid */
+    --panel-bg: #1e2836;        /* Panel gelap solid */
     --empty-slot: #222d3d;      
     --accent: #f59e0b;          
     --success: #00ff88;         /* Hijau terang untuk efek sonar */
-    --text-main: #f8fafc;       
+    --text-main: #f8fafc;       /* Teks terang */
     --text-muted: #94a3b8;      
     --danger: #ef4444;
 }
+
+/* ==================================================
+   2. GLOBAL STYLES
+================================================== */
 
 * {
     box-sizing: border-box;
@@ -24,33 +47,29 @@ body, html {
     width: 100%;
     height: 100%;
     background-color: var(--bg-base); 
-    background-image: url('/asets/png/voice.png'); 
-    background-size: cover; 
-    background-position: center; 
-    background-repeat: no-repeat; 
+    /* FOTO TELAH DIHAPUS */
     font-family: 'Inter', -apple-system, sans-serif;
     color: var(--text-main);
     overflow: hidden; 
+    transition: background-color 0.3s ease, color 0.3s ease; /* Transisi halus saat ganti tema */
 }
 
 /* ==================================================
-   1. MAIN LAYOUT & HEADER
+   3. MAIN LAYOUT & HEADER
 ================================================== */
+
 .app-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
     width: 100%;
     position: relative;
-    background: rgba(18, 24, 34, 0.85); 
+    background-color: var(--bg-base); /* Menyesuaikan otomatis dengan tema */
+    transition: background-color 0.3s ease;
 }
 
 /* Menyesuaikan tinggi layar saat keyboard muncul */
-:root {
-  --vh: 1vh;
-}
-
 body {
-  height: calc(var(--vh) * 100);
-  overflow: hidden;
+    height: calc(var(--vh) * 100);
+    overflow: hidden;
 }

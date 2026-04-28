@@ -16,19 +16,73 @@
   </div>
 </header>
 
-<style is:global>
+<<style is:global>
+/* ==================================================
+   1. MAIN HEADER (PREMIUM LOOK)
+================================================== */
 .main-header {
     padding: 16px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: var(--panel-bg); 
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--border); /* Mengikuti tema mode terang/gelap */
     z-index: 100;
+    
+    /* Agar header tetap di atas saat scroll (opsional, hapus jika tidak perlu) */
+    position: sticky; 
+    top: 0; 
+    
+    /* Bayangan super tipis agar header terasa terpisah dari konten chat */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); 
+    transition: background-color 0.3s ease, border-bottom-color 0.3s ease;
 }
 
-.header-left { display: flex; flex-direction: column; }
-.room-title { font-size: 17px; font-weight: 700; color: var(--text-main); }
-.menu-btn { background: transparent; border: none; cursor: pointer; color: var(--text-main); }
-.menu-btn .material-icons { color: var(--text-main) !important; }
+/* ==================================================
+   2. HEADER KIRI & JUDUL RUANGAN
+================================================== */
+.header-left { 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center;
+}
+
+.room-title { 
+    font-size: 17px; 
+    font-weight: 700; 
+    color: var(--text-main); 
+    letter-spacing: -0.3px; /* Jarak huruf sedikit dirapatkan untuk kesan tipografi UI modern */
+    transition: color 0.3s ease;
+}
+
+/* ==================================================
+   3. TOMBOL MENU (INTERAKTIF)
+================================================== */
+.menu-btn { 
+    background: transparent; 
+    border: none; 
+    cursor: pointer; 
+    color: var(--text-main); 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Memperbesar area sentuh (touch target) agar nyaman di HP */
+    padding: 8px; 
+    margin-right: -8px; /* Mengimbangi padding agar posisinya tetap di pojok */
+    border-radius: 50%;
+    transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.menu-btn .material-icons { 
+    color: var(--text-main) !important; 
+    font-size: 24px;
+    transition: color 0.3s ease;
+}
+
+/* Efek saat tombol menu ditekan (Bouncy & Feedback Warna) */
+.menu-btn:active {
+    background-color: var(--empty-slot); /* Memberi warna latar redup saat ditekan */
+    transform: scale(0.92); /* Efek tombol mengecil */
+}
 </style>
