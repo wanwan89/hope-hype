@@ -17,17 +17,19 @@
 }
 
 html.dark {
-  /* 🔥 DARK MODE (Midnight Slate) 🔥 */
-  --bg-main: #0f172a; 
-  --bg-panel: #1e293b; 
-  --bg-sidebar: #1e293b; 
-  --text-color: #e2e8f0; 
-  --text-muted: #94a3b8;
-  --chat-item-bg: #1e293b; 
-  --label-bg: #0f172a; 
+  /* 🔥 Palet Biru Dongker Mewah (Midnight Navy) 🔥 */
+  --bg-main: #0F172A;         
+  --bg-panel: #1E293B;        
+  --bg-sidebar: #1E293B;      
+  --text-color: #F1F5F9;      
+  --text-muted: #94A3B8;      
   --border-color: rgba(255, 255, 255, 0.08); 
-  --username-color: #f8fafc; 
-  --chat-self-bg: #2b5278; 
+  --username-color: #f8fafc;  
+  
+  /* --- Warna Bubble Chat --- */
+  --chat-item-bg: #334155;    
+  --label-bg: #0F172A;        
+  --chat-self-bg: #1D4ED8;    
 }
 
 /* 🔥 TRANSISI SUPER EMPUK 🔥 */
@@ -1078,4 +1080,28 @@ img {
     /* Kita kasih 12px aja biar cukup ngelewatin garis navigasi, nggak lebay kayak tadi */
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important; 
   }
+}
+/* 🔥 JURUS JINAKIN TOMBOL INPUT DI MODE GELAP 🔥 */
+html.dark .input-group-wrapper {
+  background: #1E293B !important; 
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark .chat-input textarea {
+  color: #F1F5F9 !important;
+}
+
+/* Bikin tombol sticker & mic ikutan blend sama tema gelap */
+html.dark #sticker-btn,
+html.dark #action-btn {
+  background-color: #334155 !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark #sticker-btn svg {
+  stroke: #94A3B8 !important;
+}
+
+html.dark #vn-overlay {
+  background: #1E293B !important;
 }
