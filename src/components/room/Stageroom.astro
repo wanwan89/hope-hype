@@ -9,15 +9,9 @@
   </div>
 </section>
 
-<button id="btn-join-stage" class="btn-join-stage" onclick="mintaNaik()">
-  <div class="btn-glow"></div>
-  <span class="material-icons">mic</span>
-  <span>Naik Panggung</span>
-</button>
-
 <style is:global>
 /* ==================================================
-   1. STAGE CONTAINER (PREMIUM FLOATING)
+   1. STAGE CONTAINER (PREMIUM LOOK)
 ================================================== */
 .stage-container {
     display: grid;
@@ -25,6 +19,7 @@
     gap: 24px 12px; 
     padding: 24px 16px;
     background: var(--panel-bg);
+    /* Lengkungan bawah modern agar transisi ke chat halus */
     border-radius: 0 0 32px 32px;
     border-bottom: 1px solid var(--border);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
@@ -43,8 +38,8 @@
 }
 
 .avatar {
-    width: 70px; 
-    height: 70px;
+    width: 72px; /* Sedikit diperbesar biar lebih pas di mata */
+    height: 72px;
     border-radius: 50%; 
     background: var(--empty-slot);
     position: relative;
@@ -58,11 +53,13 @@
 }
 
 .avatar img { 
-    width: 100%; height: 100%; 
-    border-radius: 50%; object-fit: cover; 
+    width: 100%; 
+    height: 100%; 
+    border-radius: 50%; 
+    object-fit: cover; 
 }
 
-/* Slot Kosong dengan Efek Inset (Lubang) */
+/* Slot Kosong dengan Efek Inset (Lubang Kursi) */
 .speaker-item.empty .avatar { 
     background: var(--empty-slot); 
     border: 2px dashed var(--border);
@@ -75,10 +72,13 @@
     opacity: 0.5;
 }
 
-.avatar:active { transform: scale(0.9); }
+/* Efek Bouncy saat Slot di-tap */
+.avatar:active { 
+    transform: scale(0.9); 
+}
 
 /* ==================================================
-   3. EFEK SONAR (PREMIUM SPEAKING)
+   3. EFEK SONAR (SPEAKING GLOW PREMIUM)
 ================================================== */
 .avatar.speaking {
     border-color: var(--success) !important;
@@ -92,7 +92,7 @@
 }
 
 /* ==================================================
-   4. NAMA & LEVEL (CLEAN LOOK)
+   4. NAMA & LABEL STATUS
 ================================================== */
 .name-label {
     margin-top: 12px;
@@ -112,45 +112,5 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     opacity: 0.6;
-}
-
-/* ==================================================
-   5. FLOATING JOIN BUTTON
-================================================== */
-.btn-join-stage {
-    position: fixed;
-    bottom: 90px; 
-    right: 20px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 800;
-    font-size: 14px;
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-    z-index: 850;
-    cursor: pointer;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.btn-join-stage:active { transform: scale(0.9); }
-
-.btn-glow {
-    position: absolute;
-    top: -50%; left: -50%;
-    width: 200%; height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-    animation: rotateGlow 4s linear infinite;
-    pointer-events: none;
-}
-
-@keyframes rotateGlow {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
 }
 </style>
