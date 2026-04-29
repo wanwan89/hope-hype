@@ -1,54 +1,136 @@
 ---
 ---
 <div id="skeleton-screen">
+  <div class="skel-ambient-glow"></div>
+
   <div class="skeleton-main-card-ui">
     <div class="skel-header">
-      <div style="display: flex; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 12px;">
         <div class="skel-avatar shim"></div>
-        <div class="skel-username shim"></div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div class="skel-text-short shim"></div>
+          <div class="skel-text-micro shim"></div>
+        </div>
       </div>
-      <div style="width: 30px; height: 30px; border-radius: 50%;" class="shim"></div>
+      <div class="skel-icon-circle shim"></div>
     </div>
+
+    <div class="skel-hero-card shim"></div>
+
     <div class="skel-grid">
-      <div class="skel-main-card shim"></div>
-      <div class="skel-main-card shim"></div>
+      <div class="skel-box shim"></div>
+      <div class="skel-box shim"></div>
     </div>
-    <div style="display: flex; justify-content: space-between; gap: 10px;">
-      <div style="width: 100px; height: 34px; border-radius: 12px;" class="shim"></div>
-      <div style="width: 80px; height: 34px; border-radius: 12px;" class="shim"></div>
-    </div>
+
     <div class="skel-bar shim"></div>
-    <div class="skel-bar shim"></div>
+    
+    <div class="skel-floating-nav shim"></div>
   </div>
 </div>
 
 <style is:global>
-/* Tambahin transition biar pas ilang smooth (fade out) */
+/* 1. Global Setup & Smooth Fade Out */
 #skeleton-screen { 
   position: fixed; 
   inset: 0; 
   display: flex; 
   justify-content: center; 
   align-items: center; 
-  background-color: #0b84e3; 
+  background-color: #050510; /* Deep Navy / Dark Mode Base */
   z-index: 9999; 
   padding: 0 20px; 
-  transition: opacity 0.5s ease, visibility 0.5s;
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s;
+  overflow: hidden;
 }
-.skeleton-main-card-ui { width: 380px; background-color: #fdf9f1; border-radius: 28px; padding: 28px; box-shadow: 10px 10px 0px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 20px; }
-.shim { position: relative; overflow: hidden; background-color: #e2e8f0; border-radius: 12px; }
-.shim::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient( 90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0) 100% ); animation: shimmer 1.2s infinite ease-in-out; }
-@keyframes shimmer { 100% { transform: translateX(100%); } }
+
+/* 2. Ambient Light (Biar ala-ala Fintech Apple) */
+.skel-ambient-glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0,0,0,0) 70%);
+  top: -10%;
+  right: -10%;
+  filter: blur(40px);
+  z-index: 0;
+}
+
+/* 3. Main Glass Container */
+.skeleton-main-card-ui { 
+  width: 100%;
+  max-width: 420px; 
+  background: rgba(255, 255, 255, 0.03); /* Glass base */
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 40px; 
+  padding: 32px 24px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 24px; 
+  z-index: 1;
+  box-shadow: 0 24px 40px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* 4. The Magic Shimmer (Premium Skewed) */
+.shim { 
+  position: relative; 
+  overflow: hidden; 
+  background-color: rgba(255, 255, 255, 0.05); /* Warna dasar elemen */
+}
+
+.shim::after { 
+  content: ""; 
+  position: absolute; 
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-150%) skewX(-15deg); /* Bikin miring biar dinamis */
+  background: linear-gradient(
+    90deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.08) 50%, 
+    rgba(255, 255, 255, 0) 100% 
+  ); 
+  animation: premium-shimmer 2s infinite ease-in-out; 
+}
+
+@keyframes premium-shimmer { 
+  100% { transform: translateX(150%) skewX(-15deg); } 
+}
+
+/* 5. Skeleton Elements Sizing & Radius */
 .skel-header { display: flex; justify-content: space-between; align-items: center; }
-.skel-avatar { width: 40px; height: 40px; border-radius: 50%; }
-.skel-username { width: 120px; height: 18px; border-radius: 6px; margin-left: 10px; }
+.skel-avatar { width: 48px; height: 48px; border-radius: 50%; }
+.skel-icon-circle { width: 40px; height: 40px; border-radius: 50%; }
+
+.skel-text-short { width: 120px; height: 16px; border-radius: 8px; }
+.skel-text-micro { width: 80px; height: 12px; border-radius: 6px; }
+
+.skel-hero-card { width: 100%; height: 200px; border-radius: 28px; }
+
 .skel-grid { display: flex; gap: 16px; }
-.skel-main-card { flex: 1; height: 220px; border-radius: 18px; }
-.skel-bar { width: 100%; height: 72px; border-radius: 18px; margin-top: 5px; }
+.skel-box { flex: 1; height: 140px; border-radius: 24px; }
+
+.skel-bar { width: 100%; height: 80px; border-radius: 24px; }
+
+/* Floating Nav Placeholder */
+.skel-floating-nav {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 64px;
+  border-radius: 32px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+}
 </style>
 
 <script is:inline>
-  // Fungsi darurat buat ngilangin skeleton
   function removeSkeleton() {
     const skel = document.getElementById('skeleton-screen');
     const container = document.querySelector('.container');
@@ -57,15 +139,20 @@
       skel.style.opacity = '0';
       skel.style.visibility = 'hidden';
       setTimeout(() => {
-        skel.remove(); // Hapus dari layar
-        if (container) container.style.display = 'block'; // Munculin menu utama
-      }, 500);
+        skel.remove();
+        if (container) {
+          container.style.opacity = '0';
+          container.style.display = 'block';
+          // Animasi fade in konten utama biar lebih smooth
+          requestAnimationFrame(() => {
+            container.style.transition = 'opacity 0.4s ease';
+            container.style.opacity = '1';
+          });
+        }
+      }, 600); // Sinkron dengan durasi transisi CSS
     }
   }
 
-  // 1. Ilangin pas semua data keload
   window.addEventListener('load', removeSkeleton);
-
-  // 2. Safety Net: Kalau 5 detik nggak ilang juga (misal JS error), paksa ilang!
-  setTimeout(removeSkeleton, 5000);
+  setTimeout(removeSkeleton, 5000); // 5s fail-safe
 </script>
