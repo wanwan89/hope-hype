@@ -40,13 +40,12 @@
 
 <style is:global>
 /* ==================================================
-   1. MODAL OVERLAY (GLASSMORPHISM)
+   1. MODAL OVERLAY (GLASSMORPHISM) + ANTI-NYANGKUT
 ================================================== */
 .modal-overlay { 
     position: fixed; 
     inset: 0; 
-    /* Menggunakan var(--overlay-bg) dari setup sebelumnya agar dinamis */
-    background: rgba(0, 0, 0, 0.5); /* Warna dasar overlay */
+    background: rgba(0, 0, 0, 0.5); 
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
     z-index: 10000; 
@@ -54,11 +53,23 @@
     align-items: center; 
     justify-content: center; 
     opacity: 0;
+    
+    /* 🔥 JURUS ANTI-NYANGKUT 🔥 */
+    /* Saat tertutup, jari tembus ke layar di bawahnya */
+    pointer-events: none !important; 
 }
 
-/* Class .show ditambahkan oleh JS saat modal dibuka */
+/* Karena di JS lu kadang buka modal pakai .style.display = 'flex' (bukan addClass 'show'), 
+   kita pancing pointer-events-nya biar aktif kalau di-flex */
+.modal-overlay[style*="display: flex"] {
+    pointer-events: auto !important;
+    opacity: 1; /* Pastikan kelihatan */
+}
+
+/* Class .show ditambahkan oleh JS saat modal dibuka (sebagai opsi alternatif) */
 .modal-overlay.show {
     display: flex;
+    pointer-events: auto !important; /* Kembalikan fungsi klik buat nutup modal */
     animation: fadeInModal 0.3s ease-out forwards;
 }
 
@@ -69,16 +80,22 @@
     background: var(--panel-bg); 
     width: 85%; 
     max-width: 360px; 
-    border-radius: 24px; /* Sudut lebih membulat ala iOS */
+    border-radius: 24px; 
     padding: 24px; 
     border: 1px solid var(--border);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
     transform: scale(0.9);
     transition: background-color 0.3s ease, border-color 0.3s ease;
+    
+    /* Pastikan box tetap muncul full kalau modalnya pakai display:flex dari JS */
+}
+
+.modal-overlay[style*="display: flex"] .modal-box {
+    transform: scale(1);
 }
 
 .modal-overlay.show .modal-box {
-    animation: scaleUpModal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; /* Animasi membal halus */
+    animation: scaleUpModal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; 
 }
 
 /* ==================================================
@@ -116,7 +133,7 @@
 
 .close-modal:active {
     background-color: var(--empty-slot);
-    color: var(--danger); /* Berubah merah saat mau ditutup */
+    color: var(--danger); 
     transform: scale(0.9);
 }
 
@@ -134,9 +151,10 @@
 .modal-body input, 
 .modal-body textarea { 
     width: 100%; 
-    background: var(--input-bg); /* Menggunakan variabel input dari footer sebelumnya */
-    border: 1px solid var(--border); 
-    color: var(--text-main); /* Mengikuti mode gelap/terang */
+    /* var(--input-bg) ini ada di file style utama kamu (di bagian footer chat) */
+    background: var(--input-bg, rgba(0,0,0,0.2)); 
+    border: 1px solid var(--border, transparent); 
+    color: var(--text-main, white); 
     padding: 14px; 
     border-radius: 14px; 
     margin-bottom: 16px; 
@@ -151,11 +169,10 @@
     color: var(--text-muted);
 }
 
-/* Efek saat input sedang diketik */
 .modal-body input:focus, 
 .modal-body textarea:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); /* Ring fokus warna biru */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); 
 }
 
 /* ==================================================
@@ -193,4 +210,3 @@
     100% { transform: scale(1); opacity: 1; }
 }
 </style>
-
