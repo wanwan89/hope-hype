@@ -1,6 +1,8 @@
-// 1. IMPORT WAJIB DI BARIS PALING ATAS!
-// Kita panggil supabase dari file lib, dan kasih alias 'sb' biar sisa kode lu aman.
 import { supabase as sb } from '../lib/supabase.js';
+
+// 👇 TAMBAHIN DUA BARIS INI BREE 👇
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
 // ===== [VOICE.JS - THE REAL FULL COMPLETE FIX 100%] =====
 
