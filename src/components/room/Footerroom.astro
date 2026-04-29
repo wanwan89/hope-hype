@@ -17,66 +17,87 @@
    1. VARIABEL TAMBAHAN KHUSUS FOOTER
 ================================================== */
 :root, [data-theme="light"] {
-    --input-bg: #f1f5f9; /* Abu-abu terang agar kontras dengan panel putih */
+    --input-bg: #f1f5f9; /* Abu-abu terang elegan */
+    --footer-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03); /* Bayangan atas super halus */
 }
 
 [data-theme="dark"] {
-    --input-bg: rgba(0, 0, 0, 0.25); /* Gelap transparan menyatu dengan panel gelap */
+    --input-bg: rgba(255, 255, 255, 0.05); /* Transparan terang di atas gelap */
+    --footer-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
 }
 
 /* ==================================================
-   2. FOOTER CHAT AREA
+   2. FOOTER CHAT AREA (PREMIUM DOCK)
 ================================================== */
 .footer-controls {
     position: fixed; 
     bottom: 0; left: 0; right: 0;
-    padding: 10px 15px;
-    /* Konsolidasi safe-area agar tidak bertumpuk / error di iOS */
-    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    padding: 12px 16px;
+    /* Konsolidasi safe-area agar tidak mentok di layar iPhone bawah */
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    
     background: var(--panel-bg); 
-    border-top: 1px solid var(--border); /* Otomatis mengikuti tema */
+    border-top: 1px solid var(--border); 
+    box-shadow: var(--footer-shadow); /* Efek mengambang */
+    
     display: flex; 
-    gap: 10px; 
+    gap: 12px; 
     align-items: center; 
     z-index: 900; 
     transition: background-color 0.3s ease, border-top-color 0.3s ease;
+    
+    /* Tambahan efek blur kaca (Glassmorphism tipis) jika background tembus pandang */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 /* ==================================================
-   3. TOMBOL GIFT (AKSEN)
+   3. TOMBOL GIFT (AKSEN GOLD/AMBER)
 ================================================== */
 .btn-gift-main {
-    width: 44px; height: 44px; 
+    width: 46px; height: 46px; 
     border-radius: 50%; 
-    background: var(--accent); 
+    
+    /* Gradasi linear agar terlihat sedikit 3D / Premium */
+    background: linear-gradient(135deg, #fbbf24, #d97706); 
     border: none; 
     display: flex; 
     align-items: center; justify-content: center;
     color: #ffffff; 
     cursor: pointer; 
     flex-shrink: 0; 
-    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); /* Bayangan tipis estetik */
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    
+    /* Cahaya bayangan di bawah tombol */
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35); 
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
 }
 
-/* Efek tombol saat ditekan */
+/* Efek tombol saat ditekan (Bouncy) */
 .btn-gift-main:active {
-    transform: scale(0.92);
+    transform: scale(0.88);
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
 }
 
 /* ==================================================
-   4. WRAPPER INPUT CHAT
+   4. WRAPPER INPUT CHAT (SMART FOCUS)
 ================================================== */
 .input-wrapper {
     flex: 1; 
     display: flex; 
     align-items: center;
-    background: var(--input-bg); /* Dinamis mengikuti mode */
-    border: 1px solid var(--border); /* Menambah batas halus agar form tegas */
+    background: var(--input-bg); 
+    border: 1px solid var(--border); 
     border-radius: 24px; 
-    padding: 4px 6px 4px 16px; 
-    height: 44px; 
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    padding: 4px 6px 4px 18px; 
+    height: 46px; 
+    transition: all 0.3s ease;
+}
+
+/* 🔥 EFEK GLOW SAAT DIKETIK 🔥 */
+.input-wrapper:focus-within {
+    border-color: var(--primary);
+    background: transparent;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); /* Cincin biru halus ala iOS */
 }
 
 #chat-input { 
@@ -84,17 +105,20 @@
     background: transparent; 
     border: none; 
     color: var(--text-main); 
-    font-size: 13px; 
+    font-size: 13.5px; 
+    outline: none; /* Hilangkan outline bawaan browser yang jelek */
 }
+
 #chat-input::placeholder { 
     color: var(--text-muted); 
+    font-weight: 500;
 }
 
 /* ==================================================
-   5. TOMBOL KIRIM
+   5. TOMBOL KIRIM (SEND ICON)
 ================================================== */
 .btn-send {
-    width: 34px; height: 34px; 
+    width: 36px; height: 36px; 
     border-radius: 50%; 
     background: var(--primary); 
     border: none; 
@@ -102,13 +126,13 @@
     align-items: center; justify-content: center;
     color: white; 
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-    transition: transform 0.15s ease;
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
 }
 
 /* Efek tombol saat ditekan */
 .btn-send:active {
-    transform: scale(0.9);
+    transform: scale(0.85);
+    background: #2563eb; /* Biru yang sedikit lebih gelap saat ditekan */
 }
 </style>
-

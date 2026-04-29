@@ -4,7 +4,9 @@
   <div class="modal-box">
     <div class="modal-header">
       <h3>⚙️ Room Settings</h3>
-      <span class="close-modal" onclick="closeRoomSetting()">×</span>
+      <button class="close-modal" onclick="closeRoomSetting()">
+        <span class="material-icons">close</span>
+      </button>
     </div>
     <div class="modal-body">
       <label>Nama Room Baru</label>
@@ -17,196 +19,209 @@
 </div>
 
 <div id="confirm-modal" class="modal-overlay" style="z-index: 10005;">
-  <div class="modal-box" style="text-align: center; max-width: 300px; padding: 25px 20px;">
-    <h3 style="margin-top: 0; color: #fff; font-size: 18px;">Turun Panggung?</h3>
-    <p style="color: #94a3b8; font-size: 14px; margin-bottom: 25px;">Yakin mau turun dari panggung sekarang? Mic kamu akan otomatis dimatikan.</p>
-    <div style="display: flex; gap: 15px; justify-content: center;">
-      <button onclick="closeConfirmModal()" style="flex: 1; padding: 12px; border-radius: 14px; border: none; background: #333; color: white; font-weight: bold; cursor: pointer;">BATAL</button>
-      <button onclick="prosesTurunMic()" style="flex: 1; padding: 12px; border-radius: 14px; border: none; background: #ff4d4d; color: white; font-weight: bold; cursor: pointer;">YAKIN</button>
+  <div class="modal-box modal-confirm">
+    <div class="confirm-icon-wrapper">
+      <span class="material-icons">mic_off</span>
+    </div>
+    <h3>Turun Panggung?</h3>
+    <p>Yakin mau turun dari panggung sekarang? Mic kamu akan otomatis dimatikan.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeConfirmModal()">BATAL</button>
+      <button class="btn-danger" onclick="prosesTurunMic()">YAKIN</button>
     </div>
   </div>
 </div>
 
-<div id="top-gifters-modal" class="modal-overlay" style="display: none; z-index: 10006;">
-  <div class="modal-box" style="max-width: 320px; padding: 20px; background: #1e293b;">
-    <div class="modal-header" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-      <h3 style="margin: 0; color: #FFD700; font-size: 18px; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);">THE SULTAN</h3>
-      <span class="close-modal" onclick="closeTopGiftersModal()" style="cursor:pointer; font-size: 24px; color: #94a3b8;">&times;</span>
+<div id="top-gifters-modal" class="modal-overlay" style="z-index: 10006;">
+  <div class="modal-box modal-leaderboard">
+    <div class="modal-header">
+      <h3 class="gold-title">🏆 THE SULTAN</h3>
+      <button class="close-modal" onclick="closeTopGiftersModal()">
+        <span class="material-icons">close</span>
+      </button>
     </div>
-    <div id="top-gifters-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 350px; overflow-y: auto; padding-right: 5px;">
-    </div>
+    <div id="top-gifters-list" class="leaderboard-list">
+      </div>
   </div>
 </div>
 
 <style is:global>
 /* ==================================================
-   1. MODAL OVERLAY (GLASSMORPHISM) + ANTI-NYANGKUT
+   1. VARIABEL MODAL
+================================================== */
+:root, [data-theme="light"] {
+    --modal-bg: #ffffff;
+    --modal-overlay: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] {
+    --modal-bg: #1e293b;
+    --modal-overlay: rgba(15, 23, 42, 0.6);
+}
+
+/* ==================================================
+   2. MODAL OVERLAY & ANIMASI MASUK
 ================================================== */
 .modal-overlay { 
     position: fixed; 
     inset: 0; 
-    background: rgba(0, 0, 0, 0.5); 
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    background: var(--modal-overlay); 
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     z-index: 10000; 
     display: none; 
     align-items: center; 
     justify-content: center; 
     opacity: 0;
-    
-    /* 🔥 JURUS ANTI-NYANGKUT 🔥 */
-    /* Saat tertutup, jari tembus ke layar di bawahnya */
     pointer-events: none !important; 
 }
 
-/* Karena di JS lu kadang buka modal pakai .style.display = 'flex' (bukan addClass 'show'), 
-   kita pancing pointer-events-nya biar aktif kalau di-flex */
-.modal-overlay[style*="display: flex"] {
-    pointer-events: auto !important;
-    opacity: 1; /* Pastikan kelihatan */
-}
-
-/* Class .show ditambahkan oleh JS saat modal dibuka (sebagai opsi alternatif) */
+/* Trigger JS via flex */
+.modal-overlay[style*="display: flex"],
 .modal-overlay.show {
     display: flex;
-    pointer-events: auto !important; /* Kembalikan fungsi klik buat nutup modal */
+    pointer-events: auto !important; 
     animation: fadeInModal 0.3s ease-out forwards;
 }
 
 /* ==================================================
-   2. KOTAK MODAL (PREMIUM BOX)
+   3. KOTAK MODAL UTAMA (PREMIUM CARD)
 ================================================== */
 .modal-box { 
-    background: var(--panel-bg); 
-    width: 85%; 
-    max-width: 360px; 
-    border-radius: 24px; 
-    padding: 24px; 
+    background: var(--modal-bg); 
+    width: 88%; 
+    max-width: 380px; 
+    border-radius: 28px; 
+    padding: 26px 24px; 
     border: 1px solid var(--border);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-    transform: scale(0.9);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    transform: scale(0.9) translateY(20px);
     transition: background-color 0.3s ease, border-color 0.3s ease;
-    
-    /* Pastikan box tetap muncul full kalau modalnya pakai display:flex dari JS */
 }
 
-.modal-overlay[style*="display: flex"] .modal-box {
-    transform: scale(1);
-}
-
+.modal-overlay[style*="display: flex"] .modal-box,
 .modal-overlay.show .modal-box {
     animation: scaleUpModal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; 
 }
 
 /* ==================================================
-   3. HEADER & TOMBOL CLOSE
+   4. HEADER MODAL & TOMBOL CLOSE
 ================================================== */
 .modal-header { 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    margin-bottom: 20px; 
+    margin-bottom: 22px; 
 }
 
 .modal-header h3 { 
-    font-size: 18px; 
+    font-size: 19px; 
     margin: 0; 
     color: var(--text-main);
-    font-weight: 700;
-    letter-spacing: -0.3px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
 }
 
 .close-modal { 
-    font-size: 24px; 
-    cursor: pointer; 
-    color: var(--text-muted); 
-    background: transparent;
+    background: var(--empty-slot);
     border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    color: var(--text-muted);
+    width: 36px; height: 36px;
     border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    transition: background-color 0.2s, transform 0.15s, color 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .close-modal:active {
-    background-color: var(--empty-slot);
-    color: var(--danger); 
-    transform: scale(0.9);
+    background: rgba(239, 68, 68, 0.15); /* Merah transparan saat ditekan */
+    color: #ef4444;
+    transform: scale(0.85);
 }
 
 /* ==================================================
-   4. FORM INPUT & LABEL
+   5. FORM INPUT SETTING ROOM
 ================================================== */
 .modal-body label { 
-    display: block; 
-    margin-bottom: 8px; 
-    font-size: 13px; 
-    font-weight: 600;
-    color: var(--text-muted); 
+    display: block; margin-bottom: 8px; 
+    font-size: 13px; font-weight: 700; color: var(--text-muted); 
 }
 
 .modal-body input, 
 .modal-body textarea { 
     width: 100%; 
-    /* var(--input-bg) ini ada di file style utama kamu (di bagian footer chat) */
-    background: var(--input-bg, rgba(0,0,0,0.2)); 
-    border: 1px solid var(--border, transparent); 
-    color: var(--text-main, white); 
-    padding: 14px; 
-    border-radius: 14px; 
-    margin-bottom: 16px; 
-    font-size: 14px; 
-    font-family: inherit;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    background: var(--input-bg); 
+    border: 1px solid var(--border); 
+    color: var(--text-main); 
+    padding: 16px; 
+    border-radius: 16px; 
+    margin-bottom: 20px; 
+    font-size: 14.5px; 
+    font-weight: 500;
     outline: none;
+    transition: all 0.3s ease;
 }
 
-.modal-body input::placeholder, 
-.modal-body textarea::placeholder {
-    color: var(--text-muted);
-}
+.modal-body textarea { height: 100px; resize: none; }
 
 .modal-body input:focus, 
 .modal-body textarea:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); 
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); 
+    background: transparent;
 }
 
-/* ==================================================
-   5. TOMBOL SIMPAN
-================================================== */
 .btn-save-setting { 
-    width: 100%; 
-    padding: 14px; 
-    background: var(--primary); 
-    color: white; 
-    border: none; 
-    border-radius: 14px; 
-    font-weight: 700; 
-    font-size: 15px;
-    cursor: pointer; 
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    width: 100%; padding: 16px; 
+    background: var(--primary); color: white; 
+    border: none; border-radius: 16px; 
+    font-weight: 700; font-size: 15px;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
-.btn-save-setting:active {
-    transform: scale(0.96);
-    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
-}
+.btn-save-setting:active { transform: scale(0.95); }
 
 /* ==================================================
-   6. KEYFRAMES ANIMASI
+   6. MODAL KONFIRMASI (CONFIRM MODAL)
 ================================================== */
-@keyframes fadeInModal {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+.modal-confirm { text-align: center; padding: 32px 24px; }
 
+.confirm-icon-wrapper {
+    width: 64px; height: 64px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px auto;
+}
+.confirm-icon-wrapper .material-icons { font-size: 32px; }
+
+.modal-confirm h3 { font-size: 20px; font-weight: 800; color: var(--text-main); margin: 0 0 10px 0; }
+.modal-confirm p { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin: 0 0 24px 0; }
+
+.modal-actions { display: flex; gap: 12px; }
+.modal-actions button {
+    flex: 1; padding: 14px; border: none; border-radius: 16px;
+    font-weight: 700; font-size: 14px; transition: transform 0.2s ease;
+}
+.btn-cancel { background: var(--empty-slot); color: var(--text-main); }
+.btn-danger { background: #ef4444; color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+
+.modal-actions button:active { transform: scale(0.92); }
+
+/* ==================================================
+   7. MODAL LEADERBOARD (SULTAN)
+================================================== */
+.modal-leaderboard { background: #1e293b; border-color: #334155; }
+.gold-title { color: #FFD700 !important; text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3); }
+.leaderboard-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 4px; scrollbar-width: none; }
+
+/* ==================================================
+   8. ANIMASI KEYFRAMES
+================================================== */
+@keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scaleUpModal {
-    0% { transform: scale(0.85); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    0% { transform: scale(0.8) translateY(20px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 </style>

@@ -3,86 +3,151 @@
 <header class="main-header">
   <div class="header-left">
     <h1 class="room-title">KLASIKAN NYANYI</h1>
-    <div style="font-size: 11px; color: #94a3b8; margin-top: 4px; display: flex; align-items: center; gap: 6px; font-weight: 600;">
-      <span class="material-icons" style="font-size: 14px; color: #00e676;">people</span>
-      <span id="online-count">1</span> orang di room
+    
+    <div class="online-status">
+      <div class="online-dot"></div>
+      <span class="material-icons" style="font-size: 13px;">people</span>
+      <span><b id="online-count">1</b> orang di room</span>
     </div>
   </div>
+  
   <div class="header-right" style="display: flex; align-items: center;">
-    <div id="top-gifters-container" style="display: flex; align-items: center; margin-right: 15px; cursor: pointer;" onclick="openTopGiftersModal()"></div>
+    <div id="top-gifters-container" class="top-gifters-wrapper" onclick="openTopGiftersModal()"></div>
+    
     <button class="menu-btn" onclick="toggleSidebar()">
-      <span class="material-icons" style="font-size: 28px; color: white;">menu</span>
+      <span class="material-icons" style="font-size: 28px;">menu</span>
     </button>
   </div>
 </header>
 
 <style is:global>
 /* ==================================================
-   1. MAIN HEADER (PREMIUM LOOK)
+   1. VARIABEL HEADER (GLASSMORPHISM)
+================================================== */
+:root, [data-theme="light"] {
+    --header-bg: rgba(255, 255, 255, 0.85); /* Putih transparan */
+    --header-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] {
+    --header-bg: rgba(30, 41, 59, 0.85); /* Gelap transparan */
+    --header-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ==================================================
+   2. MAIN HEADER (PREMIUM LOOK)
 ================================================== */
 .main-header {
-    padding: 16px 20px;
+    /* Gunakan safe-area agar tidak mentok ke jam/baterai di HP modern */
+    padding: calc(12px + env(safe-area-inset-top)) 20px 12px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--panel-bg); 
-    border-bottom: 1px solid var(--border); /* Mengikuti tema mode terang/gelap */
-    z-index: 100;
+    background: var(--header-bg); 
+    border-bottom: 1px solid var(--border); 
+    z-index: 800; /* Di bawah modal, tapi di atas chat */
     
-    /* Agar header tetap di atas saat scroll (opsional, hapus jika tidak perlu) */
     position: sticky; 
     top: 0; 
     
-    /* Bayangan super tipis agar header terasa terpisah dari konten chat */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); 
+    /* Efek Blur Kaca layaknya iOS */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    
+    box-shadow: var(--header-shadow); 
     transition: background-color 0.3s ease, border-bottom-color 0.3s ease;
 }
 
 /* ==================================================
-   2. HEADER KIRI & JUDUL RUANGAN
+   3. HEADER KIRI (JUDUL & STATUS)
 ================================================== */
 .header-left { 
     display: flex; 
     flex-direction: column; 
     justify-content: center;
+    gap: 4px;
 }
 
 .room-title { 
-    font-size: 17px; 
-    font-weight: 700; 
+    font-size: 18px; /* Sedikit dibesarkan */
+    font-weight: 800; /* Lebih tebal dan tegas */
     color: var(--text-main); 
-    letter-spacing: -0.3px; /* Jarak huruf sedikit dirapatkan untuk kesan tipografi UI modern */
+    letter-spacing: -0.4px; 
+    margin: 0;
+    text-transform: uppercase;
     transition: color 0.3s ease;
 }
 
+/* Badge Indikator Online */
+.online-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    background: var(--empty-slot); /* Background abu-abu redup */
+    padding: 3px 10px 3px 6px;
+    border-radius: 12px;
+    width: max-content;
+}
+
+.online-status b {
+    color: var(--text-main);
+    font-weight: 800;
+}
+
+/* Titik Hijau Berdenyut */
+.online-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #10b981; /* Hijau cerah */
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+    animation: pulseGreen 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes pulseGreen {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+}
+
 /* ==================================================
-   3. TOMBOL MENU (INTERAKTIF)
+   4. HEADER KANAN (TOP GIFTER & MENU)
 ================================================== */
+.top-gifters-wrapper {
+    display: flex; 
+    align-items: center; 
+    margin-right: 15px; 
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.top-gifters-wrapper:active {
+    transform: scale(0.92);
+}
+
+/* TOMBOL MENU */
 .menu-btn { 
     background: transparent; 
     border: none; 
     cursor: pointer; 
-    color: var(--text-main); 
     display: flex;
     align-items: center;
     justify-content: center;
-    
-    /* Memperbesar area sentuh (touch target) agar nyaman di HP */
-    padding: 8px; 
-    margin-right: -8px; /* Mengimbangi padding agar posisinya tetap di pojok */
+    padding: 6px; 
+    margin-right: -6px; 
     border-radius: 50%;
     transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
 .menu-btn .material-icons { 
-    color: var(--text-main) !important; 
-    font-size: 24px;
+    color: var(--text-main); /* Mengikuti warna teks otomatis (Gelap/Terang) */
     transition: color 0.3s ease;
 }
 
-/* Efek saat tombol menu ditekan (Bouncy & Feedback Warna) */
 .menu-btn:active {
-    background-color: var(--empty-slot); /* Memberi warna latar redup saat ditekan */
-    transform: scale(0.92); /* Efek tombol mengecil */
+    background-color: var(--empty-slot); 
+    transform: scale(0.85); 
 }
 </style>

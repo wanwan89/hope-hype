@@ -7,87 +7,100 @@
     <button class="close-sidebar-btn" onclick="toggleSidebar()">
       <span class="material-icons">chevron_right</span>
     </button>
-    <img src="/asets/png/profile.png" id="sidebar-avatar" class="sidebar-profile-img" />
+    <div class="profile-img-wrapper">
+      <img src="/asets/png/profile.png" id="sidebar-avatar" class="sidebar-profile-img" />
+    </div>
     <span id="sidebar-username">Username</span>
   </div>
 
   <div class="sidebar-menu">
     <a href="/data">
-      <span class="material-icons">person</span> 
+      <div class="menu-icon-box"><span class="material-icons">person</span></div>
       <span>Profil</span>
     </a>
     
     <a href="#" id="menu-mic" onclick="toggleMicSidebar(event)">
-      <span class="material-icons" id="mic-icon">mic</span> 
+      <div class="menu-icon-box"><span class="material-icons" id="mic-icon">mic</span></div>
       <span id="mic-text">Matikan Mic</span>
     </a>
     
     <a href="#" id="menu-setting" style="display: none;" onclick="openRoomSetting()">
-      <span class="material-icons">settings</span> 
+      <div class="menu-icon-box"><span class="material-icons">settings</span></div>
       <span>Room Settings</span>
     </a>
     
+    <div class="menu-divider"></div>
+
     <a href="#" onclick="keluarRoom()" class="logout-item">
-      <span class="material-icons">logout</span> 
-      <span>Keluar</span>
+      <div class="menu-icon-box logout-box"><span class="material-icons">logout</span></div>
+      <span>Keluar Ruangan</span>
     </a>
   </div>
 </div> 
 
 <style is:global>
 /* ==================================================
-   1. SIDEBAR OVERLAY (GLASSMORPHISM) + FIX ANTI-NYANGKUT
+   1. SIDEBAR OVERLAY (GLASSMORPHISM) + ANTI-NYANGKUT
 ================================================== */
 .sidebar-overlay { 
     position: fixed; 
     inset: 0; 
-    background: rgba(0, 0, 0, 0.4); 
-    backdrop-filter: blur(4px);     
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.45); 
+    backdrop-filter: blur(5px);     
+    -webkit-backdrop-filter: blur(5px);
     z-index: 1999; 
     display: none; 
     opacity: 0;
     transition: opacity 0.3s ease;
     
     /* 🔥 JURUS ANTI-NYANGKUT 🔥 */
-    /* Saat tertutup, jari bisa tembus layar tanpa keblokir */
     pointer-events: none !important; 
 }
 
 .sidebar-overlay.active { 
     display: block; 
-    opacity: 1; /* Pastikan layar gelap penuh saat dibuka */
-    
-    /* 🔥 JURUS ANTI-NYANGKUT 🔥 */
-    /* Saat dibuka, kembalikan fungsi klik agar bisa ditutup lagi */
+    opacity: 1; 
     pointer-events: auto !important; 
-    
     animation: fadeInOverlay 0.3s ease forwards;
 }
 
-/* Tambahan keyframes agar animasi blur-nya jalan mulus */
 @keyframes fadeInOverlay {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
 /* ==================================================
-   2. PANEL SIDEBAR UTAMA
+   2. PANEL SIDEBAR UTAMA (PREMIUM FLOATING)
 ================================================== */
+:root, [data-theme="light"] {
+    --sidebar-shadow: -10px 0 40px rgba(0, 0, 0, 0.08);
+}
+[data-theme="dark"] {
+    --sidebar-shadow: -10px 0 40px rgba(0, 0, 0, 0.4);
+}
+
 .sidebar {
     position: fixed; 
     top: 0; 
-    right: -280px; 
-    width: 280px; 
+    right: -300px; /* Diperlebar sedikit agar lebih elegan */
+    width: 290px; 
     height: 100%;
     background: var(--panel-bg); 
     z-index: 2000;
-    transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
-    padding: 24px 20px;
+    
+    /* Tambahkan Safe Area untuk HP Modern */
+    padding: calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom)) 20px;
+    
     display: flex; 
     flex-direction: column; 
+    
+    /* Border kiri dilengkungkan sedikit ala Drawer modern */
+    border-top-left-radius: 28px;
+    border-bottom-left-radius: 28px;
     border-left: 1px solid var(--border); 
-    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.05); 
+    
+    box-shadow: var(--sidebar-shadow); 
+    transition: right 0.4s cubic-bezier(0.32, 0.72, 0, 1); 
 }
 
 .sidebar.active { 
@@ -101,8 +114,7 @@
     display: flex; 
     flex-direction: column; 
     align-items: center; 
-    padding-bottom: 24px; 
-    border-bottom: 1px solid var(--border); 
+    padding-bottom: 28px; 
     position: relative; 
 }
 
@@ -110,82 +122,109 @@
     position: absolute; 
     left: 0; 
     top: 0; 
-    background: transparent; 
+    background: var(--empty-slot); 
     border: none; 
     color: var(--text-muted); 
     cursor: pointer; 
-    font-size: 24px; 
-    padding: 4px;
+    width: 36px; height: 36px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s, transform 0.15s, color 0.2s;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .close-sidebar-btn:active {
-    background-color: var(--empty-slot);
+    background-color: rgba(239, 68, 68, 0.15);
     color: var(--danger); 
     transform: scale(0.85);
 }
 
+/* Wrapper Foto untuk Efek Cincin Gradasi */
+.profile-img-wrapper {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+    padding: 3px;
+    border-radius: 50%;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+}
+
 .sidebar-profile-img { 
-    width: 76px; 
-    height: 76px; 
+    width: 78px; 
+    height: 78px; 
     border-radius: 50%; 
     object-fit: cover; 
-    margin-bottom: 12px; 
-    border: 2px solid var(--primary); 
-    padding: 2px; 
+    border: 3px solid var(--panel-bg); /* Pemisah antara foto dan cincin gradasi */
+    background: var(--panel-bg); /* Mencegah background tembus jika transparan */
 }
 
 #sidebar-username { 
-    font-weight: 700; 
-    font-size: 16px; 
+    font-weight: 800; 
+    font-size: 17px; 
     color: var(--text-main);
     letter-spacing: -0.3px;
 }
 
 /* ==================================================
-   4. MENU NAVIGASI
+   4. MENU NAVIGASI (DENGAN IKON BOX)
 ================================================== */
 .sidebar-menu { 
-    margin-top: 24px; 
+    margin-top: 10px; 
     display: flex;
     flex-direction: column;
-    gap: 4px; 
+    gap: 8px; 
+    flex: 1; /* Biar logout bisa didorong ke bawah (opsional) */
 }
 
 .sidebar-menu a { 
     display: flex; 
     align-items: center; 
-    gap: 12px; 
+    gap: 14px; 
     color: var(--text-main); 
     text-decoration: none; 
-    padding: 14px 16px; 
-    border-radius: 12px; 
-    font-size: 14px; 
+    padding: 10px 14px; 
+    border-radius: 16px; 
+    font-size: 14.5px; 
     font-weight: 600; 
-    transition: background-color 0.2s ease, transform 0.15s ease; 
+    transition: all 0.2s ease; 
 }
 
+.menu-icon-box {
+    width: 38px; height: 38px;
+    background: var(--empty-slot);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-main);
+}
+.menu-icon-box .material-icons { font-size: 20px; }
+
+/* Efek saat menu ditekan */
 .sidebar-menu a:active {
     background-color: var(--empty-slot);
-    transform: scale(0.97);
+    transform: scale(0.96);
+}
+
+/* Garis Pemisah Menu */
+.menu-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 10px 0;
 }
 
 /* ==================================================
    5. MENU LOGOUT KHUSUS
 ================================================== */
 .sidebar-menu a.logout-item { 
-    color: var(--danger); 
-    margin-top: 20px; 
-    background: rgba(239, 68, 68, 0.08); 
-    border: 1px solid rgba(239, 68, 68, 0.15);
+    color: #ef4444; 
+    margin-top: auto; /* Dorong ke paling bawah */
+}
+
+.logout-box {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
 }
 
 .sidebar-menu a.logout-item:active { 
-    background: rgba(239, 68, 68, 0.15); 
-    transform: scale(0.97);
+    background: rgba(239, 68, 68, 0.08); 
 }
 </style>

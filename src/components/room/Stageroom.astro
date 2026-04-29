@@ -1,168 +1,170 @@
 ---
 ---
-<section id="stage-grid" class="stage-container"></section>
+<div id="drawer-overlay" class="drawer-overlay" onclick="toggleGiftDrawer()"></div>
+
+<div id="gift-drawer" class="gift-drawer">
+  <div class="handle"></div> 
+  
+  <div class="drawer-header">
+    <span class="drawer-title">KIRIM HADIAH</span>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="coin-panel">
+        <div class="coin-icon-mini">
+           <span class="material-icons" style="font-size: 14px;">savings</span>
+        </div>
+        <span id="user-coins">0</span>
+      </div>
+      <button class="close-drawer-btn" onclick="toggleGiftDrawer()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="level-progress-container" class="level-progress-wrapper"></div>
+  
+  <div class="target-selection-container">
+    <span class="target-label">KIRIM KE:</span>
+    <div id="gift-targets" class="target-list"></div>
+  </div>
+
+  <div class="gift-list">
+    <div class="gift-item" onclick="sendGift('Love', 1, 1)">
+      <div class="gift-card-inner">
+        <img src="/asets/png/gift1.png" class="gift-img" />
+        <span class="gift-label">LOVE</span>
+        <div class="gift-price-tag">
+          <span class="material-icons">monetization_on</span>
+          <span class="gift-price">1</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gift-item" onclick="sendGift('Daebak', 10, 2)">
+      <div class="gift-card-inner">
+        <img src="/asets/png/gift2.png" class="gift-img" />
+        <span class="gift-label">DAEBAK</span>
+        <div class="gift-price-tag">
+          <span class="material-icons">monetization_on</span>
+          <span class="gift-price">10</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gift-item" onclick="sendGift('Sultan', 100000, 10)">
+      <div class="gift-card-inner highlight-sultan">
+        <img src="/asets/png/gift10.png" class="gift-img" />
+        <span class="gift-label">SULTAN</span>
+        <div class="gift-price-tag">
+          <span class="material-icons">monetization_on</span>
+          <span class="gift-price">100K</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <style is:global>
 /* ==================================================
-   1. STAGE CONTAINER (PREMIUM CURVES)
+   0. OVERLAY & DRAWER BASE
 ================================================== */
-.stage-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px 10px; 
-    padding: 24px 15px;
+.drawer-overlay {
+    position: fixed; inset: 0; 
+    background: rgba(0, 0, 0, 0.45); 
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 5000; display: none; opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none !important; 
+}
+.drawer-overlay.show { display: block; opacity: 1; pointer-events: auto !important; }
+
+.gift-drawer {
+    position: fixed; bottom: -100%; left: 0; right: 0;
+    background: var(--bg-base);
+    border-top-left-radius: 32px; border-top-right-radius: 32px;
+    z-index: 5001; padding: 24px 20px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    transition: bottom 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+    border-top: 1px solid var(--border);
+}
+.gift-drawer.open { bottom: 0 !important; }
+
+/* ==================================================
+   1. HEADER & COIN PANEL
+================================================== */
+.drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.drawer-title { font-weight: 900; font-size: 15px; color: var(--text-main); letter-spacing: 0.5px; }
+
+.coin-panel {
+    background: rgba(245, 158, 11, 0.12);
+    padding: 6px 14px; border-radius: 24px;
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.1);
+}
+#user-coins { color: var(--accent); font-weight: 800; font-size: 14px; }
+
+.close-drawer-btn {
+    background: var(--empty-slot); border: none; color: var(--text-muted);
+    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+
+/* ==================================================
+   2. TARGET SELECTION (SULTAN STYLE)
+================================================== */
+.target-label { font-size: 11px; color: var(--text-muted); font-weight: 800; margin-bottom: 12px; }
+.target-list { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+
+.target-user { opacity: 0.4; transition: all 0.3s ease; text-align: center; }
+.target-user.selected { opacity: 1; transform: translateY(-3px); }
+
+.target-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 2px solid transparent; padding: 2px;
+    transition: all 0.3s ease;
+}
+.target-user.selected .target-avatar { 
+    border-color: var(--primary); 
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+.target-name { font-size: 10px; font-weight: 700; color: var(--text-main); margin-top: 6px; display: block; }
+
+/* ==================================================
+   3. GIFT GRID (CARD DESIGN)
+================================================== */
+.gift-list {
+    display: grid; grid-template-columns: repeat(4, 1fr); /* 4 kolom agar lebih ringkas */
+    gap: 12px; max-height: 300px; overflow-y: auto;
+    padding: 4px; scrollbar-width: none;
+}
+
+.gift-card-inner {
     background: var(--panel-bg);
-    border-radius: 0 0 32px 32px;
-    border-bottom: 1px solid var(--border); /* Dinamis mengikuti tema */
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04); /* Bayangan tipis agar elegan */
-    z-index: 90;
-    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 20px; padding: 12px 6px;
+    display: flex; flex-direction: column; align-items: center;
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
 }
 
-[data-theme="dark"] .stage-container {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); /* Bayangan lebih kuat di mode gelap */
-}
-
-/* ==================================================
-   2. SPEAKER ITEM & AVATAR
-================================================== */
-.speaker-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%; 
-    min-width: 0; /* Penting agar grid tidak jebol ke samping */
-}
-
-.avatar {
-    width: 64px; 
-    height: 64px;
-    border-radius: 50%; 
+.gift-item:active .gift-card-inner {
+    transform: scale(0.9);
     background: var(--empty-slot);
-    position: relative;
-    border: 2px solid transparent; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-    flex-shrink: 0;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    border-color: var(--accent);
 }
 
-.avatar img { 
-    width: 100%; 
-    height: 100%; 
-    border-radius: 50%; 
-    object-fit: cover; 
-}
+.gift-img { width: 44px; height: 44px; object-fit: contain; margin-bottom: 8px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); }
+.gift-label { font-size: 10px; font-weight: 800; color: var(--text-muted); margin-bottom: 4px; }
 
-/* Tampilan Slot Kosong */
-.speaker-item.empty .avatar { 
-    background: var(--empty-slot); 
-    border: 2px dashed var(--border); /* Efek garis putus-putus agar terlihat lebih rapi */
-    box-shadow: none; 
+.gift-price-tag {
+    display: flex; align-items: center; gap: 2px;
+    color: var(--accent); font-weight: 900; font-size: 11px;
 }
+.gift-price-tag .material-icons { font-size: 12px; }
 
-.speaker-item.empty .avatar .material-icons { 
-    color: var(--text-muted); /* Dinamis, tidak lagi pakai hardcode #475569 */
-    font-size: 28px; 
-}
-
-/* ==================================================
-   3. EFEK SONAR (SPEAKING) - OTOMATIS IKUT TEMA
-================================================== */
-.avatar.speaking {
-    border-color: var(--success) !important; 
-    /* Animasi gelombang memancar dengan timing membal (cubic-bezier) */
-    animation: sonar-wave 1.5s infinite cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-@keyframes sonar-wave {
-    /* Trik menggunakan properti transparan agar menyatu sempurna dengan variabel var(--success) */
-    0% { box-shadow: 0 0 0 0 var(--success); }
-    50% { box-shadow: 0 0 0 6px var(--success), 0 0 0 12px transparent; }
-    100% { box-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent; }
-}
-
-/* ==================================================
-   4. TRIGGER GIFT KECIL DI AVATAR
-================================================== */
-.gift-trigger {
-    position: absolute; 
-    bottom: -4px; 
-    right: -4px;
-    background: var(--empty-slot); 
-    color: var(--accent);
-    border: 2px solid var(--panel-bg); /* Cutout effect (seperti memotong avatar utama) */
-    border-radius: 50%;
-    width: 26px; 
-    height: 26px; 
-    font-size: 13px;
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    z-index: 10;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.15s ease, background-color 0.3s ease;
-}
-
-.gift-trigger:active {
-    transform: scale(0.85); /* Mengecil saat ditekan */
-}
-
-/* ==================================================
-   5. NAMA & BADGE (RAPI & MODERN)
-================================================== */
-.name-label {
-    margin-top: 10px;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px; 
-    font-size: 13px; 
-    font-weight: 700;
-    color: var(--text-main);
-    flex-wrap: nowrap; 
-    overflow: hidden; 
-    transition: color 0.3s ease;
-}
-
-/* Teks nama dipotong jika kepanjangan */
-.name-label span, 
-.name-label .user-name-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex-shrink: 1; 
-}
-
-/* Styling Badge Modern */
-.name-label b, 
-.badge {
-    font-size: 10px !important; 
-    padding: 3px 6px !important;
-    background: rgba(59, 130, 246, 0.1); /* Background biru super transparan */
-    color: var(--primary); /* Teks biru menyala */
-    border: 1px solid rgba(59, 130, 246, 0.2); /* Garis batas tipis */
-    border-radius: 6px; 
-    height: auto;
-    flex-shrink: 0; 
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    line-height: 1;
-}
-
-.name-label img {
-    height: 14px !important; 
-    width: auto;
-    flex-shrink: 0;
-}
-
-.speaker-item.empty .name-label { 
-    color: var(--text-muted); 
-    font-size: 12px; 
-    font-weight: 600;
+/* Highlight khusus kado Sultan */
+.highlight-sultan {
+    background: linear-gradient(145deg, var(--panel-bg), rgba(245, 158, 11, 0.05));
+    border: 1px solid rgba(245, 158, 11, 0.3);
 }
 </style>
-
