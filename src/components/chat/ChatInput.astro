@@ -3,12 +3,12 @@
 <div class="chat-input-container">
   
   <div id="sticker-menu" class="sticker-container">
-    <div style="display: flex; gap: 8px; margin-bottom: 10px; width: 100%;">
-      <input type="text" id="sticker-search-input" placeholder="Cari stiker..." style="flex: 1; border-radius: 20px; padding: 8px 15px; border: 1px solid var(--border-color); outline: none;">
-      <button id="sticker-search-btn" style="border-radius: 20px; padding: 8px 15px; border: none; background: #3a7bd5; color: white; font-weight: bold; cursor: pointer;">Cari</button>
+    <div class="sticker-search-wrapper">
+      <input type="text" id="sticker-search-input" placeholder="Cari stiker...">
+      <button id="sticker-search-btn">Cari</button>
     </div>
-    <div id="sticker-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; overflow-y: auto; max-height: 200px;">
-      <p style="font-size: 12px; color: var(--text-muted); width: 100%; text-align: center;">Memuat stiker...</p>
+    <div id="sticker-list">
+      <p class="loading-text">Memuat stiker...</p>
     </div>
   </div>
 
@@ -17,15 +17,14 @@
       <div class="reply-title">Membalas pesan</div>
       <div class="reply-text-preview">Isi pesan yang dibalas...</div>
     </div>
-    <div class="close-reply-btn" id="close-reply-btn">×</div>
+    <div class="close-reply-btn" id="close-reply-btn" onclick="window.cancelReply()">×</div>
   </div>
 
   <div class="input-row">
     
     <div class="input-group-wrapper">
-      
-      <button type="button" id="sticker-btn" style="position: relative; z-index: 999; padding: 5px; cursor: pointer; pointer-events: auto !important; outline: none; -webkit-tap-highlight-color: transparent; background: transparent; border: none; display: flex; align-items: center;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none !important;">
+      <button type="button" id="sticker-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
           <line x1="9" y1="9" x2="9.01" y2="9"></line>
@@ -36,16 +35,14 @@
       <textarea id="chat-input" placeholder="Tulis pesan..." rows="1"></textarea>
 
       <div id="vn-overlay">
-        <div style="display: flex; align-items: center; width: 100%; gap: 12px;">
-          <div class="vn-dot"></div>
-          <span id="vn-timer">00:00</span>
-          <span class="vn-cancel-text">&laquo; Geser batal</span>
-        </div>
+        <div class="vn-dot"></div>
+        <span id="vn-timer">00:00</span>
+        <span class="vn-cancel-text">&laquo; Geser batal</span>
       </div>
     </div>
 
-    <button type="button" id="action-btn" style="pointer-events: auto !important; cursor: pointer;">
-      <div class="icon-stack" style="pointer-events: none;">
+    <button type="button" id="action-btn">
+      <div class="icon-stack">
         <span class="svg-send">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
