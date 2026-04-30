@@ -1,386 +1,199 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* 🔥 LIGHT MODE (Fresh, Clean, Solid) 🔥 */
-  --bg-main: #f8fafc; 
+  /* 🔥 LIGHT MODE (Fresh & Clean) 🔥 */
+  --bg-main: #f0f2f5; 
   --bg-panel: #ffffff;
-  --bg-sidebar: #ffffff;
-  --text-color: #0f172a;
-  --text-muted: #64748b;
-  --chat-item-bg: #ffffff;
-  --label-bg: #f1f5f9; 
-  --border-color: #e2e8f0;
+  --text-color: #111b21;
+  --text-muted: #667781;
+  --border-color: #d1d7db;
   --username-color: #111827; 
   --chat-self-bg: #dcf8c6; 
+  --chat-other-bg: #ffffff;
 }
 
 html.dark {
-  /* 🔥 Palet Biru Dongker Mewah (Midnight Navy) 🔥 */
-  --bg-main: #0F172A;         
-  --bg-panel: #1E293B;        
-  --bg-sidebar: #1E293B;      
-  --text-color: #F1F5F9;      
-  --text-muted: #94A3B8;      
-  --border-color: rgba(255, 255, 255, 0.08); 
-  --username-color: #f8fafc;  
+  /* 🔥 DARK MODE (OLED Deep Navy/Black - Sangat nyaman di mata) 🔥 */
+  --bg-main: #0B141A;         
+  --bg-panel: #111B21;        
+  --text-color: #E9EDEF;      
+  --text-muted: #8696A0;      
+  --border-color: rgba(255, 255, 255, 0.05); 
+  --username-color: #E9EDEF;  
   
-  /* --- Warna Bubble Chat --- */
-  --chat-item-bg: #334155;    
-  --label-bg: #0F172A;        
-  --chat-self-bg: #1D4ED8;    
+  /* --- Warna Bubble Chat Mode Gelap --- */
+  --chat-self-bg: #005C4B;    
+  --chat-other-bg: #202C33;   
 }
 
 /* 🔥 TRANSISI SUPER EMPUK 🔥 */
 *, *::before, *::after {
   transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
               border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              fill 0.2s ease;
+              color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: 'Inter', sans-serif;
   box-sizing: border-box;
 }
 
 /* =========================================
-   1. GLOBAL & PWA BODY FIX (Jurus Kuncian PWA)
+   1. GLOBAL & PWA BODY FIX
    ========================================= */
 html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  max-width: 100vw; 
-  overflow-x: hidden; 
-  height: 100%;
-  height: 100dvh; 
-  background: var(--bg-main); 
-  color: var(--text-color);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; 
-  touch-action: pan-x pan-y;
-  -webkit-text-size-adjust: 100%;
-  position: fixed; 
-  top: 0; left: 0; right: 0; bottom: 0;
+  margin: 0; padding: 0; width: 100%; max-width: 100vw; overflow-x: hidden; 
+  height: 100%; height: 100dvh; background: var(--bg-main); color: var(--text-color);
+  display: flex; flex-direction: column; overflow: hidden; 
+  touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
 }
 
 /* =========================================
-   2. MAIN CONTAINER (Jurus Anti Mengkerut)
+   2. MAIN CONTAINER & HEADER
    ========================================= */
 .telegram-chat {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-main);
-  z-index: 1;
-  overflow: hidden;
-  /* Kunci Layar Penuh Paksa */
-  position: absolute !important;
-  top: 0; left: 0; right: 0; bottom: 0;
-  height: 100dvh !important;
-  width: 100vw !important; 
+  display: flex; flex-direction: column; background-color: var(--bg-main);
+  z-index: 1; overflow: hidden; position: absolute !important;
+  top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; width: 100vw !important; 
 }
 
-/* =========================================
-   3. CHAT HEADER
-   ========================================= */
 .chat-header {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 15px;
-  padding-top: env(safe-area-inset-top);
-  background: #3a7bd5;
-  color: white;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 15px; padding-top: env(safe-area-inset-top);
+  background: #3a7bd5; color: white;
   height: calc(65px + env(safe-area-inset-top));
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  flex-shrink: 0; 
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); flex-shrink: 0; 
 }
-
-.header-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
-.menu-btn { cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.header-info { display: flex; flex-direction: column; justify-content: center; flex: 1; min-width: 0; }
-.header-info h3 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: 0.3px; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.header-info h3 svg { flex-shrink: 0; }
-.status-container { font-size: 10px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.status-online { opacity: 0.85; color: white; }
-.status-typing { color: #e0eaff; font-weight: 600; font-style: italic; }
-.btn-invite { background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: white; padding: 6px 12px; border-radius: 15px; font-size: 9px; font-weight: 800; cursor: pointer; flex-shrink: 0; margin-left: 5px; transition: background 0.2s ease; }
-.btn-invite:active { background: rgba(255, 255, 255, 0.4); }
-.header-right { display: flex; align-items: center; gap: 15px; flex-shrink: 0; margin-left: 10px; }
-.btn-call { cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
-.header-logo { width: 80px; height: 80px; border-radius: 0; object-fit: contain; flex-shrink: 0; }
-.logo-besar-header { position: relative !important; right: auto !important; top: auto !important; transform: none !important; height: 50px !important; width: auto !important; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.2)); flex-shrink: 0; margin-left: 5px; }
-.chat-members { padding: 6px 16px; background: var(--bg-panel); font-size: 14px; color: var(--text-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.header-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+.header-info h3 { margin: 0; font-size: 16px; font-weight: 600; display: flex; align-items: center; }
 
 /* =========================================
-   4. CHAT MESSAGES AREA (Ruang Bebas)
+   3. CHAT MESSAGES AREA
    ========================================= */
 .chat-messages {
-  flex: 1 1 auto !important; 
-  min-height: 0; 
-  padding: 12px;
-  /* KUNCI: Biar chat paling bawah gak ketimpa input melayang */
-  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  flex: 1 1 auto !important; min-height: 0; padding: 12px;
+  /* Jarak bawah dilebarkan agar pesan tak tertutup input melayang */
+  padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)) !important;
+  overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
   -webkit-overflow-scrolling: touch;
 }
 
-.chat-messages::-webkit-scrollbar { width: 6px; }
-.chat-messages::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 3px; }
+.chat-messages::-webkit-scrollbar { width: 5px; }
+.chat-messages::-webkit-scrollbar-thumb { background: rgba(134, 150, 160, 0.3); border-radius: 3px; }
 
 /* --- Message Bubbles --- */
-.chat-message { display: flex; max-width: 75%; padding: 6px 10px; border-radius: 16px; font-size: 14px; word-wrap: break-word; align-items: flex-end; position: relative; transition: transform 0.2s ease; user-select: none; -webkit-user-select: none; touch-action: pan-y; }
-.chat-message::before { content: "↩"; position: absolute; left: -25px; top: 50%; transform: translateY(-50%); font-size: 18px; opacity: 0.4; }
-.chat-message.self { background: var(--chat-self-bg); color: var(--text-color); align-self: flex-end; border-bottom-right-radius: 2px; flex-direction: row-reverse; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); }
-.chat-message.other { background: var(--bg-panel); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); }
-.chat-message.new-msg { animation: slideUp 0.3s ease forwards; }
-.chat-message.replying { background: rgba(0, 150, 255, 0.08); }
-.chat-message .avatar { width: 35px; height: 35px; border-radius: 50%; margin: 0 8px; flex-shrink: 0; object-fit: cover; object-position: center; background: #eee; }
-.chat-message .content { position: relative; display: flex; flex-direction: column; padding-bottom: 5px; }
-.chat-message .username { font-weight: 700; font-size: 12px; color: var(--username-color); margin-bottom: 2px; }
-.chat-message .text { font-size: 14px; }
-.chat-message .timestamp { font-size: 10px; color: var(--text-muted); align-self: flex-end; margin-top: 2px; }
-.chat-message.self .message-info { color: rgba(255, 255, 255, 0.7); }
-html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
-.message-info { margin-top: -5px; padding-bottom: 2px; }
-.text.deleted { font-style: italic; color: #aaa !important; }
+.chat-message { display: flex; max-width: 80%; padding: 8px 12px; border-radius: 18px; font-size: 14px; word-wrap: break-word; position: relative; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
+.chat-message.self { background: var(--chat-self-bg); color: var(--text-color); align-self: flex-end; border-bottom-right-radius: 4px; flex-direction: row-reverse; }
+.chat-message.other { background: var(--chat-other-bg); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 4px; }
+.chat-message .username { font-weight: 700; font-size: 12px; color: var(--username-color); margin-bottom: 3px; }
+.chat-message .timestamp { font-size: 10px; color: var(--text-muted); align-self: flex-end; margin-top: 4px; margin-left: 8px; }
+html.dark .chat-message.self .timestamp { color: rgba(255, 255, 255, 0.6); }
+
+/* Banner Enkripsi Diperbaiki untuk Dark Mode */
+.encryption-notice { display: flex; align-items: flex-start; justify-content: center; gap: 6px; background: #fff3c4; color: #856404; font-size: 11px; text-align: center; padding: 8px 12px; border-radius: 10px; margin: 10px auto 20px auto; max-width: 85%; }
+html.dark .encryption-notice { background: rgba(212, 175, 55, 0.08); color: #D4AF37; border: 1px solid rgba(212, 175, 55, 0.15); box-shadow: none; }
 
 /* =========================================
-   5. CHAT INPUT (Jurus Fix Melayang di Bawah)
+   4. CHAT INPUT FLOATING PILL (Bentuk Premium)
    ========================================= */
 .chat-input-container {
-  position: fixed !important; 
-  bottom: 0; left: 0; right: 0; 
-  width: 100%;
+  position: fixed !important; bottom: 0; left: 0; right: 0; width: 100%;
   z-index: 9999;
-  
-  /* Glassmorphism Premium */
-  background: rgba(var(--bg-panel-rgb, 255, 255, 255), 0.9) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  
-  border-top: 1px solid var(--border-color);
+  /* Transparan di belakang agar terkesan melayang */
+  background: transparent !important; 
   padding: 10px 12px;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important;
-  
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8px;
-  box-sizing: border-box;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;
+  pointer-events: none; /* Biarkan klik tembus area kosong */
 }
 
-html.dark .chat-input-container {
-  background: rgba(30, 41, 59, 0.9) !important; 
+/* Kembalikan pointer-events ke elemen dalam container */
+.chat-input-container > * { pointer-events: auto; }
+
+.input-group-wrapper {
+  flex: 1; min-width: 0; display: flex; align-items: center;
+  /* Bentuk Kapsul/Pill Oval */
+  background: var(--bg-panel) !important;
+  border-radius: 28px !important; 
+  padding: 6px 16px; position: relative; min-height: 50px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+  border: 1px solid var(--border-color);
+}
+html.dark .input-group-wrapper { box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+
+#chat-input {
+  flex: 1; min-width: 0; border: none; outline: none; background: transparent !important;
+  resize: none; max-height: 100px; padding: 12px 0; font-family: 'Inter', sans-serif;
+  font-size: 15px; color: var(--text-color); line-height: 1.4;
+}
+
+#sticker-btn {
+  background: none; border: none; cursor: pointer; padding: 0; margin-right: 12px;
+  color: var(--text-muted); display: flex; align-items: center;
 }
 
 /* =========================================
-   6. BADGES, ICONS, STICKERS, REACTIONS
+   5. MENU STIKER SLIDE-UP (FIXED)
    ========================================= */
-.badge, .admin-badge { font-size: 7px; background: #4facfe; color: white; padding: 0px 2px; border-radius: 3px; margin-left: 2px; font-weight: 600; }
-.verified-icon { margin-left: 4px; display: inline-flex; align-items: center; }
+#sticker-menu, .sticker-container {
+  position: absolute;
+  /* Melayang tepat di atas container input */
+  bottom: calc(100% + 10px) !important; 
+  left: 12px; right: 12px; width: calc(100% - 24px) !important;
+  background: var(--bg-panel) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 -5px 25px rgba(0,0,0,0.15) !important;
+  border: 1px solid var(--border-color) !important;
+  max-height: 40vh !important;
+  overflow-y: auto !important;
+  padding: 12px !important;
+  z-index: 10000;
+  display: none; /* Default tersembunyi */
+  flex-direction: column;
+}
 
-#sticker-menu { display: none; flex-wrap: wrap; padding: 8px; background: var(--bg-panel); border-top: 1px solid var(--border-color); height: 250px; overflow-y: auto; justify-content: center; }
-.reaction-menu { position: absolute; background: var(--bg-panel); padding: 8px 12px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; gap: 12px; z-index: 10006; border: 1px solid var(--border-color); transform: translateX(-50%); animation: reactionPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); pointer-events: auto; }
-.reaction-emoji { cursor: pointer; font-size: 24px; transition: transform 0.2s; user-select: none; }
-.reaction-emoji:hover { transform: scale(1.4) translateY(-5px); }
-.message-reactions { position: absolute; bottom: -10px; left: 10px; display: flex; gap: 2px; background: var(--bg-panel); padding: 1px 4px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); z-index: 5; border: 1px solid var(--border-color); animation: badgePop 0.3s ease-out; }
-.reaction-badge { font-size: 11px; display: flex; align-items: center; }
+/* Styling Khusus Input Cari Stiker saat Dark Mode */
+html.dark #sticker-menu input,
+html.dark .sticker-container input {
+  background: var(--bg-main) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 20px;
+  padding: 10px 15px;
+  width: 100%;
+}
+
+html.dark #sticker-menu button,
+html.dark .sticker-container button.Cari {
+  background: #3a7bd5 !important; color: white !important;
+}
 
 /* =========================================
-   7. REPLY SYSTEM
+   6. TOMBOL ACTION (MIC/SEND)
    ========================================= */
-.reply-container { display: none; padding: 8px 12px; background: var(--bg-panel); border-left: 4px solid #3a7bd5 !important; position: relative; }
-.reply-container .reply-text { font-size: 12px; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.reply-content { background: rgba(0, 0, 0, 0.05); padding: 5px 8px; border-left: 3px solid #3a7bd5 !important; border-radius: 4px; margin-bottom: 5px; font-size: 11px; cursor: pointer; }
-.reply-content strong { display: block; color: #3a7bd5 !important; }
-.reply-indicator { position: absolute; right: -30px; top: 50%; transform: translateY(-50%); font-size: 18px; opacity: 0.5; }
-#reply-preview-box { display: none; position: relative; width: 100%; background: var(--bg-panel); border-left: 4px solid #3a7bd5 !important; padding: 8px 12px; box-sizing: border-box; align-items: center; justify-content: space-between; gap: 10px; z-index: 10; }
-.reply-content-wrapper { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
-.reply-title { font-size: 11px; color: #3a7bd5 !important; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.reply-text-preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.close-reply-btn { font-size: 24px; color: #ff4757; font-weight: bold; cursor: pointer; flex-shrink: 0; padding: 0 5px; line-height: 1; }
+#action-btn { 
+  width: 50px; height: 50px; min-width: 50px; border-radius: 50%;
+  background: #3a7bd5; border: none; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3); outline: none;
+}
+html.dark #action-btn { background: #005C4B; box-shadow: 0 4px 10px rgba(0, 92, 75, 0.4); }
 
-/* =========================================
-   8. UI ELEMENTS & MODALS
-   ========================================= */
-.cta { display: flex; padding: 8px 20px; text-decoration: none; font-size: 14px; color: white; background: #3a7bd5 !important; transition: 1s; box-shadow: 4px 4px 0 black; transform: skewX(-15deg); border: none; cursor: pointer; align-items: center; justify-content: center; width: 80%; margin: 10px auto; }
-.cta:focus { outline: none; }
-.cta:hover { transition: 0.5s; box-shadow: 7px 7px 0 #869da6; background: #2a5cb8 !important; }
-.cta:hover .second { margin-right: 15px; }
-.cta .span { transform: skewX(15deg); display: inline-block; }
-.cta .second { transition: 0.5s; margin-left: 15px; transform: skewX(15deg); display: flex; align-items: center; }
-
-.delete-btn { font-size: 10px; color: #ff4d4d; cursor: pointer; margin-left: 8px; display: none; }
-.chat-message.self:hover .delete-btn { display: inline; }
-
-.delete-overlay, .searching-overlay { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 9999; }
-.delete-overlay { background: rgba(0, 31, 63, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 10005; padding: 20px; animation: fadeIn 0.2s ease-out; }
-.delete-menu { background: #ffffff; width: 100%; max-width: 280px; padding: 25px; border-radius: 24px; text-align: center; box-shadow: 0 15px 35px rgba(58, 123, 213, 0.2) !important; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.delete-menu p { font-size: 16px; font-weight: 700; color: #004466; margin: 0 0 20px 0; }
-.delete-menu-btns { display: flex; gap: 12px; }
-.delete-menu button { flex: 1; padding: 12px; border: none; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-#confirm-delete { background: linear-gradient(135deg, #3a7bd5, #00d2ff) !important; color: white; box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3) !important; }
-#confirm-delete:active { transform: scale(0.95); filter: brightness(0.9); }
-.btn-cancel { background: #eef2f5; color: #708090; }
-.btn-cancel:active { transform: scale(0.95); background: #e1e8ed; }
-
-.custom-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9999999; display: flex; align-items: center; justify-content: center; padding: 20px; }
-.custom-modal-card { background: var(--bg-panel, #ffffff); width: 100%; max-width: 320px; border-radius: 28px; padding: 30px 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.modal-icon-love { width: 70px; height: 70px; background: rgba(255, 51, 102, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
-.custom-modal-card h3 { margin: 0 0 10px; font-size: 18px; color: var(--text-color); font-weight: 800; }
-.custom-modal-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0 0 25px; }
-.modal-actions { display: flex; gap: 12px; margin-top: 25px; }
-.btn-modal-cancel { flex: 1; background: #f1f5f9; border: none; padding: 14px; border-radius: 16px; font-weight: 600; color: #64748b; cursor: pointer; }
-.btn-modal-confirm { flex: 1.5; background: linear-gradient(135deg, #FF3366, #FF7755); color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; cursor: pointer; }
-
-/* =========================================
-   9. STATUS & LOADING ANIMATIONS
-   ========================================= */
-.online-dot { height: 8px; width: 8px; background-color: #2ecc71; border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 5px #2ecc71; animation: pulse-dot 1.5s infinite; }
-#typing-indicator { transition: all 0.3s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.searching-text { letter-spacing: 2px; font-weight: 600; animation: pulse 1.5s infinite; }
-.searching-overlay { background: rgba(0, 0, 0, 0.85); color: white; }
-.status-icon { display: inline-flex; align-items: center; justify-content: center; margin-left: 4px; vertical-align: middle; line-height: 1; transform: translateY(1px); }
-.status-icon svg { display: block; }
-.status-icon.sending { gap: 1px; color: #9aa0a6; font-size: 11px; font-weight: 600; min-width: 14px; }
-.sending-dot { display: inline-block; animation: sendingBlink 1.2s infinite; opacity: 0.35; }
-.sending-dot:nth-child(2) { animation-delay: 0.2s; }
-.sending-dot:nth-child(3) { animation-delay: 0.4s; }
-.status-icon.sent, .status-icon.delivered { color: #8e8e93; }
-.status-icon.read { color: #4fc3f7; }
-
-.loading-dot { width: 10px; height: 10px; border-radius: 50%; background: #25d366; animation: bounceDot 1.2s infinite ease-in-out; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.25); }
-.loading-dot:nth-child(2) { animation-delay: 0.15s; }
-.loading-dot:nth-child(3) { animation-delay: 0.3s; }
-
-.chat-loading-screen { display: flex; flex-direction: column; gap: 14px; padding: 18px 14px 24px; animation: fadeInChatLoading 0.25s ease; }
-.skeleton-msg { display: flex; align-items: flex-end; gap: 8px; max-width: 82%; }
-.skeleton-msg.left { align-self: flex-start; }
-.skeleton-msg.right { align-self: flex-end; justify-content: flex-end; margin-left: auto; }
-.skeleton-avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, 0.35); flex-shrink: 0; }
-.skeleton-bubble { background: var(--bg-panel); border-radius: 16px 16px 16px 6px; padding: 10px 12px; min-width: 110px; max-width: 220px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); backdrop-filter: blur(3px); }
-.skeleton-bubble.me { background: rgba(220, 248, 198, 0.85); border-radius: 16px 16px 6px 16px; }
-.skeleton-line { height: 8px; border-radius: 999px; margin-bottom: 8px; background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.35)); background-size: 200% 100%; animation: shimmerMove 1.2s linear infinite; }
-.skeleton-line:last-child { margin-bottom: 0; }
-.w1 { width: 130px; } .w2 { width: 95px; } .w3 { width: 60px; } .w4 { width: 120px; } .w5 { width: 70px; }
-.typing-bubble { display: flex; align-items: center; gap: 5px; min-width: 54px; padding: 12px 14px; }
-.typing-bubble span { width: 7px; height: 7px; border-radius: 50%; background: #9aa0a6; display: inline-block; animation: typingBounce 1s infinite ease-in-out; }
-.typing-bubble span:nth-child(2) { animation-delay: 0.15s; }
-.typing-bubble span:nth-child(3) { animation-delay: 0.3s; }
-.loading-chat-hint { text-align: center; font-size: 12px; color: var(--text-muted, #667781); margin-top: 8px; font-weight: 500; letter-spacing: 0.2px; opacity: 0.9; }
-
-/* =========================================
-   10. MIC & SEND BUTTON ANIMATIONS
-   ========================================= */
-#action-btn { width: 48px; height: 48px; background-color: #3a7bd5 !important; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); }
 .icon-stack { position: relative; width: 24px; height: 24px; }
 .svg-send, .svg-mic { position: absolute; inset: 0; transition: all 0.3s ease; }
 .svg-send { opacity: 0; transform: scale(0.5) rotate(45deg); }
 .svg-mic { opacity: 1; transform: scale(1) rotate(0); }
 #action-btn.mode-typing .svg-send { opacity: 1; transform: scale(1) rotate(0); }
 #action-btn.mode-typing .svg-mic { opacity: 0; transform: scale(0.5) rotate(-45deg); }
-#action-btn.is-recording { background-color: #ff4757 !important; transform: scale(1.1); }
-#action-btn.is-recording .svg-send { opacity: 0; transform: scale(0) rotate(45deg); }
-#action-btn.is-recording .svg-mic { opacity: 1; transform: scale(1) rotate(0); }
-#action-btn:active { top: 0px; box-shadow: 0 2px 0 #2D5DA3, 0 3px 6px rgba(0,0,0,0.2); }
 
 /* =========================================
-   11. VOICE NOTE PLAYER & OVERLAY
+   7. VOICE NOTE OVERLAY
    ========================================= */
-#vn-overlay { position: absolute; inset: 0; background: var(--bg-panel); display: none; align-items: center; padding: 0 15px; border-radius: 24px; z-index: 10; color: var(--text-color); }
-.vn-custom-player { display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.05); padding: 8px 12px; border-radius: 20px; min-width: 190px; margin: 5px 0; box-sizing: border-box; }
-.vn-play-btn { width: 32px !important; height: 32px !important; border-radius: 50% !important; border: none !important; background: #00d2ff !important; color: white !important; display: flex !important; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; padding: 0; }
-.vn-play-btn svg { width: 18px; height: 18px; fill: white; }
-.vn-waveform { display: flex; align-items: center; gap: 3px; height: 20px; flex-grow: 1; }
-.vn-waveform .bar { width: 3px; height: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 2px; display: inline-block; }
-.vn-waveform .bar:nth-child(odd) { height: 18px; }
-.vn-waveform .bar:nth-child(3n) { height: 8px; }
-.vn-time { font-size: 10px; font-weight: 600; color: var(--text-muted); white-space: nowrap; margin-left: 5px; }
-.playing .bar { animation: waveAnim 0.6s infinite alternate; background: #00d2ff; }
-
-/* =========================================
-   12. PANGGILAN / LIVEKIT
-   ========================================= */
-.sonar-wave { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; background: #3a7bd5; opacity: 0.3; z-index: -1; animation: sonar-effect 2s infinite; }
-#btn-end-call:active { transform: scale(0.9); }
-#btn-call-trigger { display: none; align-items: center; justify-content: center; z-index: 1001; }
-#btn-call-trigger:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.3); }
-.anim-calling-avatar { animation: radar-pulse 1.5s infinite cubic-bezier(0.66, 0, 0, 1); border: 3px solid #00d2ff; border-radius: 50%; }
-.anim-calling-text { animation: text-blink 1.5s infinite ease-in-out; color: #00d2ff !important; font-weight: bold; letter-spacing: 2px; }
-
-/* =========================================
-   13. TOAST COMPACT MOBILE
-   ========================================= */
-#toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 99999; width: calc(100% - 24px); max-width: 420px; pointer-events: none; }
-.toast-card { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.96); color: #1f2937; border-radius: 20px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); opacity: 0; transform: translateY(-20px) scale(0.96); transition: all 0.28s ease; pointer-events: auto; min-height: 64px; border: 1px solid rgba(255, 255, 255, 0.6); }
-.toast-card.show { opacity: 1; transform: translateY(0) scale(1); }
-.toast-icon-wrap { flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
-.toast-icon-wrap.success { background: linear-gradient(135deg, #22c55e, #16a34a); }
-.toast-icon-wrap.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.toast-icon-wrap.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
-.toast-icon-wrap.info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.toast-icon { font-size: 22px; font-weight: 800; line-height: 1; }
-.toast-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-.toast-title { font-size: 14px; font-weight: 800; line-height: 1.2; margin-bottom: 2px; color: #111827; }
-.toast-subtitle { font-size: 12px; line-height: 1.3; color: #6b7280; word-break: break-word; }
-.toast-close { background: transparent; border: none; color: #9ca3af; font-size: 22px; cursor: pointer; padding: 0; margin-left: 4px; line-height: 1; flex-shrink: 0; width: 24px; height: 24px; }
-
-@media (max-width: 480px) {
-  #toast { top: 10px; width: calc(100% - 16px); }
-  .toast-card { border-radius: 18px; padding: 10px 12px; gap: 8px; min-height: 56px; }
-  .toast-icon-wrap { width: 38px; height: 38px; }
-  .toast-icon { font-size: 18px; }
-  .toast-title { font-size: 13px; margin-bottom: 1px; }
-  .toast-subtitle { font-size: 11px; line-height: 1.25; }
-  .toast-close { font-size: 18px; width: 20px; height: 20px; }
+#vn-overlay { 
+  display: none; position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+  background: var(--bg-panel) !important; border-radius: 28px;
+  align-items: center; padding: 0 16px; box-sizing: border-box; z-index: 10;
 }
+.vn-dot { width: 10px; height: 10px; background: #ff4757; border-radius: 50%; animation: pulse-dot 1s infinite; }
+#vn-timer { font-weight: 600; font-size: 14px; color: var(--text-color); margin-left: 8px; }
+.vn-cancel-text { color: var(--text-muted); font-size: 12px; margin-left: auto; font-style: italic; }
 
-/* =========================================
-   14. EMPTY CHAT, DIVIDERS & IMAGES
-   ========================================= */
-.empty-chat { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 60px 20px; margin-top: 20px; text-align: center; opacity: 0.9; animation: fadeIn 0.4s ease; }
-.empty-icon { font-size: 40px; opacity: 0.6; filter: grayscale(0.2); }
-.empty-title { font-size: 18px; font-weight: 600; color: var(--text-color); }
-.empty-subtitle { font-size: 13px; color: var(--text-muted); }
-
-.encryption-notice { display: flex; align-items: flex-start; justify-content: center; gap: 6px; background: #fff3c4; color: #856404; font-size: 11px; text-align: center; padding: 8px 12px; border-radius: 10px; margin: 10px auto 20px auto; max-width: 85%; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); animation: fadeIn 0.4s ease; }
-.encryption-notice svg { flex-shrink: 0; margin-top: 1px; }
-html.dark .encryption-notice { background: rgba(212, 175, 55, 0.1); color: #eab308; border: 1px solid rgba(212, 175, 55, 0.2); box-shadow: none; }
-
-.unread-divider { display: flex; align-items: center; text-align: center; margin: 15px 0 10px 0; width: 100%; animation: fadeIn 0.4s ease; }
-.unread-divider::before, .unread-divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(58, 123, 213, 0.3); }
-.unread-divider span { background: rgba(58, 123, 213, 0.1); color: #3a7bd5; font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 12px; margin: 0 10px; letter-spacing: 0.5px; }
-html.dark .unread-divider::before, html.dark .unread-divider::after { border-bottom: 1px solid rgba(56, 189, 248, 0.2); }
-html.dark .unread-divider span { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
-
-img { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select: none; user-select: none; pointer-events: auto; }
-* { -webkit-tap-highlight-color: transparent; outline: none; }
-.btn, .tab, button { -webkit-tap-highlight-color: rgba(0, 0, 0, 0); user-select: none; }
-
-/* =========================================
-   15. KEYFRAMES GLOBALS
-   ========================================= */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes pulse-dot { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
-@keyframes color_anim { 0%, 100% { fill: white; } 50% { fill: #3a7bd5 !important; } }
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes sendingBlink { 0%, 80%, 100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-1px); } }
-@keyframes bounceDot { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; } 40% { transform: scale(1.2); opacity: 1; } }
-@keyframes fadeInChatLoading { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes shimmerMove { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-@keyframes typingBounce { 0%, 80%, 100% { transform: translateY(0); opacity: 0.45; } 40% { transform: translateY(-4px); opacity: 1; } }
-@keyframes reactionPop { 0% { transform: translate(-50%, 10px) scale(0.9); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
-@keyframes badgePop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-@keyframes sonar-effect { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(2.2); opacity: 0; } }
-@keyframes radar-pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 210, 255, 0.7), 0 0 0 0 rgba(0, 210, 255, 0.4); transform: scale(0.95); } 50% { box-shadow: 0 0 0 15px rgba(0, 210, 255, 0), 0 0 0 30px rgba(0, 210, 255, 0.2); transform: scale(1); } 100% { box-shadow: 0 0 0 0 rgba(0, 210, 255, 0), 0 0 0 45px rgba(0, 210, 255, 0); transform: scale(0.95); } }
-@keyframes text-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-@keyframes waveAnim { from { transform: scaleY(0.8); } to { transform: scaleY(1.4); } }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-@keyframes slide-text { 0% { transform: translateX(0); } 50% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
-@keyframes modalPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
