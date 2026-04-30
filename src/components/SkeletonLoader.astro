@@ -1,7 +1,8 @@
 ---
 ---
 <div id="skeleton-screen">
-  <div class="skel-ambient-glow"></div>
+  <div class="skel-ambient-glow-1"></div>
+  <div class="skel-ambient-glow-2"></div>
 
   <div class="skeleton-main-card-ui">
     <div class="skel-header">
@@ -36,22 +37,34 @@
   display: flex; 
   justify-content: center; 
   align-items: center; 
-  background-color: #050510; /* Deep Navy / Dark Mode Base */
+  /* Background akuuu ubah jadi gradasi dark rich biar gak mati warnanyaaa */
+  background: linear-gradient(135deg, #0b0f19 0%, #1a1625 100%);
   z-index: 9999; 
   padding: 0 20px; 
   transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s;
   overflow: hidden;
 }
 
-/* 2. Ambient Light (Biar ala-ala Fintech Apple) */
-.skel-ambient-glow {
+/* 2. Ambient Light (Dibuat dua warna biar ala-ala Fintech Apple yang cantikkk) */
+.skel-ambient-glow-1 {
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, rgba(0,0,0,0) 70%);
+  top: -5%;
+  left: -10%;
+  filter: blur(50px);
+  z-index: 0;
+}
+
+.skel-ambient-glow-2 {
   position: absolute;
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0,0,0,0) 70%);
-  top: -10%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, rgba(0,0,0,0) 70%);
+  bottom: 10%;
   right: -10%;
-  filter: blur(40px);
+  filter: blur(50px);
   z-index: 0;
 }
 
@@ -59,24 +72,27 @@
 .skeleton-main-card-ui { 
   width: 100%;
   max-width: 420px; 
-  background: rgba(255, 255, 255, 0.03); /* Glass base */
+  /* Opacity dinaikin dikittt biar kelihatan wujudnyaaa */
+  background: rgba(255, 255, 255, 0.05); 
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 40px; 
   padding: 32px 24px; 
   display: flex; 
   flex-direction: column; 
   gap: 24px; 
   z-index: 1;
-  box-shadow: 0 24px 40px -12px rgba(0, 0, 0, 0.5);
+  /* Tambahan inner shadow kecil buat efek 3D / Clay dikittt */
+  box-shadow: 0 24px 40px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* 4. The Magic Shimmer (Premium Skewed) */
 .shim { 
   position: relative; 
   overflow: hidden; 
-  background-color: rgba(255, 255, 255, 0.05); /* Warna dasar elemen */
+  /* Base color dicerahin biar gak hitam doanggg */
+  background-color: rgba(255, 255, 255, 0.08); 
 }
 
 .shim::after { 
@@ -86,11 +102,12 @@
   right: 0;
   bottom: 0;
   left: 0;
-  transform: translateX(-150%) skewX(-15deg); /* Bikin miring biar dinamis */
+  transform: translateX(-150%) skewX(-15deg); 
+  /* Cahaya shimmernya di-boost biar nyalaaa */
   background: linear-gradient(
     90deg, 
     rgba(255, 255, 255, 0) 0%, 
-    rgba(255, 255, 255, 0.08) 50%, 
+    rgba(255, 255, 255, 0.15) 50%, 
     rgba(255, 255, 255, 0) 100% 
   ); 
   animation: premium-shimmer 2s infinite ease-in-out; 
@@ -124,9 +141,10 @@
   width: 70%;
   height: 64px;
   border-radius: 32px;
-  background-color: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(12px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
 </style>
 
