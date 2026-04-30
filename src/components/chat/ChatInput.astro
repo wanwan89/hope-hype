@@ -1,8 +1,7 @@
 ---
 ---
 <div class="chat-input-container" 
-     style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 10px 12px; background: var(--bg-panel) !important; width: 100%; max-width: 100%; box-sizing: border-box; border-top: 1px solid var(--border-color); flex-shrink: 0; position: relative; z-index: 100; -webkit-tap-highlight-color: transparent;">
-
+     style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 10px 12px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); background: rgba(var(--bg-panel-rgb, 255, 255, 255), 0.9) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-sizing: border-box; border-top: 1px solid var(--border-color); z-index: 9999; -webkit-tap-highlight-color: transparent;">
 
   <div class="input-group-wrapper" 
        style="flex: 1; min-width: 0; display: flex; align-items: center; background: var(--bg-main) !important; border-radius: 30px; padding: 4px 12px; position: relative; min-height: 48px; box-sizing: border-box; border: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s;">

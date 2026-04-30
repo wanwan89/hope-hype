@@ -56,35 +56,30 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden; 
-  
   touch-action: pan-x pan-y;
   -webkit-text-size-adjust: 100%;
-  
   position: fixed; 
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
 }
 
 /* =========================================
-   2. MAIN CONTAINER (Flex Layout)
+   2. MAIN CONTAINER (Jurus Anti Mengkerut)
    ========================================= */
 .telegram-chat {
-  flex: 1;
   display: flex;
-  flex-direction: column; /* Wajib Column */
-  overflow: hidden;
+  flex-direction: column;
   background-color: var(--bg-main);
-  position: relative;
   z-index: 1;
-  height: 100%;
-  width: 100%; 
-  max-width: 100%; 
+  overflow: hidden;
+  /* Kunci Layar Penuh Paksa */
+  position: absolute !important;
+  top: 0; left: 0; right: 0; bottom: 0;
+  height: 100dvh !important;
+  width: 100vw !important; 
 }
 
 /* =========================================
-   3. CHAT HEADER (Flex-Shrink: 0 - Anti Gepeng)
+   3. CHAT HEADER
    ========================================= */
 .chat-header {
   position: relative;
@@ -97,10 +92,9 @@ html, body {
   color: white;
   height: calc(65px + env(safe-area-inset-top));
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  flex-shrink: 0; /* Tetap ukurannya, jangan mengecil */
+  flex-shrink: 0; 
 }
 
-/* --- Header Internal Styles --- */
 .header-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .menu-btn { cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .header-info { display: flex; flex-direction: column; justify-content: center; flex: 1; min-width: 0; }
@@ -118,12 +112,14 @@ html, body {
 .chat-members { padding: 6px 16px; background: var(--bg-panel); font-size: 14px; color: var(--text-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
 
 /* =========================================
-   4. CHAT MESSAGES AREA (Flex-Grow: 1, Min-Height: 0)
+   4. CHAT MESSAGES AREA (Ruang Bebas)
    ========================================= */
 .chat-messages {
-  flex: 1 1 0; /* ✨ JURUS 1: Ambil sisa ruang, tapi jangan dorong container */
-  min-height: 0; /* ✨ JURUS 2: Fix bug flexbox overflow */
+  flex: 1 1 auto !important; 
+  min-height: 0; 
   padding: 12px;
+  /* KUNCI: Biar chat paling bawah gak ketimpa input melayang */
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -153,67 +149,33 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
 .text.deleted { font-style: italic; color: #aaa !important; }
 
 /* =========================================
-   5. CHAT INPUT & CONTAINER (Flex-Shrink: 0)
+   5. CHAT INPUT (Jurus Fix Melayang di Bawah)
    ========================================= */
-
-/* Container bungkus paling luar (bila dipakai) */
 .chat-input-container {
-  flex-shrink: 0; /* ✨ JURUS 3: Gantikan Position Sticky dengan Flex Shrink 0 */
+  position: fixed !important; 
+  bottom: 0; left: 0; right: 0; 
   width: 100%;
-  background: transparent; 
-  padding-bottom: env(safe-area-inset-bottom, 5px); /* Default padding */
-  z-index: 100;
-}
-
-@media (display-mode: standalone) {
-  .chat-input-container {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); 
-  }
-}
-
-/* Input Bar-nya sendiri */
-.chat-input {
-  display: flex;
-  align-items: center; 
-  border-top: 1px solid var(--border-color); 
-  padding: 10px;
+  z-index: 9999;
   
-  /* 💎 Premium Glassmorphism UI 💎 */
-  background: rgba(255, 255, 255, 0.85); 
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* Glassmorphism Premium */
+  background: rgba(var(--bg-panel-rgb, 255, 255, 255), 0.9) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   
-  width: 100%;
-  flex-shrink: 0; /* Anti gepeng */
-}
-
-/* Glassmorphism khusus Dark Mode (Warna Biru Dongker) */
-html.dark .chat-input {
-  background: rgba(30, 41, 59, 0.85); /* Sesuai dengan #1E293B */
-}
-
-.chat-input input {
-  flex: 1;
+  border-top: 1px solid var(--border-color);
   padding: 10px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--border-color); 
-  background: var(--bg-main); 
-  color: var(--text-color); 
-  outline: none;
-  font-size: 16px; /* Cegah Auto-Zoom iOS */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important;
+  
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  box-sizing: border-box;
 }
 
-.chat-input button {
-  margin-left: 6px;
-  padding: 10px 16px;
-  border-radius: 20px;
-  border: none;
-  background: #3a7bd5 !important;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
+html.dark .chat-input-container {
+  background: rgba(30, 41, 59, 0.9) !important; 
 }
-
 
 /* =========================================
    6. BADGES, ICONS, STICKERS, REACTIONS
