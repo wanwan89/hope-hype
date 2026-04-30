@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* 🔥 LIGHT MODE (Fresh, Clean, Solid) 🔥 */
   --bg-main: #f8fafc; 
   --bg-panel: #ffffff;
   --bg-sidebar: #ffffff;
@@ -15,7 +14,6 @@
 }
 
 html.dark {
-  /* 🔥 FIX 1: Mode Gelap Lebih Nyaman (Deep Navy/Black) 🔥 */
   --bg-main: #0B141A;         
   --bg-panel: #111B21;        
   --bg-sidebar: #111B21;      
@@ -23,14 +21,11 @@ html.dark {
   --text-muted: #8696A0;      
   --border-color: rgba(255, 255, 255, 0.05); 
   --username-color: #E9EDEF;  
-  
-  /* --- Warna Bubble Chat --- */
   --chat-item-bg: #202C33;    
   --label-bg: #0B141A;        
   --chat-self-bg: #005C4B;    
 }
 
-/* 🔥 TRANSISI SUPER EMPUK 🔥 */
 *, *::before, *::after {
   transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
               border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -41,59 +36,30 @@ html.dark {
 }
 
 /* =========================================
-   1. GLOBAL & PWA BODY FIX (Jurus Kuncian PWA)
+   1. GLOBAL & MAIN CONTAINER
    ========================================= */
 html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  max-width: 100vw; 
-  overflow-x: hidden; 
-  height: 100%;
-  height: 100dvh; 
-  background: var(--bg-main); 
-  color: var(--text-color);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; 
-  touch-action: pan-x pan-y;
-  -webkit-text-size-adjust: 100%;
-  position: fixed; 
-  top: 0; left: 0; right: 0; bottom: 0;
+  margin: 0; padding: 0; width: 100%; max-width: 100vw; overflow-x: hidden; 
+  height: 100%; height: 100dvh; background: var(--bg-main); color: var(--text-color);
+  display: flex; flex-direction: column; overflow: hidden; 
+  touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
 }
 
-/* =========================================
-   2. MAIN CONTAINER (Jurus Anti Mengkerut)
-   ========================================= */
 .telegram-chat {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-main);
-  z-index: 1;
-  overflow: hidden;
-  position: absolute !important;
-  top: 0; left: 0; right: 0; bottom: 0;
-  height: 100dvh !important;
-  width: 100vw !important; 
+  display: flex; flex-direction: column; background-color: var(--bg-main); z-index: 1;
+  overflow: hidden; position: absolute !important; top: 0; left: 0; right: 0; bottom: 0;
+  height: 100dvh !important; width: 100vw !important; 
 }
 
 /* =========================================
-   3. CHAT HEADER
+   2. HEADER
    ========================================= */
 .chat-header {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 15px;
-  padding-top: env(safe-area-inset-top);
-  background: #3a7bd5;
-  color: white;
-  height: calc(65px + env(safe-area-inset-top));
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  flex-shrink: 0; 
+  position: relative; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 15px; padding-top: env(safe-area-inset-top); background: #3a7bd5; color: white;
+  height: calc(65px + env(safe-area-inset-top)); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); flex-shrink: 0; 
 }
-
 .header-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .menu-btn { cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .header-info { display: flex; flex-direction: column; justify-content: center; flex: 1; min-width: 0; }
@@ -102,7 +68,7 @@ html, body {
 .status-container { font-size: 10px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .status-online { opacity: 0.85; color: white; }
 .status-typing { color: #e0eaff; font-weight: 600; font-style: italic; }
-.btn-invite { background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: white; padding: 6px 12px; border-radius: 15px; font-size: 9px; font-weight: 800; cursor: pointer; flex-shrink: 0; margin-left: 5px; transition: background 0.2s ease; }
+.btn-invite { background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: white; padding: 6px 12px; border-radius: 15px; font-size: 9px; font-weight: 800; cursor: pointer; flex-shrink: 0; margin-left: 5px; }
 .btn-invite:active { background: rgba(255, 255, 255, 0.4); }
 .header-right { display: flex; align-items: center; gap: 15px; flex-shrink: 0; margin-left: 10px; }
 .btn-call { cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
@@ -111,33 +77,24 @@ html, body {
 .chat-members { padding: 6px 16px; background: var(--bg-panel); font-size: 14px; color: var(--text-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
 
 /* =========================================
-   4. CHAT MESSAGES AREA
+   3. CHAT MESSAGES AREA
    ========================================= */
 .chat-messages {
-  flex: 1 1 auto !important; 
-  min-height: 0; 
-  padding: 12px;
-  /* 🔥 FIX 2: Ruang bawah dilebarkan agar pesan tak tertutup input */
-  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  flex: 1 1 auto !important; min-height: 0; padding: 12px;
+  padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
+  overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
   -webkit-overflow-scrolling: touch;
 }
-
 .chat-messages::-webkit-scrollbar { width: 6px; }
 .chat-messages::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 3px; }
 
-/* --- Message Bubbles --- */
-.chat-message { display: flex; max-width: 75%; padding: 6px 10px; border-radius: 16px; font-size: 14px; word-wrap: break-word; align-items: flex-end; position: relative; transition: transform 0.2s ease; user-select: none; -webkit-user-select: none; touch-action: pan-y; }
+.chat-message { display: flex; max-width: 75%; padding: 6px 10px; border-radius: 16px; font-size: 14px; word-wrap: break-word; align-items: flex-end; position: relative; user-select: none; -webkit-user-select: none; touch-action: pan-y; }
 .chat-message::before { content: "↩"; position: absolute; left: -25px; top: 50%; transform: translateY(-50%); font-size: 18px; opacity: 0.4; }
 .chat-message.self { background: var(--chat-self-bg); color: var(--text-color); align-self: flex-end; border-bottom-right-radius: 2px; flex-direction: row-reverse; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); }
 .chat-message.other { background: var(--bg-panel); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); }
 .chat-message.new-msg { animation: slideUp 0.3s ease forwards; }
 .chat-message.replying { background: rgba(0, 150, 255, 0.08); }
-.chat-message .avatar { width: 35px; height: 35px; border-radius: 50%; margin: 0 8px; flex-shrink: 0; object-fit: cover; object-position: center; background: #eee; }
+.chat-message .avatar { width: 35px; height: 35px; border-radius: 50%; margin: 0 8px; flex-shrink: 0; object-fit: cover; }
 .chat-message .content { position: relative; display: flex; flex-direction: column; padding-bottom: 5px; }
 .chat-message .username { font-weight: 700; font-size: 12px; color: var(--username-color); margin-bottom: 2px; }
 .chat-message .text { font-size: 14px; }
@@ -148,45 +105,32 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
 .text.deleted { font-style: italic; color: #aaa !important; }
 
 /* =========================================
-   5. CHAT INPUT (🔥 FIX 3: Bentuk Kapsul Melayang)
+   4. CHAT INPUT (FIX: Layout Kolom + Baris)
    ========================================= */
 .chat-input-container {
-  position: fixed !important; 
-  bottom: 0; left: 0; right: 0; 
-  width: 100%;
-  z-index: 9999;
-  
-  /* Latar belakang transparan agar input terlihat melayang */
+  position: fixed !important; bottom: 0; left: 0; right: 0; width: 100%; z-index: 9999;
   background: transparent !important;
+  padding: 10px 12px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important;
   
-  padding: 10px 12px;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important;
-  
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8px;
-  box-sizing: border-box;
-  pointer-events: none; /* Biarkan ruang kosong bisa diklik tembus */
+  /* DIUBAH JADI COLUMN BIAR REPLY BOX DI ATAS INPUT */
+  display: flex; flex-direction: column; gap: 8px;
+  box-sizing: border-box; pointer-events: none; 
+}
+.chat-input-container > * { pointer-events: auto; }
+
+/* Bungkus buat Input Kapsul + Tombol Kirim biar sejajar (Baris) */
+.input-row {
+  display: flex; width: 100%; align-items: flex-end; gap: 8px;
 }
 
-/* Pastikan tombol & input di dalam container tetap bisa diklik */
-.chat-input-container > * {
-  pointer-events: auto;
-}
-
-/* Wadah Input (Pill/Kapsul) */
 .input-group-wrapper {
   flex: 1; min-width: 0; display: flex; align-items: center;
-  background: var(--bg-panel) !important; 
-  border-radius: 28px !important; /* Bentuk Kapsul/Pill */
+  background: var(--bg-panel) !important; border-radius: 28px !important; 
   padding: 6px 16px; position: relative; min-height: 48px;
   box-sizing: border-box; border: 1px solid var(--border-color);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* Efek melayang */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
 }
-html.dark .input-group-wrapper {
-  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-}
+html.dark .input-group-wrapper { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
 
 #chat-input {
   flex: 1; min-width: 0; border: none; outline: none; background: transparent !important;
@@ -200,45 +144,49 @@ html.dark .input-group-wrapper {
 }
 
 /* =========================================
-   6. STICKER MENU (🔥 FIX 4: Melayang & Bebas Kepotong)
+   5. STICKER MENU & REPLY BOX FIX
    ========================================= */
 #sticker-menu, .sticker-container {
   position: absolute !important;
-  /* Posisi mengambang tepat di atas bar input */
-  bottom: calc(100% + 10px) !important; 
-  left: 12px; right: 12px; width: calc(100% - 24px) !important;
-  
-  background: var(--bg-panel) !important; 
-  border-radius: 20px !important;
-  box-shadow: 0 -5px 25px rgba(0,0,0,0.15) !important;
-  border: 1px solid var(--border-color) !important;
-  
-  max-height: 40vh !important;
-  overflow-y: auto !important;
-  padding: 12px !important;
-  z-index: 10000;
-  display: none; /* Default tersembunyi */
-  flex-direction: column;
+  bottom: calc(100% + 10px) !important; left: 12px; right: 12px; width: calc(100% - 24px) !important;
+  background: var(--bg-panel) !important; border-radius: 20px !important;
+  box-shadow: 0 -5px 25px rgba(0,0,0,0.15) !important; border: 1px solid var(--border-color) !important;
+  max-height: 40vh !important; overflow-y: auto !important; padding: 12px !important;
+  z-index: 10000; display: none; flex-direction: column;
 }
-
-/* Input search stiker menyesuaikan Dark Mode */
-html.dark #sticker-menu input,
-html.dark .sticker-container input {
-  background: var(--bg-main) !important;
-  color: var(--text-color) !important;
-  border: 1px solid var(--border-color) !important;
+html.dark #sticker-menu input, html.dark .sticker-container input {
+  background: var(--bg-main) !important; color: var(--text-color) !important; border: 1px solid var(--border-color) !important;
 }
-html.dark #sticker-menu button,
-html.dark .sticker-container button {
+html.dark #sticker-menu button, html.dark .sticker-container button {
   background: #3a7bd5 !important; color: white !important;
 }
 
+/* STYLE KOTAK BALASAN YANG DIPERBARUI */
+#reply-preview-box { 
+  display: none; width: 100%; background: var(--bg-panel); 
+  border-left: 4px solid #3a7bd5 !important; border-radius: 16px; /* Pill theme */
+  padding: 10px 14px; box-sizing: border-box; align-items: center; 
+  justify-content: space-between; gap: 10px; z-index: 10;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+}
+html.dark #reply-preview-box { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+
+.reply-content-wrapper { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
+.reply-title { font-size: 11px; color: #3a7bd5 !important; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reply-text-preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.close-reply-btn { font-size: 24px; color: #ff4757; font-weight: bold; cursor: pointer; flex-shrink: 0; padding: 0 5px; line-height: 1; }
+
+.reply-container { display: none; padding: 8px 12px; background: var(--bg-panel); border-left: 4px solid #3a7bd5 !important; position: relative; }
+.reply-container .reply-text { font-size: 12px; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reply-content { background: rgba(0, 0, 0, 0.05); padding: 5px 8px; border-left: 3px solid #3a7bd5 !important; border-radius: 4px; margin-bottom: 5px; font-size: 11px; cursor: pointer; }
+.reply-content strong { display: block; color: #3a7bd5 !important; }
+.reply-indicator { position: absolute; right: -30px; top: 50%; transform: translateY(-50%); font-size: 18px; opacity: 0.5; }
+
 /* =========================================
-   7. BADGES, ICONS, REACTIONS
+   6. BADGES, ICONS, REACTIONS
    ========================================= */
 .badge, .admin-badge { font-size: 7px; background: #4facfe; color: white; padding: 0px 2px; border-radius: 3px; margin-left: 2px; font-weight: 600; }
 .verified-icon { margin-left: 4px; display: inline-flex; align-items: center; }
-
 .reaction-menu { position: absolute; background: var(--bg-panel); padding: 8px 12px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; gap: 12px; z-index: 10006; border: 1px solid var(--border-color); transform: translateX(-50%); animation: reactionPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); pointer-events: auto; }
 .reaction-emoji { cursor: pointer; font-size: 24px; transition: transform 0.2s; user-select: none; }
 .reaction-emoji:hover { transform: scale(1.4) translateY(-5px); }
@@ -246,21 +194,7 @@ html.dark .sticker-container button {
 .reaction-badge { font-size: 11px; display: flex; align-items: center; }
 
 /* =========================================
-   8. REPLY SYSTEM
-   ========================================= */
-.reply-container { display: none; padding: 8px 12px; background: var(--bg-panel); border-left: 4px solid #3a7bd5 !important; position: relative; }
-.reply-container .reply-text { font-size: 12px; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.reply-content { background: rgba(0, 0, 0, 0.05); padding: 5px 8px; border-left: 3px solid #3a7bd5 !important; border-radius: 4px; margin-bottom: 5px; font-size: 11px; cursor: pointer; }
-.reply-content strong { display: block; color: #3a7bd5 !important; }
-.reply-indicator { position: absolute; right: -30px; top: 50%; transform: translateY(-50%); font-size: 18px; opacity: 0.5; }
-#reply-preview-box { display: none; position: relative; width: 100%; background: var(--bg-panel); border-left: 4px solid #3a7bd5 !important; padding: 8px 12px; box-sizing: border-box; align-items: center; justify-content: space-between; gap: 10px; z-index: 10; }
-.reply-content-wrapper { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
-.reply-title { font-size: 11px; color: #3a7bd5 !important; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.reply-text-preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.close-reply-btn { font-size: 24px; color: #ff4757; font-weight: bold; cursor: pointer; flex-shrink: 0; padding: 0 5px; line-height: 1; }
-
-/* =========================================
-   9. UI ELEMENTS & MODALS
+   7. UI ELEMENTS & MODALS
    ========================================= */
 .cta { display: flex; padding: 8px 20px; text-decoration: none; font-size: 14px; color: white; background: #3a7bd5 !important; transition: 1s; box-shadow: 4px 4px 0 black; transform: skewX(-15deg); border: none; cursor: pointer; align-items: center; justify-content: center; width: 80%; margin: 10px auto; }
 .cta:focus { outline: none; }
@@ -293,7 +227,7 @@ html.dark .sticker-container button {
 .btn-modal-confirm { flex: 1.5; background: linear-gradient(135deg, #FF3366, #FF7755); color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; cursor: pointer; }
 
 /* =========================================
-   10. STATUS & LOADING ANIMATIONS
+   8. STATUS & LOADING ANIMATIONS
    ========================================= */
 .online-dot { height: 8px; width: 8px; background-color: #2ecc71; border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 5px #2ecc71; animation: pulse-dot 1.5s infinite; }
 #typing-indicator { transition: all 0.3s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -307,11 +241,9 @@ html.dark .sticker-container button {
 .sending-dot:nth-child(3) { animation-delay: 0.4s; }
 .status-icon.sent, .status-icon.delivered { color: #8e8e93; }
 .status-icon.read { color: #4fc3f7; }
-
 .loading-dot { width: 10px; height: 10px; border-radius: 50%; background: #25d366; animation: bounceDot 1.2s infinite ease-in-out; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.25); }
 .loading-dot:nth-child(2) { animation-delay: 0.15s; }
 .loading-dot:nth-child(3) { animation-delay: 0.3s; }
-
 .chat-loading-screen { display: flex; flex-direction: column; gap: 14px; padding: 18px 14px 24px; animation: fadeInChatLoading 0.25s ease; }
 .skeleton-msg { display: flex; align-items: flex-end; gap: 8px; max-width: 82%; }
 .skeleton-msg.left { align-self: flex-start; }
@@ -329,7 +261,7 @@ html.dark .sticker-container button {
 .loading-chat-hint { text-align: center; font-size: 12px; color: var(--text-muted, #667781); margin-top: 8px; font-weight: 500; letter-spacing: 0.2px; opacity: 0.9; }
 
 /* =========================================
-   11. MIC & SEND BUTTON ANIMATIONS
+   9. MIC & SEND BUTTON ANIMATIONS
    ========================================= */
 #action-btn { width: 48px; height: 48px; min-width: 48px; background-color: #3a7bd5 !important; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3); }
 html.dark #action-btn { background-color: #005C4B !important; box-shadow: 0 4px 10px rgba(0, 92, 75, 0.4); }
@@ -345,7 +277,7 @@ html.dark #action-btn { background-color: #005C4B !important; box-shadow: 0 4px 
 #action-btn:active { top: 0px; box-shadow: 0 2px 0 #2D5DA3, 0 3px 6px rgba(0,0,0,0.2); }
 
 /* =========================================
-   12. VOICE NOTE PLAYER & OVERLAY
+   10. VOICE NOTE PLAYER & OVERLAY
    ========================================= */
 #vn-overlay { position: absolute; inset: 0; background: var(--bg-main) !important; border-radius: 28px; display: none; align-items: center; padding: 0 16px; z-index: 10; color: var(--text-color); }
 .vn-custom-player { display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.05); padding: 8px 12px; border-radius: 20px; min-width: 190px; margin: 5px 0; box-sizing: border-box; }
@@ -359,7 +291,7 @@ html.dark #action-btn { background-color: #005C4B !important; box-shadow: 0 4px 
 .playing .bar { animation: waveAnim 0.6s infinite alternate; background: #00d2ff; }
 
 /* =========================================
-   13. PANGGILAN / LIVEKIT
+   11. PANGGILAN / LIVEKIT
    ========================================= */
 .sonar-wave { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; background: #3a7bd5; opacity: 0.3; z-index: -1; animation: sonar-effect 2s infinite; }
 #btn-end-call:active { transform: scale(0.9); }
@@ -369,7 +301,7 @@ html.dark #action-btn { background-color: #005C4B !important; box-shadow: 0 4px 
 .anim-calling-text { animation: text-blink 1.5s infinite ease-in-out; color: #00d2ff !important; font-weight: bold; letter-spacing: 2px; }
 
 /* =========================================
-   14. TOAST COMPACT MOBILE
+   12. TOAST COMPACT MOBILE
    ========================================= */
 #toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 99999; width: calc(100% - 24px); max-width: 420px; pointer-events: none; }
 .toast-card { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.96); color: #1f2937; border-radius: 20px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); opacity: 0; transform: translateY(-20px) scale(0.96); transition: all 0.28s ease; pointer-events: auto; min-height: 64px; border: 1px solid rgba(255, 255, 255, 0.6); }
@@ -384,19 +316,10 @@ html.dark #action-btn { background-color: #005C4B !important; box-shadow: 0 4px 
 .toast-title { font-size: 14px; font-weight: 800; line-height: 1.2; margin-bottom: 2px; color: #111827; }
 .toast-subtitle { font-size: 12px; line-height: 1.3; color: #6b7280; word-break: break-word; }
 .toast-close { background: transparent; border: none; color: #9ca3af; font-size: 22px; cursor: pointer; padding: 0; margin-left: 4px; line-height: 1; flex-shrink: 0; width: 24px; height: 24px; }
-
-@media (max-width: 480px) {
-  #toast { top: 10px; width: calc(100% - 16px); }
-  .toast-card { border-radius: 18px; padding: 10px 12px; gap: 8px; min-height: 56px; }
-  .toast-icon-wrap { width: 38px; height: 38px; }
-  .toast-icon { font-size: 18px; }
-  .toast-title { font-size: 13px; margin-bottom: 1px; }
-  .toast-subtitle { font-size: 11px; line-height: 1.25; }
-  .toast-close { font-size: 18px; width: 20px; height: 20px; }
-}
+@media (max-width: 480px) { #toast { top: 10px; width: calc(100% - 16px); } .toast-card { border-radius: 18px; padding: 10px 12px; gap: 8px; min-height: 56px; } .toast-icon-wrap { width: 38px; height: 38px; } .toast-icon { font-size: 18px; } .toast-title { font-size: 13px; margin-bottom: 1px; } .toast-subtitle { font-size: 11px; line-height: 1.25; } .toast-close { font-size: 18px; width: 20px; height: 20px; } }
 
 /* =========================================
-   15. EMPTY CHAT, DIVIDERS & IMAGES
+   13. EMPTY CHAT, DIVIDERS & IMAGES
    ========================================= */
 .empty-chat { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 60px 20px; margin-top: 20px; text-align: center; opacity: 0.9; animation: fadeIn 0.4s ease; }
 .empty-icon { font-size: 40px; opacity: 0.6; filter: grayscale(0.2); }
@@ -418,7 +341,7 @@ img { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select:
 .btn, .tab, button { -webkit-tap-highlight-color: rgba(0, 0, 0, 0); user-select: none; }
 
 /* =========================================
-   16. KEYFRAMES GLOBALS
+   14. KEYFRAMES
    ========================================= */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

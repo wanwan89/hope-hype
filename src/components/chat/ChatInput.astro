@@ -5,44 +5,54 @@
   <div id="sticker-menu" class="sticker-container">
     </div>
 
-  <div class="input-group-wrapper">
-    
-    <button id="sticker-btn">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-        <line x1="9" y1="9" x2="9.01" y2="9"></line>
-        <line x1="15" y1="9" x2="15.01" y2="9"></line>
-      </svg>
-    </button>
-
-    <textarea id="chat-input" placeholder="Tulis pesan..." rows="1"></textarea>
-
-    <div id="vn-overlay">
-      <div style="display: flex; align-items: center; width: 100%; gap: 12px;">
-        <div class="vn-dot"></div>
-        <span id="vn-timer">00:00</span>
-        <span class="vn-cancel-text">&laquo; Geser batal</span>
-      </div>
+  <div id="reply-preview-box">
+    <div class="reply-content-wrapper">
+      <div class="reply-title">Membalas pesan</div>
+      <div class="reply-text-preview">Isi pesan yang dibalas...</div>
     </div>
-    
+    <div class="close-reply-btn" id="close-reply-btn">×</div>
   </div>
 
-  <button id="action-btn">
-    <div class="icon-stack">
-      <span class="svg-send">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  <div class="input-row">
+    
+    <div class="input-group-wrapper">
+      
+      <button id="sticker-btn" style="position: relative; z-index: 50; padding: 5px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+          <line x1="9" y1="9" x2="9.01" y2="9"></line>
+          <line x1="15" y1="9" x2="15.01" y2="9"></line>
         </svg>
-      </span>
-      <span class="svg-mic">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <rect x="9" y="2" width="6" height="11" rx="3" fill="white" />
-          <path d="M5 10V11C5 14.866 8.13401 18 12 18C15.866 18 19 14.866 19 11V10" stroke="white" stroke-width="2.5" stroke-linecap="round" />
-          <line x1="12" y1="18" x2="12" y2="22" stroke="white" stroke-width="2.5" stroke-linecap="round" />
-        </svg>
-      </span>
-    </div>
-  </button>
+      </button>
 
+      <textarea id="chat-input" placeholder="Tulis pesan..." rows="1"></textarea>
+
+      <div id="vn-overlay">
+        <div style="display: flex; align-items: center; width: 100%; gap: 12px;">
+          <div class="vn-dot"></div>
+          <span id="vn-timer">00:00</span>
+          <span class="vn-cancel-text">&laquo; Geser batal</span>
+        </div>
+      </div>
+    </div>
+
+    <button id="action-btn">
+      <div class="icon-stack" style="pointer-events: none;">
+        <span class="svg-send">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+        <span class="svg-mic">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="9" y="2" width="6" height="11" rx="3" fill="white" />
+            <path d="M5 10V11C5 14.866 8.13401 18 12 18C15.866 18 19 14.866 19 11V10" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="12" y1="18" x2="12" y2="22" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+          </svg>
+        </span>
+      </div>
+    </button>
+    
+  </div>
 </div>
