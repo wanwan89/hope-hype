@@ -993,8 +993,35 @@ async function sendSticker(url) {
 
 if (searchBtn) searchBtn.onclick = () => fetchStickers(searchInput?.value || "");
 if (searchInput) searchInput.onkeydown = (e) => { if (e.key === "Enter") fetchStickers(searchInput.value); };
+// ===== LOGIKA STICKER MENU (SUPER FIX) =====
 const stickerBtn = document.getElementById("sticker-btn");
-if (stickerBtn) { stickerBtn.onclick = () => { if (!stickerMenu) return; stickerMenu.style.display = stickerMenu.style.display === "none" || stickerMenu.style.display === "" ? "flex" : "none"; }; }
+if (stickerBtn) { 
+  // Gunakan 'mousedown' atau 'touchstart' agar lebih responsif di mobile
+  stickerBtn.addEventListener("click", (e) => {
+    e.preventDefault(); // Mencegah aksi bawaan browser (kalau ada)
+    e.stopPropagation(); // Mencegah klik tembus ke elemen di belakangnya (PENTING!)
+    
+    if (!stickerMenu) return; 
+    
+    // Toggle menu stiker
+    if (stickerMenu.style.display === "none" || stickerMenu.style.display === "") {
+        stickerMenu.style.display = "flex";
+    } else {
+        stickerMenu.style.display = "none";
+    }
+  }); 
+}
+
+// Opsional: Tutup stiker kalau klik di luar area stiker/input
+document.addEventListener("click", (e) => {
+    if (stickerMenu && stickerMenu.style.display === "flex") {
+        const isClickInsideInput = document.querySelector(".chat-input-container").contains(e.target);
+        if (!isClickInsideInput) {
+            stickerMenu.style.display = "none";
+        }
+    }
+});
+
 
 window.showDeleteMenu = function(id) {
   selectedMessageId = id; const overlayDelete = document.getElementById("delete-overlay");
