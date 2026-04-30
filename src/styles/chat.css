@@ -118,11 +118,15 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
    5. CHAT INPUT (FIX: Layout Kapsul & Tombol Bisa Diklik)
    ========================================= */
 .chat-input-container {
-  position: fixed !important; bottom: 0; left: 0; right: 0; width: 100%; z-index: 9999;
-  background: transparent !important; /* Biar melayang */
-  padding: 10px 12px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important;
+  position: fixed !important; 
+  bottom: 0; left: 0; right: 0; 
+  width: 100%; z-index: 9999;
+  background: transparent !important; 
+  padding: 10px 12px; 
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important;
   display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; 
-  /* HAPUS pointer-events: none agar layar berfungsi normal */
+  
+  /* HAPUS pointer-events: none; JIKA MASIH ADA DI SINI */
 }
 
 /* Bungkus untuk input + tombol kirim */
