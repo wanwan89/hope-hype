@@ -52,6 +52,7 @@
     display: none; 
     opacity: 0;
     transition: opacity 0.3s ease;
+    will-change: opacity; /* Biar overlay-nya gak bikin ngelag pas munculll */
     
     /* 🔥 JURUS ANTI-NYANGKUT 🔥 */
     pointer-events: none !important; 
@@ -82,29 +83,29 @@
 .sidebar {
     position: fixed; 
     top: 0; 
-    right: -300px; /* Diperlebar sedikit agar lebih elegan */
+    right: 0; /* Ubah ke 0, jangan -300px lagi yaaa */
     width: 290px; 
     height: 100%;
     background: var(--panel-bg); 
     z-index: 2000;
     
-    /* Tambahkan Safe Area untuk HP Modern */
     padding: calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom)) 20px;
-    
     display: flex; 
     flex-direction: column; 
     
-    /* Border kiri dilengkungkan sedikit ala Drawer modern */
     border-top-left-radius: 28px;
     border-bottom-left-radius: 28px;
     border-left: 1px solid var(--border); 
-    
     box-shadow: var(--sidebar-shadow); 
-    transition: right 0.4s cubic-bezier(0.32, 0.72, 0, 1); 
+    
+    /* INI KUNCI UTAMANYA BIAR GAK LEMOT SAYANGGG */
+    transform: translateX(100%); 
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); 
+    will-change: transform; 
 }
 
 .sidebar.active { 
-    right: 0; 
+    transform: translateX(0); /* Ditarik masuk pake GPU, jadi enteng bangettt */
 }
 
 /* ==================================================
@@ -154,8 +155,8 @@
     height: 78px; 
     border-radius: 50%; 
     object-fit: cover; 
-    border: 3px solid var(--panel-bg); /* Pemisah antara foto dan cincin gradasi */
-    background: var(--panel-bg); /* Mencegah background tembus jika transparan */
+    border: 3px solid var(--panel-bg); 
+    background: var(--panel-bg); 
 }
 
 #sidebar-username { 
@@ -173,7 +174,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px; 
-    flex: 1; /* Biar logout bisa didorong ke bawah (opsional) */
+    flex: 1; 
 }
 
 .sidebar-menu a { 
@@ -198,13 +199,11 @@
 }
 .menu-icon-box .material-icons { font-size: 20px; }
 
-/* Efek saat menu ditekan */
 .sidebar-menu a:active {
     background-color: var(--empty-slot);
     transform: scale(0.96);
 }
 
-/* Garis Pemisah Menu */
 .menu-divider {
     height: 1px;
     background: var(--border);
@@ -216,7 +215,7 @@
 ================================================== */
 .sidebar-menu a.logout-item { 
     color: #ef4444; 
-    margin-top: auto; /* Dorong ke paling bawah */
+    margin-top: auto; 
 }
 
 .logout-box {

@@ -68,7 +68,6 @@ const {
     });
     
     if ('serviceWorker' in navigator) {
-      // Pake load biasa gapapa untuk service worker (cuma butuh di awal)
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js').catch(err => console.error(err));
       });
@@ -79,9 +78,7 @@ const {
       if (e.target.tagName === 'IMG') e.preventDefault();
     });
 
-    // 🔥 FIX 2: UBAH LAZY LOAD FIREBASE KE ASTRO PAGE LOAD BIAR JALAN TIAP PINDAH HALAMAN
     document.addEventListener('astro:page-load', () => {
-      // Cek biar nggak ke-load dobel-dobel sayangkuuu
       if (!document.getElementById('fb-app-script')) {
         setTimeout(() => {
           const fbApp = document.createElement('script');
@@ -96,7 +93,7 @@ const {
             fbMsg.defer = true;
             document.head.appendChild(fbMsg);
           };
-        }, 1500); // Waktunya dicepetin dikit biar gak terlalu nunggu lamaaa
+        }, 1500); 
       }
     });
   </script>
@@ -104,7 +101,6 @@ const {
   <script>
     import { supabase } from '../lib/supabase.js';
 
-    // 1. Bersihkan channel saat mau pindah halaman agar tidak 'nyangkut'
     document.addEventListener('astro:before-preparation', () => {
       if (supabase) {
         supabase.removeAllChannels();
@@ -112,7 +108,6 @@ const {
       }
     });
 
-    // 2. Tangani masalah Auth Lock saat halaman dimuat ulang oleh ClientRouter
     document.addEventListener('astro:page-load', async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -127,6 +122,21 @@ const {
   </script>
 
   <ClientRouter /> 
+
+  <script is:inline>
+    const sinkronisasiTema = () => {
+      // Ngambil memori dari browser, kalau kosong otomatis 'light' yaaa
+      const temaTersimpan = localStorage.getItem('hopehype-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', temaTersimpan);
+    };
+
+    // Panggil pas halamannya pertama kali dibuka
+    sinkronisasiTema();
+
+    // Panggil lagiii pas Astro ganti halaman biar temanya nggak hilang!
+    document.addEventListener('astro:after-swap', sinkronisasiTema);
+  </script>
+
 </head>
 
 <body class="theme-transition">
@@ -137,9 +147,8 @@ const {
 </html>
 
 <style is:global>
-  /* Menghilangkan kedip putih dan bikin transisi body smooth */
   body {
-    background-color: #050510; /* Pastiin warna body sama kayak tema gelapnyaaa */
+    /* Akuuu hapus warna background statisnya biar dia ngikutin variabel tema dari CSS kamuuu */
     margin: 0;
     padding: 0;
   }
@@ -148,7 +157,6 @@ const {
     transition: background-color 0.4s ease-in-out;
   }
 
-  /* Ini rahasia biar efek transisi Astro makin smooth sayanggg */
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation-duration: 0.4s;
