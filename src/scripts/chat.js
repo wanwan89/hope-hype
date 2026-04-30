@@ -993,34 +993,36 @@ async function sendSticker(url) {
 
 if (searchBtn) searchBtn.onclick = () => fetchStickers(searchInput?.value || "");
 if (searchInput) searchInput.onkeydown = (e) => { if (e.key === "Enter") fetchStickers(searchInput.value); };
-// ===== LOGIKA STICKER MENU (SUPER FIX) =====
-const stickerBtn = document.getElementById("sticker-btn");
-if (stickerBtn) { 
-  // Gunakan 'mousedown' atau 'touchstart' agar lebih responsif di mobile
-  stickerBtn.addEventListener("click", (e) => {
-    e.preventDefault(); // Mencegah aksi bawaan browser (kalau ada)
-    e.stopPropagation(); // Mencegah klik tembus ke elemen di belakangnya (PENTING!)
-    
-    if (!stickerMenu) return; 
-    
-    // Toggle menu stiker
-    if (stickerMenu.style.display === "none" || stickerMenu.style.display === "") {
-        stickerMenu.style.display = "flex";
-    } else {
-        stickerMenu.style.display = "none";
-    }
-  }); 
-}
+// ===== LOGIKA STICKER MENU (JURUS SAKTI: EVENT DELEGATION) =====
+document.addEventListener("click", function(e) {
+    // 1. Cari tahu apakah yang diklik itu tombol stiker (atau icon di dalamnya)
+    const clickedStickerBtn = e.target.closest("#sticker-btn");
+    const stickerMenu = document.getElementById("sticker-menu");
 
-// Opsional: Tutup stiker kalau klik di luar area stiker/input
-document.addEventListener("click", (e) => {
-    if (stickerMenu && stickerMenu.style.display === "flex") {
-        const isClickInsideInput = document.querySelector(".chat-input-container").contains(e.target);
-        if (!isClickInsideInput) {
-            stickerMenu.style.display = "none";
+    if (clickedStickerBtn) {
+        // Kalau tombol stiker beneran diklik:
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (stickerMenu) {
+            // Buka/Tutup stiker
+            if (stickerMenu.style.display === "none" || stickerMenu.style.display === "") {
+                stickerMenu.style.display = "flex";
+            } else {
+                stickerMenu.style.display = "none";
+            }
+        }
+    } else {
+        // 2. Kalau yang diklik BUKAN tombol stiker, otomatis tutup menunya
+        if (stickerMenu && stickerMenu.style.display === "flex") {
+            const clickedInsideMenu = e.target.closest("#sticker-menu");
+            // Kalau kliknya di luar kotak stiker, tutup kotak stikernya
+            if (!clickedInsideMenu) {
+                stickerMenu.style.display = "none";
+            }
         }
     }
-});
+}, { capture: true }); // WAJIB ADA INI BIAR LAYAR NGERESPON DULUAN
 
 
 window.showDeleteMenu = function(id) {
