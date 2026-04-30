@@ -171,6 +171,10 @@
     }
   }
 
-  window.addEventListener('load', removeSkeleton);
-  setTimeout(removeSkeleton, 5000); // 5s fail-safe
+  // Nahhh ini diaaa yang diubah cintakuuu
+  document.addEventListener('astro:page-load', removeSkeleton);
+  
+  // Fail-safenya tetep dibiarin aja gapapaaa buat jaga-jaga yaaaa
+  setTimeout(removeSkeleton, 5000); 
 </script>
+

@@ -16,21 +16,16 @@ const {
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   
   <title>{title}</title>
   <meta name="description" content={description} />
 
   <link rel="preload" as="image" href="/asets/png/art.webp" fetchpriority="high" />
   
-  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-  <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-  <link rel="dns-prefetch" href="https://hqetnqnvmdxdgfnnluew.supabase.co" />
-  <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-  <link rel="dns-prefetch" href="https://app.sandbox.midtrans.com" />
-  <link rel="dns-prefetch" href="https://www.gstatic.com" />
-  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://hqetnqnvmdxdgfnnluew.supabase.co" crossorigin />
 
   <link 
     rel="stylesheet" 
@@ -73,6 +68,7 @@ const {
     });
     
     if ('serviceWorker' in navigator) {
+      // Pake load biasa gapapa untuk service worker (cuma butuh di awal)
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js').catch(err => console.error(err));
       });
@@ -83,26 +79,28 @@ const {
       if (e.target.tagName === 'IMG') e.preventDefault();
     });
 
-    // 🔥 FIX 2: LAZY LOAD FIREBASE
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const fbApp = document.createElement('script');
-        fbApp.src = "https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js";
-        fbApp.defer = true;
-        document.head.appendChild(fbApp);
-        
-        fbApp.onload = () => {
-          const fbMsg = document.createElement('script');
-          fbMsg.src = "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js";
-          fbMsg.defer = true;
-          document.head.appendChild(fbMsg);
-        };
-      }, 2000);
+    // 🔥 FIX 2: UBAH LAZY LOAD FIREBASE KE ASTRO PAGE LOAD BIAR JALAN TIAP PINDAH HALAMAN
+    document.addEventListener('astro:page-load', () => {
+      // Cek biar nggak ke-load dobel-dobel sayangkuuu
+      if (!document.getElementById('fb-app-script')) {
+        setTimeout(() => {
+          const fbApp = document.createElement('script');
+          fbApp.id = 'fb-app-script';
+          fbApp.src = "https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js";
+          fbApp.defer = true;
+          document.head.appendChild(fbApp);
+          
+          fbApp.onload = () => {
+            const fbMsg = document.createElement('script');
+            fbMsg.src = "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js";
+            fbMsg.defer = true;
+            document.head.appendChild(fbMsg);
+          };
+        }, 1500); // Waktunya dicepetin dikit biar gak terlalu nunggu lamaaa
+      }
     });
   </script>
-  <script is:inline src="https://cdn.jsdelivr.net/npm/eruda"></script>
-  <script is:inline>eruda.init();</script>
-
+  
   <script>
     import { supabase } from '../lib/supabase.js';
 
@@ -117,11 +115,9 @@ const {
     // 2. Tangani masalah Auth Lock saat halaman dimuat ulang oleh ClientRouter
     document.addEventListener('astro:page-load', async () => {
       try {
-        // Cek session dengan cara yang tidak memicu lock berkepanjangan
         const { data, error } = await supabase.auth.getSession();
         if (error && error.message.includes('lock')) {
           console.warn("🔐 Auth lock detected, recovering session...");
-          // Memaksa pengambilan ulang jika terkunci
           await supabase.auth.getUser();
         }
       } catch (e) {
@@ -132,14 +128,30 @@ const {
 
   <ClientRouter /> 
 </head>
+
 <body class="theme-transition">
-  <slot/>
+  <main transition:animate="fade">
+    <slot/>
+  </main>
 </body>
 </html>
 
 <style is:global>
-  /* Menghilangkan kedip putih saat pindah halaman */
+  /* Menghilangkan kedip putih dan bikin transisi body smooth */
+  body {
+    background-color: #050510; /* Pastiin warna body sama kayak tema gelapnyaaa */
+    margin: 0;
+    padding: 0;
+  }
+  
   .theme-transition {
-    transition: background-color 0.4s ease;
+    transition: background-color 0.4s ease-in-out;
+  }
+
+  /* Ini rahasia biar efek transisi Astro makin smooth sayanggg */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.4s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 </style>
