@@ -172,12 +172,12 @@ html.dark .input-group-wrapper { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
   display: none; width: 100%; background: var(--bg-panel); 
   border-left: 4px solid var(--primary-blue) !important; border-radius: 16px; 
   padding: 10px 14px; box-sizing: border-box; align-items: center; 
-  justify-content: space-between; gap: 10px; z-index: 100;
-  margin-bottom: 5px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+  justify-content: space-between; gap: 10px; z-index: 9999 !important;
+  margin-bottom: 5px; position: relative !important; /* MENGATASI BUG DI BELAKANG INPUT */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
   animation: replyPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
-html.dark #reply-preview-box { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+html.dark #reply-preview-box { box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
 
 .reply-content-wrapper { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
 .reply-title { font-size: 11px; color: var(--primary-blue) !important; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -189,7 +189,7 @@ html.dark #reply-preview-box { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
 #sticker-menu, .sticker-container {
   display: none; width: 100%; background: var(--bg-panel) !important;
   border-radius: 16px !important; border: 1px solid var(--border-color) !important;
-  padding: 12px !important; box-shadow: 0 -5px 20px rgba(0,0,0,0.1) !important;
+  padding: 12px !important; box-shadow: 0 -10px 30px rgba(0,0,0,0.2) !important;
   flex-direction: column; 
   height: 350px !important; /* Dipaksa besar biar gampang nyari stiker */
   max-height: 60vh !important; 
@@ -198,7 +198,7 @@ html.dark #reply-preview-box { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
   margin-bottom: 5px; /* Jarak antara stiker dan elemen di bawahnya */
   animation: replyPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
-html.dark #sticker-menu, html.dark .sticker-container { box-shadow: 0 -5px 20px rgba(0,0,0,0.5) !important; }
+html.dark #sticker-menu, html.dark .sticker-container { box-shadow: 0 -10px 30px rgba(0,0,0,0.6) !important; }
 
 #sticker-list {
   flex: 1 !important;
