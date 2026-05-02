@@ -14,14 +14,14 @@
   --chat-self-bg: #dcf8c6; 
   --primary-blue: #3a7bd5; 
   
-  /* Efek Kaca Transparan Light Mode */
+  /* Transparan Kaca Light Mode */
   --glass-bg: rgba(255, 255, 255, 0.85); 
   --header-bg: #3a7bd5;
   --header-text: #ffffff;
 }
 
 html.dark {
-  /* 🔥 DARK MODE: Body #01070A, Header #0b141b 🔥 */
+  /* 🔥 DARK MODE REQUEST: Body #01070A, Header #0b141b 🔥 */
   --bg-main: #01070A;         
   --bg-panel: #0b141b;        
   --bg-sidebar: #0b141b;      
@@ -34,7 +34,7 @@ html.dark {
   --chat-self-bg: #005C4B;
   --primary-blue: #3a7bd5; 
   
-  /* Efek Kaca Transparan Dark Mode Seragam */
+  /* Transparan Kaca Dark Mode */
   --glass-bg: rgba(11, 20, 27, 0.75); 
   --header-bg: #0b141b;
   --header-text: #E9EDEF;
@@ -93,19 +93,25 @@ html, body {
 .chat-members { padding: 6px 16px; background: var(--bg-panel); font-size: 14px; color: var(--text-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
 
 /* =========================================
-   3. CHAT MESSAGES AREA
+   3. CHAT MESSAGES AREA (🔥 BATAS BAWAH CHAT 🔥)
    ========================================= */
 .chat-messages {
-  flex: 1 1 auto !important; min-height: 0; padding: 12px;
-  padding-bottom: 12px !important; 
-  overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+  flex: 1 1 auto !important; 
+  min-height: 0; 
+  padding: 12px;
+  
+  /* 🔥 FIX: Padding bawah super besar (Batas) agar chat terakhir tidak tertutup input 🔥 */
+  padding-bottom: 160px !important; 
+  
+  overflow-y: auto; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px;
   -webkit-overflow-scrolling: touch;
 }
 
-/* ELEMEN HANTU PENDORONG PESAN TERAKHIR */
-.chat-messages::after {
-  content: ""; display: block; min-height: 160px; width: 100%; flex-shrink: 0; pointer-events: none;
-}
+/* Hapus elemen hantu ::after yang lama */
+.chat-messages::after { display: none !important; }
 
 .chat-messages::-webkit-scrollbar { width: 6px; }
 .chat-messages::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 3px; }
@@ -128,23 +134,25 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
 .text.deleted { font-style: italic; color: #aaa !important; }
 
 /* =========================================
-   4. CHAT INPUT LAYER (🔥 FIX: BLOCK LAYOUT MURNI)
+   4. CHAT INPUT LAYER (🔥 BLOCK LAYOUT MURNI 🔥)
    ========================================= */
 .chat-input-container {
-  position: fixed !important; bottom: 0; left: 0; right: 0; width: 100%; z-index: 9999;
+  position: fixed !important; 
+  bottom: 0; left: 0; right: 0; 
+  width: 100%; z-index: 9999;
   background: transparent !important; 
-  padding: 8px 12px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+  padding: 8px 12px; 
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
   
-  /* JURUS ANTI TUMPANG TINDIH: Susunan Block Natural */
+  /* 🔥 SUSUNAN BLOCK NATURAL: PASTI NUMPUK RAPI DARI ATAS KE BAWAH 🔥 */
   display: block !important; 
   pointer-events: none; 
 }
 .chat-input-container > * { pointer-events: auto !important; }
 
-/* BARIS INPUT UTAMA (Paling Bawah) */
+/* BARIS INPUT UTAMA */
 .input-row {
-  display: flex; width: 100%; align-items: flex-end; gap: 8px; 
-  position: relative; z-index: 100;
+  display: flex; width: 100%; align-items: flex-end; gap: 8px; position: relative; z-index: 50;
 }
 
 /* KAPSUL INPUT KACA */
@@ -174,33 +182,38 @@ html.dark .input-group-wrapper { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
 
 
 /* =========================================
-   5. STICKER MENU & REPLY BOX (KACA & WA STYLE)
+   5. STICKER MENU & REPLY BOX (WA STYLE)
    ========================================= */
 
 @keyframes replyPop {
-  0% { opacity: 0; transform: translateY(15px); }
+  0% { opacity: 0; transform: translateY(10px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* 🔥 KOTAK BALASAN (REPLY) ALA WHATSAPP 🔥 */
+/* 🔥 KOTAK BALASAN (REPLY) - MURNI NATURAL FLOW 🔥 */
 #reply-preview-box { 
-  display: none; /* di-handle JS jadi 'flex' */
+  display: none; /* diubah JS ke flex */
   width: 100% !important; 
   background: var(--glass-bg) !important; 
   backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
   
   border-left: 4px solid var(--primary-blue) !important; 
-  border-radius: 12px 12px 4px 4px !important; /* Lengkung atas, rata bawah */
+  border-radius: 12px 12px 4px 4px !important; /* Gaya WA (Rata di bawah nempel ke input) */
   
   padding: 8px 12px; box-sizing: border-box; align-items: center; justify-content: space-between; gap: 10px; 
   
-  position: relative !important; z-index: 90 !important; 
-  margin: 0 0 6px 0 !important; /* Ganjal ruang di atas input */
+  position: relative !important; z-index: 9998 !important; 
+  margin-bottom: 6px !important; /* Ganjal jarak ke Input Row */
   
   box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
   animation: replyPop 0.25s ease-out forwards;
 }
-html.dark #reply-preview-box { box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+html.dark #reply-preview-box { 
+  background: rgba(11, 20, 27, 0.85) !important; /* Warna Dark Mode WA */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4); 
+  border: 1px solid rgba(255,255,255,0.05) !important;
+  border-left: 4px solid var(--primary-blue) !important;
+}
 
 .reply-content-wrapper { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
 .reply-title { font-size: 11px; color: var(--primary-blue) !important; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -208,7 +221,7 @@ html.dark #reply-preview-box { box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 .close-reply-btn { font-size: 24px; color: #ff4757; font-weight: bold; cursor: pointer; flex-shrink: 0; padding: 0 5px; line-height: 1; transition: transform 0.2s;}
 .close-reply-btn:active { transform: scale(0.8); }
 
-/* 🔥 MENU STIKER 🔥 */
+/* 🔥 MENU STIKER - MURNI NATURAL FLOW 🔥 */
 #sticker-menu, .sticker-container {
   display: none; width: 100% !important; 
   background: var(--glass-bg) !important; 
@@ -217,13 +230,13 @@ html.dark #reply-preview-box { box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
   padding: 12px !important; flex-direction: column; 
   height: 300px !important; max-height: 40vh !important; overflow: hidden;
   
-  position: relative !important; z-index: 80 !important; 
-  margin: 0 0 8px 0 !important; /* Ganjal ruang */
+  position: relative !important; z-index: 10000 !important; 
+  margin-bottom: 8px !important; /* Ganjal jarak ke bawahnya */
   
-  box-shadow: 0 -5px 20px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
   animation: replyPop 0.25s ease-out forwards;
 }
-html.dark #sticker-menu, html.dark .sticker-container { box-shadow: 0 -5px 20px rgba(0,0,0,0.5) !important; }
+html.dark #sticker-menu, html.dark .sticker-container { box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important; }
 
 #sticker-list { flex: 1 !important; max-height: none !important; overflow-y: auto !important; margin-top: 5px; }
 
