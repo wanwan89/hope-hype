@@ -110,6 +110,7 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Hapus elemen hantu ::after yang lama */
 .chat-messages::after { display: none !important; }
 
 .chat-messages::-webkit-scrollbar { width: 6px; }
@@ -133,47 +134,38 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
 .text.deleted { font-style: italic; color: #aaa !important; }
 
 /* =========================================
-   4. CHAT INPUT LAYER (🔥 WADAH TRANSPARAN & BACKGROUND PISAH 🔥)
+   4. CHAT INPUT LAYER (🔥 BLOCK LAYOUT MURNI 🔥)
    ========================================= */
 .chat-input-container {
   position: fixed !important; 
   bottom: 0; left: 0; right: 0; 
   width: 100%; z-index: 9999;
+  background: transparent !important; 
+  padding: 8px 12px; 
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
   
-  background: transparent !important; /* WADAH HARUS TRANSPARAN */
-  padding: 0 !important; /* Hilangkan padding di sini */
-  
-  display: flex !important; 
-  flex-direction: column !important; 
-  justify-content: flex-end !important; 
+  /* 🔥 SUSUNAN BLOCK NATURAL: PASTI NUMPUK RAPI DARI ATAS KE BAWAH 🔥 */
+  display: block !important; 
   pointer-events: none; 
 }
 .chat-input-container > * { pointer-events: auto !important; }
 
-/* 🔥 BARIS INPUT BAWAH (INI YANG JADI BACKGROUNDNYA) 🔥 */
+/* BARIS INPUT UTAMA */
 .input-row {
-  display: flex; width: 100%; align-items: flex-end; gap: 8px; 
-  position: relative; z-index: 100;
-  order: 3 !important; /* Memastikan ada di paling bawah */
-  
-  /* BACKGROUND BLUR PINDAH KESINI */
-  background: var(--glass-bg) !important; 
-  backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-  border-top: 1px solid var(--border-color);
-  
-  /* PADDING KITA TARUH DI SINI */
-  padding: 8px 12px;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+  display: flex; width: 100%; align-items: flex-end; gap: 8px; position: relative; z-index: 50;
 }
 
-/* KAPSUL INPUT (Warna pekat untuk membedakan dari background bar) */
+/* KAPSUL INPUT KACA */
 .input-group-wrapper {
   flex: 1; min-width: 0; display: flex; align-items: center;
-  background: var(--bg-main) !important; 
+  background: var(--glass-bg) !important; 
+  backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
   border-radius: 24px !important; 
   padding: 6px 14px; position: relative; min-height: 48px;
   box-sizing: border-box; border: 1px solid var(--border-color);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
 }
+html.dark .input-group-wrapper { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
 
 #chat-input {
   flex: 1; min-width: 0; border: none; outline: none; background: transparent !important;
@@ -190,7 +182,7 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
 
 
 /* =========================================
-   5. STICKER MENU & REPLY BOX (🔥 MELAYANG DI ATAS BACKGROUND 🔥)
+   5. STICKER MENU & REPLY BOX (WA STYLE)
    ========================================= */
 
 @keyframes replyPop {
@@ -198,29 +190,26 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* 🔥 KOTAK BALASAN (REPLY) 🔥 */
+/* 🔥 KOTAK BALASAN (REPLY) - MURNI NATURAL FLOW 🔥 */
 #reply-preview-box { 
-  display: none; 
-  width: calc(100% - 24px) !important; /* Dikecilkan biar nggak mentok layar */
-  align-self: center !important; /* Ditengahin */
-  
+  display: none; /* diubah JS ke flex */
+  width: 100% !important; 
   background: var(--glass-bg) !important; 
   backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
   
   border-left: 4px solid var(--primary-blue) !important; 
-  border-radius: 12px 12px 4px 4px !important; 
+  border-radius: 12px 12px 4px 4px !important; /* Gaya WA (Rata di bawah nempel ke input) */
   
   padding: 8px 12px; box-sizing: border-box; align-items: center; justify-content: space-between; gap: 10px; 
   
   position: relative !important; z-index: 9998 !important; 
-  order: 2 !important; /* Di atas input row */
-  margin-bottom: 8px !important; /* JARAK DARI BACKGROUND BAWAH */
+  margin-bottom: 6px !important; /* Ganjal jarak ke Input Row */
   
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
   animation: replyPop 0.25s ease-out forwards;
 }
 html.dark #reply-preview-box { 
-  background: rgba(11, 20, 27, 0.85) !important; 
+  background: rgba(11, 20, 27, 0.85) !important; /* Warna Dark Mode WA */
   box-shadow: 0 4px 15px rgba(0,0,0,0.4); 
   border: 1px solid rgba(255,255,255,0.05) !important;
   border-left: 4px solid var(--primary-blue) !important;
@@ -232,12 +221,9 @@ html.dark #reply-preview-box {
 .close-reply-btn { font-size: 24px; color: #ff4757; font-weight: bold; cursor: pointer; flex-shrink: 0; padding: 0 5px; line-height: 1; transition: transform 0.2s;}
 .close-reply-btn:active { transform: scale(0.8); }
 
-/* 🔥 MENU STIKER 🔥 */
+/* 🔥 MENU STIKER - MURNI NATURAL FLOW 🔥 */
 #sticker-menu, .sticker-container {
-  display: none; 
-  width: calc(100% - 24px) !important; 
-  align-self: center !important;
-  
+  display: none; width: 100% !important; 
   background: var(--glass-bg) !important; 
   backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
   border-radius: 16px !important; border: 1px solid var(--border-color) !important;
@@ -245,8 +231,7 @@ html.dark #reply-preview-box {
   height: 300px !important; max-height: 40vh !important; overflow: hidden;
   
   position: relative !important; z-index: 10000 !important; 
-  order: 1 !important; /* Paling atas */
-  margin-bottom: 8px !important; /* JARAK DARI BACKGROUND/REPLY */
+  margin-bottom: 8px !important; /* Ganjal jarak ke bawahnya */
   
   box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
   animation: replyPop 0.25s ease-out forwards;
@@ -255,11 +240,11 @@ html.dark #sticker-menu, html.dark .sticker-container { box-shadow: 0 4px 15px r
 
 #sticker-list { flex: 1 !important; max-height: none !important; overflow-y: auto !important; margin-top: 5px; }
 
-#sticker-menu input, .sticker-container input {
-  background: var(--bg-panel) !important; color: var(--text-color) !important; border: 1px solid var(--border-color) !important;
-  border-radius: 20px; padding: 8px 15px; outline: none; flex: 1;
+html.dark #sticker-menu input, html.dark .sticker-container input {
+  background: var(--bg-main) !important; color: var(--text-color) !important; border: 1px solid var(--border-color) !important;
+  border-radius: 20px; padding: 8px 15px; outline: none;
 }
-#sticker-menu button, .sticker-container button {
+html.dark #sticker-menu button, html.dark .sticker-container button {
   background: var(--primary-blue) !important; color: white !important;
   border-radius: 20px; padding: 8px 15px; border: none; font-weight: bold; cursor: pointer;
 }
