@@ -21,7 +21,7 @@
 }
 
 html.dark {
-  /* 🔥 DARK MODE: Body #01070A, Header/Panel #0b141b 🔥 */
+  /* 🔥 DARK MODE REQUEST: Body #01070A, Header #0b141b 🔥 */
   --bg-main: #01070A;         
   --bg-panel: #0b141b;        
   --bg-sidebar: #0b141b;      
@@ -93,13 +93,16 @@ html, body {
 .chat-members { padding: 6px 16px; background: var(--bg-panel); font-size: 14px; color: var(--text-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
 
 /* =========================================
-   3. CHAT MESSAGES AREA 
+   3. CHAT MESSAGES AREA (🔥 BATAS BAWAH CHAT 🔥)
    ========================================= */
 .chat-messages {
   flex: 1 1 auto !important; 
   min-height: 0; 
   padding: 12px;
+  
+  /* 🔥 FIX: Padding bawah super besar (Batas) agar chat terakhir tidak tertutup input 🔥 */
   padding-bottom: 160px !important; 
+  
   overflow-y: auto; 
   display: flex; 
   flex-direction: column; 
@@ -107,10 +110,7 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* ELEMEN HANTU PENDORONG PESAN TERAKHIR */
-.chat-messages::after {
-  content: ""; display: block; min-height: 20px; width: 100%; flex-shrink: 0; pointer-events: none;
-}
+.chat-messages::after { display: none !important; }
 
 .chat-messages::-webkit-scrollbar { width: 6px; }
 .chat-messages::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 3px; }
@@ -133,31 +133,40 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
 .text.deleted { font-style: italic; color: #aaa !important; }
 
 /* =========================================
-   4. CHAT INPUT LAYER (🔥 FULL BACKGROUND ALA WA 🔥)
+   4. CHAT INPUT LAYER (🔥 WADAH TRANSPARAN & BACKGROUND PISAH 🔥)
    ========================================= */
 .chat-input-container {
   position: fixed !important; 
   bottom: 0; left: 0; right: 0; 
   width: 100%; z-index: 9999;
   
-  /* 🔥 INI DIA: BACKGROUND BAR BAWAH FULL EFEK KACA 🔥 */
+  background: transparent !important; /* WADAH HARUS TRANSPARAN */
+  padding: 0 !important; /* Hilangkan padding di sini */
+  
+  display: flex !important; 
+  flex-direction: column !important; 
+  justify-content: flex-end !important; 
+  pointer-events: none; 
+}
+.chat-input-container > * { pointer-events: auto !important; }
+
+/* 🔥 BARIS INPUT BAWAH (INI YANG JADI BACKGROUNDNYA) 🔥 */
+.input-row {
+  display: flex; width: 100%; align-items: flex-end; gap: 8px; 
+  position: relative; z-index: 100;
+  order: 3 !important; /* Memastikan ada di paling bawah */
+  
+  /* BACKGROUND BLUR PINDAH KESINI */
   background: var(--glass-bg) !important; 
   backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
   border-top: 1px solid var(--border-color);
   
-  padding: 8px 12px; 
+  /* PADDING KITA TARUH DI SINI */
+  padding: 8px 12px;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
-  
-  display: block !important; 
-  pointer-events: auto !important; 
 }
 
-/* BARIS INPUT UTAMA */
-.input-row {
-  display: flex; width: 100%; align-items: flex-end; gap: 8px; position: relative; z-index: 50;
-}
-
-/* KAPSUL INPUT (Warna dibedakan dari background biar menonjol) */
+/* KAPSUL INPUT (Warna pekat untuk membedakan dari background bar) */
 .input-group-wrapper {
   flex: 1; min-width: 0; display: flex; align-items: center;
   background: var(--bg-main) !important; 
@@ -181,7 +190,7 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
 
 
 /* =========================================
-   5. STICKER MENU & REPLY BOX (MENYATU DI DALAM BAR BAWAH)
+   5. STICKER MENU & REPLY BOX (🔥 MELAYANG DI ATAS BACKGROUND 🔥)
    ========================================= */
 
 @keyframes replyPop {
@@ -192,19 +201,29 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
 /* 🔥 KOTAK BALASAN (REPLY) 🔥 */
 #reply-preview-box { 
   display: none; 
-  width: 100% !important; 
-  background: var(--bg-main) !important; 
+  width: calc(100% - 24px) !important; /* Dikecilkan biar nggak mentok layar */
+  align-self: center !important; /* Ditengahin */
   
-  border: 1px solid var(--border-color) !important;
+  background: var(--glass-bg) !important; 
+  backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+  
   border-left: 4px solid var(--primary-blue) !important; 
-  border-radius: 12px 12px 4px 4px !important; /* Gaya WA */
+  border-radius: 12px 12px 4px 4px !important; 
   
   padding: 8px 12px; box-sizing: border-box; align-items: center; justify-content: space-between; gap: 10px; 
   
   position: relative !important; z-index: 9998 !important; 
-  margin-bottom: 8px !important; 
+  order: 2 !important; /* Di atas input row */
+  margin-bottom: 8px !important; /* JARAK DARI BACKGROUND BAWAH */
   
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
   animation: replyPop 0.25s ease-out forwards;
+}
+html.dark #reply-preview-box { 
+  background: rgba(11, 20, 27, 0.85) !important; 
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4); 
+  border: 1px solid rgba(255,255,255,0.05) !important;
+  border-left: 4px solid var(--primary-blue) !important;
 }
 
 .reply-content-wrapper { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
@@ -215,17 +234,24 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
 
 /* 🔥 MENU STIKER 🔥 */
 #sticker-menu, .sticker-container {
-  display: none; width: 100% !important; 
-  background: var(--bg-main) !important; 
+  display: none; 
+  width: calc(100% - 24px) !important; 
+  align-self: center !important;
+  
+  background: var(--glass-bg) !important; 
+  backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
   border-radius: 16px !important; border: 1px solid var(--border-color) !important;
   padding: 12px !important; flex-direction: column; 
   height: 300px !important; max-height: 40vh !important; overflow: hidden;
   
   position: relative !important; z-index: 10000 !important; 
-  margin-bottom: 8px !important; 
+  order: 1 !important; /* Paling atas */
+  margin-bottom: 8px !important; /* JARAK DARI BACKGROUND/REPLY */
   
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
   animation: replyPop 0.25s ease-out forwards;
 }
+html.dark #sticker-menu, html.dark .sticker-container { box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important; }
 
 #sticker-list { flex: 1 !important; max-height: none !important; overflow-y: auto !important; margin-top: 5px; }
 
