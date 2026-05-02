@@ -85,15 +85,31 @@ html, body {
 .chat-members { padding: 6px 16px; background: var(--bg-panel); font-size: 14px; color: var(--text-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
 
 /* =========================================
-   4. CHAT MESSAGES AREA
+   4. CHAT MESSAGES AREA (🔥 FIX: ANTI-TENGGELAM)
    ========================================= */
 .chat-messages {
-  flex: 1 1 auto !important; min-height: 0; padding: 12px;
-  /* 🔥 FIX: Ruang bawah dilebarkan agar pesan tak tertutup input */
-  padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px)) !important;
-  overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+  flex: 1 1 auto !important; 
+  min-height: 0; 
+  padding: 12px;
+  padding-bottom: 12px !important; /* Gunakan padding normal */
+  overflow-y: auto; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px;
   -webkit-overflow-scrolling: touch;
 }
+
+/* 🔥 JURUS ELEMEN HANTU (SPACER) 🔥
+   Ganjal ini akan mendorong obrolan paling bawah supaya tidak tertutup input bar */
+.chat-messages::after {
+  content: "";
+  display: block;
+  min-height: 160px; /* Tinggi penahan, pastikan lebih tinggi dari bar input */
+  width: 100%;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
 .chat-messages::-webkit-scrollbar { width: 6px; }
 .chat-messages::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 3px; }
 
@@ -121,12 +137,12 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
   position: fixed !important; bottom: 0; left: 0; right: 0; width: 100%; z-index: 9999;
   background: transparent !important; 
   padding: 10px 12px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important;
-  display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; box-sizing: border-box; 
+  display: flex; flex-direction: column; justify-content: flex-end;
   pointer-events: none; /* Latar transparan bisa ditembus sentuhan */
 }
 
 /* Kembalikan sentuhan ke elemen anak */
-#sticker-menu, #reply-preview-box, .input-row {
+.chat-input-container > * {
   pointer-events: auto !important;
 }
 
@@ -137,8 +153,7 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
 .input-group-wrapper {
   flex: 1; min-width: 0; display: flex; align-items: center;
   background: var(--bg-panel) !important; border-radius: 28px !important; 
-  padding: 6px 16px; position: relative; min-height: 48px;
-  box-sizing: border-box; border: 1px solid var(--border-color);
+  padding: 6px 16px; min-height: 48px; border: 1px solid var(--border-color);
   box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
 }
 html.dark .input-group-wrapper { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
@@ -152,16 +167,14 @@ html.dark .input-group-wrapper { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
 #sticker-btn {
   background: none; border: none; cursor: pointer; padding: 5px; margin-right: 4px;
   display: flex; align-items: center; color: var(--text-muted);
-  position: relative; z-index: 50;
-  -webkit-tap-highlight-color: transparent;
+  position: relative; z-index: 50; -webkit-tap-highlight-color: transparent;
 }
 #sticker-btn svg { pointer-events: none !important; }
 
 /* =========================================
-   6. STICKER MENU & REPLY BOX (🔥 FIX TINGGI DAN POSISI)
+   6. STICKER MENU & REPLY BOX (🔥 JURUS MELAYANG ABSOLUTE 🔥)
    ========================================= */
 
-/* Animasi Bouncy (Pop Up) Keren */
 @keyframes replyPop {
   0% { opacity: 0; transform: translateY(30px) scale(0.9); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
@@ -169,11 +182,18 @@ html.dark .input-group-wrapper { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
 
 /* KOTAK BALASAN (REPLY) */
 #reply-preview-box { 
-  display: none; width: 100%; background: var(--bg-panel); 
+  display: none; background: var(--bg-panel); 
   border-left: 4px solid var(--primary-blue) !important; border-radius: 16px; 
   padding: 10px 14px; box-sizing: border-box; align-items: center; 
-  justify-content: space-between; gap: 10px; z-index: 9999 !important;
-  margin-bottom: 5px; position: relative !important; /* MENGATASI BUG DI BELAKANG INPUT */
+  justify-content: space-between; gap: 10px; 
+  
+  /* 🔥 FIX POSISI: Selalu Melayang Tepat di Atas Input 🔥 */
+  position: absolute !important;
+  bottom: 100% !important; 
+  left: 12px; right: 12px; width: calc(100% - 24px) !important;
+  z-index: 9998 !important;
+  margin-bottom: -5px; /* Jarak pas ke input */
+  
   box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
   animation: replyPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
@@ -187,32 +207,27 @@ html.dark #reply-preview-box { box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
 
 /* MENU STIKER */
 #sticker-menu, .sticker-container {
-  display: none; width: 100%; background: var(--bg-panel) !important;
+  display: none; background: var(--bg-panel) !important;
   border-radius: 16px !important; border: 1px solid var(--border-color) !important;
-  padding: 12px !important; box-shadow: 0 -10px 30px rgba(0,0,0,0.2) !important;
-  flex-direction: column; 
-  height: 350px !important; /* Dipaksa besar biar gampang nyari stiker */
-  max-height: 60vh !important; 
-  overflow: hidden;
-  z-index: 10000;
-  margin-bottom: 5px; /* Jarak antara stiker dan elemen di bawahnya */
+  padding: 12px !important; flex-direction: column; 
+  height: 350px !important; max-height: 60vh !important; overflow: hidden;
+  
+  /* 🔥 FIX POSISI: Selalu Melayang Tepat di Atas Input 🔥 */
+  position: absolute !important; 
+  bottom: 100% !important; 
+  left: 12px; right: 12px; width: calc(100% - 24px) !important;
+  z-index: 10000 !important;
+  margin-bottom: -5px; /* Jarak pas ke input */
+  
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.15) !important;
   animation: replyPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
-html.dark #sticker-menu, html.dark .sticker-container { box-shadow: 0 -10px 30px rgba(0,0,0,0.6) !important; }
+html.dark #sticker-menu, html.dark .sticker-container { box-shadow: 0 -5px 20px rgba(0,0,0,0.6) !important; }
 
-#sticker-list {
-  flex: 1 !important;
-  max-height: none !important;
-  overflow-y: auto !important;
-  margin-top: 5px;
-}
+#sticker-list { flex: 1 !important; max-height: none !important; overflow-y: auto !important; margin-top: 5px; }
 
-html.dark #sticker-menu input, html.dark .sticker-container input {
-  background: var(--bg-main) !important; color: var(--text-color) !important; border: 1px solid var(--border-color) !important;
-}
-html.dark #sticker-menu button, html.dark .sticker-container button {
-  background: var(--primary-blue) !important; color: white !important;
-}
+html.dark #sticker-menu input, html.dark .sticker-container input { background: var(--bg-main) !important; color: var(--text-color) !important; border: 1px solid var(--border-color) !important; }
+html.dark #sticker-menu button, html.dark .sticker-container button { background: var(--primary-blue) !important; color: white !important; }
 
 .reply-container { display: none; padding: 8px 12px; background: var(--bg-panel); border-left: 4px solid var(--primary-blue) !important; position: relative; }
 .reply-container .reply-text { font-size: 12px; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
