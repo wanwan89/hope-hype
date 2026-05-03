@@ -133,8 +133,6 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
   background: transparent !important; 
   padding: 8px 12px; 
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
-  
-  /* Natural Flex: Mengikuti urutan HTML */
   display: flex !important; 
   flex-direction: column !important; 
   justify-content: flex-end !important; 
@@ -195,7 +193,7 @@ html.dark .input-group-wrapper { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
   padding: 8px 12px; box-sizing: border-box; align-items: center; justify-content: space-between; gap: 10px; 
   
   position: relative !important; z-index: 9998 !important; 
-  margin-bottom: 6px !important; /* Jarak ke elemen bawahnya */
+  margin-bottom: 6px !important; 
   
   box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
   animation: replyPop 0.25s ease-out forwards;
@@ -226,7 +224,7 @@ html.dark #reply-preview-box {
   height: 300px !important; max-height: 40vh !important; overflow: hidden;
   
   position: relative !important; z-index: 10000 !important; 
-  margin-bottom: 6px !important; /* Jarak ke elemen bawahnya */
+  margin-bottom: 6px !important;
   
   box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
   animation: replyPop 0.25s ease-out forwards;
@@ -443,62 +441,81 @@ img { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select:
    🔥 OVERRIDE & FIXES (DO NOT REMOVE) 🔥
    ========================================= */
 
-/* 1. PERBAIKAN BOX REPLY & STICKER MENU (WA STYLE POS & ANIMATION) */
+/* 1. PERBAIKAN STACKING: POSISI BOX REPLY & STICKER MENU (WA STYLE) */
+/* Pastikan container input berjalan normal (bukan flex column) */
 .chat-input-container {
-    /* Mengikuti urutan flex column */
-    display: flex !important;
-    flex-direction: column !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important;
+    display: block !important; 
 }
 
-/* Memaksa box reply berada di urutan atas input chat tanpa ubah HTML */
-.chat-input-container #reply-preview-box {
-    order: -1 !important; 
-    z-index: 10001 !important; 
+.input-row {
+    position: relative !important;
+    z-index: 10005 !important; /* Baris ketik pesan wajib paling depan */
+}
+
+/* Posisikan box balasan & stiker melayang TEPAT di atas input bar */
+#reply-preview-box, 
+#sticker-menu, 
+.sticker-container {
+    position: absolute !important;
+    bottom: 100% !important; /* Titik bawah popup menempel di titik atas input bar */
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    z-index: 10000 !important; 
     animation: slideUpFadeWA 0.25s ease forwards !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 0 !important;
 }
 
-/* Memaksa sticker menu juga berada di atas input chat */
-.chat-input-container #sticker-menu, 
-.chat-input-container .sticker-container {
-    order: -2 !important;
-    z-index: 10002 !important;
-    animation: slideUpFadeWA 0.25s ease forwards !important;
-    margin-bottom: 8px !important;
-}
-
-/* Animasi Halus seperti WA */
+/* Animasi membal/smooth ala WA */
 @keyframes slideUpFadeWA {
-    0% {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    0% { opacity: 0; transform: translateY(15px); }
+    100% { opacity: 1; transform: translateY(0); }
 }
 
-/* 2. PERBAIKAN STICKER GRID 3x3 */
+
+/* 2. PERBAIKAN STICKER GRID 3x3 AGAR TIDAK MELAR / TERPOTONG */
 #sticker-list {
     display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, 1fr) !important; /* Paksa 3 kolom rata */
     gap: 12px !important;
-    padding: 8px !important;
+    padding: 5px !important;
     width: 100% !important;
-    box-sizing: border-box !important;
+    max-height: 200px !important; /* Batas tinggi box agar bisa di-scroll */
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    box-sizing: border-box !important;
 }
 
-/* Memastikan item stiker di dalam grid tidak berantakan & responsif */
+/* Aturan untuk anak di dalam grid (entah itu <div> atau tag lain) */
 #sticker-list > * {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 1 / 1 !important;
-    object-fit: contain !important;
-    cursor: pointer;
+    aspect-ratio: 1 / 1 !important; /* Paksa jadi kotak persegi sempurna */
+    background: transparent !important;
+    overflow: hidden !important;
 }
+
+/* Aturan ketat langsung ke target gambarnya */
+#sticker-list img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important; /* Gambar akan menyesuaikan kotak tanpa terpotong/melar */
+    cursor: pointer !important;
+    transition: transform 0.2s ease !important;
+    display: block !important;
+}
+
+#sticker-list img:active {
+    transform: scale(0.9) !important; /* Efek klik mengecil sedikit */
+}
+
 
 /* 3. UPGRADE DARK MODE (LEBIH NYAMAN DI MATA) */
 html.dark {
@@ -511,7 +528,7 @@ html.dark {
     --username-color: #e2e8f0 !important;  
     --chat-item-bg: #1e293b !important;    
     --label-bg: #0f172a !important;        
-    --chat-self-bg: #0f766e !important; /* Hijau slate/teal soft biar nyambung sama tema slate */
+    --chat-self-bg: #0f766e !important; 
     
     /* Transparan Kaca Dark Mode Baru */
     --glass-bg: rgba(30, 41, 59, 0.85) !important; 
@@ -519,7 +536,7 @@ html.dark {
     --header-text: #e2e8f0 !important;
 }
 
-/* Tambahan depth (shadow) dan border halus di UI Dark Mode */
+/* Tambahan kedalaman (shadow) dan garis tepi halus di UI Dark Mode */
 html.dark .input-group-wrapper,
 html.dark #reply-preview-box,
 html.dark #sticker-menu,
