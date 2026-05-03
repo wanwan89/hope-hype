@@ -438,3 +438,92 @@ img { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select:
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 @keyframes slide-text { 0% { transform: translateX(0); } 50% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
 @keyframes modalPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* =========================================
+   🔥 OVERRIDE & FIXES (DO NOT REMOVE) 🔥
+   ========================================= */
+
+/* 1. PERBAIKAN BOX REPLY & STICKER MENU (WA STYLE POS & ANIMATION) */
+.chat-input-container {
+    /* Mengikuti urutan flex column */
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Memaksa box reply berada di urutan atas input chat tanpa ubah HTML */
+.chat-input-container #reply-preview-box {
+    order: -1 !important; 
+    z-index: 10001 !important; 
+    animation: slideUpFadeWA 0.25s ease forwards !important;
+    margin-bottom: 8px !important;
+}
+
+/* Memaksa sticker menu juga berada di atas input chat */
+.chat-input-container #sticker-menu, 
+.chat-input-container .sticker-container {
+    order: -2 !important;
+    z-index: 10002 !important;
+    animation: slideUpFadeWA 0.25s ease forwards !important;
+    margin-bottom: 8px !important;
+}
+
+/* Animasi Halus seperti WA */
+@keyframes slideUpFadeWA {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 2. PERBAIKAN STICKER GRID 3x3 */
+#sticker-list {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
+    padding: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* Memastikan item stiker di dalam grid tidak berantakan & responsif */
+#sticker-list > * {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    object-fit: contain !important;
+    cursor: pointer;
+}
+
+/* 3. UPGRADE DARK MODE (LEBIH NYAMAN DI MATA) */
+html.dark {
+    --bg-main: #0f172a !important;         
+    --bg-panel: #1e293b !important;        
+    --bg-sidebar: #1e293b !important;      
+    --text-color: #e2e8f0 !important;      
+    --text-muted: #94a3b8 !important;      
+    --border-color: rgba(255, 255, 255, 0.05) !important; 
+    --username-color: #e2e8f0 !important;  
+    --chat-item-bg: #1e293b !important;    
+    --label-bg: #0f172a !important;        
+    --chat-self-bg: #0f766e !important; /* Hijau slate/teal soft biar nyambung sama tema slate */
+    
+    /* Transparan Kaca Dark Mode Baru */
+    --glass-bg: rgba(30, 41, 59, 0.85) !important; 
+    --header-bg: #0f172a !important;
+    --header-text: #e2e8f0 !important;
+}
+
+/* Tambahan depth (shadow) dan border halus di UI Dark Mode */
+html.dark .input-group-wrapper,
+html.dark #reply-preview-box,
+html.dark #sticker-menu,
+html.dark .chat-message {
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
