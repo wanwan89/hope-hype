@@ -959,17 +959,29 @@ async function initRealtimeMessages() {
 const apiKey = "vPUlBU5Qfz2ZygoEtKXVUqmIEAEcIB08";
 async function fetchStickers(query = "") {
   if (!stickerList) return;
-  stickerList.innerHTML = "<p style='font-size:12px; color:#999; text-align:center; width:100%;'>Mencari...</p>";
+  stickerList.innerHTML = "<p style='font-size:12px; color:#999; text-align:center; width:100%; grid-column: span 3;'>Mencari...</p>";
+  
   const endpoint = query ? `https://api.giphy.com/v1/stickers/search?api_key=${apiKey}&q=${encodeURIComponent(query)}&limit=30&rating=g` : `https://api.giphy.com/v1/stickers/trending?api_key=${apiKey}&limit=20&rating=g`;
+  
   try {
-    const res = await fetch(endpoint); const data = await res.json(); stickerList.innerHTML = "";
+    const res = await fetch(endpoint); 
+    const data = await res.json(); 
+    stickerList.innerHTML = "";
+    
     data.data.forEach((sticker) => {
-      const img = document.createElement("img"); img.src = sticker.images.fixed_width_small.webp;
-      img.style.cssText = "width:75px; height:75px; margin:4px; cursor:pointer; border-radius:8px; background:#eee;";
-      img.loading = "lazy"; img.onclick = () => sendSticker(sticker.images.fixed_width.url);
+      const img = document.createElement("img"); 
+      img.src = sticker.images.fixed_width_small.webp;
+      
+      // 🔥 FIX: Biarkan CSS Grid yang atur ukurannya, jangan di-hardcode 75px lagi!
+      img.style.cssText = "cursor:pointer; border-radius:8px; background:rgba(0,0,0,0.05); transition: transform 0.2s;";
+      
+      img.loading = "lazy"; 
+      img.onclick = () => sendSticker(sticker.images.fixed_width.url);
       stickerList.appendChild(img);
     });
-  } catch (err) { stickerList.innerHTML = "<p style='font-size:12px; color:red;'>Gagal memuat stiker.</p>"; }
+  } catch (err) { 
+    stickerList.innerHTML = "<p style='font-size:12px; color:red; grid-column: span 3; text-align:center;'>Gagal memuat stiker.</p>"; 
+  }
 }
 
 async function sendSticker(url) {
