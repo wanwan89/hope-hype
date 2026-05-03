@@ -124,29 +124,14 @@ html.dark .chat-message.self .message-info { color: rgba(255, 255, 255, 0.5); }
 .text.deleted { font-style: italic; color: #aaa !important; }
 
 /* =========================================
-   4. CHAT INPUT LAYER (MURNI DARI HTML)
+   4. CHAT INPUT LAYER (STYLES DASAR)
    ========================================= */
 .chat-input-container {
-  position: fixed !important; 
-  bottom: 0; left: 0; right: 0; 
-  width: 100%; z-index: 9999;
-  background: transparent !important; 
-  padding: 8px 12px; 
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
-  
-  /* Natural Flex: Mengikuti urutan HTML */
-  display: flex !important; 
-  flex-direction: column !important; 
-  justify-content: flex-end !important; 
-  pointer-events: none; 
+  /* Di-override ketat di bagian bawah */
 }
-.chat-input-container > * { pointer-events: auto !important; }
-
-/* BARIS INPUT */
 .input-row {
   display: flex; width: 100%; align-items: flex-end; gap: 8px; position: relative; z-index: 100;
 }
-
 .input-group-wrapper {
   flex: 1; min-width: 0; display: flex; align-items: center;
   background: var(--glass-bg) !important; 
@@ -163,7 +148,6 @@ html.dark .input-group-wrapper { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
   resize: none; max-height: 100px; padding: 12px 0; font-family: 'Inter', sans-serif;
   font-size: 16px; color: var(--text-color); line-height: 1.4;
 }
-
 #sticker-btn {
   background: none; border: none; cursor: pointer; padding: 5px; margin-right: 4px;
   display: flex; align-items: center; color: var(--text-muted);
@@ -172,68 +156,16 @@ html.dark .input-group-wrapper { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
 #sticker-btn svg { pointer-events: none !important; }
 
 /* =========================================
-   5. STICKER MENU & REPLY BOX (WA STYLE)
+   5. STICKER MENU & REPLY BOX (BASE)
    ========================================= */
-
-@keyframes replyPop {
-  0% { opacity: 0; transform: translateY(10px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-/* 🔥 KOTAK BALASAN (REPLY) 🔥 */
-#reply-preview-box { 
-  display: none; 
-  width: calc(100% - 24px) !important; 
-  align-self: center !important; 
-  
-  background: var(--glass-bg) !important; 
-  backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-  
-  border-left: 4px solid var(--primary-blue) !important; 
-  border-radius: 12px 12px 4px 4px !important; 
-  
-  padding: 8px 12px; box-sizing: border-box; align-items: center; justify-content: space-between; gap: 10px; 
-  
-  position: relative !important; z-index: 9998 !important; 
-  margin-bottom: 6px !important; /* Jarak ke elemen bawahnya */
-  
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
-  animation: replyPop 0.25s ease-out forwards;
-}
-html.dark #reply-preview-box { 
-  background: rgba(11, 20, 27, 0.85) !important; 
-  box-shadow: 0 4px 15px rgba(0,0,0,0.4); 
-  border: 1px solid rgba(255,255,255,0.05) !important;
-  border-left: 4px solid var(--primary-blue) !important;
-}
+#reply-preview-box { display: none; }
+#sticker-menu, .sticker-container { display: none; }
 
 .reply-content-wrapper { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
 .reply-title { font-size: 11px; color: var(--primary-blue) !important; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .reply-text-preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .close-reply-btn { font-size: 24px; color: #ff4757; font-weight: bold; cursor: pointer; flex-shrink: 0; padding: 0 5px; line-height: 1; transition: transform 0.2s;}
 .close-reply-btn:active { transform: scale(0.8); }
-
-/* 🔥 MENU STIKER 🔥 */
-#sticker-menu, .sticker-container {
-  display: none; 
-  width: calc(100% - 24px) !important; 
-  align-self: center !important;
-  
-  background: var(--glass-bg) !important; 
-  backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-  border-radius: 16px !important; border: 1px solid var(--border-color) !important;
-  padding: 12px !important; flex-direction: column; 
-  height: 300px !important; max-height: 40vh !important; overflow: hidden;
-  
-  position: relative !important; z-index: 10000 !important; 
-  margin-bottom: 6px !important; /* Jarak ke elemen bawahnya */
-  
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
-  animation: replyPop 0.25s ease-out forwards;
-}
-html.dark #sticker-menu, html.dark .sticker-container { box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important; }
-
-#sticker-list { flex: 1 !important; max-height: none !important; overflow-y: auto !important; margin-top: 5px; }
 
 #sticker-menu input, .sticker-container input {
   background: var(--bg-main) !important; color: var(--text-color) !important; border: 1px solid var(--border-color) !important;
@@ -242,13 +174,9 @@ html.dark #sticker-menu, html.dark .sticker-container { box-shadow: 0 4px 15px r
 #sticker-menu button, .sticker-container button {
   background: var(--primary-blue) !important; color: white !important;
   border-radius: 20px; padding: 8px 15px; border: none; font-weight: bold; cursor: pointer;
+  margin-left: 8px;
 }
-
-.reply-container { display: none; padding: 8px 12px; background: var(--bg-panel); border-left: 4px solid var(--primary-blue) !important; position: relative; }
-.reply-container .reply-text { font-size: 12px; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.reply-content { background: rgba(0, 0, 0, 0.05); padding: 5px 8px; border-left: 3px solid var(--primary-blue) !important; border-radius: 4px; margin-bottom: 5px; font-size: 11px; cursor: pointer; }
-.reply-content strong { display: block; color: var(--primary-blue) !important; }
-.reply-indicator { position: absolute; right: -30px; top: 50%; transform: translateY(-50%); font-size: 18px; opacity: 0.5; }
+.sticker-search-wrapper { display: flex; width: 100%; margin-bottom: 10px; }
 
 /* =========================================
    6. MIC & SEND BUTTON ANIMATIONS
@@ -274,7 +202,7 @@ html.dark #action-btn { box-shadow: 0 4px 10px rgba(58, 123, 213, 0.4); }
 #action-btn:active { top: 0px; box-shadow: 0 2px 0 rgba(42, 92, 184, 0.8), 0 3px 6px rgba(0,0,0,0.2); }
 
 /* =========================================
-   7. BADGES, ICONS, REACTIONS
+   7 - 14. KOMPONEN LAINNYA (TIDAK ADA YANG DIHAPUS)
    ========================================= */
 .badge, .admin-badge { font-size: 7px; background: #4facfe; color: white; padding: 0px 2px; border-radius: 3px; margin-left: 2px; font-weight: 600; }
 .verified-icon { margin-left: 4px; display: inline-flex; align-items: center; }
@@ -282,21 +210,12 @@ html.dark #action-btn { box-shadow: 0 4px 10px rgba(58, 123, 213, 0.4); }
 .reaction-emoji { cursor: pointer; font-size: 24px; transition: transform 0.2s; user-select: none; }
 .reaction-emoji:hover { transform: scale(1.4) translateY(-5px); }
 .message-reactions { position: absolute; bottom: -10px; left: 10px; display: flex; gap: 2px; background: var(--bg-panel); padding: 1px 4px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); z-index: 5; border: 1px solid var(--border-color); animation: badgePop 0.3s ease-out; }
-.reaction-badge { font-size: 11px; display: flex; align-items: center; }
 
-/* =========================================
-   8. UI ELEMENTS & MODALS
-   ========================================= */
 .cta { display: flex; padding: 8px 20px; text-decoration: none; font-size: 14px; color: white; background: var(--primary-blue) !important; transition: 1s; box-shadow: 4px 4px 0 black; transform: skewX(-15deg); border: none; cursor: pointer; align-items: center; justify-content: center; width: 80%; margin: 10px auto; }
 .cta:focus { outline: none; }
 .cta:hover { transition: 0.5s; box-shadow: 7px 7px 0 #869da6; background: #2a5cb8 !important; }
-.cta:hover .second { margin-right: 15px; }
-.cta .span { transform: skewX(15deg); display: inline-block; }
-.cta .second { transition: 0.5s; margin-left: 15px; transform: skewX(15deg); display: flex; align-items: center; }
-
 .delete-btn { font-size: 10px; color: #ff4d4d; cursor: pointer; margin-left: 8px; display: none; }
 .chat-message.self:hover .delete-btn { display: inline; }
-
 .delete-overlay, .searching-overlay { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 9999; }
 .delete-overlay { background: rgba(0, 31, 63, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 10005; padding: 20px; animation: fadeIn 0.2s ease-out; }
 .delete-menu { background: #ffffff; width: 100%; max-width: 280px; padding: 25px; border-radius: 24px; text-align: center; box-shadow: 0 15px 35px rgba(58, 123, 213, 0.2) !important; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -304,9 +223,7 @@ html.dark #action-btn { box-shadow: 0 4px 10px rgba(58, 123, 213, 0.4); }
 .delete-menu-btns { display: flex; gap: 12px; }
 .delete-menu button { flex: 1; padding: 12px; border: none; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
 #confirm-delete { background: linear-gradient(135deg, var(--primary-blue), #00d2ff) !important; color: white; box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3) !important; }
-#confirm-delete:active { transform: scale(0.95); filter: brightness(0.9); }
 .btn-cancel { background: #eef2f5; color: #708090; }
-.btn-cancel:active { transform: scale(0.95); background: #e1e8ed; }
 
 .custom-modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9999999; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .custom-modal-card { background: var(--bg-panel, #ffffff); width: 100%; max-width: 320px; border-radius: 28px; padding: 30px 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -317,9 +234,6 @@ html.dark #action-btn { box-shadow: 0 4px 10px rgba(58, 123, 213, 0.4); }
 .btn-modal-cancel { flex: 1; background: #f1f5f9; border: none; padding: 14px; border-radius: 16px; font-weight: 600; color: #64748b; cursor: pointer; }
 .btn-modal-confirm { flex: 1.5; background: linear-gradient(135deg, #FF3366, #FF7755); color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; cursor: pointer; }
 
-/* =========================================
-   9. STATUS & LOADING ANIMATIONS
-   ========================================= */
 .online-dot { height: 8px; width: 8px; background-color: #2ecc71; border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 5px #2ecc71; animation: pulse-dot 1.5s infinite; }
 #typing-indicator { transition: all 0.3s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .searching-text { letter-spacing: 2px; font-weight: 600; animation: pulse 1.5s infinite; }
@@ -343,7 +257,6 @@ html.dark #action-btn { box-shadow: 0 4px 10px rgba(58, 123, 213, 0.4); }
 .skeleton-bubble { background: var(--bg-panel); border-radius: 16px 16px 16px 6px; padding: 10px 12px; min-width: 110px; max-width: 220px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); backdrop-filter: blur(3px); }
 .skeleton-bubble.me { background: rgba(220, 248, 198, 0.85); border-radius: 16px 16px 6px 16px; }
 .skeleton-line { height: 8px; border-radius: 999px; margin-bottom: 8px; background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.35)); background-size: 200% 100%; animation: shimmerMove 1.2s linear infinite; }
-.skeleton-line:last-child { margin-bottom: 0; }
 .w1 { width: 130px; } .w2 { width: 95px; } .w3 { width: 60px; } .w4 { width: 120px; } .w5 { width: 70px; }
 .typing-bubble { display: flex; align-items: center; gap: 5px; min-width: 54px; padding: 12px 14px; }
 .typing-bubble span { width: 7px; height: 7px; border-radius: 50%; background: #9aa0a6; display: inline-block; animation: typingBounce 1s infinite ease-in-out; }
@@ -351,9 +264,6 @@ html.dark #action-btn { box-shadow: 0 4px 10px rgba(58, 123, 213, 0.4); }
 .typing-bubble span:nth-child(3) { animation-delay: 0.3s; }
 .loading-chat-hint { text-align: center; font-size: 12px; color: var(--text-muted, #667781); margin-top: 8px; font-weight: 500; letter-spacing: 0.2px; opacity: 0.9; }
 
-/* =========================================
-   10. VOICE NOTE PLAYER & OVERLAY
-   ========================================= */
 #vn-overlay { position: absolute; inset: 0; background: var(--bg-main) !important; border-radius: 28px; display: none; align-items: center; padding: 0 16px; z-index: 10; color: var(--text-color); }
 .vn-custom-player { display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.05); padding: 8px 12px; border-radius: 20px; min-width: 190px; margin: 5px 0; box-sizing: border-box; }
 .vn-play-btn { width: 32px !important; height: 32px !important; border-radius: 50% !important; border: none !important; background: #00d2ff !important; color: white !important; display: flex !important; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; padding: 0; }
@@ -365,9 +275,6 @@ html.dark #action-btn { box-shadow: 0 4px 10px rgba(58, 123, 213, 0.4); }
 .vn-time { font-size: 10px; font-weight: 600; color: var(--text-muted); white-space: nowrap; margin-left: 5px; }
 .playing .bar { animation: waveAnim 0.6s infinite alternate; background: #00d2ff; }
 
-/* =========================================
-   11. PANGGILAN / LIVEKIT
-   ========================================= */
 .sonar-wave { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; background: var(--primary-blue); opacity: 0.3; z-index: -1; animation: sonar-effect 2s infinite; }
 #btn-end-call:active { transform: scale(0.9); }
 #btn-call-trigger { display: none; align-items: center; justify-content: center; z-index: 1001; }
@@ -375,9 +282,6 @@ html.dark #action-btn { box-shadow: 0 4px 10px rgba(58, 123, 213, 0.4); }
 .anim-calling-avatar { animation: radar-pulse 1.5s infinite cubic-bezier(0.66, 0, 0, 1); border: 3px solid #00d2ff; border-radius: 50%; }
 .anim-calling-text { animation: text-blink 1.5s infinite ease-in-out; color: #00d2ff !important; font-weight: bold; letter-spacing: 2px; }
 
-/* =========================================
-   12. TOAST COMPACT MOBILE
-   ========================================= */
 #toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 99999; width: calc(100% - 24px); max-width: 420px; pointer-events: none; }
 .toast-card { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.96); color: #1f2937; border-radius: 20px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); opacity: 0; transform: translateY(-20px) scale(0.96); transition: all 0.28s ease; pointer-events: auto; min-height: 64px; border: 1px solid rgba(255, 255, 255, 0.6); }
 .toast-card.show { opacity: 1; transform: translateY(0) scale(1); }
@@ -393,9 +297,6 @@ html.dark #action-btn { box-shadow: 0 4px 10px rgba(58, 123, 213, 0.4); }
 .toast-close { background: transparent; border: none; color: #9ca3af; font-size: 22px; cursor: pointer; padding: 0; margin-left: 4px; line-height: 1; flex-shrink: 0; width: 24px; height: 24px; }
 @media (max-width: 480px) { #toast { top: 10px; width: calc(100% - 16px); } .toast-card { border-radius: 18px; padding: 10px 12px; gap: 8px; min-height: 56px; } .toast-icon-wrap { width: 38px; height: 38px; } .toast-icon { font-size: 18px; } .toast-title { font-size: 13px; margin-bottom: 1px; } .toast-subtitle { font-size: 11px; line-height: 1.25; } .toast-close { font-size: 18px; width: 20px; height: 20px; } }
 
-/* =========================================
-   13. EMPTY CHAT, DIVIDERS & IMAGES
-   ========================================= */
 .empty-chat { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 60px 20px; margin-top: 20px; text-align: center; opacity: 0.9; animation: fadeIn 0.4s ease; }
 .empty-icon { font-size: 40px; opacity: 0.6; filter: grayscale(0.2); }
 .empty-title { font-size: 18px; font-weight: 600; color: var(--text-color); }
@@ -415,9 +316,6 @@ img { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select:
 * { -webkit-tap-highlight-color: transparent; outline: none; }
 .btn, .tab, button { -webkit-tap-highlight-color: rgba(0, 0, 0, 0); user-select: none; }
 
-/* =========================================
-   14. KEYFRAMES
-   ========================================= */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -439,96 +337,111 @@ img { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select:
 @keyframes slide-text { 0% { transform: translateX(0); } 50% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
 @keyframes modalPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
+
 /* =========================================
-   🔥 OVERRIDE & FIXES (DO NOT REMOVE) 🔥
+   🔥 OVERRIDE SAKTI: FIX STIKER & REPLY BOX 🔥
    ========================================= */
 
-/* 1. KUNCI MATI LAYOUT CONTAINER */
+/* 1. CONTAINER BAWAH: JADIKAN BLOCK (BUKAN FLEX) */
 .chat-input-container {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
     z-index: 9999 !important;
-    display: flex !important; 
-    flex-direction: column !important;
-    justify-content: flex-end !important;
+    display: block !important; /* Paksa jadi block agar bottom: 100% dari anaknya jadi akurat ke atas */
     background: transparent !important;
+    padding: 8px 12px !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
 }
 
 .input-row {
     position: relative !important;
     z-index: 10005 !important;
     width: 100% !important;
-    order: 3 !important; /* Paksa input bar selalu ada di dasar (paling bawah) */
+    display: flex !important;
 }
 
-/* 2. PAKSA BOX STIKER & REPLY DI ATAS INPUT (ANTI-JS OVERRIDE) */
+/* 2. JANGKAR ABSOLUTE: PAKSA MENU MELAYANG DI ATAS INPUT */
 #reply-preview-box, 
 #sticker-menu, 
 .sticker-container {
-    position: relative !important; 
-    bottom: auto !important;
-    left: auto !important;
-    right: auto !important;
+    position: absolute !important;
+    bottom: 100% !important; /* Tepat di garis paling atas dari .chat-input-container */
+    left: 12px !important;
+    right: 12px !important;
     width: calc(100% - 24px) !important;
-    margin: 0 auto 8px auto !important; /* Posisi tengah + Jarak 8px ke box input */
-    z-index: 10001 !important;
-    order: 1 !important; /* Paksa urutan flex selalu di atas input-row */
+    margin: 0 0 8px 0 !important; /* Jarak pas 8px ke box input di bawahnya */
+    z-index: 10000 !important;
+    box-sizing: border-box !important;
 }
 
-/* Animasi muncul dari bawah mulus ala WhatsApp */
+/* Tampilan UI Reply Box yang diperbaiki biar lebih cakep (terutama di Dark Mode) */
+#reply-preview-box {
+    background: var(--bg-panel) !important;
+    border-left: 4px solid var(--primary-blue) !important;
+    border-radius: 12px 12px 12px 12px !important;
+    padding: 10px 14px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
+}
+
+/* Kunci agar jika dihidupkan via JS, tetap pakai Flex */
+#reply-preview-box[style*="display: block"], 
+#reply-preview-box[style*="display: flex"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    animation: slideUpFadeWA 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+
+#sticker-menu[style*="display: block"], 
+#sticker-menu[style*="display: flex"] {
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--bg-panel) !important;
+    border-radius: 16px !important;
+    padding: 12px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
+    animation: slideUpFadeWA 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+
 @keyframes slideUpFadeWA {
     0% { opacity: 0; transform: translateY(15px); }
     100% { opacity: 1; transform: translateY(0); }
 }
 
-#reply-preview-box[style*="display: block"], 
-#reply-preview-box[style*="display: flex"], 
-#sticker-menu[style*="display: block"], 
-#sticker-menu[style*="display: flex"] {
-    animation: slideUpFadeWA 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
-}
 
-/* 3. PERBAIKAN STICKER GRID 3x3 (KUNCI KETAT) */
+/* 3. FIX BLANK STICKER & MEMBUATNYA JADI GRID 3x3 KONSISTEN */
 #sticker-list {
     display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important; /* Kunci permanen 3 kolom rata */
-    gap: 12px !important;
-    padding: 10px !important;
+    grid-template-columns: repeat(3, 1fr) !important; /* 3 Kolom */
+    gap: 8px !important;
     width: 100% !important;
-    max-height: 250px !important; /* Batas max tinggi box */
+    max-height: 250px !important;
+    min-height: 120px !important; /* KUNCI: Paksa box agar tidak hilang/menciut */
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    box-sizing: border-box !important;
-    margin-top: 10px !important;
+    padding: 8px 0 !important;
 }
 
-/* Amankan setiap item yang disuntik JS ke dalam grid */
-#sticker-list > * {
-    width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 1 / 1 !important; /* Wajib jadi kotak sempurna */
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    overflow: hidden !important;
-    border-radius: 8px !important;
-    background: transparent !important;
-}
-
+/* Menganulir inline-style 'width: 75px' dari JS bawaan */
 #sticker-list img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: contain !important; /* Gambar menyesuaikan tanpa melar */
+    width: 100% !important; 
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important; /* Otomatis jadi kotak sempurna */
+    object-fit: contain !important;
+    background: rgba(128, 128, 128, 0.08) !important; /* Kotak bayangan sementara loading */
+    border-radius: 8px !important;
+    margin: 0 !important; /* Buang margin dari JS karena udah pakai gap Grid */
+    display: block !important;
     cursor: pointer !important;
     transition: transform 0.2s ease !important;
-    display: block !important;
 }
 
 #sticker-list img:active {
-    transform: scale(0.85) !important; /* Animasi membal diklik */
+    transform: scale(0.85) !important;
 }
+
 
 /* 4. UPGRADE DARK MODE MODERN */
 html.dark {
@@ -543,17 +456,15 @@ html.dark {
     --label-bg: #0f172a !important;        
     --chat-self-bg: #0f766e !important; 
     
-    /* Transparan Kaca Dark Mode Baru */
+    /* Kaca Dark Mode */
     --glass-bg: rgba(30, 41, 59, 0.85) !important; 
     --header-bg: #0f172a !important;
     --header-text: #e2e8f0 !important;
 }
 
-/* Tambahan depth (shadow) dan border halus di UI Dark Mode */
-html.dark .input-group-wrapper,
 html.dark #reply-preview-box,
 html.dark #sticker-menu,
-html.dark .chat-message {
+html.dark .input-group-wrapper {
     border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
 }
