@@ -337,12 +337,11 @@ img { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select:
 @keyframes slide-text { 0% { transform: translateX(0); } 50% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
 @keyframes modalPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-
 /* =========================================
-   🔥 FULL FIX OVERRIDE: STICKER & REPLY BOX 🔥
+   🔥 FULL FIX OVERRIDE SAKTI: STICKER & REPLY BOX 🔥
    ========================================= */
 
-/* 1. KUNCI MATI SUSUNAN FLEX (ANTI-TUMPANG TINDIH & MENUTUPI INPUT) */
+/* 1. CONTAINER BAWAH: FLEX COLUMN */
 .chat-input-container {
     position: fixed !important;
     bottom: 0 !important;
@@ -350,48 +349,51 @@ img { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select:
     right: 0 !important;
     z-index: 9999 !important;
     display: flex !important; 
-    flex-direction: column !important; /* Memaksa susunan berjajar dari atas ke bawah */
+    flex-direction: column !important; /* Wajib flex column */
     background: transparent !important;
     padding: 8px 12px !important;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
     height: auto !important;
-    pointer-events: none !important; /* Area container transparan tidak bisa di-klik */
+    pointer-events: none !important;
 }
-
-/* Biarkan tombol dan input di dalamnya bisa di-klik */
 .chat-input-container > * {
     pointer-events: auto !important; 
 }
 
-/* 2. BARIS KETIKAN PESAN WAJIB DI PALING BAWAH */
+/* 2. BARIS KETIKAN PESAN (SELALU DI BAWAH) */
 .input-row {
-    order: 3 !important; /* Urutan ke-3 (Dasar/Bawah) */
+    order: 2 !important; /* Dasar/Bawah */
     position: relative !important;
     width: 100% !important;
     margin: 0 !important;
+    z-index: 10005 !important;
 }
 
-/* 3. PAKSA REPLY BOX MELAYANG TEPAT DI ATAS INPUT CHAT */
+/* 3. REPLY BOX (SELALU MENEMPEL TEPAT DI ATAS INPUT CHAT) */
 #reply-preview-box {
-    order: 1 !important; /* Urutan ke-1 (Atas) */
-    position: relative !important; /* Buang position absolute bawaan JS yang bikin error */
+    order: 1 !important; /* Atas input */
+    position: relative !important; 
     bottom: auto !important; top: auto !important; left: auto !important; right: auto !important;
     width: 100% !important;
-    margin: 0 0 8px 0 !important; /* Kasih jarak 8px pas di atas input chat */
+    margin: 0 0 8px 0 !important; /* Jarak 8px di atas input chat */
     box-sizing: border-box !important;
+    z-index: 10001 !important;
 }
 
-/* 4. PAKSA STICKER MENU MELAYANG TEPAT DI ATAS INPUT CHAT */
+/* 4. STICKER MENU (MELAYANG ABSOLUTE DI ATAS SEMUANYA) */
 #sticker-menu, .sticker-container {
-    order: 2 !important; /* Urutan ke-2 (Tengah) */
-    position: relative !important; /* Buang position absolute bawaan JS */
-    bottom: auto !important; top: auto !important; left: auto !important; right: auto !important;
-    width: 100% !important;
-    margin: 0 0 8px 0 !important;
+    position: absolute !important;
+    bottom: 100% !important; /* Melayang dari atap container input ke atas (Mencegah nimpa input bar) */
+    left: 0 !important;
+    right: 0 !important;
+    width: auto !important;
+    margin: 0 12px 8px 12px !important; /* Jarak Kiri Kanan & Bawah */
+    z-index: 10010 !important;
     box-sizing: border-box !important;
+    top: auto !important;
 }
 
-/* Kunci animasi saat Reply Box muncul (dihidupkan oleh JS) */
+/* Kunci UI & Animasi Saat Box Aktif */
 #reply-preview-box[style*="display: block"], 
 #reply-preview-box[style*="display: flex"] {
     display: flex !important;
@@ -405,7 +407,6 @@ img { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select:
     animation: slideUpFadeWA 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
 }
 
-/* Kunci animasi saat Sticker Menu muncul */
 #sticker-menu[style*="display: block"], 
 #sticker-menu[style*="display: flex"] {
     display: flex !important;
@@ -454,6 +455,17 @@ img { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select:
 
 .chat-input-container #sticker-list img:active {
     transform: scale(0.9) !important;
+}
+
+/* Style Box Pencarian Stiker */
+.sticker-search-wrapper { 
+    display: flex !important; 
+    width: 100% !important; 
+    margin-bottom: 10px !important; 
+    gap: 8px !important; 
+}
+.sticker-search-wrapper input {
+    flex: 1 !important;
 }
 
 /* 6. DARK MODE PENYEMPURNAAN UI */
